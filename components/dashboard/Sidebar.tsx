@@ -21,7 +21,7 @@ export default function Sidebar() {
   const router = useRouter();
 
   const menuItems: MenuItems[] = [
-    { name: "Dashboard", icon: dashboardIcon, path: "./dashboard" },
+    { name: "Dashboard", icon: dashboardIcon, path: "/companydashboard/dashboard" },
     { name: "Calendar", icon: calendarIcon, path: "./calendar" },
     { name: "Crash Report", icon: crashReportIcon, path: "./crashreport" },
     { name: "Payments", icon: paymentIcon, path: "./payments" },
@@ -35,7 +35,7 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-1/5 px-8 gap-10 flex flex-col items-center py-9 border border-y-0 border-l-0 border-r h-screen bg-white">
+    <div className="w-[17%] px-8 gap-10 flex flex-col items-center py-9 pt-7 border border-y-0 border-l-0 static border-r h-screen bg-white">
       <div className="text-2xl mr-auto ml-3 font-semibold flex gap-2 items-center">
         <span>
           <Image
