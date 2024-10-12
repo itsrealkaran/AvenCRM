@@ -22,11 +22,11 @@ export default function Sidebar() {
 
   const menuItems: MenuItems[] = [
     { name: "Dashboard", icon: dashboardIcon, path: "/companydashboard/dashboard" },
-    { name: "Calendar", icon: calendarIcon, path: "./calendar" },
-    { name: "Crash Report", icon: crashReportIcon, path: "./crashreport" },
-    { name: "Payments", icon: paymentIcon, path: "./payments" },
-    { name: "Email", icon: emailIcon, path: "./email" },
-    { name: "Settings", icon: settingsIcon, path: "./settings" },
+    { name: "Calendar", icon: calendarIcon, path: "/companydashboard/calendar" },
+    { name: "Crash Report", icon: crashReportIcon, path: "/companydashboard/crashreport" },
+    { name: "Payments", icon: paymentIcon, path: "/companydashboard/payments" },
+    { name: "Email", icon: emailIcon, path: "/companydashboard/email" },
+    { name: "Settings", icon: settingsIcon, path: "/companydashboard/settings" },
   ];
 
   const handleNavigation = (path: string, name: React.SetStateAction<string>) => {
