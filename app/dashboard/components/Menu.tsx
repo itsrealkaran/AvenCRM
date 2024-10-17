@@ -1,7 +1,12 @@
 import React from 'react'
 import { FaAngleRight } from "react-icons/fa6";
 
-const Menu = ({icons : Icon , heading}) => {
+interface MenuProps {
+  icons: React.ComponentType; 
+  heading: string;
+}
+
+const Menu:React.FC<MenuProps> = ({icons : Icon , heading}) => {
   return (
                <div className='w-full flex justify-between  py-3 rounded-[9px] px-1 items-center hover:bg-[#5932ea] hover:opacity-100 hover:text-white opacity-45 h-fit'>
                {/* inner div for the logo and text  */}
