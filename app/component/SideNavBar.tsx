@@ -8,9 +8,11 @@ import { CiWallet } from "react-icons/ci";
 import { CiSquareQuestion } from "react-icons/ci";
 import Menu from '../dashboard/components/Menu';
 
+// done with it for now  w-[18%]
+
 const SideNavBar = () => {
   return (
-               <div className='h-full w-[18%] bg-white shadow-xl shadow-black/20 pt-10 px-8'>
+               <div className='h-screen w-[18%] sticky top-0 select-none bg-white shadow-xl shadow-black/20 pt-10 px-8'>
 
                {/* this is the top level heading display div  */}
 
