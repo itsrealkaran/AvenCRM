@@ -1,8 +1,6 @@
 "use client"
 
 import React from 'react'
-import SideNavBar from '../component/SideNavBar'
-import { TopNavigation } from '../component/TopNavigation'
 import GraphComp from './components/GraphComp'
 import {useState} from "react"
 import { IoIosSearch } from "react-icons/io";
@@ -11,6 +9,8 @@ import { FaArrowDown } from "react-icons/fa";
 import { CiFilter } from "react-icons/ci";
 import StatsOverview from './components/StatsOverview';
 import FilterComp from './components/FilterComp'
+import SideNavBar from './components/SideNavBar';
+import { TopNavigation } from './components/TopNavigation';
 
 
 const Page = () => {

@@ -1,13 +1,25 @@
 import React from 'react'
 
-const InnerNav = () => {
+interface val { 
+        dets : ()=>void;
+        passw: ()=>void;
+        notifi : ()=>void;
+}
+
+const InnerNav:React.FC<val> = ({dets , passw , notifi}) => {
   return (
                <div className='w-full  flex items-center justify-between  h-[10%]'>
                {/*this is the toggel navigation section   */}
                <div className='w-1/2 font-semibold text-[14px]  flex gap-6 items-center '>
-                 <h1 className=''>My details</h1>
-                 <h1 className='opacity-70'>Password</h1>
-                 <h1 className='opacity-70'>Notifications</h1>
+                <div onClick={()=>dets()}>
+                 <h1  className=''>My details</h1>
+                </div>
+                <div onClick={()=>passw()}>
+                 <h1 className='opacity-70 font-semibold '>Password</h1>
+                </div>
+                <div onClick={()=>notifi()}>
+                 <h1 className='opacity-70 font-semibold '>Notifications</h1>
+                </div>
                </div>
 
                {/* this is the button section */}

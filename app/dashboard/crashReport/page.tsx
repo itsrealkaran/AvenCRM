@@ -1,6 +1,4 @@
 "use client"
-import SideNavBar from '@/app/component/SideNavBar'
-import { TopNavigation } from '@/app/component/TopNavigation'
 import React from 'react'
 import { FaAngleDown } from "react-icons/fa6";
 import GraphComp from '../components/GraphComp';
@@ -10,6 +8,8 @@ import { CiFilter } from "react-icons/ci";
 import ListComp from '../components/ListComp';
 import FilterComp from '../components/FilterComp';
 import {useState} from "react"
+import SideNavBar from '../components/SideNavBar';
+import { TopNavigation } from '../components/TopNavigation';
 
 
 

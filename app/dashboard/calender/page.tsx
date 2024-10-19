@@ -1,6 +1,7 @@
-import SideNavBar from '@/app/component/SideNavBar'
-import { TopNavigation } from '@/app/component/TopNavigation'
+
 import React from 'react'
+import SideNavBar from '../components/SideNavBar'
+import { TopNavigation } from '../components/TopNavigation'
 
 const page = () => {
   return (

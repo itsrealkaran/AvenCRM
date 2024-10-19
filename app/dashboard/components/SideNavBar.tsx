@@ -6,8 +6,8 @@ import { BsCalendar2Date } from "react-icons/bs";
 import { CiUser } from "react-icons/ci";
 import { CiWallet } from "react-icons/ci";
 import { CiSquareQuestion } from "react-icons/ci";
-import Menu from '../dashboard/components/Menu';
 import Link from '@/node_modules/next/link';
+import Menu from './Menu';
 
 // done with it for now  w-[18%]
 
