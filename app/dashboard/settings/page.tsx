@@ -25,13 +25,14 @@ const page = () => {
 
               {/* this is the right div  */}
 
-              <div className='w-[82%]   h-[120vh] overflow-y-auto '>
+              <div className='w-[82%]   h-[100vh]  '>
                {/* this is the top navigation section  */}
                           <TopNavigation/>
 
                           {/* this is the main image section */}
+                          <div className='w-full h-[90%] overflow-y-auto'>
 
-                          <div className='w-full h-[30%] flex relative items-center justify-center'>
+                          <div className='w-full h-[35%] flex relative items-center justify-center'>
 
                             {/* this is the inner div this will be an component  */}
 
@@ -39,13 +40,13 @@ const page = () => {
 
                           </div>
 
-                          <div className='w-full h-[70%] pt-12 px-10'>
+                          <div className='w-full h-[70%] pt-12 px-10 '>
 
                             {/* confused that should i make it a component or not well lets make it btw it is the inner nav section that contains the cancel and save button  */}
 
                                                <InnerNav/>
 
-                                               <div className='w-full h-[90%] flex'>
+                                               <div className='w-full h-fit flex pb-5'>
 
                                                   {/* left div  */}
                                                 <div className='w-1/2 h-full pr-12 border-r-[3px] border-black/10 '>
@@ -115,7 +116,7 @@ const page = () => {
                                                </div>
                           </div>  
 
-
+                          </div>
               </div>
     </div>
   )
