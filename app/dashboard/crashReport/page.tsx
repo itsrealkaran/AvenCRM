@@ -1,5 +1,4 @@
 "use client"
-
 import SideNavBar from '@/app/component/SideNavBar'
 import { TopNavigation } from '@/app/component/TopNavigation'
 import React from 'react'
@@ -16,7 +15,8 @@ import {useState} from "react"
 
 
 
-const page = () => {
+const Page = () => {
+
   const [filterOpen, setfilterOpen] = useState(false)
   const closeFilter = ()=>{
     setfilterOpen(false)
@@ -74,9 +74,8 @@ const page = () => {
                                              {/* this scroll thingy where you have to scroll down to see more of the stuff */}
 
                                              <div className='w-full h-[52%] px-4 bg-white whitespace-nowrap gap-5 overflow-y-auto pt-5 rounded-xl mt-5 flex flex-col '>
-                                                                           {[1,2,4,5,6,7,8,8,9].map((e,i)=>(
-
-                                                                                          <ListComp/>
+                                                                           {[{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:true },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false }].map((e,i)=>(
+                                                                                          <ListComp name={e.Name} username={e.username} date={e.date} id={e.id} status={e.status} key={i}/>
                                                                                           ))}
                                              </div>
                               </div>
@@ -92,4 +91,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

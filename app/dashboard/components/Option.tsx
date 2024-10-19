@@ -2,7 +2,7 @@ import React from 'react'
 
 interface val {
                icon:React.ComponentType,
-               text:String
+               text:string
 }
 
 const Option:React.FC<val> = ({icon:Icon , text}) => {

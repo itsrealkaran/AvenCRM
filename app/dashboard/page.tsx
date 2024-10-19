@@ -13,7 +13,7 @@ import StatsOverview from './components/StatsOverview';
 import FilterComp from './components/FilterComp'
 
 
-const page = () => {
+const Page = () => {
   const [filterOpen, setfilterOpen] = useState(false)
 
   const filterClose = () =>{
@@ -107,4 +107,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page

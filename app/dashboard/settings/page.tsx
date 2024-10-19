@@ -102,7 +102,7 @@ const page = () => {
                                                       {/*  this is the option div*/}
                                                       <div className='w-full flex gap-3 '>
                                                         {[{icon:CiImageOn , text:"Image"} , {icon:IoMdColorFilter, text:"Color"} ,{icon:HiOutlineCodeBracket , text:"Text"} , {icon:FaAlignLeft , text:"Align"} , {icon:CiLink , text:"Link"} ].map((e,i)=>(
-                                                          <Option icon={e.icon} text={e.text}/>
+                                                          <Option key={i} icon={e.icon} text={e.text}/>
                                                         ))}
                                                       </div>
 

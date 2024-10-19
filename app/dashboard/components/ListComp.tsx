@@ -1,6 +1,14 @@
 import React from 'react'
 
-const ListComp = () => {
+interface val { 
+  name:string,
+  username:string,
+  date:string, 
+  status:boolean,
+  id:string
+}
+
+const ListComp:React.FC<val> = ({name, username , id ,date , status}) => {
   return (
                <div className='w-full h-[22%] flex-shrink-0 bg-[#f5f5f5] flex items-center justify-between px-5  rounded-lg'>
                {/* logo with the name */}
@@ -9,15 +17,15 @@ const ListComp = () => {
                                              <img className='w-full h-full object-cover' src="https://images.pexels.com/photos/258083/pexels-photo-258083.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing " />
                               </div>
 
-                              <h1 className='opacity-70'>Tesla</h1>
+                              <h1 className='opacity-70'>{name}</h1>
                </div>
 
                <div className='opacity-60 text-[1rem]'>
-                              <p>12/2/2</p>
+                              <p>{date}</p>
                </div>
 
                <div className='opacity-60 uppercase text-[1rem]'>
-                              <p>pre2290</p>
+                              <p>{id}</p>
                </div>
 
                <div className='flex gap-2 items-center font-semibold text-[1rem] tracking-tight capitalize'>
@@ -25,11 +33,17 @@ const ListComp = () => {
                                              <img className='w-full h-full object-cover' src="https://images.pexels.com/photos/258083/pexels-photo-258083.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing " />
                               </div>
 
-                              <h1 className='opacity-60'>Arima Kousie</h1>
+                              <h1 className='opacity-60'>{username}</h1>
                </div>
 
-               <div className='opacity-80 text-blue-700  text-[1rem]'>
-                              <p>Pending</p>
+               <div className='opacity-80   text-[1rem]'>
+                                {status?(
+
+                                  <p className='text-red-700 pr-3'>done!</p>
+                                  ):(
+                                    <p className='text-blue-700'>Pending</p>
+                                    
+                                  )}
                </div>
 </div>
   )

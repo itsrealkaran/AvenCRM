@@ -11,7 +11,7 @@ import FilterComp from '../components/FilterComp';
 import {useState} from "react"
 
 
-const page = () => {
+const Page = () => {
 
                const [filteropen, setfilteropen] = useState(false)
                const filterClose = ()=>{
@@ -91,4 +91,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page
