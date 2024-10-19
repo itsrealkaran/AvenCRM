@@ -1,3 +1,5 @@
+"use client"
+
 import SideNavBar from '@/app/component/SideNavBar'
 import { TopNavigation } from '@/app/component/TopNavigation'
 import React from 'react'
@@ -5,17 +7,22 @@ import { FaAngleDown } from "react-icons/fa6";
 import GraphComp from '../components/GraphComp';
 import { IoIosSearch } from "react-icons/io";
 import { RiExpandUpDownLine } from "react-icons/ri";
-import { FaArrowDownLong } from "react-icons/fa6";
 import { CiFilter } from "react-icons/ci";
 import ListComp from '../components/ListComp';
+import FilterComp from '../components/FilterComp';
+import {useState} from "react"
 
 
 
 
 
 const page = () => {
+  const [filterOpen, setfilterOpen] = useState(false)
+  const closeFilter = ()=>{
+    setfilterOpen(false)
+  }
   return (
-    <div className='w-full flex'>
+    <div className='w-full flex relative'>
                <SideNavBar/>
                <div className='w-[82%] bg-[#f7f9fe] h-[100vh]  overflow-hidden'>
                               <TopNavigation/>
@@ -54,7 +61,10 @@ const page = () => {
                                                                            
                                                                            <div className='flex gap-4'>
                                                                                           <FaAngleDown/>
+                                                                                          <div onClick={()=>setfilterOpen(prev=>!prev)}>
+
                                                                                           <CiFilter/>
+                                                                                          </div>
                                                                            </div>
 
                                                             </div>
@@ -71,6 +81,13 @@ const page = () => {
                                              </div>
                               </div>
                </div>
+               {filterOpen?(
+
+                 
+                 <FilterComp close={closeFilter}/>
+                 ):<></>
+               }
+
     </div>
   )
 }

@@ -1,14 +1,16 @@
+import Link from '@/node_modules/next/link';
 import React from 'react'
 import { FaAngleRight } from "react-icons/fa6";
 
 interface MenuProps {
   icons: React.ComponentType; 
   heading: string;
+  reff:string
 }
 
-const Menu:React.FC<MenuProps> = ({icons : Icon , heading}) => {
+const Menu:React.FC<MenuProps> = ({icons : Icon , heading , reff}) => {
   return (
-               <div className='w-full flex justify-between  py-3 rounded-[9px] px-1 items-center hover:bg-[#5932ea] hover:opacity-100 hover:text-white opacity-45 h-fit'>
+               <Link  href={reff} className='w-full flex justify-between  py-3 rounded-[9px] px-1 items-center hover:bg-[#5932ea] hover:opacity-100 hover:text-white opacity-45 h-fit'>
                {/* inner div for the logo and text  */}
                               <div className=' capitalize h-full font-semibold  flex gap-[10px]  items-center'>        
 
@@ -21,7 +23,7 @@ const Menu:React.FC<MenuProps> = ({icons : Icon , heading}) => {
                               <div >
                                              <FaAngleRight/>
                               </div>
-</div>
+</Link>
   )
 }
 
