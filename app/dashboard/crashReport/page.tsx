@@ -10,8 +10,9 @@ import FilterComp from '../components/FilterComp';
 import {useState} from "react"
 import SideNavBar from '../components/SideNavBar';
 import { TopNavigation } from '../components/TopNavigation';
-
-
+import { ComboChartHero } from '../components/ComboChartHero';
+import { DonutChartHero } from '../components/DonutChartHero';
+import { BarListHero } from '../components/BarListHero';
 
 
 
@@ -30,9 +31,9 @@ const Page = () => {
                               {/* outer container div */}
                               <div className='w-full px-3 h-[90%]'>
                                              <div className='w-full h-[40%] mt-4 flex gap-3 '>
-                                                            {[{text:"Crash Frequency" , width:"40"}, {text:"User Impact" , width:"30"}, {text:"Error types" , width:"30"}].map((e,i)=>(
+                                                            {[{text:"Crash Frequency" , width:"40" , Comp:ComboChartHero}, {text:"User Impact" , width:"30" , Comp:DonutChartHero}, {text:"Error types" , width:"30" , Comp:BarListHero}].map((e,i)=>(
 
-                                                                           <GraphComp key={i} text={e.text} width={e.width}/>
+                                                                           <GraphComp Comp={e.Comp} key={i} text={e.text} width={e.width}/>
                                                             ))}
                                                        
                                              </div>

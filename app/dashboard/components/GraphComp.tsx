@@ -1,12 +1,14 @@
 import React from 'react'
 import { FaAngleDown } from "react-icons/fa6";
 
+
 interface val{
                width:string,
                text:string
+               Comp:React.ComponentType
 }
 
-const GraphComp:React.FC<val> = ({width , text}) => {
+const GraphComp:React.FC<val> = ({width , text , Comp}) => {
   return (
                <>
                 <div style={{width:width +"%"}} className={` h-full overflow-hidden rounded-xl bg-white shadow-lg shadow-black/10`}>
@@ -18,8 +20,12 @@ const GraphComp:React.FC<val> = ({width , text}) => {
                                                                                           </div>
                                                                            </div>
 
-                                                                           <div className='w-full h-[87%] bg-black/10'>
-
+                                                                           <div className='w-full h-[85%] p-1 '>
+                                                                            <div className='w-full h-full '>
+                                                                                {Comp && 
+                                                                                <Comp />
+                                                                                }
+                                                                            </div>
                                                                            </div>
                                                             </div>
                

@@ -36,7 +36,7 @@ const SettingNotification = () => {
 
                  <div>
                  <p className='font-semibold text-[1.1rem]'>Tracking Activity</p>
-                 <p className='text-[14px] opacity-50 font-semibold'>Send me email notification when someone've mailed me</p>
+                 <p className='text-[14px] opacity-50 font-semibold'>Send me email notification when someone&apos;ve mailed me</p>
                  </div>
 
                  <div onClick={()=>(
@@ -51,7 +51,7 @@ const SettingNotification = () => {
 
                  <div>
                  <p className='font-semibold text-[1.1rem]'>New Comments</p>
-                 <p className='text-[14px] opacity-50 font-semibold'>Send me email notification when someone've sent the comment</p>
+                 <p className='text-[14px] opacity-50 font-semibold'>Send me email notification when someone&apos;ve sent the comment</p>
                  </div>
 
                  <div onClick={()=>(
@@ -65,7 +65,7 @@ const SettingNotification = () => {
 
                    <div className='w-full flex px-1 mt-4 items-center gap-2'>
                      <input className='w-10 h-5' type="checkbox"  />
-                     <p className='opacity-70 text-[15px]'>Don't send me notification after 9:00 PM</p>
+                     <p className='opacity-70 text-[15px]'>Don&apos;t send me notification after 9:00 PM</p>
                    </div>
              </div>
 

@@ -1,5 +1,4 @@
 "use client"
-
 import React from 'react'
 import GraphComp from './components/GraphComp'
 import {useState} from "react"
@@ -11,7 +10,9 @@ import StatsOverview from './components/StatsOverview';
 import FilterComp from './components/FilterComp'
 import SideNavBar from './components/SideNavBar';
 import { TopNavigation } from './components/TopNavigation';
-
+import { LineChartHero } from './components/LineChartHero';
+import { BarChartHero } from './components/BarChartHero';
+import { DonutChartHero } from './components/DonutChartHero';
 
 const Page = () => {
   const [filterOpen, setfilterOpen] = useState(false)
@@ -33,10 +34,10 @@ const Page = () => {
 
             <div className='w-[40%] h-full flex flex-col gap-3'>
                         <div className='w-full h-[45%] bg-white rounded-xl '>
-                                    <GraphComp text='Sales Statistic' width='100'/>
+                                    <GraphComp Comp={LineChartHero} text='Sales Statistic' width='100'/>
                         </div>
                         <div className='w-full h-[55%] bg-white rounded-xl '>
-                                    <GraphComp text='Plan Status' width='100'/>
+                                    <GraphComp Comp={DonutChartHero} text='Plan Status' width='100'/>
                         </div>
                         
             </div>
@@ -45,16 +46,16 @@ const Page = () => {
 
             <div className='w-[58%] h-full flex-col gap-3 flex '>
             <div className='w-full h-[50%] bg-white rounded-xl '>
-                                    <GraphComp text='Renewal Status' width='100'/>
+                                    <GraphComp Comp={BarChartHero} text='Renewal Status' width='100'/>
                         </div>
             <div className='w-full h-[50%] flex gap-2 bg-white rounded-xl '>
               <div className='w-[45%] h-full'>
 
-                                    <GraphComp text='visitors' width='100'/>
+                                    <GraphComp Comp={BarChartHero} text='visitors' width='100'/>
               </div>
               <div className='w-[55%] h-full'>
 
-                                    <GraphComp text='Revenue' width='100'/>
+                                    <GraphComp Comp={LineChartHero} text='Revenue' width='100'/>
               </div>
                         </div>
             </div>
