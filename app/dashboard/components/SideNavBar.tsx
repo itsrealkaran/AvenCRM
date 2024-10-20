@@ -32,12 +32,12 @@ const SideNavBar:React.FC<val> = ({current}) => {
                               {/* this is the main heading  */}
 
                               <Link href="/dashboard" className='text-[1.6rem]  text-[#5932ea]  flex gap-[2px] items-end font-bold'>
-                                             <h1>Dashboard</h1>
+                                             <h1>AvenCRM</h1>
                                              <span className='text-[12px] opacity-70 pb-1'>v.01</span>
                               </Link>
                </div>
 
-               <div className=' w-full mt-14 h-fit flex flex-col gap-2 '>
+               <div className=' w-full mt-[50px] h-fit flex flex-col gap-2 '>
 
                               {/* this is the single menu component  */}
 

@@ -21,7 +21,7 @@ const GraphComp:React.FC<val> = ({width , text , Comp}) => {
                                                                            </div>
 
                                                                            <div className='w-full h-[85%] p-1 '>
-                                                                            <div className='w-full h-full '>
+                                                                            <div className='w-full h-full px-5 '>
                                                                                 {Comp && 
                                                                                 <Comp />
                                                                                 }
