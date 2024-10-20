@@ -1,7 +1,9 @@
-import React from 'react'
 
-export default function page() {
+export default function Home() {
   return (
-    <div className=''>page</div>
-  )
+<>
+<h1>welcome</h1>
+</>
+  );
 }
+// not giving tags leads to hyderation error 
