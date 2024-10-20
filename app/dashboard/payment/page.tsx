@@ -20,7 +20,7 @@ const Page = () => {
   return (
                
     <div className='w-full relative bg-[#f0f5fc] h-screen flex'>
-               <SideNavBar/>
+               <SideNavBar current={"payment"}/>
                <div className='w-[82%] h-full'>
                               <TopNavigation/>
 

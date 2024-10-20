@@ -5,12 +5,16 @@ import { FaAngleRight } from "react-icons/fa6";
 interface MenuProps {
   icons: React.ComponentType; 
   heading: string;
-  reff:string
+  reff:string; 
+  status: boolean | undefined
 }
 
-const Menu:React.FC<MenuProps> = ({icons : Icon , heading , reff}) => {
+
+const Menu:React.FC<MenuProps> = ({icons : Icon , heading , reff , status}) => {
+
+  console.log(status)
   return (
-               <Link  href={reff} className='w-full flex justify-between  py-3 rounded-[9px] px-1 items-center hover:bg-[#5932ea] hover:opacity-100 hover:text-white opacity-45 h-fit'>
+               <Link  href={reff} className={`w-full flex justify-between  py-3 rounded-[9px] px-1 items-center ${status ? "bg-[#5932ea] text-white" :"opacity-45"} hover:bg-[#5932ea]  hover:opacity-100 hover:text-white  h-fit`}>
                {/* inner div for the logo and text  */}
                               <div className=' capitalize h-full font-semibold  flex gap-[10px]  items-center'>        
 

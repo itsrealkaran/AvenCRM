@@ -38,7 +38,7 @@ const opennotifi = () =>{
 
                {/* this is the side navbar  */}
 
-              <SideNavBar/>
+              <SideNavBar current={"settings"}/>
 
               {/* this is the right div  */}
 
@@ -61,7 +61,7 @@ const opennotifi = () =>{
 
                             {/* confused that should i make it a component or not well lets make it btw it is the inner nav section that contains the cancel and save button  */}
 
-                                               <InnerNav  dets={openDets} passw={openpass} notifi={opennotifi}/>
+                                               <InnerNav openSet={details} openPas = {password} opennoti ={notification}  dets={openDets} passw={openpass} notifi={opennotifi}/>
                                         {details&&(
 
                                           <SettingDetails/>

@@ -24,8 +24,8 @@ const Page = () => {
   }
   return (
     <div className='w-full flex relative'>
-               <SideNavBar/>
-               <div className='w-[82%] bg-[#f7f9fe] h-[100vh]  overflow-hidden'>
+               <SideNavBar current={"crash Report"}/>
+               <div className='w-[82%] bg-[#F0F5FC] h-[100vh]  overflow-hidden'>
                               <TopNavigation/>
                               
                               {/* outer container div */}

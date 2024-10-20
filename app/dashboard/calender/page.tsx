@@ -6,7 +6,7 @@ import { TopNavigation } from '../components/TopNavigation'
 const page = () => {
   return (
     <div className='w-full h-screen flex'>
-               <SideNavBar/>
+               <SideNavBar current={"calender"}/>
                <div className='w-[82%] h-full'>
                               <TopNavigation/>
                </div>

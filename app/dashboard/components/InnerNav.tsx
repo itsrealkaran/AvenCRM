@@ -4,21 +4,25 @@ interface val {
         dets : ()=>void;
         passw: ()=>void;
         notifi : ()=>void;
+
+        openSet:boolean
+        openPas:boolean
+        opennoti:boolean
 }
 
-const InnerNav:React.FC<val> = ({dets , passw , notifi}) => {
+const InnerNav:React.FC<val> = ({dets , passw , notifi , openPas , openSet , opennoti}) => {
   return (
                <div className='w-full  flex items-center justify-between  h-[10%]'>
                {/*this is the toggel navigation section   */}
                <div className='w-1/2 font-semibold text-[14px]  flex gap-6 items-center '>
                 <div onClick={()=>dets()}>
-                 <h1  className=''>My details</h1>
+                 <h1  className={`${openSet?"font-semibold" : "font-semibold opacity-70"}`}>My details</h1>
                 </div>
                 <div onClick={()=>passw()}>
-                 <h1 className='opacity-70 font-semibold '>Password</h1>
+                 <h1 className={`${openPas?"font-semibold":"font-semibold opacity-70"}`}>Password</h1>
                 </div>
                 <div onClick={()=>notifi()}>
-                 <h1 className='opacity-70 font-semibold '>Notifications</h1>
+                 <h1 className={`${opennoti ? "font-semibold" :"font-semibold opacity-70"}`}>Notifications</h1>
                 </div>
                </div>
 

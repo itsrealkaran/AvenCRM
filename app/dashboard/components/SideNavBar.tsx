@@ -11,7 +11,11 @@ import Menu from './Menu';
 
 // done with it for now  w-[18%]
 
-const SideNavBar = () => {
+interface val { 
+  current : string
+}
+
+const SideNavBar:React.FC<val> = ({current}) => {
   return (
                <div className='h-screen w-[18%] sticky top-0 select-none bg-white shadow-xl shadow-black/20 pt-10 px-8'>
 
@@ -37,10 +41,10 @@ const SideNavBar = () => {
 
                               {/* this is the single menu component  */}
 
-                              {[{heading:"dashboard" , icons:FaKey , reff:"/dashboard"} ,{heading:"calender" , icons:BsCalendar2Date , reff:"/dashboard/calender"} , {heading:"crash report" , icons:CiUser , reff:"/dashboard/crashReport"} ,   {heading:"payments" , icons:CiWallet , reff:"/dashboard/payment"} , {heading:"Email" , icons:CiWallet , reff:"/dashboard/email"} ,{heading:"Settings" , icons:CiSquareQuestion, reff:"/dashboard/settings"} ].map((e,i)=>(
+                              {[{heading:"dashboard" , icons:FaKey , reff:"/dashboard", status : current === "dashboard" } ,{heading:"calender" , icons:BsCalendar2Date , reff:"/dashboard/calender" , status : current === "calender"} , {heading:"crash report" , icons:CiUser , reff:"/dashboard/crashReport" , status : current === "crash Report"} ,   {heading:"payments" , icons:CiWallet , reff:"/dashboard/payment" , status : current === "payment"} , {heading:"Email" , icons:CiWallet , reff:"/dashboard/email"} ,{heading:"Settings" , icons:CiSquareQuestion, reff:"/dashboard/settings" ,  status : current === "settings"} ].map((e,i)=>(
 
                                              
-                                             <Menu key={i} icons={e.icons}  heading={e.heading} reff={e.reff}/>
+                                             <Menu key={i} icons={e.icons}  heading={e.heading} reff={e.reff} status = {e.status}/>
                                              ))}
                            
                </div>

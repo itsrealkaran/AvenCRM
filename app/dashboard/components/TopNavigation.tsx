@@ -9,7 +9,7 @@ import { FaAngleDown } from "react-icons/fa6";
 
 export const TopNavigation = () => {
   return (
-               <div className='w-full px-5  flex justify-between bg-white h-[10%] items-center '>
+               <div className='w-full px-5  flex justify-between bg-white h-[10%] items-center rounded-b-xl'>
 
                {/* this is the search bar  */}
 
