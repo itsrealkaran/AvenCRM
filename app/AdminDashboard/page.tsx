@@ -22,7 +22,7 @@ const Page = () => {
   }
   return (
     <div className='w-full h-screen bg-[#f0f5fc] flex relative'>
-      <SideNavBar current={"dashboard"}/>
+      <SideNavBar current={"AdminDashboard"}/>
       <div className='w-[82%]  h-full'>
         <TopNavigation/>
         {/* outer div */}

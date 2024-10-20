@@ -41,7 +41,7 @@ const SideNavBar:React.FC<val> = ({current}) => {
 
                               {/* this is the single menu component  */}
 
-                              {[{heading:"dashboard" , icons:FaKey , reff:"/dashboard", status : current === "dashboard" } ,{heading:"calender" , icons:BsCalendar2Date , reff:"/dashboard/calender" , status : current === "calender"} , {heading:"crash report" , icons:CiUser , reff:"/dashboard/crashReport" , status : current === "crash Report"} ,   {heading:"payments" , icons:CiWallet , reff:"/dashboard/payment" , status : current === "payment"} , {heading:"Email" , icons:CiWallet , reff:"/dashboard/email"} ,{heading:"Settings" , icons:CiSquareQuestion, reff:"/dashboard/settings" ,  status : current === "settings"} ].map((e,i)=>(
+                              {[{heading:"dashboard" , icons:FaKey , reff:"/AdminDashboard", status : current === "AdminDashboard" } ,{heading:"calender" , icons:BsCalendar2Date , reff:"/AdminDashboard/calender" , status : current === "calender"} , {heading:"crash report" , icons:CiUser , reff:"/AdminDashboard/crashReport" , status : current === "crash Report"} ,   {heading:"payments" , icons:CiWallet , reff:"/AdminDashboard/payment" , status : current === "payment"} , {heading:"Email" , icons:CiWallet , reff:"/AdminDashboard/email"} ,{heading:"Settings" , icons:CiSquareQuestion, reff:"/AdminDashboard/settings" ,  status : current === "settings"} ].map((e,i)=>(
 
                                              
                                              <Menu key={i} icons={e.icons}  heading={e.heading} reff={e.reff} status = {e.status}/>
