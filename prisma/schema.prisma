@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum LeadSourceType {
+  website
+  advertising
+  social_media
+  email_campaign
+  client_ref
+  agent_ref
+}
+
+enum DealStatus {
+  offer_made
+  offer_accepted
+  contract_signed
+  paid
+  closed
+  rejected
+}
+
+enum PaymentType {
+  subscription
+  deal_payment
+}
+
+enum SubscriptionTier {
+  BASIC
+  PREMIUM
+  ENTERPRISE
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  resource    String
+  action      String   @db.VarChar(4) // Limiting to CRUD operations
+  description String
+  roles       Role[]   @relation("RolePermissions")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([resource, action])
+}
+
+model Role {
+  id          String       @id @default(cuid())
+  name        String       @db.VarChar(50)
+  agency      Agency       @relation(fields: [agencyId], references: [id])
+  agencyId    String
+  permissions Permission[] @relation("RolePermissions")
+  users       User[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([name, agencyId])
+  @@index([agencyId])
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  name               String              @db.VarChar(100)
+  role               Role                @relation(fields: [roleId], references: [id])
+  roleId             String
+  email              String              @unique
+  emailVerified      DateTime?
+  image              String?
+  accounts           Account[]
+  sessions           Session[]
+  authenticators     Authenticator[]
+  properties         Property[]          @relation("AgentProperties")
+  ownedProperties    Property[]          @relation("OwnerProperties")
+  leads              Lead[]              @relation("LeadUser")
+  assignedLeads      Lead[]              @relation("AgentLead")
+  managedAgency      Agency?             @relation("AgencyManager")
+  memberOfAgencies   Agency[]            @relation("AgencyMembers")
+  deals              Deal[]              @relation("ClientDeals")
+  uploadedDocuments  DealDocument[]
+  clientInteractions ClientInteraction[] @relation("AgentInteractions")
+  interactedBy       ClientInteraction[] @relation("ClientInteractions")
+  referralsGiven     ClientReferral[]    @relation("Referrer")
+  referralsReceived  ClientReferral[]    @relation("Referred")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([email])
+}
+
+model Account {
+  id                String    @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?   @db.Text
+  access_token      String?   @db.Text
+  expires_at        DateTime?
+  token_type        String?
+  scope             String?
+  id_token          String?   @db.Text
+  session_state     String?
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Authenticator {
+  id                   String   @id @default(cuid())
+  credentialID         String   @unique
+  userId               String
+  providerAccountId    String
+  credentialPublicKey  String
+  counter              Int
+  credentialDeviceType String
+  credentialBackedUp   Boolean
+  transports           String[]
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Agency {
+  id            String               @id @default(cuid())
+  name          String               @db.VarChar(100)
+  urlSlug       String               @unique @db.VarChar(50)
+  manager       User                 @relation("AgencyManager", fields: [managerId], references: [id])
+  managerId     String               @unique
+  agents        User[]               @relation("AgencyMembers")
+  roles         Role[]
+  subscriptions AgencySubscription[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([urlSlug])
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(200)
+  description String   @db.Text
+  location    Json // Storing location as JSON for flexibility
+  images      String[]
+  agent       User     @relation("AgentProperties", fields: [agentId], references: [id])
+  agentId     String
+  owner       User     @relation("OwnerProperties", fields: [ownerId], references: [id])
+  ownerId     String
+  uniqueUrl   String   @unique
+  leads       Lead[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([agentId])
+  @@index([ownerId])
+}
+
+model Lead {
+  id         String         @id @default(cuid())
+  property   Property       @relation(fields: [propertyId], references: [id])
+  propertyId String
+  leadUser   User           @relation("LeadUser", fields: [leadUserId], references: [id])
+  leadUserId String
+  deal       Deal?
+  agent      User           @relation("AgentLead", fields: [agentId], references: [id])
+  agentId    String
+  source     LeadSourceType
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@index([propertyId])
+  @@index([leadUserId])
+  @@index([agentId])
+}
+
+model Deal {
+  id        String         @id @default(cuid())
+  lead      Lead           @relation(fields: [leadId], references: [id])
+  leadId    String         @unique
+  status    DealStatus
+  client    User           @relation("ClientDeals", fields: [clientId], references: [id])
+  clientId  String
+  payments  Payment[]
+  documents DealDocument[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@index([clientId])
+}
+
+model DealDocument {
+  id           String   @id @default(cuid())
+  deal         Deal     @relation(fields: [dealId], references: [id])
+  dealId       String
+  documentUrl  String
+  documentType String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  uploadedById String
+  uploadedAt   DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([dealId])
+  @@index([uploadedById])
+}
+
+model ClientInteraction {
+  id              String   @id @default(cuid())
+  client          User     @relation("ClientInteractions", fields: [clientId], references: [id])
+  clientId        String
+  agent           User     @relation("AgentInteractions", fields: [userId], references: [id])
+  userId          String
+  interactionType String
+  note            String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([userId])
+}
+
+model Payment {
+  id                 String              @id @default(cuid())
+  paymentType        PaymentType
+  transactionId      String              @unique
+  deal               Deal?               @relation(fields: [dealId], references: [id])
+  dealId             String?
+  agencySubscription AgencySubscription?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([dealId])
+}
+
+model Subscription {
+  id                   String               @id @default(cuid())
+  displayName          String               @db.VarChar(100)
+  commissionPercentage Float
+  agencySubscriptions  AgencySubscription[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+}
+
+model AgencySubscription {
+  id             String           @id @default(cuid())
+  startDate      DateTime
+  endDate        DateTime
+  agency         Agency           @relation(fields: [agencyId], references: [id])
+  agencyId       String
+  subscription   Subscription     @relation(fields: [subscriptionId], references: [id])
+  subscriptionId String
+  tier           SubscriptionTier
+  payment        Payment          @relation(fields: [paymentId], references: [id])
+  paymentId      String           @unique
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([agencyId])
+  @@index([subscriptionId])
+}
+
+model ClientReferral {
+  id          String   @id @default(cuid())
+  referrer    User     @relation("Referrer", fields: [referrerId], references: [id])
+  referrerId  String
+  referred    User     @relation("Referred", fields: [referredId], references: [id])
+  referredId  String
+  referredAt  DateTime @default(now())
+  bonusAmount Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([referrerId])
+  @@index([referredId])
+}
