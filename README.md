@@ -112,23 +112,6 @@ The Team Lead Dashboard includes all Agent Dashboard features with additional fu
 
 ---
 
-### **4. Non-Functional Requirements**  
-
-**4.1 Performance**  
-- Subdomain generation must be completed within 5 seconds.  
-- The platform should handle up to 100,000 concurrent users.  
-
-**4.2 Security**  
-- All passwords and sensitive data must be encrypted (e.g., bcrypt for passwords).  
-- Implement role-based access controls to prevent unauthorized actions.  
-
-**4.3 Scalability**  
-- Support for over 10,000 companies with individual subdomains.  
-
-**4.4 Availability**  
-- Ensure 99.9% uptime with automated failover systems.  
-
----
 ### **Backend Development Checklist for AvenCRM**
 
 ---
@@ -136,7 +119,6 @@ The Team Lead Dashboard includes all Agent Dashboard features with additional fu
 #### **1. Authentication and Authorization**
 - [ ] User Role Management: Admin, Company, Agent, Team Lead.
 - [ ] OTP-based first-time login for Company, Agent, and Team Lead.
-- [ ] JWT-based authentication for session handling.
 - [ ] Password hashing (e.g., bcrypt).
 - [ ] Role-based Access Control (RBAC) to restrict API access.
 - [ ] Email integration for OTP and notifications.
@@ -275,3 +257,9 @@ The Team Lead Dashboard includes all Agent Dashboard features with additional fu
 - [ ] Implement caching for frequently accessed data (e.g., Redis).
 - [ ] Database indexing for faster queries.
 - [ ] Load balancing for high traffic.
+
+#### **13. Future Scope**
+- Import Data
+- Excel Export
+- Pdf download
+- Drive
