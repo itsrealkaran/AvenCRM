@@ -85,8 +85,8 @@ const FilterComp:React.FC<val> = ({close}) => {
 
                  <div className='w-full flex justify-center gap-6 items-center px-6 pt-5'>
                    <h1 className='font-semibold '>10 matches found</h1>
-                   <div className='px-3 py-[6px] bg-[#3f8cff] rounded-lg text-white font-semibold '>
-                     Save Filter(3)
+                   <div className='px-3 py-[6px] bg-[#3f8cff] rounded-lg text-sm text-white font-semibold '>
+                     Save Filter (3)
                    </div>
                  </div>
                </div>

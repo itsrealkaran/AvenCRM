@@ -11,7 +11,17 @@ import SideNavBar from '../components/SideNavBar';
 import { TopNavigation } from '../components/TopNavigation';
 
 
+// one api for the invoices and for its detailed explanatino 
+
 const Page = () => {
+
+  const [modal, setmodal] = useState(false)
+
+
+  const changeModal = () =>{
+    setmodal(prev=>!prev)
+  }
+
 
                const [filteropen, setfilteropen] = useState(false)
                const filterClose = ()=>{
@@ -19,13 +29,13 @@ const Page = () => {
                }
   return (
                
-    <div className='w-full relative bg-[#f0f5fc] h-screen flex'>
+    <div className='w-full relative bg-[#f0f5fc] h-screen overflow-hidden flex'>
                <SideNavBar current={"payment"}/>
                <div className='w-[82%] h-full '>
                               <TopNavigation/>
 
                               <div className='w-full h-[90%] flex flex-col px-3'>
-                                             <div className='w-full h-[32%] bg-white rounded-xl mt-3 pt-2'>
+                                             <div className='w-full h-[32%] bg-white rounded-t-xl mt-3 pt-2'>
                                                             {/*  this is teh top filter section */}
                                                             <div className='w-full px-4 flex justify-between items-center'>
                                                                            {/* this is the main heading */}
@@ -75,11 +85,15 @@ const Page = () => {
                                                             {/* this is the final thingy of this page  */}
 
                                              </div>
-                                                            <div className='w-full h-[65%] overflow-y-auto mt-2 bg-white rounded-xl flex flex-col whitespace-nowrap gap-2 pt-5 px-3'>
-                                                                           {[1,2,4,5,6,7,7,8,9].map((e,i)=>(
+                                                            <div className='w-full h-[65%]    bg-white  overflow-hidden flex flex-col whitespace-nowrap gap-2  px-3'>
+                                                              <div className='overflow-y-auto pt-3 flex flex-col gap-3  pb-8  '>
 
-                                                                                          <InvoiceOverview key={i}/>
-                                                                           ))}
+                                                                           {[1,2,4,5,6,7,7,8,9].map((e,i)=>(
+                                                                             
+                                                                             <InvoiceOverview func={changeModal} open={modal} key={i}/>
+                                                                             ))}
+                                                                             </div>
+                                                                             <div className='w-full h-[7%] backdrop-blur-sm absolute bottom-0'></div>
                                                             </div>
                               </div>
                </div>

@@ -5,6 +5,8 @@ import { FaAngleDown } from "react-icons/fa6";
 import { IoSearch } from 'react-icons/io5';
 
 
+
+// search bar bye bye 
 // done with it for now 
 
 export const TopNavbar = () => {

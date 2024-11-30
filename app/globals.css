@@ -23,3 +23,12 @@
                -ms-user-select: none; /* IE 10 and IE 11 */
                user-select: none; /* Standard syntax */
 }
+
+.hover{
+               height: 0vh;
+               transition: all 0.2s ease;
+}
+
+.dropdown:hover .hover{
+               height: 12vh;
+}

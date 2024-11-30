@@ -7,6 +7,9 @@ import { VscRefresh } from 'react-icons/vsc'
 import MonitoringLeadList from '../components/MonitoringLeadList'
 import MonitoringList from '../components/MonitoringList'
 
+// single component 
+// in deals just 4 parameter ,  
+
 const Page = () => {
 
 const [deal, setdeal] = useState(false)
@@ -19,7 +22,6 @@ const closedeal = ()=> {
 }
 
 
-
   const bakaData = [1,2,3,4,5,6,7,7,8,8,8,8,]
 
   return (
@@ -30,11 +32,11 @@ const closedeal = ()=> {
       <div className='w-full px-4 flex justify-between  items-center pt-5'>
                                                                            {/* this is the main heading */}
                                                                            <div className='flex items-center gap-3 '>
-                                                                           <div onClick={()=>opendeal()} className={`${deal? "bg-[#5932EA]" : "bg-[#979797]"} text-white px-4 text-sm py-2  tracking-tight rounded-[4px]`}>
-                                                                              <button>Deals</button>
-                                                                            </div>
-                                                                           <div onClick={()=>closedeal()}  className={` ${deal? "bg-[#979797]" : "bg-[#5932EA]" } text-white px-4 text-sm py-2  tracking-tight rounded-[4px]`}>
+                                                                           <div onClick={()=>closedeal()}  className={` ${deal? "bg-[#979797]" : "bg-[#5932EA]" } text-white px-4 text-sm py-[5px]  tracking-tight rounded-[4px]`}>
                                                                               <button>Leads</button>
+                                                                            </div>
+                                                                           <div onClick={()=>opendeal()} className={`${deal? "bg-[#5932EA]" : "bg-[#979797]"} text-white px-4 text-sm py-[5px]  tracking-tight rounded-[4px]`}>
+                                                                              <button>Deals</button>
                                                                             </div>
                                                                            </div>
 
@@ -42,13 +44,13 @@ const closedeal = ()=> {
                                                                            <div className='flex gap-4 text-[1rem] items-center  '>
 
                                                                          
-                                                                            <div className='flex gap-4 opacity-70'>
+                                                                            <div className='flex gap-4 text-lg opacity-70'>
 
                                                                             <IoIosSearch/>
                                                                            <VscRefresh/>
                                                                            <IoDownloadOutline/>
                                                                             </div>
-                                                                           <div >
+                                                                           <div  className='opacity-70'>
 
                                                                            <LuFilter/>
                                                                            </div>

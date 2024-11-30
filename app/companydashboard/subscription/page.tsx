@@ -9,7 +9,7 @@ const page = () => {
       <div className='w-full h-[50%] rounded-xl justify-between flex'>
         <div className='w-[49.5%] h-full overflow-hidden rounded-xl bg-white flex '>
           {/* this is the right div  */}
-          <div className='w-[50%] pt-5  pl-10 h-full  '>
+          <div className='w-[50%] pt-5  flex flex-col  pl-10 h-full  '>
             {/* top level div */}
                   <div className=' flex gap-[17px]'>
                     {/* this is the geometric shape thingy  */}
@@ -20,9 +20,9 @@ const page = () => {
                       </div>
                     </div>
                       {/* this is the text box of the top level div  */}
-                    <div className='leading-[2rem]'>
-                        <h1 className='text-[1.3rem] opacity-70'>For individuals</h1>
-                        <h2 className='font-bold text-[1.6rem]'>Basic</h2>
+                    <div className='leading-[1.6rem] '>
+                        <h1 className='text-[1rem] opacity-70'>For individuals</h1>
+                        <h2 className='font-bold text-[1.4rem]'>Basic</h2>
                     </div>
                   </div>
                   {/* paragraph text area div */}
@@ -35,18 +35,18 @@ const page = () => {
 
                   <div className='flex w-full items-center mt-8'>
                     <div className='w-[40%] h-fit flex items-start gap-5  flex-col'>
-                        <div className='bg-[#F7F7FA] rounded-xl px-4 py-1 font-bold'>Status</div>
-                        <div className='  font-bold text-[#3FFF9C] px-4'>Active</div>
+                        <div className='bg-[#F7F7FA] rounded-xl px-4 py-1 font-bold text-sm'>Status</div>
+                        <div className='  font-bold text-sm text-[#3FFF9C] px-4'>Active</div>
                     </div>
                     <div className='w-[60%] h-fit flex items-start gap-5    flex-col'>
-                    <div className='bg-[#F7F7FA] rounded-xl px-4 py-1 font-bold'>Next Due Date</div>
-                        <div className=' pr-4  font-bold text-[#106fff] px-4'>14/05/25</div>
+                    <div className='bg-[#F7F7FA] rounded-xl px-4 py-1 text-sm font-bold'>Next Due Date</div>
+                        <div className=' pr-4 text-sm font-bold text-[#106fff] px-4'>14/05/25</div>
                     </div>
                   </div>
 
                   {/* this is the pay now div  */}
 
-                  <div className='px-4 w-fit cursor-pointer rounded-lg mt-8 py-2 text-white font-semibold bg-[#5932EA]'>
+                  <div className='px-4 w-fit cursor-pointer rounded-lg mt-5 text-sm py-[6px] text-white font-semibold bg-[#5932EA]'>
                             Pay now 
                   </div>
           </div>
@@ -135,9 +135,9 @@ const page = () => {
                       </div>
                     </div>
                       {/* this is the text box of the top level div  */}
-                    <div className='leading-[2rem]'>
-                        <h1 className='text-[1.3rem] opacity-70'>For Startups</h1>
-                        <h2 className='font-bold text-[1.6rem]'>Popular</h2>
+                    <div className='leading-[1.6rem]'>
+                        <h1 className='text-[1rem] opacity-70'>For Startups</h1>
+                        <h2 className='font-bold text-[1.4rem]'>Popular</h2>
                     </div>
                   </div>
                   {/* paragraph text area div */}

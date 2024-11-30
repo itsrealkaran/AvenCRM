@@ -6,11 +6,15 @@ interface val {
   date:string, 
   status:boolean,
   id:string
+  func:()=>void
+  open:boolean
 }
 
-const ListComp:React.FC<val> = ({name, username , id ,date , status}) => {
+const ListComp:React.FC<val> = ({name, username , id ,date , status , func , open}) => {
   return (
-               <div className='w-full h-[17%] flex-shrink-0 bg-[#f5f5f5] flex px-16 items-center justify-between   rounded-lg'>
+    <>
+    
+               <div onClick={func} className='w-full cursor-pointer h-[17%] flex-shrink-0  bg-[#f5f5f5] flex px-16 items-center justify-between   rounded-lg'>
                {/* logo with the name */}
                <div className='flex gap-4 items-center font-semibold text-[1.3rem] tracking-tight capitalize'>
                               <div className='w-8 h-8 rounded-lg overflow-hidden'>
@@ -36,7 +40,7 @@ const ListComp:React.FC<val> = ({name, username , id ,date , status}) => {
                               <h1 className='opacity-60 text-[0.85rem]'>{username}</h1>
                </div>
 
-               <div className='opacity-80   text-[1rem]'>
+               <div className='opacity-80 mr-12  text-[1rem]'>
                                 {status?(
 
                                   <p className='text-red-700 pr-3'>done!</p>
@@ -46,6 +50,14 @@ const ListComp:React.FC<val> = ({name, username , id ,date , status}) => {
                                   )}
                </div>
 </div>
+
+{open ? (
+  
+  <div className='absolute top-0 left-0 bg-white w-full h-screen'>
+  <button onClick={func}>go back</button>
+</div>
+  ):<></>}
+</>
   )
 }
 

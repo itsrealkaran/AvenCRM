@@ -8,11 +8,14 @@ interface val {
   assignee : string , 
   imgUrl : string , 
   empName : string 
+  open:boolean
+  func : ()=>void
 }
 
-const StatsOverview:React.FC<val> = ({Cname , plan , date , assignee , imgUrl , empName}) => {
+const StatsOverview:React.FC<val> = ({Cname , plan , date , assignee , imgUrl , empName , func , open}) => {
   return (
-<div className='w-full  flex items-center justify-between py-1 bg-[#f5f5f5] rounded-xl '>
+    <>
+<div onClick={func} className='w-full cursor-pointer flex-shrink-0  flex items-center justify-between py-1 bg-[#f5f5f5] rounded-xl '>
                         <div className='text-center w-[20%] flex flex-col gap-1 items-center  leading-[1.3rem]'>
                           <h1 className='opacity-70 text-[12px]'>Company</h1>
                           <h1 className='text-[0.85rem] opacity-70 font-bold'>{Cname}</h1>
@@ -46,6 +49,14 @@ const StatsOverview:React.FC<val> = ({Cname , plan , date , assignee , imgUrl , 
                           </div>
                         </div>
             </div>
+            {open? (
+
+              <div className='absolute top-0 left-0 w-full h-screen overflow-hidden bg-white '>
+            
+              <button className="border-[1px] border-black" onClick={()=>func()}>go back</button>
+            </div>
+              ):<></>}
+            </>
   )
 }
 

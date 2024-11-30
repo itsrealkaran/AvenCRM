@@ -7,6 +7,8 @@ export const metadata: Metadata = {
   description: "Professional Dashboard",
 };
 
+// navabar se sear
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,7 +20,7 @@ export default function RootLayout({
         <div className="w-[18%]  h-full">
           <SideNavBar />
         </div>
-        <div className="w-[82%] h-full overflow-y-auto">
+        <div className="w-[82%] overflow-hidden h-full ">
           <TopNavbar />
           <div className="w-full h-full">
             {children}

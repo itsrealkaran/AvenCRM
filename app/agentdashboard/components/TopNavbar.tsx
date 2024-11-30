@@ -9,7 +9,7 @@ import { IoSearch } from 'react-icons/io5';
 
 export const TopNavbar = () => {
   return (
-               <div className='w-full px-5 shadow-lg shadow-black/10 z-10   flex justify-between bg-white h-[9%] items-center '>
+               <div className='w-full px-5 shadow-sm shadow-black/10 z-10   flex justify-between bg-white h-[9%] items-center '>
 
                {/* this is the search bar  */}
 

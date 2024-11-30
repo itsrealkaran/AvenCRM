@@ -1,10 +1,16 @@
-const ManageUserList = () => {
+
+interface val { 
+  func: (i:number)=>void
+  index:number
+}
+
+const ManageUserList:React.FC<val> = ({func , index}) => {
 
   return (
     <div className=' w-full py-4 px-5 relative bg-[#F5F5F5] rounded-lg flex justify-between items-center'>
     {/* this is teh checkbox div */}
     <div className='w-fit  flex items-center cursor-pointer justify-center'>
-      <input className='w-5 h-5 cursor-pointer' type="checkbox" name="" id="" />
+      <input onClick={()=>func(index)} className='w-5 h-5 cursor-pointer' type="checkbox" name="" id="" />
     </div>
 
     {/* this is the name with the image div  */}

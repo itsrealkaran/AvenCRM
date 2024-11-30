@@ -6,6 +6,8 @@ import { RxDragHandleDots2 } from "react-icons/rx";
 
 import { BsFunnel, BsThreeDots } from 'react-icons/bs'
 import { ComboChartHero } from '@/app/admindashboard/components/ComboChartHero';
+import { BarChartHero } from '@/app/admindashboard/components/BarChartHero';
+import { BarChartHeroSec } from '@/app/admindashboard/components/BarchartHeroSecond';
 
 const page = () => {
   return (
@@ -92,9 +94,8 @@ const page = () => {
                               </div>
                               
                               <div className='w-full px-20 pb-2 h-[88%] '>
-                                  <ComboChartHero/>
+                                  <BarChartHeroSec/>
                               </div>
-
                </div>
     </div>
   )

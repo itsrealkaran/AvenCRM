@@ -11,6 +11,7 @@ import SettingDetails from '../components/SettingDetails';
 
 
 
+// three different apis for recieving the data . 
 
 const Page = () => {
 const [details, setdetails] = useState(true)
@@ -32,7 +33,6 @@ const opennotifi = () =>{
   setpassword(false)
   setnotification(true)
 }
-
   return (
     <div className='w-full  relative  flex bg-[#fafbff]'>
 

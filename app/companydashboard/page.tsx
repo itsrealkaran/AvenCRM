@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { IoIosSearch, IoMdPerson } from 'react-icons/io'
 import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from "react-icons/md";
 import { IoClose, IoDownloadOutline } from 'react-icons/io5'
@@ -14,37 +14,82 @@ import { FaUser } from 'react-icons/fa6';
 
 
 
+// default button 
+// Manage user font size inc ✅
+// second componet height dec  --bhul gaya 
+// bg remove 
+// updated figma ✅
+// update user if selected only once ✅
+// delete user for multiple user  ✅
+// user , agents in form selection ✅
+// if agent then choose team lead , one more select form, ✅
+// form padding change
+
+
 const Page = () => {
   const [adduser, setadd] = useState(false)
 
+  const [agent, setagent] = useState("false")
+
+
+
+  const [selectedList, setselectedList] =useState<number[]>([])
+  useEffect(()=>{
+    console.log(selectedList)
+    console.log(agent)
+  },[selectedList ,agent])
+
+
+
+
+  const addItem = (i: number) => {
+    if (selectedList.includes(i)) {
+      setselectedList(selectedList.filter(item => item !== i));
+    } else {
+      setselectedList([...selectedList, i]);
+    }
+  };
+
+
+
   const openadd = ()=>{
+    setagent("")
     setadd(prev=>!prev)
   }
   
   const bakaData = [1,2,4,5,6,7,9,0,6,4,3]
 
   return (
-    <div className='w-full h-[100vh] relative overflow-hidden p-3 bg-[#F6F9FE]  '>
+<>
 
+   
+    <div className='w-full  relative overflow-hidden p-3 bg-[#F6F9FE]  '>
       {/* this is the top most div with the filter options  */}
       <div className='bg-white w-full'>
         {/* this is the top level filter div  */}
           <div className='w-full px-4 flex justify-between  items-center pt-5'>
                                                                            {/* this is the main heading */}
-                                                                           <div className='text-[1rem] font-bold tracking-tight opacity-90'>Manage Users</div>
+                                                                           <div className='text-[1.2rem] font-bold tracking-tight opacity-90'>Manage Users</div>
 
-                                                                           <div className='flex gap-4 text-[1rem] items-center  '>
+                                                                           <div className='flex gap-3 text-[1rem] items-center  '>
 
+                                                                            <div onClick={()=>openadd()} className={`bg-red-500 text-white px-2 text-sm py-1 ${selectedList.length>0  ? "block" : "hidden"}  tracking-tight rounded-[4px]`}>
+                                                                              <button>Delete User</button>
+                                                                            </div>
+
+                                                                            <div onClick={()=>openadd()} className={`bg-[#5932EA] text-white px-2 text-sm py-1 ${selectedList.length>0 && selectedList.length<2 ? "block" : "hidden"}  tracking-tight rounded-[4px]`}>
+                                                                              <button>Update User</button>
+                                                                            </div>
                                                                             <div onClick={()=>openadd()} className='bg-[#5932EA] text-white px-2 text-sm py-1  tracking-tight rounded-[4px] '>
                                                                               <button>Add Users</button>
                                                                             </div>
-                                                                            <div className='flex gap-4 opacity-70'>
+                                                                            <div className='flex gap-3 text-lg opacity-70'>
 
                                                                            <IoIosSearch/>
                                                                            <VscRefresh/>
                                                                            <IoDownloadOutline/>
                                                                             </div>
-                                                                           <div >
+                                                                           <div className=' opacity-70 ' >
 
                                                                            <LuFilter/>
                                                                            </div>
@@ -81,9 +126,9 @@ const Page = () => {
 
       {bakaData.map((e,i)=>(
 
-        <ManageUserList key={i}/>
+        <ManageUserList func={addItem} key={i} index ={i}/>
         
-        
+  
         ))}
         
  
@@ -96,13 +141,13 @@ const Page = () => {
 
                   {/* this is the internal div  */}
 
-                  <div className='w-[40%] pr-10 pl-14 py-10 h-[80%] bg-white rounded-lg'>
+                  <div className='w-[40%] pr-10 pl-14 py-5 h-[80%] bg-white rounded-lg'>
                     {/* this is the close button div */}
                     <div onClick={()=>openadd()} className='w-full cursor-pointer text-[1.5rem] opacity-80 flex items-center justify-end'>
                       <IoClose/>
                     </div>
                 {/* this is the main heading text  */}
-                    <div className='w-full mt-5 font-semibold tracking-tight text-[1.1rem] opacity-80 '>
+                    <div className='w-full mt-2 font-semibold tracking-tight text-[1.1rem] opacity-80 '>
                           <h1>Create Users</h1>
                     </div>
 
@@ -206,12 +251,31 @@ const Page = () => {
                         {/* this is the input box field */}
 
                         <div className='w-[68%]  h-10 flex items-center '>
-                        <select className='w-full h-full text-black/50 bg-black/10 rounded-md font-semibold px-3 outline-none ' name="cars" id="cars">
-    <option value="volvo">Active</option>
-    <option value="saab">Not Active</option>
-    <option value="opel">Active</option>
-    <option value="audi">Premium</option>
-  </select>
+                        <select  onChange={(e)=>setagent(e.target.value)} className='w-full h-full text-black/50 bg-black/10 rounded-md font-semibold px-3 outline-none ' name="cars" id="cars">
+                           <option value="user">User</option>
+                           <option  value="agent">Agent</option>
+
+                        </select>
+                    
+                        </div>
+
+                      </div>
+                      <div className={` ${agent==="agent" ? "flex" : "hidden"} w-full  items-center justify-between gap-2`}>
+                        {/* this is the name and the symbol div  */}
+                        <div className='flex gap-2 items-center'>
+                          <div> <FaUser/></div>
+                          <h1>Team Lead</h1>
+                        </div>
+
+                        {/* this is the input box field */}
+
+                        <div className='w-[68%]  h-10 flex items-center '>
+                        <select  className='w-full h-full text-black/50 bg-black/10 rounded-md font-semibold px-3 outline-none ' name="cars" id="cars">
+                           <option value="Lead 1 ">Lead 1 </option>
+                           <option  value="Lead 2 ">Lead 2 </option>
+
+                        </select>
+                    
                         </div>
 
                       </div>
@@ -229,6 +293,7 @@ const Page = () => {
         ):<></>}
 
     </div>
+    </>
   )
 }
 

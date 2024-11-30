@@ -32,7 +32,7 @@ const InnerNav:React.FC<val> = ({dets , passw , notifi , openPas , openSet , ope
                                Cancle
                        </div>
                        <div className='py-[3px] bg-[#5051f9] text-white px-4 border  rounded-lg'>
-                               save
+                               Save
                        </div>
                </div>
 

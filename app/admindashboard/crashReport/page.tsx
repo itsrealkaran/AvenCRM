@@ -16,7 +16,19 @@ import { BarListHero } from '../components/BarListHero';
 
 
 
+
+
+// one apis for the graph data 
+// one api for the list data
+
+
 const Page = () => {
+  const [modal, setmodal] = useState(false)
+
+
+  const changeModal = () =>{
+    setmodal(prev=>!prev)
+  }
 
   const [filterOpen, setfilterOpen] = useState(false)
   const closeFilter = ()=>{
@@ -39,12 +51,12 @@ const Page = () => {
                                              </div>
                                                                            
                                                                            {/* this is the option choosing thingy search thingy , in-between thingy fuck it  */}
-                                             <div className='mt-5 bg-white w-full h-[8%] rounded-t-xl font-semibold flex items-center px-8 justify-between'>
-                                                            <div className='px-10 py-[5px] bg-[#F5F5FF] flex items-center gap-1 text-[1.3rem] rounded-md '>
+                                             <div className='mt-2 bg-white w-full h-[8%] rounded-t-xl font-semibold flex items-center px-8 justify-between'>
+                                                            <div className='w-32 px-3 py-[5px] bg-[#F5F5FF] flex items-center justify-between gap-1 text-[1.3rem] rounded-md '>
                                                                            <IoIosSearch/>
                                                                            <p className='text-[0.8rem] opacity-80'>Search</p>
                                                             </div>
-                                                            <div className='px-10 py-[5px] bg-[#F5F5FF] flex items-center gap-3 text-[1rem] rounded-md '>
+                                                            {/* <div className='px-10 py-[5px] bg-[#F5F5FF] flex items-center gap-3 text-[1rem] rounded-md '>
                                                                            <p className='text-[0.8rem] opacity-80'>Tickets Raised on</p>
                                                                            <RiExpandUpDownLine/>
                                                             </div>
@@ -53,7 +65,7 @@ const Page = () => {
                                                             </div>
                                                             <div className='px-10 py-[5px] bg-[#F5F5FF] flex items-center gap-3  tracking-tight text-[1rem] rounded-md '>
                                                                            <p className='text-[0.8rem] opacity-80'>Designated Person</p>
-                                                            </div>
+                                                            </div> */}
                                                             <div className=' flex   items-center gap-5   text-[1rem] rounded-md '>
                                                                            <div className='bg-[#F5F5FF] px-4 py-[5px]  rounded-md'>
 
@@ -74,10 +86,13 @@ const Page = () => {
 
                                              {/* this scroll thingy where you have to scroll down to see more of the stuff */}
 
-                                             <div className='w-full h-[52%] px-4 bg-white whitespace-nowrap gap-3 overflow-y-auto pt-5 rounded-b-xl mt- flex flex-col '>
+                                             <div className='w-full h-[52%] px-4 bg-white whitespace-nowrap   pb-10 rounded-b-xl mt- flex flex-col '>
+                                              <div className='w-full py-5 overflow-y-auto flex flex-col gap-3'>
                                                                            {[{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:true },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false },{Name:"Tesla" , date:"12/2/2" , id:"PRE2022" , username:"Arima Kousie" ,status:false }].map((e,i)=>(
-                                                                                          <ListComp name={e.Name} username={e.username} date={e.date} id={e.id} status={e.status} key={i}/>
+
+                                                                                          <ListComp name={e.Name} username={e.username} date={e.date} id={e.id} status={e.status} key={i} func={changeModal}  open ={modal}/>
                                                                                           ))}
+                                              </div>
                                              </div>
                               </div>
                </div>

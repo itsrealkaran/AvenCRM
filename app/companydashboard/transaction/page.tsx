@@ -8,6 +8,9 @@ import FilterComp from '@/app/admindashboard/components/FilterComp';
 import { IoDownloadOutline, IoSearch } from 'react-icons/io5';
 import { LuFilter } from 'react-icons/lu';
 
+// two buttons in invoices 
+// checkbox 
+// 
 
 const Page = () => {
 
@@ -16,9 +19,7 @@ const Page = () => {
                               setfilteropen(false)
                }
 
-                
-
-
+        
   return (
                
     <div className='w-full relative bg-[#f0f5fc] h-screen flex'>

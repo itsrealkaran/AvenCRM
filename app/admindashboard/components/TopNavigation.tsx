@@ -22,7 +22,7 @@ export const TopNavigation = () => {
 
                {/* this is the notification section  */}
 
-               <div className='flex items-center gap-2'>
+               <div className='flex items-center  gap-2'>
                               <div className='w-7 h-7 flex opacity-50 items-center justify-center text-[1.2rem]  rounded-[8px] border-black/70 border-[1px]'>
                                              <CiBellOn/>
                               </div>
@@ -30,7 +30,7 @@ export const TopNavigation = () => {
                                              <FaQuestion/>
                               </div>
 
-                              <div className='flex items-center gap-[6px]'>
+                              <div className='flex h-fit cursor-pointer w-fit items-center dropdown relative gap-[6px]'>
                                              <div className='w-[37px] h-[37px] rounded-full  overflow-hidden ml-6'>
                                                             <img className='w-full h-full object-cover ' src="https://cdn.pixabay.com/photo/2022/12/01/04/43/girl-7628308_640.jpg" alt="not showing" />
                                              </div>
@@ -42,6 +42,8 @@ export const TopNavigation = () => {
                                              <div className='ml-1 opacity-70 '>
                                                             <FaAngleDown/>
                                              </div>
+
+                                             <div className='absolute top-[100%] z-10 w-full left-2  hover bg-black '></div>
                               </div>
                </div>
 

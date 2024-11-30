@@ -22,7 +22,6 @@ const data = [
 export const DonutChartHero = () => (
   <div className="h-full ">
       <div className="flex flex-col items-center justify-center gap-4">
-      <p className="text-gray-700 dark:text-gray-300">Variant: `pie`</p>
       <DonutChart
         data={data}
         variant="pie"

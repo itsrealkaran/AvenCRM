@@ -29,7 +29,7 @@ const menuItems = [
 
 
 const SideNavBar:React.FC = () => {
-  const [activeLink, setActiveLink] = useState<string>('manage user'); // This state tracks the active link
+  const [activeLink, setActiveLink] = useState<string>('/companydashboard'); // This state tracks the active link
 
   // Function to handle the active menu item change
   const handleMenuClick = (id: string) => {
