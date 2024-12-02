@@ -1,38 +1,46 @@
-import React from 'react'
+import React from 'react';
 
-interface val{
-  func:()=>void
-  open:boolean
+interface val {
+  func: () => void;
+  open: boolean;
 }
 
-const InvoiceOverview:React.FC<val> = ({func,open}) => {
+const InvoiceOverview: React.FC<val> = ({ func, open }) => {
   return (
     <>
-               <div onClick={func} className='flex cursor-pointer flex-shrink-0 items-center text-[0.8rem] justify-between px-16 py-2  bg-[#f5f5f5] rounded-xl'>
-               <div className='font-semibold'>
-                              <h1 >Feb 2, 2023</h1>
-               </div>
+      <div
+        onClick={func}
+        className="flex flex-shrink-0 cursor-pointer items-center justify-between rounded-xl bg-[#f5f5f5] px-16 py-2 text-[0.8rem]"
+      >
+        <div className="font-semibold">
+          <h1>Feb 2, 2023</h1>
+        </div>
 
-               <div className='font-semibold text-center'>
-                              <h1>Quaterly true-up</h1>
-                              <p className='text-[9px] opacity-60 leading-[1.1rem]'>july 14,2023 - july 5,2024</p>
-               </div>
-               <div className='font-semibold'>
-                              <h1>Rs 50,000.00</h1>
-               </div>
-               <div className='font-semibold text-center'>
-                              <h1>paid</h1>
-                              <p className='text-[12px] opacity-90 leading-[1.1rem] text-blue-600'>view Invoice</p>
-               </div>
-</div>
-{open ? (
+        <div className="text-center font-semibold">
+          <h1>Quaterly true-up</h1>
+          <p className="text-[9px] leading-[1.1rem] opacity-60">
+            july 14,2023 - july 5,2024
+          </p>
+        </div>
+        <div className="font-semibold">
+          <h1>Rs 50,000.00</h1>
+        </div>
+        <div className="text-center font-semibold">
+          <h1>paid</h1>
+          <p className="text-[12px] leading-[1.1rem] text-blue-600 opacity-90">
+            view Invoice
+          </p>
+        </div>
+      </div>
+      {open ? (
+        <div className="absolute left-0 top-0 h-screen w-full bg-white">
+          <button onClick={func}>go back</button>
+        </div>
+      ) : (
+        <></>
+      )}
+    </>
+  );
+};
 
-  <div className='absolute top-0 left-0 w-full h-screen bg-white'>
-  <button onClick={func}>go back</button>
-</div>
-  ):<></>}
-</>
-  )
-}
-
-export default InvoiceOverview
+export default InvoiceOverview;
