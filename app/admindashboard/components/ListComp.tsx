@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import React from 'react'
 
 interface val { 
@@ -18,7 +19,7 @@ const ListComp:React.FC<val> = ({name, username , id ,date , status , func , ope
                {/* logo with the name */}
                <div className='flex gap-4 items-center font-semibold text-[1.3rem] tracking-tight capitalize'>
                               <div className='w-8 h-8 rounded-lg overflow-hidden'>
-                                             <img className='w-full h-full object-cover' src="https://images.pexels.com/photos/258083/pexels-photo-258083.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing " />
+                                             <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/258083/pexels-photo-258083.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing " />
                               </div>
 
                               <h1 className='opacity-70 text-[0.9rem]'>{name}</h1>
@@ -34,7 +35,7 @@ const ListComp:React.FC<val> = ({name, username , id ,date , status , func , ope
 
                <div className='flex gap-2 items-center font-semibold text-[1rem] tracking-tight capitalize'>
                               <div className='w-8 h-8 rounded-full overflow-hidden'>
-                                             <img className='w-full h-full object-cover' src="https://images.pexels.com/photos/258083/pexels-photo-258083.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing " />
+                                             <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/258083/pexels-photo-258083.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing " />
                               </div>
 
                               <h1 className='opacity-60 text-[0.85rem]'>{username}</h1>

@@ -81,7 +81,7 @@ const Page = () => {
 
       {[1,2,4,5,6,7,7,8,9].map((e,i)=>(
 
-<InvoiceOverview key={i}/>
+<InvoiceOverview func={()=>{}} open={false} key={i}/>
 ))}
          
  

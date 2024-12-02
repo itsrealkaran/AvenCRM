@@ -9,6 +9,7 @@ import FilterComp from '../components/FilterComp';
 import {useState} from "react"
 import SideNavBar from '../components/SideNavBar';
 import { TopNavigation } from '../components/TopNavigation';
+import Image from 'next/image';
 
 
 // one api for the invoices and for its detailed explanatino 
@@ -58,7 +59,7 @@ const Page = () => {
 
                                                             <div className='w-full text-[0.95rem] mt-10 ml-2 px-4 font-semibold tracking-tight items-center flex gap-3'>
                                                                            <div className='w-8 h-8 rounded-lg overflow-hidden  bg-black'>
-                                                                                          <img className='w-full h-full object-contain' src="https://cdn.pixabay.com/photo/2015/10/20/21/05/mcdonald-998495_1280.png" alt="not showing" />
+                                                                                          <Image className='w-full h-full object-contain' src="https://cdn.pixabay.com/photo/2015/10/20/21/05/mcdonald-998495_1280.png" alt="not showing" />
                                                                            </div>
                                                                            <h1>McDonalds</h1>
                                                             </div>

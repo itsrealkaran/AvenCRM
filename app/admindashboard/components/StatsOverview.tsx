@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React from 'react'
 import { FaArrowUp } from "react-icons/fa";
 
@@ -35,7 +36,7 @@ const StatsOverview:React.FC<val> = ({Cname , plan , date , assignee , imgUrl , 
                           <h1 className='opacity-70 text-[12px]  '>Assignee</h1>
                           <div className='flex gap-2  items-center  w-[50%]'>
                             <div className='w-8 h-8 rounded-full  overflow-hidden'>
-                              <img className='w-full h-full object-cover' src={imgUrl} alt="not showing" />
+                              <Image className='w-full h-full object-cover' src={imgUrl} alt="not showing" />
                             </div>
                           <h1 className='text-[0.85rem] font-semibold  opacity-70'>{assignee}</h1>
                           </div>

@@ -80,7 +80,7 @@ const DashboardPage = () => {
 
           <div className='w-full h-[52%]  px-4 bg-white whitespace-nowrap gap-3 overflow-y-auto pt-5 rounded-b-xl flex flex-col'>
             {ticketData.map((ticket, index) => (
-              <ListComp name={ticket.Name} username={ticket.username} date={ticket.date} id={ticket.id} status={ticket.status} key={index} />
+              <ListComp name={ticket.Name} username={ticket.username} date={ticket.date} id={ticket.id} status={ticket.status} func={()=>{}} open={false} key={index} />
             ))}
           </div>
         </div>

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import React from 'react'
 import { CiBellOn } from "react-icons/ci";
 import { FaQuestion } from "react-icons/fa6";
@@ -32,7 +33,7 @@ export const TopNavbar = () => {
 
                               <div className='flex items-center gap-[6px]'>
                                              <div className='w-[37px] h-[37px] rounded-full  overflow-hidden ml-6'>
-                                                            <img className='w-full h-full object-cover ' src="https://cdn.pixabay.com/photo/2022/12/01/04/43/girl-7628308_640.jpg" alt="not showing" />
+                                                            <Image className='w-full h-full object-cover ' src="https://cdn.pixabay.com/photo/2022/12/01/04/43/girl-7628308_640.jpg" alt="not showing" />
                                              </div>
                                              <div className='leading-[0.8rem]'>
                                                             <h1 className='font-semibold text-[0.8rem] opacity-90'>Profile</h1>

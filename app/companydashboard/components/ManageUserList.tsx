@@ -1,3 +1,4 @@
+import Image from "next/image"
 
 interface val { 
   func: (i:number)=>void
@@ -17,7 +18,7 @@ const ManageUserList:React.FC<val> = ({func , index}) => {
 
     <div className='flex items-center  justify-center pr-10 gap-[5.5px] w-[23%]'>
                 <div className='w-6 h-6 rounded-full overflow-hidden '>
-                  <img className='w-full h-full object-cover' src="https://images.pexels.com/photos/22468584/pexels-photo-22468584/free-photo-of-woman-sitting-on-bed-with-flowers.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing " />
+                  <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/22468584/pexels-photo-22468584/free-photo-of-woman-sitting-on-bed-with-flowers.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing " />
                 </div>
                 <h1 className=' opacity-70'>isagi yoichi</h1>
     </div>

@@ -1,5 +1,6 @@
 
 
+import Image from 'next/image'
 import React from 'react'
 
 
@@ -12,7 +13,7 @@ const MonitoringList = () => {
                {/* this is the images div with name */}
              <div className='flex items-center gap-[7px] w-[14%]' >
                <div className='w-5 h-5 rounded-full overflow-hidden'>
-                 <img src="https://images.pexels.com/photos/10414204/pexels-photo-10414204.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
+                 <Image src="https://images.pexels.com/photos/10414204/pexels-photo-10414204.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
                </div>
                <h1 className='opacity-80'>nikochan</h1>
              </div>

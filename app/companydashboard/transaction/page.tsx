@@ -7,6 +7,7 @@ import InvoiceOverview from '@/app/admindashboard/components/InvoiceOverview';
 import FilterComp from '@/app/admindashboard/components/FilterComp';
 import { IoDownloadOutline, IoSearch } from 'react-icons/io5';
 import { LuFilter } from 'react-icons/lu';
+import Image from 'next/image';
 
 // two buttons in invoices 
 // checkbox 
@@ -50,7 +51,7 @@ const Page = () => {
 
                                                             <div className='w-full text-[0.95rem] mt-10 ml-2 px-4 font-semibold tracking-tight items-center flex gap-3'>
                                                                            <div className='w-8 h-8 rounded-lg overflow-hidden  bg-black'>
-                                                                                          <img className='w-full h-full object-contain' src="https://cdn.pixabay.com/photo/2015/10/20/21/05/mcdonald-998495_1280.png" alt="not showing" />
+                                                                                          <Image className='w-full h-full object-contain' src="https://cdn.pixabay.com/photo/2015/10/20/21/05/mcdonald-998495_1280.png" alt="not showing" />
                                                                            </div>
                                                                            <h1>McDonalds</h1>
                                                             </div>
@@ -80,7 +81,7 @@ const Page = () => {
                                                             <div className='w-full  bg-white overflow-y-auto mt-2 rounded-xl flex flex-col whitespace-nowrap gap-3 pt-4 pb-5 px-3'>
                                                                            {[1,2,4,5,6,7,7,8,9].map((e,i)=>(
 
-                                                                                          <InvoiceOverview key={i}/>
+                                                                                          <InvoiceOverview func={()=>{}} open={false} key={i}/>
                                                                            ))}
                                                             </div>
                               </div>

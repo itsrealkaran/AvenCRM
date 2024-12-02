@@ -12,7 +12,7 @@ import StatsOverview from '../components/StatsOverview'
 
 // company font dec
 
-const page = () => {
+const Page = () => {
 
                // one api for the list component 
 
@@ -78,4 +78,4 @@ const page = () => {
   )
 }
 
-export default page
+export default Page
