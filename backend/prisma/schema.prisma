@@ -70,6 +70,12 @@ enum EmailCampaignStatus {
   FAILED
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHERS
+}
+
 
 // Superuser/Platform Company Model
 model SuperAdmin {
@@ -192,6 +198,7 @@ model Agent {
   email        String     @unique
   password     String
   phone        String?
+  gender       Gender
   dob          DateTime?
   
   // Relations
