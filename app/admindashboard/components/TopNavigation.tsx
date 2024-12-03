@@ -1,54 +1,60 @@
-import React from 'react'
-import { FaSearch } from "react-icons/fa";
-import { CiBellOn } from "react-icons/ci";
-import { FaQuestion } from "react-icons/fa6";
-import { FaAngleDown } from "react-icons/fa6";
+import React from 'react';
+import { FaSearch } from 'react-icons/fa';
+import { CiBellOn } from 'react-icons/ci';
+import { FaQuestion } from 'react-icons/fa6';
+import { FaAngleDown } from 'react-icons/fa6';
 import Image from 'next/image';
 
-
-// done with it for now 
+// done with it for now
 
 export const TopNavigation = () => {
   return (
-               <div className='w-full px-5 shadow-lg shadow-black/10 z-50  flex justify-between bg-white h-[9%] items-center '>
+    <div className="z-50 flex h-[9%] w-full items-center justify-between bg-white px-5 shadow-lg shadow-black/10">
+      {/* this is the search bar  */}
 
-               {/* this is the search bar  */}
+      <div className="relative w-[20%]">
+        <input
+          className="w-full rounded-[7px] border border-[#e8f0f6] bg-[#f3f7fa] px-3 py-1 text-[12.5px] outline-none"
+          type="text"
+          placeholder="Search anything..."
+        />
+        <div className="absolute right-4 top-[5px] text-[1rem] font-bold opacity-50">
+          <FaSearch />
+        </div>
+      </div>
 
-               <div className='relative w-[20%]  '>
-                              <input className='outline-none  border border-[#e8f0f6] w-full text-[12.5px] py-1  rounded-[7px]  px-3 bg-[#f3f7fa]' type="text" placeholder='Search anything...' />
-                              <div className='absolute text-[1rem] top-[5px] right-4 opacity-50 font-bold  '>
-                              <FaSearch/>
-                              </div>
-               </div>
+      {/* this is the notification section  */}
 
-               {/* this is the notification section  */}
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-[8px] border-[1px] border-black/70 text-[1.2rem] opacity-50">
+          <CiBellOn />
+        </div>
+        <div className="flex h-7 w-7 items-center justify-center rounded-[8px] border-[1px] border-black/70 text-[1.1rem] opacity-50">
+          <FaQuestion />
+        </div>
 
-               <div className='flex items-center  gap-2'>
-                              <div className='w-7 h-7 flex opacity-50 items-center justify-center text-[1.2rem]  rounded-[8px] border-black/70 border-[1px]'>
-                                             <CiBellOn/>
-                              </div>
-                              <div className='w-7 h-7 flex items-center opacity-50 justify-center text-[1.1rem]  rounded-[8px] border-black/70 border-[1px]'>
-                                             <FaQuestion/>
-                              </div>
+        <div className="dropdown relative flex h-fit w-fit cursor-pointer items-center gap-[6px]">
+          <div className="ml-6 h-[37px] w-[37px] overflow-hidden rounded-full">
+            <Image
+              height={100}
+              width={100}
+              className="h-full w-full object-cover"
+              src="https://cdn.pixabay.com/photo/2022/12/01/04/43/girl-7628308_640.jpg"
+              alt="not showing"
+            />
+          </div>
+          <div className="leading-[0.8rem]">
+            <h1 className="text-[0.8rem] font-semibold opacity-90">Profile</h1>
+            <p className="text-[0.55rem] opacity-70">Manager</p>
+          </div>
 
-                              <div className='flex h-fit cursor-pointer w-fit items-center dropdown relative gap-[6px]'>
-                                             <div className='w-[37px] h-[37px] rounded-full  overflow-hidden ml-6'>
-                                                            <Image height={10} width={10} className='w-full h-full object-cover ' src="https://cdn.pixabay.com/photo/2022/12/01/04/43/girl-7628308_640.jpg" alt="not showing" />
-                                             </div>
-                                             <div className='leading-[0.8rem]'>
-                                                            <h1 className='font-semibold text-[0.8rem] opacity-90'>Profile</h1>
-                                                            <p className='text-[0.55rem] opacity-70'>Manager</p>
-                                             </div>
+          <div className="ml-1 opacity-70">
+            <FaAngleDown />
+          </div>
 
-                                             <div className='ml-1 opacity-70 '>
-                                                            <FaAngleDown/>
-                                             </div>
-
-                                             <div className='absolute top-[100%] z-10 w-full left-2  hover bg-black '></div>
-                              </div>
-               </div>
-
-
-               </div>
-)
-}
+          <div className="hover absolute left-2 top-[100%] z-10 w-full bg-black"></div>
+        </div>
+      </div>
+    </div>
+  );
+};
