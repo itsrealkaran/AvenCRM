@@ -9,7 +9,7 @@ const MonitoringLeadList = () => {
 
                <div className='flex items-center w-[25%]  justify-center gap-2'>
                  <div className='w-6 h-6 rounded-full overflow-hidden'>
-                   <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/14840712/pexels-photo-14840712.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
+                   <Image height={100} width={100} className='w-full h-full object-cover' src="https://images.pexels.com/photos/14840712/pexels-photo-14840712.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
                  </div>
                  <h1 className='opacity-80' >isagi yoichi</h1>
                </div>
