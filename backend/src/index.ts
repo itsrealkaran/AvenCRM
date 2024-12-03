@@ -4,6 +4,8 @@ import "dotenv/config"
 import session from 'express-session';
 import passport from 'passport';
 import { agentRouter } from './routers/manageUsers';
+import { manageLeads } from './routers/manageLeads';
+import { manageDeals } from './routers/manageDeals';
 
 const app = express();
 
@@ -19,6 +21,8 @@ app.use(passport.session())
 
 app.use("/auth", authRouter)
 app.use("/agent", agentRouter)
+app.use("/client/leads", manageLeads)
+app.use("/client.deals", manageDeals)
 
 app.get("/", (req, res) => {
   res.send(req.user)
