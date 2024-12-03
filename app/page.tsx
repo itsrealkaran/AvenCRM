@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -14,7 +15,7 @@ export default function Home() {
 <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
   <div className="max-w-md w-full space-y-8">
     <div>
-      <Image className="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg" alt="Workflow"/>
+      <Image className="mx-auto h-12 w-auto" src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg" height={100} width={100} alt="Workflow"/>
       <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
         Sign in to your account
       </h2>
@@ -73,10 +74,10 @@ export default function Home() {
                 </div>
               
                 <div className="grid grid-cols-3 gap-x-3">
-                  <button className="flex-none flex items-center justify-center h-9 rounded-md text-gray-500 border border-gray-300" type="button" aria-label="like">
+                  <Link href={`${process.env.NEXT_PUBIC_BACKEND_URL}/auth/google`} className="flex-none flex items-center justify-center h-9 rounded-md text-gray-500 border border-gray-300" type="button" aria-label="like">
                     <svg width="20" height="20" fill="currentColor"viewBox="0 0 24 24">
                       <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-                  </button>
+                  </Link>
                   
                   <button className="flex-none flex items-center justify-center h-9 rounded-md text-gray-500 border border-gray-300" type="button" aria-label="like">
                      <svg width="20" height="20" fill="currentColor">

@@ -1,0 +1,539 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for various statuses
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  TEAM_LEADER
+  AGENT
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  NEGOTIATION
+  WON
+  LOST
+  FOLLOWUP
+}
+
+enum DealStatus {
+  PROSPECT
+  ACTIVE
+  UNDER_CONTRACT
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+enum PaymentType {
+  INCOME
+  EXPENSE
+  SUBSCRIPTION
+  COMMISSION
+}
+
+enum PlanTier {
+  BASIC
+  PROFESSIONAL
+  ENTERPRISE
+  CUSTOM
+}
+
+enum EventType {
+  MEETING
+  CALL
+  PROPERTY_VIEWING
+  FOLLOW_UP
+  INTERNAL_MEETING
+  CLIENT_MEETING
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  COMPLETED
+  FAILED
+}
+
+
+// Superuser/Platform Company Model
+model SuperAdmin {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  EmailCampaign EmailCampaign[]
+
+  AdminAccessToken AdminAccessToken[]
+
+  AdminLoginLog AdminLoginLog[]
+}
+
+// Company Model
+model Company {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  size         Int?
+  
+  // Subscription details
+  plan         Plan     @relation(fields: [planId], references: [id])
+  planId       String
+  
+  // Detailed company information
+  address      String?
+  phone        String?
+  website      String?
+  taxId        String?
+  foundedYear  Int?
+  
+  // Relations
+  admin        Admin    @relation(fields: [adminId], references: [id])
+  adminId      String   @unique
+  
+  users        Agent[]
+  leads        Lead[]
+  deals        Deal[]
+  payments     Payment[]
+  teams        Team[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  CalendarEvent CalendarEvent[]
+
+  EmailCampaign EmailCampaign[]
+
+  CompanyAuditLog CompanyAuditLog[]
+}
+
+// Plan Model for different subscription tiers
+model Plan {
+  id           String     @id @default(cuid())
+  name         PlanTier   @default(BASIC)
+  price        Float
+  maxUsers     Int
+  maxLeads     Int
+  maxDeals     Int
+  features     Json?
+  
+  companies    Company[]
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+// Admin Model
+model Admin {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String
+  designation  String?
+  
+  // Relation to Company
+  company      Company?
+  
+  // Relations to other models
+  teams        Team[]
+  supportTickets SupportTicket[]
+  
+  role        UserRole   @default(ADMIN)
+  lastLogin   DateTime?
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  PageBuilder PageBuilder[] @relation("AllowedAdmins")
+}
+
+// Team Model
+model Team {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  
+  // Relations
+  company      Company    @relation(fields: [companyId], references: [id])
+  companyId    String
+  
+  teamLeader   Agent?     @relation("TeamLeadership", fields: [teamLeaderId], references: [id])
+  teamLeaderId String      @unique
+  
+  members      Agent[]    @relation("TeamMembers")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  Admin Admin[]
+}
+
+// Agent/User Model
+model Agent {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String
+  phone        String?
+  dob          DateTime?
+  
+  // Relations
+  company      Company    @relation(fields: [companyId], references: [id])
+  companyId    String
+  
+  // Team Relations
+  team         Team?      @relation("TeamMembers", fields: [teamId], references: [id])
+  teamId       String?
+  
+  // Leadership of Team (optional)
+  leadingTeam  Team?      @relation("TeamLeadership")
+  
+  // Other Relations
+  leads        Lead[]
+  deals        Deal[]
+  
+  role        UserRole   @default(AGENT)
+  lastLogin   DateTime?
+  
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  CalendarEvent CalendarEvent[]
+
+  EmailCampaignRecipient EmailCampaignRecipient[]
+
+  Property Property[]
+
+  PageBuilder PageBuilder[]
+}
+
+// Lead Model
+model Lead {
+  id             String      @id @default(cuid())
+  name           String
+  email          String?
+  phone          String?
+  
+  // Company Relation
+  company        Company     @relation(fields: [companyId], references: [id])
+  companyId      String
+  
+  // Agent Relation
+  agent          Agent       @relation(fields: [agentId], references: [id])
+  agentId        String
+  
+  // Lead Details
+  leadAmount     Float?
+  source         String?     @default("MANUAL")
+  status         LeadStatus  @default(NEW)
+  
+  // Property/Contact Details
+  propertyType   String?
+  budget         Float?
+  location       String?
+  
+  // Timing and Expectations
+  expectedDate   DateTime?
+  lastContactDate DateTime?
+  
+  // Additional Details
+  notes          String?
+  socialProfiles Json?
+
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Deal Model
+model Deal {
+  id             String      @id @default(cuid())
+  
+  // Relations
+  company        Company     @relation(fields: [companyId], references: [id])
+  companyId      String
+  
+  agent          Agent       @relation(fields: [agentId], references: [id])
+  agentId        String
+  
+  // Deal Specifics
+  dealAmount     Float
+  status         DealStatus  @default(PROSPECT)
+  
+  // Property Details
+  propertyType   String?
+  propertyAddress String?
+  propertyValue  Float?
+  
+  // Timeline
+  expectedCloseDate DateTime?
+  actualCloseDate   DateTime?
+  
+  // Commission and Financial
+  commissionRate Float?
+  estimatedCommission Float?
+  
+  // Additional Details
+  notes          String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Payment Model
+model Payment {
+  id             String      @id @default(cuid())
+  
+  // Relations
+  company        Company     @relation(fields: [companyId], references: [id])
+  companyId      String
+  
+  // Payment Details
+  amount         Float
+  date           DateTime    @default(now())
+  type           PaymentType
+  
+  // Parties Involved
+  secondPartyName String?
+  description    String?
+  
+  // Invoice and Billing
+  invoiceNumber  String?
+  taxRate        Float?
+  totalAmount    Float?
+  
+  // Additional Financial Info
+  paymentMethod  String?
+  receiptUrl     String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Support Ticket Model
+model SupportTicket {
+  id             String      @id @default(cuid())
+  
+  // Relations
+  createdBy      Admin?      @relation(fields: [createdById], references: [id])
+  createdById    String?
+
+  // Ticket Details
+  title          String
+  description    String
+  status         String      @default("OPEN")
+  priority       String      @default("MEDIUM")
+  
+  // Tagging and Assignment
+  assignedTo     String?
+  tags           String[]
+  
+  // Communication Thread
+  comments       TicketComment[]
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+// Ticket Comment Model for Internal Communication
+model TicketComment {
+  id             String      @id @default(cuid())
+  
+  ticket         SupportTicket @relation(fields: [ticketId], references: [id])
+  ticketId       String
+  
+  content        String
+  createdBy      String
+  
+  createdAt     DateTime    @default(now())
+}
+
+model CalendarEvent {
+  id                 String               @id @default(cuid())
+  
+  // Event Details
+  title              String
+  description        String?
+  startTime          DateTime
+  endTime            DateTime
+  
+  // Event Type and Location
+  type               EventType
+  location           String?
+  
+  // Relationships and Participants
+  company            Company              @relation(fields: [companyId], references: [id])
+  companyId          String
+  
+  organizer          Agent                @relation(fields: [organizerId], references: [id])
+  organizerId        String
+  
+  // Participant Management
+  participants       CalendarEventParticipant[]
+  
+  // Audit
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+model CalendarEventParticipant {
+  id                 String               @id @default(cuid())
+  
+  event              CalendarEvent        @relation(fields: [eventId], references: [id])
+  eventId            String
+  
+  
+  // Participation Status
+  status             String                @default("INVITED")
+  
+  createdAt          DateTime             @default(now())
+}
+
+// Email Campaign Management Model
+model EmailCampaign {
+  id                 String               @id @default(cuid())
+  
+  // Campaign Details
+  title              String
+  subject            String
+  content            String
+  
+  // Relationships
+  company            Company              @relation(fields: [companyId], references: [id])
+  companyId          String
+  createdBy          SuperAdmin           @relation(fields: [createdById], references: [id])
+  createdById        String
+  
+  // Campaign Tracking
+  status             EmailCampaignStatus  @default(DRAFT)
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  
+  // Recipient Management
+  recipients         EmailCampaignRecipient[]
+  
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+}
+
+// Email Campaign Recipient Tracking
+model EmailCampaignRecipient {
+  id                 String               @id @default(cuid())
+  
+  campaign           EmailCampaign        @relation(fields: [campaignId], references: [id])
+  campaignId         String
+  
+  recipient          Agent                @relation(fields: [recipientId], references: [id])
+  recipientId        String
+  
+  // Recipient Status Tracking
+  status             String                @default("PENDING")
+  openedAt           DateTime?
+  clickedAt          DateTime?
+  
+  createdAt          DateTime             @default(now())
+}
+
+// Comprehensive Audit Logging
+model CompanyAuditLog {
+  id                 String               @id @default(cuid())
+  
+  company            Company              @relation(fields: [companyId], references: [id])
+  companyId          String
+  
+  // Detailed Audit Information
+  action             String
+  entityType         String
+  entityId           String
+  performedBy        String
+  
+  // Additional Context
+  details            Json?
+  
+  createdAt          DateTime             @default(now())
+}
+
+// Administrative Access Token Management
+model AdminAccessToken {
+  id                 String               @id @default(cuid())
+  
+  superAdmin         SuperAdmin           @relation(fields: [superAdminId], references: [id])
+  superAdminId       String
+  
+  // Token Details
+  token              String               @unique
+  expiresAt          DateTime
+  isRevoked          Boolean              @default(false)
+  
+  createdAt          DateTime             @default(now())
+}
+
+// Login Tracking for Security
+model AdminLoginLog {
+  id                 String               @id @default(cuid())
+  
+  superAdmin         SuperAdmin           @relation(fields: [superAdminId], references: [id])
+  superAdminId       String
+  
+  // Login Details
+  ipAddress          String
+  userAgent          String?
+  loginTime          DateTime             @default(now())
+  isSuccessful       Boolean
+}
+
+model Property {
+  id              String   @id @default(cuid())
+  title           String
+  description     String
+  address         String
+  price           Float
+  propertyType    String
+  area            Float
+  bedrooms        Int?
+  bathrooms       Int?
+  images          String[] // URLs of property images
+  additionalInfo  Json?    // Any extra details like amenities, etc.
+
+  // Created and updated timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  createdBy       Agent?   @relation(fields: [createdById], references: [id])
+  createdById     String?
+}
+
+// Page Builder Model
+model PageBuilder {
+  id              String   @id @default(cuid())
+  title           String
+  content         Json     // JSON containing text, designs, image references, etc.
+  isPublic        Boolean  @default(false) // Privacy setting: public/private
+
+  // Created and updated timestamps
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relationships
+  createdBy       Agent    @relation(fields: [createdById], references: [id])
+  createdById     String
+  allowedAdmins   Admin[]  @relation("AllowedAdmins")
+}

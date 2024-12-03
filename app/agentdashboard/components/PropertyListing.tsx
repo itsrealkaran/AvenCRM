@@ -33,7 +33,7 @@ const changeimages = () =>{
                <div onClick={()=>changeDialog()} className='w-[24%] overflow-hidden flex-shrink-0 h-[49%] bg-white rounded-xl'>
                {/* this is the image container */}
                <div className='w-full h-[45%] '>
-                 <Image className='w-full h-full object-cover ' src="https://images.pexels.com/photos/29139391/pexels-photo-29139391/free-photo-of-dome-of-palacio-de-bellas-artes-in-mexico-city.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
+                 <Image height={10} width={10} className='w-full h-full object-cover ' src="https://images.pexels.com/photos/29139391/pexels-photo-29139391/free-photo-of-dome-of-palacio-de-bellas-artes-in-mexico-city.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
                </div>
        {/* THIS IS THE TEXT CONTAINER */}
                <div className='py-2 px-3'>
@@ -58,7 +58,7 @@ const changeimages = () =>{
                    <div className='flex items-center  mt-2 justify-between'>
                        <div className='flex items-center gap-1'>
                          <div className='w-9 h-9 overflow-hidden rounded-full '>
-                           <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/17525263/pexels-photo-17525263/free-photo-of-peach-juice-in-glasses.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
+                           <Image height={100} width={100} className='w-full h-full object-cover' src="https://images.pexels.com/photos/17525263/pexels-photo-17525263/free-photo-of-peach-juice-in-glasses.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load" alt="not showing" />
                          </div>
                            <h1 className='font-semibold opacity-70 tracking-tight text-sm'>Jenny Wilson</h1>
                        </div>
@@ -110,25 +110,25 @@ const changeimages = () =>{
             {/* this is the bento grid for the images  */}
                     <div className='flex px-5 h-[58%]  items-end  mt-5 gap-2 justify-between '>
                       <div className='w-[48%] overflow-hidden  rounded-lg h-full'>
-                        <Image className='w-full h-full object-cover ' src="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                        <Image height={10} width={10} className='w-full h-full object-cover ' src="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                       </div>
                       <div className='w-[53%] flex flex-col gap-2 h-full'>
 
                         <div className='w-full h-[49%] justify-between flex gap-2'>
                           <div className='w-[49.5%] h-full overflow-hidden rounded-lg'>
 
-                          <Image className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                          <Image height={10} width={10} className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                           </div>
 
                           <div className='w-[49.5%] h-full overflow-hidden rounded-lg'>
 
-                          <Image className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                          <Image height={10} width={10} className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                           </div>
                         </div>
                         <div className='w-full h-[49%] justify-between flex gap-2'>
                           <div className='w-[49.5%] h-full overflow-hidden rounded-lg'>
 
-                          <Image className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                          <Image height={10} width={10} className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                           </div>
 
                           <div className='w-[49.5%] h-full overflow-hidden rounded-lg relative'>
@@ -140,7 +140,7 @@ const changeimages = () =>{
                               </div>
                             </div>
 
-                          <Image className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                          <Image height={10} width={10} className='w-full h-full overflow-hidden' src="https://images.pexels.com/photos/276724/pexels-photo-276724.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                           </div>
                         </div>
                       </div>
@@ -207,28 +207,28 @@ const changeimages = () =>{
         
             <div className='w-[41%] h-full flex flex-wrap items-start overflow-y-auto justify-start gap-2 p-2'>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
                     <div className='w-[49%] overflow-hidden h-[23%] flex-shrink-0 rounded-lg bg-black'>
-                      <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
+                      <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showing" />
                     </div>
               
                    
@@ -236,7 +236,7 @@ const changeimages = () =>{
             <div className='w-[59%] h-full pt-2 px-1 pb-3 '>
               <div className='w-full overflow-hidden  h-full rounded-xl'>
 
-              <Image className='w-full h-full object-cover' src="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showign" />
+              <Image height={10} width={10} className='w-full h-full object-cover' src="https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=600" alt="not showign" />
               </div>
               </div> 
               </div>
