@@ -9,6 +9,7 @@ import { manageDeals } from './routers/manageDeals';
 
 const app = express();
 
+//defining middlewares
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(session({
@@ -19,10 +20,13 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+//defining routes
 app.use("/auth", authRouter)
-app.use("/agent", agentRouter)
+app.use("/company/agent", agentRouter)
+app.use("/company/moniter")
+
 app.use("/client/leads", manageLeads)
-app.use("/client.deals", manageDeals)
+app.use("/client/deals", manageDeals)
 
 app.get("/", (req, res) => {
   res.send(req.user)
