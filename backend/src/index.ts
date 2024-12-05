@@ -3,11 +3,11 @@ import { authRouter } from './routers/auth';
 import "dotenv/config"
 import session from 'express-session';
 import passport from 'passport';
-import { agentRouter } from './routers/manageUsers';
-import { manageLeads } from './routers/manageLeads';
-import { manageDeals } from './routers/manageDeals';
-import { companyMonitoring } from './routers/companyMonitoring';
-import { manageSubscription } from './routers/subscription';
+import { agentRouter } from './routers/company/manageUsers';
+import { manageLeads } from './routers/agents/manageLeads';
+import { manageDeals } from './routers/agents/manageDeals';
+import { companyMonitoring } from './routers/company/companyMonitoring';
+import { manageSubscription } from './routers/company/subscription';
 import { manageCalendar } from './routers/calander';
 
 const app = express();
