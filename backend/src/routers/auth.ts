@@ -13,7 +13,7 @@ const router = Router();
 
 //manual signup route
 router.post('/sign-up', async (req: Request, res: Response) => {
-  const { name, email, password, dob, phone, companyId } = req.body;
+  const { name, email, password, dob, phone, companyId, gender } = req.body;
 
   try {
     if (email && password) {
@@ -40,6 +40,7 @@ router.post('/sign-up', async (req: Request, res: Response) => {
           dob,
           phone,
           companyId,
+          gender
         },
       });
       const token = jwt.sign(

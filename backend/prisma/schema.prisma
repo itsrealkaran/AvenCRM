@@ -213,8 +213,6 @@ model Agent {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  CalendarEvent CalendarEvent[]
-
   EmailCampaignRecipient EmailCampaignRecipient[]
 
   Property Property[]
@@ -310,10 +308,8 @@ model Payment {
   amount         Float
   date           DateTime    @default(now())
   type           PaymentType
-  
-  // Parties Involved
-  secondPartyName String?
-  description    String?
+
+  planType       PlanTier
   
   // Invoice and Billing
   invoiceNumber  String?
@@ -379,9 +375,7 @@ model CalendarEvent {
   type               EventType
   location           String?
   
-  
-  organizer          Agent                @relation(fields: [organizerId], references: [id])
-  organizerId        String
+  setterId           String
 
   
   // Audit

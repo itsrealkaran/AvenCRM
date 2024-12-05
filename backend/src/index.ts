@@ -6,6 +6,9 @@ import passport from 'passport';
 import { agentRouter } from './routers/manageUsers';
 import { manageLeads } from './routers/manageLeads';
 import { manageDeals } from './routers/manageDeals';
+import { companyMonitoring } from './routers/companyMonitoring';
+import { manageSubscription } from './routers/subscription';
+import { manageCalendar } from './routers/calander';
 
 const app = express();
 
@@ -21,9 +24,12 @@ app.use(passport.initialize())
 app.use(passport.session())
 
 //defining routes
+app.use("/calender", manageCalendar)
+
 app.use("/auth", authRouter)
 app.use("/company/agent", agentRouter)
-app.use("/company/moniter")
+app.use("/company/moniter", companyMonitoring)
+app.use("/company/subsciption", manageSubscription)
 
 app.use("/client/leads", manageLeads)
 app.use("/client/deals", manageDeals)
