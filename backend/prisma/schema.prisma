@@ -103,13 +103,13 @@ model Company {
   // Subscription details
   plan         Plan     @relation(fields: [planId], references: [id])
   planId       String
+  planStart   DateTime @default(now())
+  planEnd     DateTime
   
   // Detailed company information
   address      String?
   phone        String?
   website      String?
-  taxId        String?
-  foundedYear  Int?
   
   // Relations
   admin        Admin    @relation(fields: [adminId], references: [id])
@@ -124,8 +124,6 @@ model Company {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  CalendarEvent CalendarEvent[]
-
   EmailCampaign EmailCampaign[]
 
   CompanyAuditLog CompanyAuditLog[]
@@ -137,8 +135,6 @@ model Plan {
   name         PlanTier   @default(BASIC)
   price        Float
   maxUsers     Int
-  maxLeads     Int
-  maxDeals     Int
   features     Json?
   
   companies    Company[]
@@ -158,11 +154,8 @@ model Admin {
   // Relation to Company
   company      Company?
   
-  // Relations to other models
-  teams        Team[]
   supportTickets SupportTicket[]
   
-  role        UserRole   @default(ADMIN)
   lastLogin   DateTime?
   
   createdAt   DateTime   @default(now())
@@ -187,8 +180,6 @@ model Team {
   members      Agent[]    @relation("TeamMembers")
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
-
-  Admin Admin[]
 }
 
 // Agent/User Model
@@ -388,32 +379,14 @@ model CalendarEvent {
   type               EventType
   location           String?
   
-  // Relationships and Participants
-  company            Company              @relation(fields: [companyId], references: [id])
-  companyId          String
   
   organizer          Agent                @relation(fields: [organizerId], references: [id])
   organizerId        String
-  
-  // Participant Management
-  participants       CalendarEventParticipant[]
+
   
   // Audit
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-}
-
-model CalendarEventParticipant {
-  id                 String               @id @default(cuid())
-  
-  event              CalendarEvent        @relation(fields: [eventId], references: [id])
-  eventId            String
-  
-  
-  // Participation Status
-  status             String                @default("INVITED")
-  
-  createdAt          DateTime             @default(now())
 }
 
 // Email Campaign Management Model
