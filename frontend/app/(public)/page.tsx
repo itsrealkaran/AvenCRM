@@ -8,6 +8,8 @@ export default function Home() {
       <Link href='/admin'>Admin</Link>
 
       <Link href='/company'>Company</Link>
+
+      <Link href='/agent'>Agent</Link>
     </main>
   );
 }
