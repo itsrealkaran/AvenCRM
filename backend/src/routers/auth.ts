@@ -63,7 +63,7 @@ router.post('/sign-up', async (req: Request, res: Response) => {
 });
 
 //maual signin route
-router.post('/sign-in', async (req: Request, res: Response) => {
+router.get('/sign-in', async (req: Request, res: Response) => {
   const { email, password } = req.body;
 
   try {

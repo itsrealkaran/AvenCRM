@@ -20,7 +20,7 @@ router.get('/getAll', async (req, res) => {
 });
 
 router.post('/add', async (req, res) => {
-  const { name, age, gender, phoneNo, email, role, companyId } = req.body;
+  const { name, dob, gender, phoneNo, email, role, companyId } = req.body;
 
   try {
     const agent = await db.agent.create({
@@ -29,7 +29,7 @@ router.post('/add', async (req, res) => {
         email,
         password: 'testpassword',
         phone: phoneNo,
-        dob: age,
+        dob,
         gender,
         role,
         companyId,

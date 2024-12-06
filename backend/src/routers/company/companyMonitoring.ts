@@ -13,7 +13,7 @@ router.get('/agentsCount', async (req, res) => {
       },
     });
 
-    res.send(agents.length);
+    res.status(200).send(agents);
   } catch (err) {
     res.status(500).send(err);
   }
