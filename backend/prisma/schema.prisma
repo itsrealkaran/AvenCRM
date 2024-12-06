@@ -86,11 +86,37 @@ model SuperAdmin {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  Transactions   Transaction[]
+
   EmailCampaign EmailCampaign[]
 
   AdminAccessToken AdminAccessToken[]
 
   AdminLoginLog AdminLoginLog[]
+}
+
+model Transaction {
+  id             String      @id @default(cuid())
+  
+  superAdmin     SuperAdmin  @relation(fields: [superAdminId], references: [id])
+  superAdminId   String
+  
+  company        Company     @relation(fields: [companyId], references: [id])
+  companyId      String
+  
+  amount         Float
+  currency       String      @default("USD")
+  
+  planTier       PlanTier
+  subscriptionPeriod DateTime
+  subscriptionEndDate DateTime
+  
+  renewalCount   Int         @default(0)
+
+  paymentMethod  String?
+  
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime?   @updatedAt
 }
 
 // Company Model
@@ -114,6 +140,8 @@ model Company {
   // Relations
   admin        Admin    @relation(fields: [adminId], references: [id])
   adminId      String   @unique
+
+  Transactions   Transaction[]
   
   users        Agent[]
   leads        Lead[]
