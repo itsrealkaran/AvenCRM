@@ -1,51 +1,51 @@
-'use client'
+"use client";
 
-import { ColumnDef } from '@tanstack/react-table'
-import { DataTable } from '@/components/common-table'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Button } from '@/components/ui/button'
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTable } from "@/components/common-table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { MoreHorizontal } from 'lucide-react'
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 
 // Define the type for our data
 interface User {
-  id: string
-  name: string
-  email: string
-  role: string
-  status: 'active' | 'inactive'
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: "active" | "inactive";
 }
 
 // Sample data
 const users: User[] = [
   {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    role: 'Admin',
-    status: 'active',
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
+    role: "Admin",
+    status: "active",
   },
   {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    role: 'User',
-    status: 'active',
+    id: "2",
+    name: "Jane Smith",
+    email: "jane@example.com",
+    role: "User",
+    status: "active",
   },
   // Add more sample data as needed
-]
+];
 
 export function UsersTable() {
   // Define columns
   const columns: ColumnDef<User>[] = [
     {
-      id: 'select',
+      id: "select",
       header: ({ table }) => (
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
@@ -64,25 +64,25 @@ export function UsersTable() {
       enableHiding: false,
     },
     {
-      accessorKey: 'name',
-      header: 'Name',
+      accessorKey: "name",
+      header: "Name",
     },
     {
-      accessorKey: 'email',
-      header: 'Email',
+      accessorKey: "email",
+      header: "Email",
     },
     {
-      accessorKey: 'role',
-      header: 'Role',
+      accessorKey: "role",
+      header: "Role",
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: "status",
+      header: "Status",
     },
     {
-      id: 'actions',
+      id: "actions",
       cell: ({ row }) => {
-        const user = row.original
+        const user = row.original;
 
         return (
           <DropdownMenu>
@@ -94,54 +94,54 @@ export function UsersTable() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => console.log('Edit user', user)}>
+              <DropdownMenuItem onClick={() => console.log("Edit user", user)}>
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => console.log('Delete user', user)}>
+              <DropdownMenuItem onClick={() => console.log("Delete user", user)}>
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        )
+        );
       },
     },
-  ]
+  ];
 
   // Define filterable columns
   const filterableColumns = [
     {
-      id: 'role',
-      title: 'Role',
+      id: "role",
+      title: "Role",
       options: [
-        { label: 'Admin', value: 'Admin' },
-        { label: 'User', value: 'User' },
+        { label: "Admin", value: "Admin" },
+        { label: "User", value: "User" },
       ],
     },
     {
-      id: 'status',
-      title: 'Status',
+      id: "status",
+      title: "Status",
       options: [
-        { label: 'Active', value: 'active' },
-        { label: 'Inactive', value: 'inactive' },
+        { label: "Active", value: "active" },
+        { label: "Inactive", value: "inactive" },
       ],
     },
-  ]
+  ];
 
   // Define searchable columns
   const searchableColumns = [
     {
-      id: 'name',
-      title: 'Name',
+      id: "name",
+      title: "Name",
     },
     {
-      id: 'email',
-      title: 'Email',
+      id: "email",
+      title: "Email",
     },
-  ]
+  ];
 
   const handleRowSelect = (selectedRows: User[]) => {
-    console.log('Selected rows:', selectedRows)
-  }
+    console.log("Selected rows:", selectedRows);
+  };
 
   return (
     <DataTable
@@ -151,5 +151,5 @@ export function UsersTable() {
       searchableColumns={searchableColumns}
       onRowSelect={handleRowSelect}
     />
-  )
+  );
 }

@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React from 'react'
+import React from "react";
 import {
   BarChart3,
   Users,
@@ -9,8 +9,8 @@ import {
   DollarSign,
   Package,
   Activity,
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   ResponsiveContainer,
   BarChart,
@@ -23,26 +23,26 @@ import {
   PieChart,
   Pie,
   Cell,
-} from 'recharts'
-import { DataTable } from '@/components/common-table'
-import { columns } from '@/components/companies-table/columns'
+} from "recharts";
+import { DataTable } from "@/components/common-table";
+import { columns } from "@/components/companies-table/columns";
 
 const revenueData = [
-  { month: 'Jan', revenue: 15000 },
-  { month: 'Feb', revenue: 25000 },
-  { month: 'Mar', revenue: 18000 },
-  { month: 'Apr', revenue: 30000 },
-  { month: 'May', revenue: 40000 },
-  { month: 'Jun', revenue: 35000 },
-]
+  { month: "Jan", revenue: 15000 },
+  { month: "Feb", revenue: 25000 },
+  { month: "Mar", revenue: 18000 },
+  { month: "Apr", revenue: 30000 },
+  { month: "May", revenue: 40000 },
+  { month: "Jun", revenue: 35000 },
+];
 
 const customerData = [
-  { name: 'Enterprise', value: 45 },
-  { name: 'Pro', value: 30 },
-  { name: 'Basic', value: 25 },
-]
+  { name: "Enterprise", value: 45 },
+  { name: "Pro", value: 30 },
+  { name: "Basic", value: 25 },
+];
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28']
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28"];
 
 function AdminPage() {
   return (
@@ -150,38 +150,38 @@ function AdminPage() {
             data={[]}
             filterableColumns={[
               {
-                id: 'status',
-                title: 'Status',
+                id: "status",
+                title: "Status",
                 options: [
-                  { label: 'Active', value: 'active' },
-                  { label: 'Inactive', value: 'inactive' },
+                  { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
                 ],
               },
               {
-                id: 'plan',
-                title: 'Plan',
+                id: "plan",
+                title: "Plan",
                 options: [
-                  { label: 'Enterprise', value: 'enterprise' },
-                  { label: 'Pro', value: 'pro' },
-                  { label: 'Basic', value: 'basic' },
+                  { label: "Enterprise", value: "enterprise" },
+                  { label: "Pro", value: "pro" },
+                  { label: "Basic", value: "basic" },
                 ],
               },
             ]}
             searchableColumns={[
               {
-                id: 'name',
-                title: 'Name',
+                id: "name",
+                title: "Name",
               },
               {
-                id: 'email',
-                title: 'Email',
+                id: "email",
+                title: "Email",
               },
             ]}
           />
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-export default AdminPage
+export default AdminPage;

@@ -1,45 +1,45 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { ChevronDown } from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import * as React from "react";
+import { ChevronDown } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
-import { SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar'
+import { SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 
 interface SubItem {
-  title: string
-  url: string
+  title: string;
+  url: string;
 }
 
 interface SidebarDropdownProps {
-  title: string
-  icon: React.ElementType
-  items: SubItem[]
-  baseUrl: string
+  title: string;
+  icon: React.ElementType;
+  items: SubItem[];
+  baseUrl: string;
 }
 
 export function SidebarDropdown({ title, icon: Icon, items, baseUrl }: SidebarDropdownProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-  const pathname = usePathname()
+  const [isOpen, setIsOpen] = React.useState(false);
+  const pathname = usePathname();
 
-  const isActive = (path: string) => pathname.startsWith(path)
-  const isParentActive = items.some((item) => isActive(baseUrl + item.url))
+  const isActive = (path: string) => pathname.startsWith(path);
+  const isParentActive = items.some((item) => isActive(baseUrl + item.url));
 
   return (
     <div className="relative">
       <SidebarMenuItem>
         <SidebarMenuButton
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full justify-between ${isParentActive ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'hover:bg-accent'}`}
+          className={`w-full justify-between ${isParentActive ? "bg-primary text-primary-foreground hover:bg-primary/90" : "hover:bg-accent"}`}
         >
           <div className="flex items-center gap-3 px-2">
             <Icon className="h-4 w-4" />
             <span className="font-medium">{title}</span>
           </div>
           <ChevronDown
-            className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            className={`h-4 w-4 transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
           />
         </SidebarMenuButton>
       </SidebarMenuItem>
@@ -48,7 +48,7 @@ export function SidebarDropdown({ title, icon: Icon, items, baseUrl }: SidebarDr
         {isOpen && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
+            animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
@@ -61,8 +61,8 @@ export function SidebarDropdown({ title, icon: Icon, items, baseUrl }: SidebarDr
                     isActive={isActive(baseUrl + item.url)}
                     className={
                       isActive(baseUrl + item.url)
-                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                        : 'hover:bg-accent'
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                        : "hover:bg-accent"
                     }
                   >
                     <Link href={baseUrl + item.url} className="flex items-center gap-3 px-2">
@@ -76,5 +76,5 @@ export function SidebarDropdown({ title, icon: Icon, items, baseUrl }: SidebarDr
         )}
       </AnimatePresence>
     </div>
-  )
+  );
 }

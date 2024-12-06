@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 import {
   Users,
@@ -10,9 +10,9 @@ import {
   DollarSign,
   Building2,
   ChartLine,
-} from 'lucide-react'
-import { usePathname } from 'next/navigation'
-import Link from 'next/link'
+} from "lucide-react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 import {
   Sidebar,
@@ -23,92 +23,92 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar'
-import { SidebarDropdown } from '@/components/ui/sidebar-dropdown'
+} from "@/components/ui/sidebar";
+import { SidebarDropdown } from "@/components/ui/sidebar-dropdown";
 
 const companyItems = [
   {
-    title: 'Home',
-    url: '/company/dashboard',
+    title: "Home",
+    url: "/company/dashboard",
     icon: LayoutDashboard,
   },
   {
-    title: 'Leads',
+    title: "Leads",
     icon: Users,
     hasDropdown: true,
     items: [
-      { title: 'All Leads', url: '/leads' },
-      { title: 'Active Leads', url: '/leads/active' },
-      { title: 'Converted', url: '/leads/converted' },
-      { title: 'Lost', url: '/leads/lost' },
+      { title: "All Leads", url: "/leads" },
+      { title: "Active Leads", url: "/leads/active" },
+      { title: "Converted", url: "/leads/converted" },
+      { title: "Lost", url: "/leads/lost" },
     ],
   },
   {
-    title: 'Sales',
+    title: "Sales",
     icon: DollarSign,
     hasDropdown: true,
     items: [
-      { title: 'Pipeline', url: '/sales/pipeline' },
-      { title: 'Deals', url: '/sales/deals' },
-      { title: 'Quotations', url: '/sales/quotations' },
+      { title: "Pipeline", url: "/sales/pipeline" },
+      { title: "Deals", url: "/sales/deals" },
+      { title: "Quotations", url: "/sales/quotations" },
     ],
   },
   {
-    title: 'Calendar',
+    title: "Calendar",
     icon: Calendar,
     hasDropdown: true,
     items: [
-      { title: 'Meetings', url: '/calendar/meetings' },
-      { title: 'Tasks', url: '/calendar/tasks' },
-      { title: 'Reminders', url: '/calendar/reminders' },
+      { title: "Meetings", url: "/calendar/meetings" },
+      { title: "Tasks", url: "/calendar/tasks" },
+      { title: "Reminders", url: "/calendar/reminders" },
     ],
   },
   {
-    title: 'Communication',
+    title: "Communication",
     icon: MessageSquare,
     hasDropdown: true,
     items: [
-      { title: 'Messages', url: '/communication/messages' },
-      { title: 'Email', url: '/communication/email' },
-      { title: 'Chat', url: '/communication/chat' },
+      { title: "Messages", url: "/communication/messages" },
+      { title: "Email", url: "/communication/email" },
+      { title: "Chat", url: "/communication/chat" },
     ],
   },
   {
-    title: 'Documents',
+    title: "Documents",
     icon: FileText,
     hasDropdown: true,
     items: [
-      { title: 'All Documents', url: '/documents' },
-      { title: 'Contracts', url: '/documents/contracts' },
-      { title: 'Invoices', url: '/documents/invoices' },
+      { title: "All Documents", url: "/documents" },
+      { title: "Contracts", url: "/documents/contracts" },
+      { title: "Invoices", url: "/documents/invoices" },
     ],
   },
   {
-    title: 'Reports',
+    title: "Reports",
     icon: ChartLine,
     hasDropdown: true,
     items: [
-      { title: 'Sales Reports', url: '/reports/sales' },
-      { title: 'Lead Reports', url: '/reports/leads' },
-      { title: 'Activity Reports', url: '/reports/activity' },
+      { title: "Sales Reports", url: "/reports/sales" },
+      { title: "Lead Reports", url: "/reports/leads" },
+      { title: "Activity Reports", url: "/reports/activity" },
     ],
   },
   {
-    title: 'Settings',
-    url: '/company/settings',
+    title: "Settings",
+    url: "/company/settings",
     icon: Settings,
   },
-]
+];
 
 export function CompanySidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const isActive = (path: string) => {
-    if (path === '/company/dashboard' && pathname === '/company/dashboard') {
-      return true
+    if (path === "/company/dashboard" && pathname === "/company/dashboard") {
+      return true;
     }
-    return pathname.startsWith(path) && path !== '/company/dashboard'
-  }
+    return pathname.startsWith(path) && path !== "/company/dashboard";
+  };
 
   return (
     <Sidebar>
@@ -135,8 +135,8 @@ export function CompanySidebar() {
                       isActive={isActive(item.url as string)}
                       className={
                         isActive(item.url as string)
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                          : 'hover:bg-accent'
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "hover:bg-accent"
                       }
                     >
                       <Link href={item.url as string} className="flex items-center gap-3 px-2">
@@ -152,5 +152,5 @@ export function CompanySidebar() {
         </SidebarGroup>
       </SidebarContent>
     </Sidebar>
-  )
+  );
 }

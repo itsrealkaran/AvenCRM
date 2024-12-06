@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button'
-import React from 'react'
+import { Button } from "@/components/ui/button";
+import React from "react";
 
 function Dashboard() {
   return (
@@ -7,7 +7,7 @@ function Dashboard() {
       this is the Dashboard route
       <Button>Button</Button>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

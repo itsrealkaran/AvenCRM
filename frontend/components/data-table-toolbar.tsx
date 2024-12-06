@@ -1,26 +1,26 @@
-'use client'
+"use client";
 
-import { GrPowerReset } from 'react-icons/gr'
-import { Table } from '@tanstack/react-table'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { DataTableViewOptions } from '@/components/data-table-view-options'
-import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter'
+import { GrPowerReset } from "react-icons/gr";
+import { Table } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { DataTableViewOptions } from "@/components/data-table-view-options";
+import { DataTableFacetedFilter } from "@/components/data-table-faceted-filter";
 
 interface DataTableToolbarProps<TData> {
-  table: Table<TData>
+  table: Table<TData>;
   filterableColumns?: {
-    id: string
-    title: string
+    id: string;
+    title: string;
     options: {
-      label: string
-      value: string
-    }[]
-  }[]
+      label: string;
+      value: string;
+    }[];
+  }[];
   searchableColumns?: {
-    id: string
-    title: string
-  }[]
+    id: string;
+    title: string;
+  }[];
 }
 
 export function DataTableToolbar<TData>({
@@ -28,7 +28,7 @@ export function DataTableToolbar<TData>({
   filterableColumns = [],
   searchableColumns = [],
 }: DataTableToolbarProps<TData>) {
-  const isFiltered = table.getState().columnFilters.length > 0
+  const isFiltered = table.getState().columnFilters.length > 0;
 
   return (
     <div className="flex items-center justify-between gap-2">
@@ -40,7 +40,7 @@ export function DataTableToolbar<TData>({
                 <Input
                   key={column.id}
                   placeholder={`Filter ${column.title}...`}
-                  value={(table.getColumn(column.id)?.getFilterValue() as string) ?? ''}
+                  value={(table.getColumn(column.id)?.getFilterValue() as string) ?? ""}
                   onChange={(event) =>
                     table.getColumn(column.id)?.setFilterValue(event.target.value)
                   }
@@ -73,5 +73,5 @@ export function DataTableToolbar<TData>({
       </div>
       <DataTableViewOptions table={table} />
     </div>
-  )
+  );
 }

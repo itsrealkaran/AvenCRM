@@ -1,41 +1,41 @@
-'use client'
+"use client";
 
-import { DataTable } from '@/components/data-table'
-import { ColumnDef } from '@tanstack/react-table'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Badge } from '@/components/ui/badge'
-import { labels, priorities, statuses } from '@/data/data'
-import { DataTableColumnHeader } from '@/components/data-table-column-header'
+import { DataTable } from "@/components/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { labels, priorities, statuses } from "@/data/data";
+import { DataTableColumnHeader } from "@/components/data-table-column-header";
 
 // Define the data type
 type Customer = {
-  id: string
-  name: string
-  email: string
-  status: 'active' | 'inactive' | 'pending'
-  priority: 'low' | 'medium' | 'high'
-  label: string
-  lastContact: string
-}
+  id: string;
+  name: string;
+  email: string;
+  status: "active" | "inactive" | "pending";
+  priority: "low" | "medium" | "high";
+  label: string;
+  lastContact: string;
+};
 
 // Sample data
 const data: Customer[] = [
   {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    status: 'active',
-    priority: 'high',
-    label: 'new',
-    lastContact: '2024-01-15',
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
+    status: "active",
+    priority: "high",
+    label: "new",
+    lastContact: "2024-01-15",
   },
   // Add more sample data as needed
-]
+];
 
 // Define columns
 export const columns: ColumnDef<Customer>[] = [
   {
-    id: 'select',
+    id: "select",
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -54,21 +54,21 @@ export const columns: ColumnDef<Customer>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'name',
+    accessorKey: "name",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
   },
   {
-    accessorKey: 'email',
+    accessorKey: "email",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Email" />,
   },
   {
-    accessorKey: 'status',
+    accessorKey: "status",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Status" />,
     cell: ({ row }) => {
-      const status = statuses.find((status) => status.value === row.getValue('status'))
+      const status = statuses.find((status) => status.value === row.getValue("status"));
 
       if (!status) {
-        return null
+        return null;
       }
 
       return (
@@ -76,20 +76,20 @@ export const columns: ColumnDef<Customer>[] = [
           {status.icon && <status.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
           <span>{status.label}</span>
         </div>
-      )
+      );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(row.getValue(id));
     },
   },
   {
-    accessorKey: 'priority',
+    accessorKey: "priority",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Priority" />,
     cell: ({ row }) => {
-      const priority = priorities.find((priority) => priority.value === row.getValue('priority'))
+      const priority = priorities.find((priority) => priority.value === row.getValue("priority"));
 
       if (!priority) {
-        return null
+        return null;
       }
 
       return (
@@ -97,65 +97,65 @@ export const columns: ColumnDef<Customer>[] = [
           {priority.icon && <priority.icon className="mr-2 h-4 w-4 text-muted-foreground" />}
           <span>{priority.label}</span>
         </div>
-      )
+      );
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(row.getValue(id));
     },
   },
   {
-    accessorKey: 'label',
+    accessorKey: "label",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Label" />,
     cell: ({ row }) => {
-      const label = labels.find((label) => label.value === row.getValue('label'))
+      const label = labels.find((label) => label.value === row.getValue("label"));
 
       if (!label) {
-        return null
+        return null;
       }
 
-      return <Badge variant="outline">{label.label}</Badge>
+      return <Badge variant="outline">{label.label}</Badge>;
     },
     filterFn: (row, id, value) => {
-      return value.includes(row.getValue(id))
+      return value.includes(row.getValue(id));
     },
   },
   {
-    accessorKey: 'lastContact',
+    accessorKey: "lastContact",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Last Contact" />,
   },
-]
+];
 
 export default function CustomersPage() {
   // Define filterable columns
   const filterableColumns = [
     {
-      id: 'status',
-      title: 'Status',
+      id: "status",
+      title: "Status",
       options: statuses,
     },
     {
-      id: 'priority',
-      title: 'Priority',
+      id: "priority",
+      title: "Priority",
       options: priorities,
     },
     {
-      id: 'label',
-      title: 'Label',
+      id: "label",
+      title: "Label",
       options: labels,
     },
-  ]
+  ];
 
   // Define searchable columns
   const searchableColumns = [
     {
-      id: 'name',
-      title: 'Name',
+      id: "name",
+      title: "Name",
     },
     {
-      id: 'email',
-      title: 'Email',
+      id: "email",
+      title: "Email",
     },
-  ]
+  ];
 
   return (
     <div className="container mx-auto py-10">
@@ -166,5 +166,5 @@ export default function CustomersPage() {
         searchableColumns={searchableColumns}
       />
     </div>
-  )
+  );
 }

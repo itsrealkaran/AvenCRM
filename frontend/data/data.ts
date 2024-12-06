@@ -7,55 +7,55 @@ import {
   CrossCircledIcon,
   QuestionMarkCircledIcon,
   StopwatchIcon,
-} from '@radix-ui/react-icons'
+} from "@radix-ui/react-icons";
 
 export const statuses = [
   {
-    value: 'active',
-    label: 'Active',
+    value: "active",
+    label: "Active",
     icon: CheckCircledIcon,
   },
   {
-    value: 'inactive',
-    label: 'Inactive',
+    value: "inactive",
+    label: "Inactive",
     icon: CrossCircledIcon,
   },
   {
-    value: 'pending',
-    label: 'Pending',
+    value: "pending",
+    label: "Pending",
     icon: StopwatchIcon,
   },
-]
+];
 
 export const priorities = [
   {
-    label: 'Low',
-    value: 'low',
+    label: "Low",
+    value: "low",
     icon: ArrowDownIcon,
   },
   {
-    label: 'Medium',
-    value: 'medium',
+    label: "Medium",
+    value: "medium",
     icon: ArrowRightIcon,
   },
   {
-    label: 'High',
-    value: 'high',
+    label: "High",
+    value: "high",
     icon: ArrowUpIcon,
   },
-]
+];
 
 export const labels = [
   {
-    value: 'new',
-    label: 'New',
+    value: "new",
+    label: "New",
   },
   {
-    value: 'returning',
-    label: 'Returning',
+    value: "returning",
+    label: "Returning",
   },
   {
-    value: 'vip',
-    label: 'VIP',
+    value: "vip",
+    label: "VIP",
   },
-]
+];

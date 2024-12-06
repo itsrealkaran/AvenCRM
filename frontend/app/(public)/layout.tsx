@@ -1,11 +1,11 @@
-import React from 'react'
+import React from "react";
 
 function PublicLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
-  return <div>{children}</div>
+  return <div>{children}</div>;
 }
 
-export default PublicLayout
+export default PublicLayout;
