@@ -3,8 +3,16 @@
   "plugins": ["prettier", "@typescript-eslint"],
   "parser": "@typescript-eslint/parser",
   "rules": {
-    "prettier/prettier": "warn",
+    "prettier/prettier": [
+      "warn",
+      {
+        "singleQuote": true,
+        "jsxSingleQuote": true,
+        "endOfLine": "lf"
+      }
+    ],
     "@typescript-eslint/no-unused-vars": "warn",
-    "@typescript-eslint/no-explicit-any": "warn"
+    "@typescript-eslint/no-explicit-any": "warn",
+    "quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }]
   }
 }
