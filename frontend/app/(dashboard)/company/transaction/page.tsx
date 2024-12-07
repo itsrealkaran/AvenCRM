@@ -2,15 +2,16 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import FilterComp from '../components/FilterComp';
-import InvoiceOverview from '../components/InvoiceOverview';
 import { IoDownloadOutline, IoSearch } from 'react-icons/io5';
 import { LuFilter } from 'react-icons/lu';
 import { VscRefresh } from 'react-icons/vsc';
 
+import FilterComp from '../components/FilterComp';
+import InvoiceOverview from '../components/InvoiceOverview';
+
 const Page = () => {
   const [filteropen, setfilteropen] = useState(false);
-  
+
   const filterClose = () => setfilteropen(false);
 
   return (
@@ -22,7 +23,7 @@ const Page = () => {
             <h1 className='text-2xl font-bold text-gray-900'>Company Invoices</h1>
             <p className='text-sm text-gray-500 mt-1'>Manage and track your company transactions</p>
           </div>
-          
+
           <div className='flex items-center gap-4'>
             <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
               <IoSearch className='w-5 h-5 text-gray-600' />
@@ -33,7 +34,7 @@ const Page = () => {
             <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
               <IoDownloadOutline className='w-5 h-5 text-gray-600' />
             </button>
-            <button 
+            <button
               onClick={() => setfilteropen(true)}
               className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
             >

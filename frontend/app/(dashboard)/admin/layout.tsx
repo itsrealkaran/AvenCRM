@@ -6,7 +6,7 @@ import SideNavBar from './components/SideNavBar';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <SideNavBar current='admin' />
+      <SideNavBar />
       <main className='w-full min-w-[80%]'>{children}</main>
     </SidebarProvider>
   );

@@ -18,12 +18,7 @@ const menuItems = [
   {
     heading: 'monitoring',
     icons: LuComputer,
-    reff: '/company/monitering',
-  },
-  {
-    heading: 'crash report',
-    icons: TbReportAnalytics,
-    reff: '/company/crashreport',
+    reff: '/company/monitoring',
   },
   {
     heading: 'subscription',
@@ -38,7 +33,7 @@ const menuItems = [
   {
     heading: 'calender',
     icons: SlCalender,
-    reff: '/company/calender',
+    reff: '/company/calendar',
   },
   { heading: 'email', icons: MdOutlineEmail, reff: '/company/email' },
   {

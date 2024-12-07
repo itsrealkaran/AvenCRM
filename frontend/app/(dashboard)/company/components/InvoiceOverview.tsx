@@ -15,14 +15,14 @@ const InvoiceOverview: React.FC<InvoiceProps> = ({ func, open }) => {
       >
         <div className='grid grid-cols-4 gap-4 p-6 items-center'>
           <div className='text-sm text-gray-900'>Feb 2, 2023</div>
-          
+
           <div>
             <h3 className='text-sm font-medium text-gray-900'>Quarterly true-up</h3>
             <p className='text-xs text-gray-500 mt-1'>July 14, 2023 - July 5, 2024</p>
           </div>
-          
+
           <div className='text-sm font-medium text-gray-900'>₹50,000.00</div>
-          
+
           <div className='flex items-center justify-between'>
             <div>
               <span className='inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800'>
@@ -36,7 +36,7 @@ const InvoiceOverview: React.FC<InvoiceProps> = ({ func, open }) => {
           </div>
         </div>
       </div>
-      
+
       {open && (
         <div className='fixed inset-0 bg-white z-50'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>

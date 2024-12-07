@@ -61,11 +61,20 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
           <div>
             <Label htmlFor='title'>Title</Label>
             <Input id='title' {...register('title', { required: 'Title is required' })} />
-            {errors.title && <span className='text-red-500 text-sm'>{errors.title.message}</span>}
+            {errors.title && React.isValidElement(errors.title) ? (
+              <span className='text-red-500 text-sm'>{errors.title}</span>
+            ) : (
+              errors.title?.message && (
+                <span className='text-red-500 text-sm'>{errors.title.message}</span>
+              )
+            )}
           </div>
           <div>
             <Label htmlFor='description'>Description</Label>
             <Textarea id='description' {...register('description')} />
+            {errors.description && (
+              <span className='text-red-500 text-sm'>{errors.description.message}</span>
+            )}
           </div>
           <div>
             <Label htmlFor='start'>Start Date</Label>
@@ -74,7 +83,11 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
               type='datetime-local'
               {...register('start', { required: 'Start date is required' })}
             />
-            {errors.start && <span className='text-red-500 text-sm'>{errors.start.message}</span>}
+            {errors.start && React.isValidElement(errors.start)
+              ? errors.start
+              : errors.start?.message && (
+                  <span className='text-red-500 text-sm'>{errors.start.message}</span>
+                )}
           </div>
           <div>
             <Label htmlFor='end'>End Date</Label>
@@ -83,9 +96,11 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
               type='datetime-local'
               {...register('end', { required: 'End date is required' })}
             />
-            {errors.end && (
-              <span className='text-red-500 text-sm'>{<p>{errors.end.message}</p>}</span>
-            )}
+            {errors.end && React.isValidElement(errors.end)
+              ? errors.end
+              : errors.end?.message && (
+                  <span className='text-red-500 text-sm'>{errors.end.message}</span>
+                )}
           </div>
           <div className='flex justify-between'>
             <Button type='submit'>{event && event.id ? 'Update Event' : 'Create Event'}</Button>
