@@ -1,7 +1,1 @@
-export type EventColor =
-    | 'primary'
-    | 'secondary'
-    | 'success'
-    | 'warning'
-    | 'danger'
-    | 'info';
+export type EventColor = 'primary' | 'secondary' | 'success' | 'warning' | 'danger' | 'info';

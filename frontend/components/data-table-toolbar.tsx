@@ -1,11 +1,12 @@
 'use client';
 
-import { GrPowerReset } from 'react-icons/gr';
 import { Table } from '@tanstack/react-table';
+import { GrPowerReset } from 'react-icons/gr';
+
+import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter';
+import { DataTableViewOptions } from '@/components/data-table-view-options';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DataTableViewOptions } from '@/components/data-table-view-options';
-import { DataTableFacetedFilter } from '@/components/data-table-faceted-filter';
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>;

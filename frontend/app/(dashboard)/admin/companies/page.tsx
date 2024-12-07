@@ -1,11 +1,7 @@
-import React from 'react'
+import React from 'react';
 
 function CompaneiesPage() {
-  return (
-    <div>
-      
-    </div>
-  )
+  return <div></div>;
 }
 
-export default CompaneiesPage
+export default CompaneiesPage;

@@ -1,5 +1,6 @@
-import { UsersTable } from '@/components/users-table';
 import React from 'react';
+
+import { UsersTable } from '@/components/users-table';
 
 function Settings() {
   return (

@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
+import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -15,15 +15,15 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/input'
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from '@/components/ui/select';
 
 const formSchema = z.object({
   name: z.string().min(2, {
@@ -40,11 +40,11 @@ const formSchema = z.object({
   }),
   companyName: z.string().optional(),
   licenseNumber: z.string().optional(),
-})
+});
 
 export default function SignUp() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -56,45 +56,45 @@ export default function SignUp() {
       companyName: '',
       licenseNumber: '',
     },
-  })
+  });
 
-  const watchUserType = form.watch('userType')
+  const watchUserType = form.watch('userType');
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true)
+    setIsLoading(true);
     // TODO: Implement sign-up logic here
-    console.log(values)
+    console.log(values);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    router.push('/dashboard')
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsLoading(false);
+    router.push('/dashboard');
   }
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold">Create an Account</h1>
-        <p className="text-gray-500 dark:text-gray-400">
+    <div className='space-y-6'>
+      <div className='space-y-2 text-center'>
+        <h1 className='text-3xl font-bold'>Create an Account</h1>
+        <p className='text-gray-500 dark:text-gray-400'>
           Enter your details to create your account
         </p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
           <FormField
             control={form.control}
-            name="userType"
+            name='userType'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>User Type</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select user type" />
+                      <SelectValue placeholder='Select user type' />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="company">Company</SelectItem>
-                    <SelectItem value="agent">Agent</SelectItem>
+                    <SelectItem value='company'>Company</SelectItem>
+                    <SelectItem value='agent'>Agent</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -103,12 +103,12 @@ export default function SignUp() {
           />
           <FormField
             control={form.control}
-            name="name"
+            name='name'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your name" {...field} />
+                  <Input placeholder='Enter your name' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -116,12 +116,12 @@ export default function SignUp() {
           />
           <FormField
             control={form.control}
-            name="email"
+            name='email'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input placeholder="Enter your email" {...field} />
+                  <Input placeholder='Enter your email' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -129,12 +129,12 @@ export default function SignUp() {
           />
           <FormField
             control={form.control}
-            name="password"
+            name='password'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Password</FormLabel>
                 <FormControl>
-                  <Input type="password" placeholder="Create a password" {...field} />
+                  <Input type='password' placeholder='Create a password' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -143,12 +143,12 @@ export default function SignUp() {
           {watchUserType === 'company' && (
             <FormField
               control={form.control}
-              name="companyName"
+              name='companyName'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Company Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter company name" {...field} />
+                    <Input placeholder='Enter company name' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -158,32 +158,31 @@ export default function SignUp() {
           {watchUserType === 'agent' && (
             <FormField
               control={form.control}
-              name="licenseNumber"
+              name='licenseNumber'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>License Number</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter license number" {...field} />
+                    <Input placeholder='Enter license number' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           )}
-          <Button type="submit" className="w-full" disabled={isLoading}>
+          <Button type='submit' className='w-full' disabled={isLoading}>
             {isLoading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </form>
       </Form>
-      <div className="text-center">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+      <div className='text-center'>
+        <p className='text-sm text-gray-500 dark:text-gray-400'>
           Already have an account?{' '}
-          <Link href="/sign-in" className="text-primary hover:underline">
+          <Link href='/sign-in' className='text-primary hover:underline'>
             Sign In
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }
-

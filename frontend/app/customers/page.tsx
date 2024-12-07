@@ -1,11 +1,12 @@
 'use client';
 
-import { DataTable } from '@/components/data-table';
-import { ColumnDef } from '@tanstack/react-table';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge';
 import { labels, priorities, statuses } from '@/data/data';
+import { ColumnDef } from '@tanstack/react-table';
+
+import { DataTable } from '@/components/data-table';
 import { DataTableColumnHeader } from '@/components/data-table-column-header';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 
 // Define the data type
 type Customer = {

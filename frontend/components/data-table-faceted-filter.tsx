@@ -1,11 +1,10 @@
 'use client';
 
 import * as React from 'react';
+import { Column } from '@tanstack/react-table';
 import { FaCheck } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
-import { Column } from '@tanstack/react-table';
 
-import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +18,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 
 interface DataTableFacetedFilterProps<TData, TValue> {
   column?: Column<TData, TValue>;

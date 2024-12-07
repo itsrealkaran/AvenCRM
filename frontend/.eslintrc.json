@@ -1,18 +1,13 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript", "prettier"],
+  "extends": ["next/core-web-vitals", "prettier"],
   "plugins": ["prettier", "@typescript-eslint"],
   "parser": "@typescript-eslint/parser",
   "rules": {
-    "prettier/prettier": [
-      "warn",
-      {
-        "singleQuote": true,
-        "jsxSingleQuote": true,
-        "endOfLine": "lf"
-      }
-    ],
+    "prettier/prettier": ["error", {}, { "usePrettierrc": true }],
     "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/no-explicit-any": "warn",
-    "quotes": ["warn", "single", { "avoidEscape": true, "allowTemplateLiterals": true }]
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "no-unused-vars": "off"
   }
 }
