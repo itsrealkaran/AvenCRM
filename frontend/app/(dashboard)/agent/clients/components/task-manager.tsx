@@ -80,9 +80,7 @@ export function TaskManager() {
   const handleToggleStatus = (id: number) => {
     setTasks(
       tasks.map((task) =>
-        task.id === id
-          ? { ...task, status: task.status === 'Basic' ? 'Pending' : 'Basic' }
-          : task
+        task.id === id ? { ...task, status: task.status === 'Basic' ? 'Pending' : 'Basic' } : task
       )
     );
   };

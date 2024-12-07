@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from 'react-day-picker';
 
 import BackGroundImage from '../components/BackGroundImage';
 import InnerNav from '../components/InnerNav';
@@ -16,6 +18,13 @@ const Page = () => {
   const [details, setdetails] = useState(true);
   const [password, setpassword] = useState(false);
   const [notification, setnotification] = useState(false);
+
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    localStorage.removeItem('accessToken');
+    router.push('/auth/sign-in');
+  };
 
   const openDets = () => {
     setdetails(true);
@@ -41,6 +50,10 @@ const Page = () => {
       <div className='w-full   h-[100vh]  '>
         {/* this is the top navigation section  */}
         <TopNavigation />
+
+        <div>
+          <Button onClick={handleSignOut}>Sign Out</Button>
+        </div>
 
         {/* this is the main image section */}
         <div className='w-full h-[90%] overflow-y-auto'>
