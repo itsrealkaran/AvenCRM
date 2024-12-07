@@ -1,63 +1,113 @@
-import React from 'react';
-import Link from '@/node_modules/next/link';
-import { GrTransaction } from 'react-icons/gr';
-import { IoSettingsOutline } from 'react-icons/io5';
-import { LuComputer } from 'react-icons/lu';
-import { MdOutlineEmail, MdOutlineSubscriptions } from 'react-icons/md';
-import { PiBriefcase } from 'react-icons/pi';
-import { SlCalender } from 'react-icons/sl';
-import { TbReportAnalytics, TbSettings2, TbUsers } from 'react-icons/tb';
+'use client';
 
-// import Menu from '@/app/companydashboard/components/Menu';
+import React, { useState } from 'react';
+import Link from '@/node_modules/next/link';
+import {
+  Building2,
+  Calendar,
+  FileText,
+  HandshakeIcon,
+  LayoutDashboard,
+  LineChart,
+  Mail,
+  MenuIcon,
+  Settings,
+  Store,
+  Target,
+  Users,
+  Wallet,
+} from 'lucide-react';
+
+import Menu from './Menu';
+
+const menuItems = [
+  { heading: 'Dashboard', icons: LayoutDashboard, reff: '/agent' },
+  { heading: 'Clients', icons: Users, reff: '/agent/clients' },
+  {
+    heading: 'Property',
+    icons: Building2,
+    reff: '/agent/property',
+  },
+  {
+    heading: 'Marketing',
+    icons: Target,
+    reff: '/agent/marketing',
+  },
+  {
+    heading: 'Page Builder',
+    icons: FileText,
+    reff: '/agent/subscription',
+  },
+  {
+    heading: 'Leads',
+    icons: Store,
+    reff: '/agent/leads',
+  },
+  {
+    heading: 'Deals',
+    icons: HandshakeIcon,
+    reff: '/agent/deals',
+  },
+  {
+    heading: 'Transactions',
+    icons: Wallet,
+    reff: '/agent/transactions',
+  },
+  {
+    heading: 'Monitoring',
+    icons: LineChart,
+    reff: '/agent/monitoring',
+  },
+  { heading: 'Email', icons: Mail, reff: '/agent/email' },
+  {
+    heading: 'Settings',
+    icons: Settings,
+    reff: '/agent/settings',
+  },
+];
 
 const SideNavBar: React.FC = () => {
+  const [activeLink, setActiveLink] = useState<string>('/agent'); // This state tracks the active link
+
+  // Function to handle the active menu item change
+  const handleMenuClick = (id: string) => {
+    setActiveLink(id);
+  };
+
   return (
-    <div className='h-screen z-10  w-[100%] sticky top-0 select-none bg-white shadow-xl shadow-black/20 pt-10 px-8'>
+    <div className='sticky top-0 z-10 h-screen w-[18%] select-none bg-white px-8 pt-10 shadow-xl shadow-black/20'>
       {/* this is the top level heading display div  */}
 
-      <div className='w-full flex items-center gap-[5px]'>
+      <div className='flex w-full items-center gap-[5px]'>
         {/* this is the settings button */}
 
-        <div className='text-[2rem]'>
-          <TbSettings2 />
+        <div className='text-[2rem] text-primary'>
+          <MenuIcon className='w-8 h-8' />
         </div>
 
         {/* this is the main heading  */}
 
         <Link
           href='/dashboard'
-          className='text-[1.24rem]  text-[#5932ea]   flex gap-[2px] items-end font-bold'
+          className='flex items-end gap-[2px] text-[1.24rem] font-bold text-primary hover:text-primary/90 transition-colors'
         >
           <h1>AvenCRM</h1>
-          <span className='text-[10px] opacity-70 pb-[3px]'>v.01</span>
+          <span className='pb-[3px] text-[10px] opacity-70'>v.01</span>
         </Link>
       </div>
 
-      <div className=' w-full mt-[35px] h-fit flex flex-col gap-[2px] '>
-        <div className='w-full flex items-center gap-[5px]'>
-          <div className='text-[1.2rem]'>
-            <TbReportAnalytics />
-          </div>
-          <Link href='/dashboard' className='text-[0.9rem] font-semibold'>
-            Dashboard
-          </Link>
-        </div>
-        <div className='w-full flex items-center gap-[5px]'>
-          <div className='text-[1.2rem]'>
-            <TbUsers />
-          </div>
-          <Link href='/agent' className='text-[0.9rem] font-semibold'>
-            Agents
-          </Link>
-        </div>
-        <div className='w-full flex items-center gap-[5px]'>
-          <div className='text-[1.2rem]'>
-            <GrTransaction />
-          </div>
-          <Link href='/transactions' className='text-[0.9rem] font-semibold'>
-            Transactions
-          </Link>
-        </div>
+      <div className='mt-[35px] flex h-fit w-full flex-col gap-[2px]'>
+        {/* this is the single menu component  */}
+        {menuItems.map((item, index) => (
+          <Menu
+            key={index}
+            icons={item.icons}
+            heading={item.heading}
+            reff={item.reff}
+            isActive={activeLink === item.reff} // Pass active state
+            onClick={() => handleMenuClick(item.reff)} // Set active link on click
+          />
+        ))}
       </div>
     </div>
   );
