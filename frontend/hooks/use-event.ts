@@ -1,4 +1,4 @@
-import { fetchEvents } from '@/app/(dashboard)/admin/calendar/api';
+import { fetchEvents } from '@/app/(dashboard)/superadmin/calendar/api';
 import useSWR from 'swr';
 
 export function useEvents() {

@@ -7,7 +7,7 @@ import InnerNav from '@/components/InnerNav';
 import SettingNotification from '@/components/SettingNotification';
 import SettingPassword from '@/components/SettingPassword';
 
-import SettingDetails from '../../admin/components/SettingDetails';
+import SettingDetails from '../../superadmin/components/SettingDetails';
 
 const Page = () => {
   const [details, setdetails] = useState(true);

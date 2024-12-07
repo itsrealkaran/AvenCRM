@@ -22,43 +22,43 @@ const menuItems = [
   {
     heading: 'Dashboard',
     icon: FaChartLine,
-    href: '/admin',
+    href: '/superadmin',
     description: 'Overview of your CRM',
   },
   {
     heading: 'Companies',
     icon: HiOutlineBuildingOffice2,
-    href: '/admin/companies',
+    href: '/superadmin/companies',
     description: 'Manage companies',
   },
   {
     heading: 'Calendar',
     icon: BsCalendar2Date,
-    href: '/admin/calendar',
+    href: '/superadmin/calendar',
     description: 'Schedule and events',
   },
   {
     heading: 'Payments',
     icon: CiWallet,
-    href: '/admin/payment',
+    href: '/superadmin/payment',
     description: 'Transaction history',
   },
   {
     heading: 'Email',
     icon: CiMail,
-    href: '/admin/email',
+    href: '/superadmin/email',
     description: 'Communication hub',
   },
   {
     heading: 'Settings',
     icon: CiSettings,
-    href: '/admin/settings',
+    href: '/superadmin/settings',
     description: 'System preferences',
   },
 ] as const;
 
 const SideNavBar: React.FC = () => {
-  const [activeLink, setActiveLink] = useState<string>('/admin'); // This state tracks the active link
+  const [activeLink, setActiveLink] = useState<string>('/superadmin'); // This state tracks the active link
 
   // Function to handle the active menu item change
   const handleMenuClick = (id: string) => {

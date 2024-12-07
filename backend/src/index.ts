@@ -11,6 +11,7 @@ import { manageSubscription } from './routers/company/subscription';
 import { manageCalendar } from './routers/calander';
 import { manageCompany } from './routers/manageCompany';
 import cors from "cors"
+import logger, { getRequestLogger, generateRequestId } from './utils/logger';
 
 const app = express();
 
@@ -46,9 +47,50 @@ app.use(passport.session());
 
 // Add a middleware to log requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  console.log('Query:', req.query);
-  console.log('Body:', req.body);
+  // Add request ID to headers if not present
+  req.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
+  const reqLogger = getRequestLogger(req);
+
+  // Log request details
+  reqLogger.info(`Incoming ${req.method} request to ${req.url}`, {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    body: req.body,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+  });
+
+  // Log response
+  const originalSend = res.send;
+  res.send = function (body) {
+    reqLogger.debug('Response sent', {
+      statusCode: res.statusCode,
+      responseSize: body ? body.length : 0,
+    });
+    return originalSend.call(this, body);
+  };
+
+  next();
+});
+
+// Add performance monitoring middleware
+app.use((req, res, next) => {
+  const start = process.hrtime();
+  
+  // Add response time logging
+  res.on('finish', () => {
+    const diff = process.hrtime(start);
+    const responseTime = (diff[0] * 1e9 + diff[1]) / 1e6; // Convert to milliseconds
+    
+    const reqLogger = getRequestLogger(req);
+    reqLogger.http('Request completed', {
+      statusCode: res.statusCode,
+      requestMethod: req.method,
+      requestUrl: req.originalUrl,
+    });
+  });
+  
   next();
 });
 
@@ -66,7 +108,14 @@ app.use("/client/deals", manageDeals)
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
+  const reqLogger = getRequestLogger(req);
+  reqLogger.error('Unhandled error', {
+    error: err.message,
+    stack: err.stack,
+    url: req.url,
+    method: req.method,
+  });
+  
   res.status(500).json({ 
     error: 'Something broke!',
     message: err.message 
@@ -77,7 +126,41 @@ app.get("/", (req, res) => {
   res.send(req.user)
 })
 
+// Add global error handlers
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception', {
+    error: error.message,
+    stack: error.stack,
+    type: 'uncaughtException'
+  });
+  // Give logger time to write before exiting
+  setTimeout(() => process.exit(1), 1000);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection', {
+    reason,
+    promise,
+    type: 'unhandledRejection'
+  });
+});
+
+// Add memory usage logging at intervals
+setInterval(() => {
+  const used = process.memoryUsage();
+  logger.info('Memory usage', {
+    rss: `${Math.round(used.rss / 1024 / 1024)}MB`,
+    heapTotal: `${Math.round(used.heapTotal / 1024 / 1024)}MB`,
+    heapUsed: `${Math.round(used.heapUsed / 1024 / 1024)}MB`,
+    external: `${Math.round(used.external / 1024 / 1024)}MB`,
+  });
+}, 300000); // Log every 5 minutes
+
 const PORT = 8000;
 app.listen(PORT, () => {
-  console.log(`Connected on http://localhost:${PORT}`);
+  logger.info(`Server started successfully`, {
+    port: PORT,
+    environment: process.env.NODE_ENV || 'development',
+    nodeVersion: process.version,
+  });
 });
