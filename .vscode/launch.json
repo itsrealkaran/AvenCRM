@@ -4,47 +4,23 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Debug Backend",
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "name": "Debug Express App",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["--inspect"],
       "program": "${workspaceFolder}/backend/src/index.ts",
-      "outFiles": [
-        "${workspaceFolder}/backend/dist/**/*.js"
-      ],
+      "skipFiles": ["<node_internals>/**"],
+      "restart": true,
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "autoAttachChildProcesses": true,
       "sourceMaps": true,
       "resolveSourceMapLocations": [
         "${workspaceFolder}/**",
         "!**/node_modules/**"
       ],
-      "preLaunchTask": "tsc: build - backend/tsconfig.json",
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
       "env": {
         "NODE_ENV": "development"
-      },
-      "runtimeArgs": [
-        "--inspect-brk"
-      ],
-      "outputCapture": "std",
-      "trace": true,
-      "smartStep": true,
-      "sourceMapPathOverrides": {
-        "webpack:///./~/*": "${workspaceFolder}/backend/node_modules/*",
-        "webpack:////*": "/*",
-        "webpack:///./*": "${workspaceFolder}/backend/*"
       }
-    },
-    {
-      "type": "node",
-      "request": "attach",
-      "name": "Attach to Process",
-      "port": 9229,
-      "restart": true,
-      "sourceMaps": true,
-      "outFiles": [
-        "${workspaceFolder}/backend/dist/**/*.js"
-      ]
     }
   ]
 }

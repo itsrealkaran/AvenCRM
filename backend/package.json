@@ -5,9 +5,9 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc -b src/index.ts",
+    "build": "tsc",
     "start": "node dist/index.js",
-    "dev": "nodemon src/index.ts"
+    "dev": "nodemon --exec node --loader ts-node/esm src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -31,6 +31,9 @@
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "prisma": "^6.0.1"
+    "@types/node": "^22.10.1",
+    "bun-types": "^1.1.38",
+    "prisma": "^6.0.1",
+    "typescript": "^5.7.2"
   }
 }

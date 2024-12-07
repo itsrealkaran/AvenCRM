@@ -61,8 +61,8 @@ const adminItems = [
     icon: Settings,
     hasDropdown: true,
     items: [
-      { title: 'Profile Settings', url: '/admin/settings' },
-      { title: 'Database Settings', url: '/admin/database-settings' },
+      { title: 'Profile Settings', url: '/settings' },
+      { title: 'Database Settings', url: '/database-settings' },
     ],
   },
 ];
