@@ -13,7 +13,16 @@ import { manageCompany } from './routers/manageCompany';
 import cors from "cors"
 import logger, { getRequestLogger, generateRequestId } from './utils/logger';
 
+// Enable source map support for stack traces
+import 'source-map-support/register';
+
 const app = express();
+
+// Debug middleware - log all requests
+app.use((req, res, next) => {
+   // Debugger breakpoint for all requests
+  next();
+});
 
 // Configure CORS with specific options
 app.use(cors({
@@ -29,6 +38,19 @@ app.use(express.urlencoded({ extended: true }));
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
+// Request body debug middleware
+app.use((req, res, next) => {
+  if (req.body && Object.keys(req.body).length) {
+     // Breakpoint for requests with body
+    logger.debug('Request body:', { 
+      path: req.path,
+      method: req.method,
+      body: req.body 
+    });
+  }
+  next();
+});
+
 // Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || "nope",
@@ -41,12 +63,26 @@ app.use(session({
   }
 }));
 
+// Debug session middleware
+app.use((req, res, next) => {
+  if (req.session) {
+     // Breakpoint for session inspection
+    logger.debug('Session data:', { 
+      sessionID: req.sessionID,
+      session: req.session 
+    });
+  }
+  next();
+});
+
 // Passport middleware
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Add a middleware to log requests
+// Add a middleware to log requests with detailed debugging
 app.use((req, res, next) => {
+   // Debugger breakpoint for request inspection
+  
   // Add request ID to headers if not present
   req.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
   const reqLogger = getRequestLogger(req);
@@ -57,16 +93,19 @@ app.use((req, res, next) => {
     url: req.url,
     query: req.query,
     body: req.body,
+    headers: req.headers,
     ip: req.ip,
     userAgent: req.get('user-agent'),
   });
 
-  // Log response
+  // Debug response
   const originalSend = res.send;
   res.send = function (body) {
+     // Breakpoint for response inspection
     reqLogger.debug('Response sent', {
       statusCode: res.statusCode,
       responseSize: body ? body.length : 0,
+      headers: res.getHeaders(),
     });
     return originalSend.call(this, body);
   };
@@ -74,12 +113,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Add performance monitoring middleware
+// Add performance monitoring middleware with debugging
 app.use((req, res, next) => {
   const start = process.hrtime();
   
-  // Add response time logging
   res.on('finish', () => {
+     // Breakpoint for performance metrics
     const diff = process.hrtime(start);
     const responseTime = (diff[0] * 1e9 + diff[1]) / 1e6; // Convert to milliseconds
     
@@ -87,77 +126,123 @@ app.use((req, res, next) => {
     reqLogger.http('Request completed', {
       statusCode: res.statusCode,
       requestMethod: req.method,
-      requestUrl: req.originalUrl,
+      requestUrl: req.originalUrl
     });
   });
   
   next();
 });
 
-//defining routes
-app.use("/calender", manageCalendar)
-app.use("/admin/company", manageCompany)
+//defining routes with debug points
+app.use("/calender", (req, res, next) => {
+   // Calendar route debug point
+  next();
+}, manageCalendar);
 
-app.use("/auth", authRouter)
-app.use("/company/agent", agentRouter)
-app.use("/company/moniter", companyMonitoring)
-app.use("/company/subsciption", manageSubscription)
+app.use("/admin/company", (req, res, next) => {
+   // Admin company route debug point
+  next();
+}, manageCompany);
 
-app.use("/client/leads", manageLeads)
-app.use("/client/deals", manageDeals)
+app.use("/auth", (req, res, next) => {
+   // Auth route debug point
+  next();
+}, authRouter);
 
-// Error handling middleware
+app.use("/company/agent", (req, res, next) => {
+   // Company agent route debug point
+  next();
+}, agentRouter);
+
+app.use("/company/moniter", (req, res, next) => {
+   // Company monitor route debug point
+  next();
+}, companyMonitoring);
+
+app.use("/company/subsciption", (req, res, next) => {
+   // Company subscription route debug point
+  next();
+}, manageSubscription);
+
+app.use("/client/leads", (req, res, next) => {
+   // Client leads route debug point
+  next();
+}, manageLeads);
+
+app.use("/client/deals", (req, res, next) => {
+   // Client deals route debug point
+  next();
+}, manageDeals);
+
+// Enhanced error handling middleware with debugging
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+   // Error handling debug point
+  
   const reqLogger = getRequestLogger(req);
   reqLogger.error('Unhandled error', {
     error: err.message,
     stack: err.stack,
     url: req.url,
     method: req.method,
+    body: req.body,
+    query: req.query,
+    headers: req.headers,
+    timestamp: new Date().toISOString()
   });
   
   res.status(500).json({ 
     error: 'Something broke!',
-    message: err.message 
+    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
+    requestId: req.headers['x-request-id']
   });
 });
 
+// Root route with debug point
 app.get("/", (req, res) => {
-  res.send(req.user)
-})
+   // Root route debug point
+  res.send(req.user);
+});
 
-// Add global error handlers
+// Enhanced global error handlers with debugging
 process.on('uncaughtException', (error) => {
+   // Uncaught exception debug point
   logger.error('Uncaught Exception', {
     error: error.message,
     stack: error.stack,
-    type: 'uncaughtException'
+    type: 'uncaughtException',
+    timestamp: new Date().toISOString(),
+    memoryUsage: process.memoryUsage()
   });
-  // Give logger time to write before exiting
   setTimeout(() => process.exit(1), 1000);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
+   // Unhandled rejection debug point
   logger.error('Unhandled Rejection', {
     reason,
     promise,
-    type: 'unhandledRejection'
+    type: 'unhandledRejection',
+    timestamp: new Date().toISOString(),
+    memoryUsage: process.memoryUsage()
   });
 });
 
-// Add memory usage logging at intervals
+// Memory usage monitoring with debug point
 setInterval(() => {
+   // Memory usage debug point
   const used = process.memoryUsage();
   logger.info('Memory usage', {
     rss: `${Math.round(used.rss / 1024 / 1024)}MB`,
     heapTotal: `${Math.round(used.heapTotal / 1024 / 1024)}MB`,
     heapUsed: `${Math.round(used.heapUsed / 1024 / 1024)}MB`,
     external: `${Math.round(used.external / 1024 / 1024)}MB`,
+    timestamp: new Date().toISOString()
   });
-}, 300000); // Log every 5 minutes
+}, 300000);
 
 const PORT = 8000;
 app.listen(PORT, () => {
+   // Server start debug point
   logger.info(`Server started successfully`, {
     port: PORT,
     environment: process.env.NODE_ENV || 'development',
