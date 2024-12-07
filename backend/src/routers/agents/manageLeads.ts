@@ -57,6 +57,42 @@ router.post('/add', async (req, res) => {
   }
 });
 
+router.post('/add', async (req, res) => {
+  const {
+    name,
+    status,
+    phoneNo,
+    email,
+    companyId,
+    agentId,
+    leadAmount,
+    source,
+    expectedDate,
+    notes,
+  } = req.body;
+
+  try {
+    const lead = await db.lead.create({
+      data: {
+        companyId,
+        agentId,
+        name,
+        status,
+        phone: phoneNo,
+        email,
+        leadAmount,
+        source,
+        expectedDate,
+        notes,
+      },
+    });
+
+    res.status(201).send(lead);
+  } catch (err) {
+    res.send(err);
+  }
+});
+
 router.patch('/update', async (req, res) => {
   const {
     name,

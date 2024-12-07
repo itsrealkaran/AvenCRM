@@ -24,12 +24,12 @@ router.post('/sign-up', async (req: Request, res: Response) => {
       });
       if (checkExistingProfile) {
         const token = jwt.sign(
-          { profile: checkExistingProfile },
+          { profileId: checkExistingProfile.id },
           process.env.JWT_SECRET || 'nope',
         );
         res
           .status(400)
-          .json({ access_token: token, user: checkExistingProfile });
+          .json({ access_token: token });
       }
       const hashedPassword = await bcrypt.hash(password, 12);
       const profile = await db.agent.create({
@@ -44,10 +44,10 @@ router.post('/sign-up', async (req: Request, res: Response) => {
         },
       });
       const token = jwt.sign(
-        { profile: profile },
+        { profileId: profile.id },
         process.env.JWT_SECRET || 'nope',
       );
-      res.cookie('Authentication', token, {
+      res.cookie('Authorisation', token, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
@@ -68,18 +68,25 @@ router.get('/sign-in', async (req: Request, res: Response) => {
 
   try {
     if (email && password) {
-      const checkExistingProfile = await db.agent.findFirst({
+      let checkExistingProfile: any = await db.admin.findFirst({
         where: {
           email,
         },
       });
+      if(checkExistingProfile === null){
+        checkExistingProfile = await db.superAdmin.findFirst({
+          where: {
+            email,
+          },
+        });
+      }
       if (checkExistingProfile) {
         if (bcrypt.compareSync(password, checkExistingProfile.password)) {
           const token = jwt.sign(
-            { profile: checkExistingProfile },
+            { profileId: checkExistingProfile.id },
             process.env.JWT_SECRET || 'nope',
           );
-          res.cookie('Authentication', token, {
+          res.cookie('Authorisation', token, {
             httpOnly: true,
             secure: true,
             sameSite: 'strict',
@@ -87,7 +94,7 @@ router.get('/sign-in', async (req: Request, res: Response) => {
           console.log(res.cookie);
           res
             .status(200)
-            .json({ access_token: token, user: checkExistingProfile });
+            .json({ access_token: token });
         } else {
           res.status(400).json({ message: 'wrong passord' });
         }
