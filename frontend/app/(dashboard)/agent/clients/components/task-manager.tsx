@@ -54,7 +54,7 @@ const dummyTasks = [
     title: 'Prepare listing presentation for 456 Elm St',
     dueDate: '2023-06-20',
     priority: 'Low',
-    status: 'Completed',
+    status: 'Basic',
   },
 ];
 
@@ -81,7 +81,7 @@ export function TaskManager() {
     setTasks(
       tasks.map((task) =>
         task.id === id
-          ? { ...task, status: task.status === 'Completed' ? 'Pending' : 'Completed' }
+          ? { ...task, status: task.status === 'Basic' ? 'Pending' : 'Basic' }
           : task
       )
     );
@@ -169,7 +169,7 @@ export function TaskManager() {
                     <SelectContent>
                       <SelectItem value='Pending'>Pending</SelectItem>
                       <SelectItem value='In Progress'>In Progress</SelectItem>
-                      <SelectItem value='Completed'>Completed</SelectItem>
+                      <SelectItem value='Basic'>Basic</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -195,7 +195,7 @@ export function TaskManager() {
               <TableRow key={task.id}>
                 <TableCell>
                   <Checkbox
-                    checked={task.status === 'Completed'}
+                    checked={task.status === 'Basic'}
                     onCheckedChange={() => handleToggleStatus(task.id)}
                   />
                 </TableCell>
@@ -222,7 +222,7 @@ export function TaskManager() {
                 <TableCell>
                   <div
                     className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      task.status === 'Completed'
+                      task.status === 'Basic'
                         ? 'bg-green-100 text-green-800'
                         : task.status === 'In Progress'
                           ? 'bg-blue-100 text-blue-800'

@@ -5,81 +5,81 @@ import { LineChart } from '../lib/graphComp/LineChart';
 const chartdata = [
   {
     date: 'Jan 23',
-    Completed: 2890,
-    InProgress: 2338,
-    On_hold: 2556,
+    Basic: 2890,
+    Premium: 2338,
+    Enterprise: 2556,
   },
   {
     date: 'Feb 23',
-    Completed: 2756,
-    InProgress: 2103,
-    On_hold: 3556,
+    Basic: 2756,
+    Premium: 2103,
+    Enterprise: 3556,
   },
   {
     date: 'Mar 23',
-    Completed: 3322,
-    InProgress: 2194,
-    On_hold: 1556,
+    Basic: 3322,
+    Premium: 2194,
+    Enterprise: 1556,
   },
   {
     date: 'Apr 23',
-    Completed: 3470,
-    InProgress: 2108,
-    On_hold: 3056,
+    Basic: 3470,
+    Premium: 2108,
+    Enterprise: 3056,
   },
   {
     date: 'May 23',
-    Completed: 3475,
-    InProgress: 1812,
-    On_hold: 1056,
+    Basic: 3475,
+    Premium: 1812,
+    Enterprise: 1056,
   },
   {
     date: 'Jun 23',
-    Completed: 3129,
-    InProgress: 1726,
-    On_hold: 2056,
+    Basic: 3129,
+    Premium: 1726,
+    Enterprise: 2056,
   },
   {
     date: 'Jul 23',
-    Completed: 3490,
-    InProgress: 1982,
-    On_hold: 2016,
+    Basic: 3490,
+    Premium: 1982,
+    Enterprise: 2016,
   },
   {
     date: 'Aug 23',
-    Completed: 2903,
-    InProgress: 2012,
-    On_hold: 4046,
+    Basic: 2903,
+    Premium: 2012,
+    Enterprise: 4046,
   },
   {
     date: 'Sep 23',
-    Completed: 2643,
-    InProgress: 2342,
-    On_hold: 2916,
+    Basic: 2643,
+    Premium: 2342,
+    Enterprise: 2916,
   },
   {
     date: 'Oct 23',
-    Completed: 2837,
-    InProgress: 2473,
-    On_hold: 4056,
+    Basic: 2837,
+    Premium: 2473,
+    Enterprise: 4056,
   },
   {
     date: 'Nov 23',
-    Completed: 2954,
-    InProgress: 3848,
-    On_hold: 2006,
+    Basic: 2954,
+    Premium: 3848,
+    Enterprise: 2006,
   },
   {
     date: 'Dec 23',
-    Completed: 3239,
-    InProgress: 3736,
-    On_hold: 1256,
+    Basic: 3239,
+    Premium: 3736,
+    Enterprise: 1256,
   },
   {
     date: 'Dec 23',
-    Completed: 2239,
-    InProgress: 4736,
-    On_hold: 4056,
+    Basic: 2239,
+    Premium: 4736,
+    Enterprise: 4056,
   },
 ];
 
@@ -88,7 +88,7 @@ export const SingleLineChart = () => (
     className='h-full w-full text-[8px]'
     data={chartdata}
     index='date'
-    categories={['Completed']}
+    categories={['Basic']}
     valueFormatter={(number: number) => `$${Intl.NumberFormat('us').format(number).toString()}`}
     onValueChange={(v) => console.log(v)}
   />
