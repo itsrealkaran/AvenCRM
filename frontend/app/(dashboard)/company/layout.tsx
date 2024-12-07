@@ -1,14 +1,12 @@
-import { CompanySidebar } from '@/components/company-sidebar';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+
+import SideNavBar from './components/SideNavbar';
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
-      <CompanySidebar />
-      <main>
-        <SidebarTrigger />
-        {children}
-      </main>
+      <SideNavBar />
+      <main className='w-full min-w-[80%]'>{children}</main>
     </SidebarProvider>
   );
 }
