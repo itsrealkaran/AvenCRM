@@ -27,14 +27,14 @@ import { AxisDomain } from 'recharts/types/util/types';
 //   hasOnlyOneValueForKey,
 // } from '../chartUtils';
 
-import { AvailableChartColors, 
-  AvailableChartColorsKeys, 
+import {
+  AvailableChartColors,
+  AvailableChartColorsKeys,
   constructCategoryColors,
   getColorClassName,
   getYAxisDomain,
   hasOnlyOneValueForKey,
 } from '../chartUtils';
-
 import { useOnWindowResize } from '../useOnWindowResize';
 import { cx } from '../utils/cx';
 

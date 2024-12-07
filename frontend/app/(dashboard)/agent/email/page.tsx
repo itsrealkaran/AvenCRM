@@ -16,8 +16,8 @@ export default function EmailDashboard() {
   return (
     <div className='container mx-auto p-6'>
       <h1 className='text-3xl font-bold mb-6'>Email Dashboard</h1>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
-        <TabsList className='grid w-full grid-cols-5'>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4 '>
+        <TabsList className='grid w-full grid-cols-5 lg:min-h-[60px]'>
           <TabsTrigger value='compose'>Compose</TabsTrigger>
           <TabsTrigger value='inbox'>Inbox</TabsTrigger>
           <TabsTrigger value='analytics'>Analytics</TabsTrigger>

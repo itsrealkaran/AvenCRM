@@ -3,31 +3,52 @@ import Link from '@/node_modules/next/link';
 import { FaAngleRight } from 'react-icons/fa6';
 
 interface MenuProps {
+  className?: string;
   icons: React.ComponentType;
   heading: string;
   reff: string;
-  isActive: boolean; // New prop to check if it's active
-  onClick: () => void; // Function to handle click event
+  isActive: boolean;
+  onClick: () => void;
 }
 
-const Menu: React.FC<MenuProps> = ({ icons: Icon, heading, reff, isActive, onClick }) => {
+const Menu: React.FC<MenuProps> = ({
+  icons: Icon,
+  heading,
+  reff,
+  isActive,
+  onClick,
+  className,
+}) => {
   return (
     <Link
       href={reff}
-      className={`w-full flex justify-between py-[10px] rounded-[9px] pl-3 pr-[3px] items-center h-fit 
-        ${isActive ? 'bg-[#5932ea] text-white' : 'opacity-45 hover:opacity-100 hover:bg-[#5932ea] hover:text-white'}`}
-      onClick={onClick} // Trigger onClick when the menu item is clicked
+      className={`${className} group flex w-full items-center justify-between rounded-lg px-3 py-2 transition-all duration-200 ease-in-out
+        ${
+          isActive
+            ? 'bg-primary text-white'
+            : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
+        }`}
+      onClick={onClick}
     >
-      {/* inner div for the logo and text */}
-      <div className='capitalize h-full font-semibold flex gap-[15px] items-center'>
-        {/* this is the svg container */}
-        <div className='text-[1.2rem]'>{Icon && <Icon />}</div>
-        <h1 className='text-[0.95rem]'>{heading}</h1>
+      <div className='flex items-center gap-3'>
+        <div className='flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-200'>
+          {Icon && (
+            <Icon
+              className={`h-5 w-5 ${isActive ? 'text-white' : 'text-gray-600 group-hover:text-primary'}`}
+            />
+          )}
+        </div>
+        <span
+          className={`text-sm font-medium capitalize ${isActive ? 'text-white' : 'text-gray-700 group-hover:text-primary'}`}
+        >
+          {heading}
+        </span>
       </div>
-
-      <div>
-        <FaAngleRight />
-      </div>
+      <FaAngleRight
+        className={`h-4 w-4 transition-transform duration-200 
+        ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-primary'} 
+        ${isActive ? 'rotate-90' : 'group-hover:translate-x-1'}`}
+      />
     </Link>
   );
 };
