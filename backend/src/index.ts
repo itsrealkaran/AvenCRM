@@ -9,6 +9,8 @@ import { manageDeals } from './routers/agents/manageDeals';
 import { companyMonitoring } from './routers/company/companyMonitoring';
 import { manageSubscription } from './routers/company/subscription';
 import { manageCalendar } from './routers/calander';
+import { manageCompany } from './routers/manageCompany';
+import cors from "cors"
 
 const app = express();
 
@@ -23,8 +25,11 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
+app.use(cors())
+
 //defining routes
 app.use("/calender", manageCalendar)
+app.use("/admin/company", manageCompany)
 
 app.use("/auth", authRouter)
 app.use("/company/agent", agentRouter)

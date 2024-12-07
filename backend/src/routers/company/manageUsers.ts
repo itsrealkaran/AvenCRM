@@ -36,14 +36,14 @@ router.post("/add", authenticateToken, async (req, res) => {
     //@ts-ignore
     const adminId = req.user.profileId;
     try {
-      const company = await db.company.findFirst({
-        where: {
-          adminId,
-        },
-      });
-      if (!company) {
-        res.status(404).json({ message: "heckerrrrr" });
-      } else {
+        const company = await db.company.findFirst({
+          where: {
+            adminId,
+          },
+        });
+        if (!company) {
+          res.status(404).json({ message: "heckerrrrr" });
+        } else {
         const agent = await db.agent.create({
           data: {
             name,
