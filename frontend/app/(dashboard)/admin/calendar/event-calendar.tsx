@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Loader2 } from 'lucide-react'
 import 'react-big-calendar/lib/css/react-big-calendar.css'
+import { mockEvents } from './mockData'
 
 // Setup the localizer for BigCalendar
 const localizer = momentLocalizer(moment)
@@ -18,12 +19,12 @@ export default function Calendar() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const { events, isLoading, error, mutate } = useEvents()
 
-  const handleSelectEvent = (event) => {
+  const handleSelectEvent = (event: React.SetStateAction<null>) => {
     setSelectedEvent(event)
     setIsModalOpen(true)
   }
 
-  const handleSelectSlot = ({ start, end }) => {
+  const handleSelectSlot = ({ start, end }: any) => {
     setSelectedEvent({ start, end })
     setIsModalOpen(true)
   }
