@@ -8,6 +8,7 @@ import bcrypt from 'bcrypt';
 import session from "express-session"
 
 import db from '../db/index';
+import { UserRole } from '@prisma/client';
 
 const router = Router();
 
@@ -110,23 +111,25 @@ router.post('/admin/sign-up', async (req: Request, res: Response) => {
 
 //maual signin route
 router.get('/sign-in', async (req: Request, res: Response) => {
-  const { email, password } = req.body;
+  const { email, password, role } = req.body;
 
   try {
     if (email && password) {
-      let checkExistingProfile: any = await db.admin.findFirst({
-        where: {
-          email,
-        },
-      });
-      if(checkExistingProfile === null){
+      let checkExistingProfile: any
+      if(role === UserRole.ADMIN) {
+        checkExistingProfile = await db.admin.findFirst({
+          where: {
+            email,
+          },
+        });
+      } else if(checkExistingProfile === UserRole.SUPERADMIN){
         checkExistingProfile = await db.superAdmin.findFirst({
           where: {
             email,
           },
         });
       }
-      if (checkExistingProfile) {
+      if (!checkExistingProfile) {
         if (bcrypt.compareSync(password, checkExistingProfile.password)) {
           const token = jwt.sign(
             { profileId: checkExistingProfile.id },
