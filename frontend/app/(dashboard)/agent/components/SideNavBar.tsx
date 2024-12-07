@@ -34,11 +34,30 @@ const SideNavBar: React.FC = () => {
       </div>
 
       <div className=' w-full mt-[35px] h-fit flex flex-col gap-[2px] '>
-        {/* this is the single menu component  */}
-        {/* {[{heading:"Property" , icons:TbUsers , reff:"/PropertyDashboard"  } , {heading:"Marketing" , icons:PiBriefcase , reff:"/PropertyDashboard/marketing"  } ,{heading:"Page builder" , icons:LuComputer , reff:"/PropertyDashboard/pagebuilder" } , {heading:"Leads" , icons:TbReportAnalytics , reff:"/PropertyDashboard/leads" } ,   {heading:"Deals" , icons:MdOutlineSubscriptions , reff:"/PropertyDashboard/deals" } ,{heading:"monitoring" , icons:MdOutlineSubscriptions , reff:"/PropertyDashboard/monitoring" } , {heading:"transaction" , icons:GrTransaction , reff:"/PropertyDashboard/transaction"} ,{heading:"calender" , icons:SlCalender, reff:"/PropertyDashboard/calender" } ,{heading:"email" , icons:MdOutlineEmail, reff:"/PropertyDashboard/email" } ,{heading:"settings" , icons:IoSettingsOutline, reff:"/PropertyDashboard/setting" } ].map((e,i)=>(
-
-                                            //  <Menu key={i} icons={e.icons}  heading={e.heading} reff={e.reff} />
-                                             ))} */}
+        <div className='w-full flex items-center gap-[5px]'>
+          <div className='text-[1.2rem]'>
+            <TbReportAnalytics />
+          </div>
+          <Link href='/dashboard' className='text-[0.9rem] font-semibold'>
+            Dashboard
+          </Link>
+        </div>
+        <div className='w-full flex items-center gap-[5px]'>
+          <div className='text-[1.2rem]'>
+            <TbUsers />
+          </div>
+          <Link href='/agent' className='text-[0.9rem] font-semibold'>
+            Agents
+          </Link>
+        </div>
+        <div className='w-full flex items-center gap-[5px]'>
+          <div className='text-[1.2rem]'>
+            <GrTransaction />
+          </div>
+          <Link href='/transactions' className='text-[0.9rem] font-semibold'>
+            Transactions
+          </Link>
+        </div>
       </div>
     </div>
   );

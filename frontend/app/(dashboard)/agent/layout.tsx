@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-import SideNavBar from './components/SideNavbar';
+import SideNavBar from './components/SideNavBar';
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   return (
