@@ -7,10 +7,10 @@ export default function AuthLayout({
 }) {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
-      <div className="md:w-1/2 bg-[#001F3F] flex items-center justify-center p-8">
+      <div className="md:w-1/2 bg-primary flex items-center justify-center p-8">
         <div className="max-w-md w-full">
           <Image
-            src="/placeholder.svg?height=80&width=240"
+            src="/logo.png"
             width={240}
             height={80}
             alt="Dubai Real Estate CRM"

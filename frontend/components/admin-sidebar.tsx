@@ -1,9 +1,8 @@
 'use client';
 
-import { Users, LayoutDashboard, Settings, Building2, ShieldCheck, BarChart3 } from 'lucide-react';
+import { Users, LayoutDashboard, Settings, Building2, ShieldCheck, BarChart3, Calendar, MailCheck } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-
 import {
   Sidebar,
   SidebarContent,
@@ -14,106 +13,99 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { SidebarDropdown } from '@/components/ui/sidebar-dropdown';
+import Image from 'next/image';
 
 const adminItems = [
   {
     title: 'Dashboard',
-    url: '/admin/',
+    url: '/admin',
     icon: LayoutDashboard,
   },
   {
-    title: 'User Management',
-    icon: Users,
-    hasDropdown: true,
-    items: [
-      { title: 'All Users', url: '/users' },
-      { title: 'Roles', url: '/users/roles' },
-      { title: 'Permissions', url: '/users/permissions' },
-    ],
+    title: 'Calendar',
+    icon: Calendar,
+    url: '/admin/calendar',
   },
   {
     title: 'Companies',
     icon: Building2,
-    hasDropdown: true,
-    items: [
-      { title: 'All Companies', url: '/companies' },
-      { title: 'Pending Approval', url: '/companies/pending' },
-      { title: 'Subscriptions', url: '/companies/subscriptions' },
-    ],
+    url: '/admin/companies',
   },
   {
-    title: 'Email Campaigns',
-    icon: BarChart3,
+    title: 'Email',
+    icon: MailCheck,
     url: '/admin/email',
   },
   {
-    title: 'Security',
+    title: 'Crash Reports',
     icon: ShieldCheck,
-    hasDropdown: true,
-    items: [
-      { title: 'Audit Logs', url: '/security/audit' },
-      { title: 'Security Settings', url: '/security/settings' },
-    ],
+    url: '/admin/crash-reports',
   },
   {
     title: 'Settings',
     icon: Settings,
-    hasDropdown: true,
-    items: [
-      { title: 'Profile Settings', url: '/settings' },
-      { title: 'Database Settings', url: '/database-settings' },
-    ],
+    url: '/admin/settings',
   },
-];
+] as const;
 
 export function AdminSidebar() {
   const pathname = usePathname();
 
   const isActive = (path: string) => {
-    if (path === '/admin/dashboard' && pathname === '/admin/dashboard') {
+    if (!pathname) return false;
+    
+    // Remove trailing slash from pathname for consistent comparison
+    const currentPath = pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+    
+    // Special case for root admin path
+    if (path === '/admin' && (currentPath === '/admin' || currentPath === '/admin/')) {
       return true;
     }
-    return pathname.startsWith(path) && path !== '/admin/dashboard';
+    
+    // Remove trailing slash from path for consistent comparison
+    const normalizedPath = path.endsWith('/') ? path.slice(0, -1) : path;
+    
+    // Check if current path matches exactly
+    return currentPath === normalizedPath;
   };
 
   return (
     <Sidebar>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel className='text-xs uppercase tracking-wider text-muted-foreground/70'>
+        <SidebarGroup className="h-full">
+          <Image
+            src="/logo.png"
+            width={250}
+            height={100}
+            alt="Logo"
+            className="mb-2 lg:mb-10 rounded-md"
+            priority
+          />
+          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
             Admin Portal
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminItems.map((item) =>
-                item.hasDropdown ? (
-                  <SidebarDropdown
-                    key={item.title}
-                    title={item.title}
-                    icon={item.icon}
-                    items={item.items}
-                    baseUrl='/admin'
-                  />
-                ) : (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url as string)}
-                      className={
-                        isActive(item.url as string)
-                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-                          : 'hover:bg-accent'
-                      }
-                    >
-                      <Link href={item.url as string} className='flex items-center gap-3 px-2'>
-                        <item.icon className='h-4 w-4' />
-                        <span className='font-medium'>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              )}
+              {adminItems.map((item) => (
+                <SidebarMenuItem key={item.title} className="h-10">
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    className={
+                      isActive(item.url)
+                        ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                        : 'hover:bg-accent'
+                    }
+                    size="lg"
+                    tooltip={item.title}
+                  >
+                    <Link href={item.url} className="flex items-center gap-3 px-2">
+                      <item.icon className="h-4 w-4" />
+                      <span className="font-medium">{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
