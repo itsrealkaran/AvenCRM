@@ -150,7 +150,7 @@ const Page = () => {
       {/* Transaction History */}
       <div className='rounded-2xl bg-white p-6 shadow-sm'>
         <h3 className='mb-6 text-lg font-semibold text-gray-900'>Transaction History</h3>
-        
+
         <div className='mb-4 grid grid-cols-5 gap-4 px-4 text-sm font-medium text-gray-700'>
           <div className='rounded-lg bg-gray-50 px-4 py-2'>Date</div>
           <div className='rounded-lg bg-gray-50 px-4 py-2'>Description</div>

@@ -18,13 +18,23 @@ import {
 } from 'recharts';
 import { AxisDomain } from 'recharts/types/util/types';
 
-import {
-  AvailableChartColors,
-  AvailableChartColorsKeys,
+// import {
+//   AvailableChartColors,
+//   AvailableChartColorsKeys,
+//   constructCategoryColors,
+//   getColorClassName,
+//   getYAxisDomain,
+//   hasOnlyOneValueForKey,
+// } from '../chartUtils';
+
+import { AvailableChartColors, 
+  AvailableChartColorsKeys, 
   constructCategoryColors,
   getColorClassName,
   getYAxisDomain,
+  hasOnlyOneValueForKey,
 } from '../chartUtils';
+
 import { useOnWindowResize } from '../useOnWindowResize';
 import { cx } from '../utils/cx';
 
