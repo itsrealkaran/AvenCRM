@@ -24,10 +24,10 @@ export default function Home() {
                 Get Started Free
               </Link>
               <Link
-                href='#features'
+                href='/sign-in'
                 className='text-lg font-semibold leading-6 text-gray-900 hover:text-primary transition-all'
               >
-                Learn more <span aria-hidden='true'>→</span>
+                Login
               </Link>
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function Home() {
             >
               <h3 className='text-xl font-semibold text-gray-900 mb-4'>For Admins</h3>
               <p className='text-gray-600 mb-4'>
-                Complete control over your organization's CRM system
+                Complete control over your organization&apos;s CRM system
               </p>
               <span className='inline-flex items-center text-primary group-hover:gap-1.5 transition-all'>
                 Learn more{' '}

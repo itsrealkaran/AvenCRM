@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
-
-import { useToast } from '@/hooks/use-toast';
 
 interface JWTPayload {
   profileId: string;
@@ -22,8 +20,62 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
 
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
+
+  const refreshToken = useCallback(
+    async (currentToken: string) => {
+      try {
+        const response = await fetch('http://localhost:8000/auth/refresh-token', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${currentToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          const { accessToken } = await response.json();
+          localStorage.setItem('accessToken', accessToken);
+        } else {
+          throw new Error('Token refresh failed');
+        }
+      } catch (error) {
+        console.error('Token refresh failed:', error);
+        setIsAuthorized(false);
+        router.push('/sign-in');
+      }
+    },
+    [router]
+  );
+
+  const validateTokenWithBackend = useCallback(
+    async (token: string) => {
+      try {
+        const response = await fetch('http://localhost:8000/auth/validate-token', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Invalid token');
+        }
+      } catch (error) {
+        // toast({
+        //   title: 'Token validation failed',
+        //   description: (error as unknown as string) || 'Please sign in to continue',
+        //   variant: 'destructive',
+        // });
+        localStorage.removeItem('accessToken');
+        setIsAuthorized(false);
+        router.push('/sign-in');
+      }
+    },
+    [router]
+  );
 
   useEffect(() => {
     const validateAuth = () => {
@@ -33,7 +85,15 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
         const token = localStorage.getItem('accessToken');
 
         if (!token) {
-          throw new Error('No access token found');
+          // toast({
+          //   title: 'Authentication Error',
+          //   description: 'Please sign in to continue',
+          //   variant: 'destructive',
+          // });
+          localStorage.removeItem('accessToken');
+          setIsAuthorized(false);
+          router.push('/sign-in');
+          return;
         }
 
         // Decode and validate token
@@ -42,7 +102,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
         // Check token expiration
         if (decoded.exp * 1000 < Date.now()) {
           localStorage.removeItem('accessToken');
-          throw new Error('Token expired');
+          // toast({
+          //   title: 'Token Expired',
+          //   description: 'Please sign in to continue',
+          //   variant: 'destructive',
+          // });
+          router.push('/sign-in');
+          return;
         }
 
         // Get user role from token
@@ -51,12 +117,28 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
         // Validate role-based access
         const currentPath = pathname.split('/')[1]?.toLowerCase();
         if (!userRole || (currentPath && currentPath !== userRole)) {
-          throw new Error('Unauthorized role');
+          // toast({
+          //   title: 'Insufficient permissions',
+          //   description: 'You do not have access to this page',
+          //   variant: 'destructive',
+          // });
+          localStorage.removeItem('accessToken');
+          setIsAuthorized(false);
+          router.push('/');
+          return;
         }
 
         // Additional role validation if specific roles are required
         if (requiredRoles.length > 0 && !requiredRoles.includes(userRole)) {
-          throw new Error('Insufficient permissions');
+          // toast({
+          //   title: 'Insufficient permissions',
+          //   description: 'You do not have access to this page',
+          //   variant: 'destructive',
+          // });
+          localStorage.removeItem('accessToken');
+          setIsAuthorized(false);
+          router.push('/');
+          return;
         }
 
         // Validate token with backend
@@ -68,11 +150,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
         setIsAuthorized(false);
         localStorage.removeItem('accessToken');
 
-        toast({
-          title: 'Authentication Error',
-          description: error.message || 'Please sign in to continue',
-          variant: 'destructive',
-        });
+        // toast({
+        //   title: 'Authentication Error',
+        //   description: error.message || 'Please sign in to continue',
+        //   variant: 'destructive',
+        // });
 
         router.push('/sign-in');
       }
@@ -92,48 +174,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
     ); // Refresh token every 14 minutes
 
     return () => clearInterval(refreshInterval);
-  }, [pathname, router, toast, requiredRoles]);
-
-  const validateTokenWithBackend = async (token: string) => {
-    try {
-      const response = await fetch('http://localhost:8000/auth/validate-token', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Invalid token');
-      }
-    } catch (error) {
-      throw new Error('Token validation failed');
-    }
-  };
-
-  const refreshToken = async (currentToken: string) => {
-    try {
-      const response = await fetch('http://localhost:8000/auth/refresh-token', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${currentToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (response.ok) {
-        const { accessToken } = await response.json();
-        localStorage.setItem('accessToken', accessToken);
-      } else {
-        throw new Error('Token refresh failed');
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      setIsAuthorized(false);
-      router.push('/sign-in');
-    }
-  };
+  }, [pathname, router, requiredRoles, refreshToken, validateTokenWithBackend]);
 
   if (!isAuthorized) {
     return null; // Or a loading spinner
