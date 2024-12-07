@@ -122,14 +122,14 @@ router.get('/sign-in', async (req: Request, res: Response) => {
             email,
           },
         });
-      } else if(checkExistingProfile === UserRole.SUPERADMIN){
+      } else if(role === UserRole.SUPERADMIN){
         checkExistingProfile = await db.superAdmin.findFirst({
           where: {
             email,
           },
         });
       }
-      if (!checkExistingProfile) {
+      if (checkExistingProfile) {
         if (bcrypt.compareSync(password, checkExistingProfile.password)) {
           const token = jwt.sign(
             { profileId: checkExistingProfile.id },
