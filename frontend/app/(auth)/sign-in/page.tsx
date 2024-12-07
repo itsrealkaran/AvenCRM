@@ -26,13 +26,13 @@ import {
 } from '@/components/ui/select';
 
 const formSchema = z.object({
-  email: z.string().email({
+  email: z.string({
     message: 'Please enter a valid email address.',
   }),
-  password: z.string().min(8, {
-    message: 'Password must be at least 8 characters long.',
+  password: z.string().min(4, {
+    message: 'Password must be at least 4 characters long.',
   }),
-  userType: z.enum(['superadmin', 'company', 'agent'], {
+  role: z.enum(['SUPERADMIN', 'COMPANY', 'AGENT'], {
     required_error: 'Please select a user type.',
   }),
 });
@@ -46,18 +46,47 @@ export default function SignIn() {
     defaultValues: {
       email: '',
       password: '',
-      userType: 'agent',
+      role: 'AGENT',
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    debugger;
+
     setIsLoading(true);
-    // TODO: Implement sign-in logic here
-    console.log(values);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    router.push('/dashboard');
+    try {
+      const response = await fetch('http://localhost:8000/auth/sign-in', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: values.email,
+          password: values.password,
+          role: values.role,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Sign-in failed');
+      }
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (data.access_token) {
+        localStorage.setItem('accessToken', data.access_token);
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        router.push(`/${values.role.toLowerCase()}`);
+      } else {
+        throw new Error('No access token received');
+      }
+    } catch (error) {
+      console.error('Error signing in:', error);
+      // You can add a toast notification here if you want
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -72,7 +101,7 @@ export default function SignIn() {
         <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
           <FormField
             control={form.control}
-            name='userType'
+            name='role'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>User Type</FormLabel>
@@ -83,9 +112,9 @@ export default function SignIn() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value='superadmin'>Super Admin</SelectItem>
-                    <SelectItem value='company'>Company</SelectItem>
-                    <SelectItem value='agent'>Agent</SelectItem>
+                    <SelectItem value='SUPERADMIN'>Super Admin</SelectItem>
+                    <SelectItem value='COMPANY'>Company</SelectItem>
+                    <SelectItem value='AGENT'>Agent</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />

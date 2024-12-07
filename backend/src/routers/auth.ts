@@ -109,8 +109,8 @@ router.post('/admin/sign-up', async (req: Request, res: Response) => {
   }
 });
 
-//maual signin route
-router.get('/sign-in', async (req: Request, res: Response) => {
+//manual signin route
+router.post('/sign-in', async (req: Request, res: Response) => {
   const { email, password, role } = req.body;
 
   try {

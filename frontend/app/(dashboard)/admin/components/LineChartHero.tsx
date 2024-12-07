@@ -24,7 +24,7 @@ const chartdata = [
   {
     date: 'Apr 23',
     Basic: 3470,
-    Premium: 2108,
+     emium: 2108,
     Enterprise: 3056,
   },
   {
