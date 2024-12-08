@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
 
+import { useToast } from '@/hooks/use-toast';
+
 interface JWTPayload {
   profileId: string;
   role: string;
@@ -20,7 +22,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
 
   const router = useRouter();
   const pathname = usePathname();
-  // const { toast } = useToast();
+  const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const refreshToken = useCallback(
@@ -64,11 +66,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
           throw new Error('Invalid token');
         }
       } catch (error) {
-        // toast({
-        //   title: 'Token validation failed',
-        //   description: (error as unknown as string) || 'Please sign in to continue',
-        //   variant: 'destructive',
-        // });
+        toast({
+          title: 'Token validation failed',
+          description: (error as unknown as string) || 'Please sign in to continue',
+          variant: 'destructive',
+        });
         localStorage.removeItem('accessToken');
         setIsAuthorized(false);
         router.push('/sign-in');
@@ -116,7 +118,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
 
         // Validate role-based access
         const currentPath = pathname.split('/')[1]?.toLowerCase();
-        if (!userRole || (currentPath && currentPath !== userRole)) {
+        if (
+          !userRole ||
+          (currentPath &&
+            !(currentPath === userRole || (currentPath === 'company' && userRole === 'admin')))
+        ) {
           // toast({
           //   title: 'Insufficient permissions',
           //   description: 'You do not have access to this page',

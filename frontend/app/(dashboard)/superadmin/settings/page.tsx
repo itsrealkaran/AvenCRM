@@ -2,14 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from 'react-day-picker';
+
+import { Button } from '@/components/ui/button';
 
 import BackGroundImage from '../components/BackGroundImage';
 import InnerNav from '../components/InnerNav';
 import SettingDetails from '../components/SettingDetails';
 import SettingNotification from '../components/SettingNotification';
 import SettingPassword from '../components/SettingPassword';
-import SideNavBar from '../components/SideNavBar';
 import { TopNavigation } from '../components/TopNavigation';
 
 // three different apis for recieving the data .
@@ -23,7 +23,7 @@ const Page = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem('accessToken');
-    router.push('/auth/sign-in');
+    router.push('/sign-in');
   };
 
   const openDets = () => {

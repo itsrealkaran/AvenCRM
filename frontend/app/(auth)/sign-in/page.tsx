@@ -32,7 +32,7 @@ const formSchema = z.object({
   password: z.string().min(4, {
     message: 'Password must be at least 4 characters long.',
   }),
-  role: z.enum(['SUPERADMIN', 'COMPANY', 'AGENT'], {
+  role: z.enum(['SUPERADMIN', 'ADMIN', 'AGENT'], {
     required_error: 'Please select a user type.',
   }),
 });
@@ -77,7 +77,8 @@ export default function SignIn() {
       if (data.access_token) {
         localStorage.setItem('accessToken', data.access_token);
         await new Promise((resolve) => setTimeout(resolve, 1000));
-        router.push(`/${values.role.toLowerCase()}`);
+        const redirectPath = values.role === 'ADMIN' ? '/company' : `/${values.role.toLowerCase()}`;
+        router.push(redirectPath);
       } else {
         throw new Error('No access token received');
       }
@@ -113,7 +114,7 @@ export default function SignIn() {
                   </FormControl>
                   <SelectContent>
                     <SelectItem value='SUPERADMIN'>Super Admin</SelectItem>
-                    <SelectItem value='COMPANY'>Company</SelectItem>
+                    <SelectItem value='ADMIN'>Admin</SelectItem>
                     <SelectItem value='AGENT'>Agent</SelectItem>
                   </SelectContent>
                 </Select>

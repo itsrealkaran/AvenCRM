@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import axios from 'axios';
 import { CiFilter } from 'react-icons/ci';
 import { FaArrowDown } from 'react-icons/fa6';
 import { FiRefreshCw } from 'react-icons/fi';
@@ -26,6 +27,22 @@ const Page = () => {
   const changeModal = () => {
     setmodal((prev) => !prev);
   };
+  const [loading, setLoading] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get('/api/comanies');
+      console.log(res.data);
+
+      if (res.data && res.data.length > 0) {
+        return res.data;
+      }
+    } catch (error) {
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return (
     <div className='relative w-full flex h-screen overflow-hidden'>

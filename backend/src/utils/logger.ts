@@ -64,38 +64,13 @@ const logger = winston.createLogger({
     pid: process.pid
   },
   transports: [
-    // Error logs
-    new DailyRotateFile({
-      filename: 'logs/error-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      level: 'error',
-      maxFiles: '30d',
-      format: fileFormat
-    }),
-    // Combined logs
-    new DailyRotateFile({
-      filename: 'logs/combined-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      maxFiles: '30d',
-      format: fileFormat
-    }),
-    // HTTP access logs
-    new DailyRotateFile({
-      filename: 'logs/access-%DATE%.log',
-      datePattern: 'YYYY-MM-DD',
-      level: 'http',
-      maxFiles: '30d',
-      format: fileFormat
+    // Remove file transports to prevent logging to files
+    // Add console transport for all environments
+    new winston.transports.Console({
+      format: consoleFormat
     })
   ]
 });
-
-// Add console transport in development
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: consoleFormat
-  }));
-}
 
 // Performance monitoring
 const startTimer = () => {

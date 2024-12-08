@@ -122,6 +122,7 @@ router.post('/admin/sign-up', (async (req: Request, res: Response) => {
 
 //manual signin route
 router.post('/sign-in', (async (req: Request, res: Response) => {
+  debugger
     const { email, password, role } = req.body;
 
     try {
@@ -207,14 +208,6 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 15 * 60 * 1000 // 15 minutes
       });
-
-      // Update last login
-      if (role === UserRole.AGENT) {
-        await db.agent.update({
-          where: { id: user.id },
-          data: { lastLogin: new Date() }
-        });
-      }
 
       return res.status(200).json({
         access_token: accessToken,

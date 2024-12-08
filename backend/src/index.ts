@@ -9,7 +9,7 @@ import { manageDeals } from './routers/agents/manageDeals';
 import { companyMonitoring } from './routers/company/companyMonitoring';
 import { manageSubscription } from './routers/company/subscription';
 import { manageCalendar } from './routers/calander';
-import { manageCompany } from './routers/manageCompany';
+import companyRoutes from './routers/superadmin/company.routes';
 import cors from "cors"
 import logger, { getRequestLogger, generateRequestId } from './utils/logger';
 
@@ -139,10 +139,10 @@ app.use("/calender", (req, res, next) => {
   next();
 }, manageCalendar);
 
-app.use("/admin/company", (req, res, next) => {
-   // Admin company route debug point
+app.use("/api/companies", (req, res, next) => {
+   // Company routes debug point
   next();
-}, manageCompany);
+}, companyRoutes);
 
 app.use("/auth", (req, res, next) => {
    // Auth route debug point
