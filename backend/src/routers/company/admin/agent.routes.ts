@@ -23,11 +23,11 @@ router.get('/getAll', async (req: Request, res: Response) => {
   await controller.getAgents(req, res);
 });
 
-router.get('/update', async (req: Request, res: Response) => {
+router.post('/update', async (req: Request, res: Response) => {
   await controller.updateAgent(req, res);
 });
 
-router.delete('/delete', async (req: Request, res: Response) => {
+router.post('/delete', async (req: Request, res: Response) => {
   await controller.deleteAgent(req, res);
 });
 

@@ -18,8 +18,6 @@ interface AuthGuardProps {
 }
 
 const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) => {
-  debugger;
-
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
@@ -81,7 +79,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
 
   useEffect(() => {
     const validateAuth = () => {
-      debugger;
 
       try {
         const token = localStorage.getItem('accessToken');
