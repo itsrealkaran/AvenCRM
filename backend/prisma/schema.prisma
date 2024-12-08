@@ -309,7 +309,8 @@ model Payment {
   date           DateTime    @default(now())
   type           PaymentType
 
-  planType       PlanTier
+  planType       PlanTier?
+  isVerfied      Boolean     @default(false)
   
   // Invoice and Billing
   invoiceNumber  String?

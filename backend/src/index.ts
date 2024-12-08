@@ -13,6 +13,7 @@ import companyRoutes from './routers/superadmin/company.routes';
 import adminRoutes from './routers/company/admin/agent.routes';
 import cors from "cors"
 import logger, { getRequestLogger, generateRequestId } from './utils/logger';
+import { managePayment } from './routers/company/managePayment';
 
 // Enable source map support for stack traces
 import 'source-map-support/register';
@@ -184,6 +185,11 @@ app.use("/client/deals", (req, res, next) => {
    // Client deals route debug point
   next();
 }, manageDeals);
+
+app.use("/company/payments", (req, res, next) => {
+   // Company payment route debug point
+  next();
+}, managePayment);
 
 // Enhanced error handling middleware with debugging
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
