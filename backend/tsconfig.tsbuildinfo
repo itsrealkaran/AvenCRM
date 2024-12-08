@@ -1,0 +1,1 @@
+{"root":["./src/index.ts","./src/db/index.ts","./src/routers/auth.ts","./src/routers/calander.ts","./src/routers/manageproperties.ts","./src/routers/agents/managedeals.ts","./src/routers/agents/manageleads.ts","./src/routers/company/companymonitoring.ts","./src/routers/company/manageusers.ts","./src/routers/company/subscription.ts"],"version":"5.7.2"}

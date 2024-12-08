@@ -1,0 +1,34 @@
+[
+  {
+    "id": "cm4flb6v00000xfokqdgf611e",
+    "companyId": "dummycompany",
+    "amount": 12382131,
+    "date": "2024-12-08T12:38:46.140Z",
+    "type": "INCOME",
+    "planType": "PROFESSIONAL",
+    "isVerfied": false,
+    "invoiceNumber": "201238830913",
+    "taxRate": null,
+    "totalAmount": null,
+    "paymentMethod": null,
+    "receiptUrl": null,
+    "createdAt": "2024-12-08T12:38:46.140Z",
+    "updatedAt": "2024-12-08T12:37:59.453Z"
+  },
+  {
+    "id": "cm4flcdzl0001xfokjt7326tz",
+    "companyId": "dummycompany",
+    "amount": 0,
+    "date": "2024-12-08T12:39:42.033Z",
+    "type": "INCOME",
+    "planType": "ENTERPRISE",
+    "isVerfied": false,
+    "invoiceNumber": null,
+    "taxRate": null,
+    "totalAmount": null,
+    "paymentMethod": null,
+    "receiptUrl": null,
+    "createdAt": "2024-12-08T12:39:42.033Z",
+    "updatedAt": "2024-12-08T12:39:03.001Z"
+  }
+]

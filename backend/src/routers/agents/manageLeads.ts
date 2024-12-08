@@ -1,27 +1,75 @@
 import { Router } from 'express';
 import db from '../../db/index';
+import { authenticateToken } from '../../middleware/authMiddleware';
 
 const router = Router();
 
 //managing leads
 
-router.get('/leads/getall', async (req, res) => {
-  const { companyId, agentId } = req.body;
+router.get('/getall', authenticateToken, async (req, res) => {
+  if (!req.user) {
+    res.status(400).json({ message: "bad auth" });
+  } else {
 
+    //@ts-ignore
+    const adminId = req.user.profileId;
+
+    try {
+      const company = await db.company.findFirst({
+        where: {
+          adminId,
+        },
+        include: {
+          leads: true
+        }
+      })
+      if(!company){
+        res.status(404).json({ message: "heckerrrrr" });
+      } else {
+        res.status(200).send(company.leads);
+      }
+    } catch (err) {
+      res.send(err);
+    }
+  }
+});
+router.post('/add', async (req, res) => {
+  const {
+    name,
+    status,
+    phoneNo,
+    email,
+    companyId,
+    agentId,
+    leadAmount,
+    source,
+    expectedDate,
+    notes,
+  } = req.body;
+  const datedate = expectedDate ? new Date(expectedDate) : null;
   try {
-    const leads = await db.lead.findMany({
-      where: {
+    const lead = await db.lead.create({
+      data: {
         companyId,
         agentId,
+        name,
+        status,
+        phone: phoneNo,
+        email,
+        leadAmount,
+        source,
+        expectedDate: datedate,
+        notes,
       },
     });
 
-    res.status(200).send(leads);
+    res.status(201).send(lead);
   } catch (err) {
     res.send(err);
   }
 });
-router.post('/leads/add', async (req, res) => {
+
+router.post('/add', async (req, res) => {
   const {
     name,
     status,
@@ -57,43 +105,7 @@ router.post('/leads/add', async (req, res) => {
   }
 });
 
-router.post('/leads/add', async (req, res) => {
-  const {
-    name,
-    status,
-    phoneNo,
-    email,
-    companyId,
-    agentId,
-    leadAmount,
-    source,
-    expectedDate,
-    notes,
-  } = req.body;
-
-  try {
-    const lead = await db.lead.create({
-      data: {
-        companyId,
-        agentId,
-        name,
-        status,
-        phone: phoneNo,
-        email,
-        leadAmount,
-        source,
-        expectedDate,
-        notes,
-      },
-    });
-
-    res.status(201).send(lead);
-  } catch (err) {
-    res.send(err);
-  }
-});
-
-router.patch('/leads/update', async (req, res) => {
+router.patch('/update', async (req, res) => {
   const {
     name,
     status,
@@ -135,7 +147,7 @@ router.patch('/leads/update', async (req, res) => {
   }
 });
 
-router.delete('/leads/delete', async (req, res) => {
+router.delete('/delete', async (req, res) => {
   const { companyId, agentId, leadId } = req.body;
 
   try {

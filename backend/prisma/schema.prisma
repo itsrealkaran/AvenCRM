@@ -84,7 +84,7 @@ model SuperAdmin {
   name      String
   password  String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime? @updatedAt
 
   EmailCampaign EmailCampaign[]
 
@@ -122,7 +122,7 @@ model Company {
   teams        Team[]
   
   createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  updatedAt    DateTime? @updatedAt
 
   EmailCampaign EmailCampaign[]
 
@@ -140,7 +140,7 @@ model Plan {
   companies    Company[]
   
   createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  updatedAt    DateTime?   @updatedAt
 }
 
 // Admin Model
@@ -159,7 +159,7 @@ model Admin {
   lastLogin   DateTime?
   
   createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  updatedAt   DateTime?   @updatedAt
 
   PageBuilder PageBuilder[] @relation("AllowedAdmins")
 }
@@ -179,7 +179,7 @@ model Team {
   
   members      Agent[]    @relation("TeamMembers")
   createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+  updatedAt    DateTime?   @updatedAt
 }
 
 // Agent/User Model
@@ -255,7 +255,7 @@ model Lead {
 
   
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt     DateTime?    @updatedAt
 }
 
 // Deal Model
@@ -309,7 +309,8 @@ model Payment {
   date           DateTime    @default(now())
   type           PaymentType
 
-  planType       PlanTier
+  planType       PlanTier?
+  isVerfied      Boolean     @default(false)
   
   // Invoice and Billing
   invoiceNumber  String?
@@ -493,7 +494,7 @@ model Property {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  // Relationships
+// Relationships
   createdBy       Agent?   @relation(fields: [createdById], references: [id])
   createdById     String?
 }
