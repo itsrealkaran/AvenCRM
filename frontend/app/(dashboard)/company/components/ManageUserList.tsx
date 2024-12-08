@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { Contact } from 'lucide-react';
 
 interface ManageUserListProps {
   func: (i: number, id: string) => void;
@@ -10,11 +11,11 @@ interface ManageUserListProps {
   id: string;
 }
 
-const ManageUserList = ({ func, index, name, email, phone, role, id}: ManageUserListProps) => {
+const ManageUserList = ({ func, index, name, email, phone, role, id }: ManageUserListProps) => {
   return (
-    <div className='relative flex w-full items-center justify-between rounded-lg bg-[#F5F5F5] px-5 py-4'>
-      {/* this is teh checkbox div */}
-      <div className='flex w-fit cursor-pointer items-center justify-center'>
+    <div className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center text-md gap-4  py-6 rounded-lg bg-[#F5F5F5] px-5 py-4'>
+      {/* Checkbox */}
+      <div className='flex items-center'>
         <input
           onClick={() => func(index, id)}
           className='h-5 w-5 cursor-pointer'
@@ -24,35 +25,24 @@ const ManageUserList = ({ func, index, name, email, phone, role, id}: ManageUser
         />
       </div>
 
-      {/* this is the name with the image div  */}
-
-      <div className='flex w-[23%] items-center justify-center gap-[5.5px] pr-10'>
-        <div className='h-6 w-6 overflow-hidden rounded-full'>
-          <Image
-            height={100}
-            width={100}
-            className='h-full w-full object-cover'
-            src='https://images.pexels.com/photos/22468584/pexels-photo-22468584/free-photo-of-woman-sitting-on-bed-with-flowers.jpeg?auto=compress&cs=tinysrgb&w=600&lazy=load'
-            alt='not showing '
-          />
-        </div>
+      {/* Name with image */}
+      <div className='flex items-center gap-2'>
+          <Contact className='h-4 w-4' />
         <h1 className='opacity-70'>{name}</h1>
       </div>
 
-      {/* this is the email div */}
-      <div className='flex w-[23%] justify-center pr-5 opacity-70'>
-        <h1>email</h1>
+      {/* Email */}
+      <div className='text-center opacity-70'>
+        <h1>{email}</h1>
       </div>
 
-      {/* this is the phone number div  */}
-
-      <div className='flex w-[25%] justify-center pr-20 opacity-70'>
+      {/* Phone number */}
+      <div className='text-center opacity-70'>
         <h1>{phone}</h1>
       </div>
 
-      {/* this is the status of the user div */}
-
-      <div className='flex w-[15%] justify-center capitalize text-blue-700'>
+      {/* User status */}
+      <div className='text-center capitalize text-blue-700'>
         <h1>{role}</h1>
       </div>
     </div>
