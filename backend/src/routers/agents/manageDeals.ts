@@ -8,16 +8,24 @@ router.get("/getall", authenticateToken, async (req, res) => {
   if (!req.user) {
     res.status(400).json({ message: "bad auth" });
   } else {
-    //@ts-ignore
-    let id = req.user.profileId;
-    try {
-      const deals = await db.deal.findMany({
-        where: {
-          agentId: id,
-        },
-      });
 
-      res.status(200).send(deals);
+    //@ts-ignore
+    const adminId = req.user.profileId;
+
+    try {
+      const company = await db.company.findFirst({
+        where: {
+          adminId,
+        },
+        include: {
+          deals: true
+        }
+      })
+      if(!company){
+        res.status(404).json({ message: "heckerrrrr" });
+      } else {
+        res.status(200).send(company.deals);
+      }
     } catch (err) {
       res.send(err);
     }

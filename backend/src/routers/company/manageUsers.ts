@@ -1,6 +1,7 @@
 import { Router } from "express";
 import db from "../../db";
 import { authenticateToken } from "../../middleware/authMiddleware";
+import { verifyAdmin } from "../../lib/verifyUser";
 
 const router = Router();
 
@@ -43,14 +44,14 @@ router.post("/add", authenticateToken, async (req, res) => {
     //@ts-ignore
     const adminId = req.user.profileId;
     try {
-        const company = await db.company.findFirst({
-          where: {
-            adminId,
-          },
-        });
-        if (!company) {
-          res.status(404).json({ message: "heckerrrrr" });
-        } else {
+      const company = await db.company.findFirst({
+        where: {
+          adminId,
+        },
+      });
+      if (!company) {
+        res.status(404).json({ message: "heckerrrrr" });
+      } else {
         const agent = await db.agent.create({
           data: {
             name,
@@ -73,27 +74,23 @@ router.post("/add", authenticateToken, async (req, res) => {
 });
 
 router.patch("/update", authenticateToken, async (req, res) => {
-  const { name, age, gender, phoneNo, email, role, agentId, companyId } =
+  const { name, age, gender, phoneNo, email, role, agentId } =
     req.body;
 
   if (!req.user) {
     res.status(400).json({ message: "bad auth" });
   } else {
-    //@ts-ignore
-    const adminId = req.user.profileId;
     try {
-      const company = await db.company.findFirst({
-        where: {
-          adminId,
-        },
-      });
-      if (!company) {
-        res.status(404).json({ message: "heckerrrrr" });
+      //@ts-ignore
+      const adminId = req.user.profileId;
+      const isVerified = await verifyAdmin(adminId);
+      if (!isVerified) {
+        res.status(400).json({ err: "not verified" });
       } else {
+
         const agent = await db.agent.update({
           where: {
             id: agentId,
-            companyId,
           },
           data: {
             name,
@@ -103,10 +100,9 @@ router.patch("/update", authenticateToken, async (req, res) => {
             dob: age,
             gender,
             role,
-            companyId,
           },
         });
-  
+
         res.status(201).send(agent);
       }
     } catch (err) {
@@ -115,20 +111,40 @@ router.patch("/update", authenticateToken, async (req, res) => {
   }
 });
 
-router.delete("/delete", async (req, res) => {
-  const { companyId, agentId } = req.body;
+router.delete("/delete", authenticateToken, async (req, res) => {
+  const { agentId } = req.body;
+  if (!req.user) {
+    res.status(400).json({ message: "bad auth" });
+  } else {
+    //@ts-ignore
+    const adminId = req.user.profileId;
+    const isVerified = await verifyAdmin(adminId);
+    if (!isVerified) {
+      res.status(400).json({ err: "not verified" });
+    }
 
-  try {
-    const agents = await db.agent.delete({
+    const company = await db.company.findFirst({
       where: {
-        id: agentId,
-        companyId: companyId,
+        adminId,
       },
     });
+    if (!company) {
+      res.status(404).json({ message: "heckerrrrr" });
+    } else {
+      const companyId = company.id;
+      try {
+        const agents = await db.agent.delete({
+          where: {
+            id: agentId,
+            companyId: companyId,
+          },
+        });
 
-    res.status(200).send(agents);
-  } catch (err) {
-    res.send(err);
+        res.status(200).send(agents);
+      } catch (err) {
+        res.send(err);
+      }
+    }
   }
 });
 

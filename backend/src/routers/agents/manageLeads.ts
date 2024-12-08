@@ -1,24 +1,36 @@
 import { Router } from 'express';
 import db from '../../db/index';
+import { authenticateToken } from '../../middleware/authMiddleware';
 
 const router = Router();
 
 //managing leads
 
-router.get('/getall', async (req, res) => {
-  const { companyId, agentId } = req.body;
+router.get('/getall', authenticateToken, async (req, res) => {
+  if (!req.user) {
+    res.status(400).json({ message: "bad auth" });
+  } else {
 
-  try {
-    const leads = await db.lead.findMany({
-      where: {
-        companyId,
-        agentId,
-      },
-    });
+    //@ts-ignore
+    const adminId = req.user.profileId;
 
-    res.status(200).send(leads);
-  } catch (err) {
-    res.send(err);
+    try {
+      const company = await db.company.findFirst({
+        where: {
+          adminId,
+        },
+        include: {
+          leads: true
+        }
+      })
+      if(!company){
+        res.status(404).json({ message: "heckerrrrr" });
+      } else {
+        res.status(200).send(company.leads);
+      }
+    } catch (err) {
+      res.send(err);
+    }
   }
 });
 router.post('/add', async (req, res) => {

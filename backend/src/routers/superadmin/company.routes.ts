@@ -1,6 +1,6 @@
 // src/routes/superadmin/company.routes.ts
 import { Router, Request, Response } from 'express';
-import { SuperAdminCompanyController } from '../../controllers/superadmin/company.controller';
+import { SuperAdminCompanyController } from '../../controllers/superadmin/superAdmin.controller';
 import { authenticateToken } from '../../middleware/authMiddleware';
 import { UserRole } from '@prisma/client';
 

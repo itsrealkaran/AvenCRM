@@ -10,6 +10,7 @@ import { companyMonitoring } from './routers/company/companyMonitoring';
 import { manageSubscription } from './routers/company/subscription';
 import { manageCalendar } from './routers/calander';
 import companyRoutes from './routers/superadmin/company.routes';
+import adminRoutes from './routers/company/admin/agent.routes';
 import cors from "cors"
 import logger, { getRequestLogger, generateRequestId } from './utils/logger';
 
@@ -139,10 +140,20 @@ app.use("/calender", (req, res, next) => {
   next();
 }, manageCalendar);
 
+/**
+ * Debug point for superadmin/company route
+ * This is a debug point for the superadmin/company route.
+ * It does not perform any actual logic, but is here to help with debugging.
+ */
 app.use("/superadmin/company", (req, res, next) => {
-   // Superadmin company route debug point
-  next();
+  // Superadmin company route debug point
+ next();
 }, companyRoutes);
+
+app.use("/admin/agent", (req, res, next) => {
+  // admin agent route debug point
+ next();
+}, adminRoutes);
 
 app.use("/auth", (req, res, next) => {
    // Auth route debug point
