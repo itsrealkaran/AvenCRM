@@ -27,7 +27,7 @@ const ManageUserList = ({ func, index, name, email, phone, role, id }: ManageUse
 
       {/* Name with image */}
       <div className='flex items-center gap-2'>
-          <Contact className='h-4 w-4' />
+        <Contact className='h-4 w-4' />
         <h1 className='opacity-70'>{name}</h1>
       </div>
 

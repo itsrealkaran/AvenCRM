@@ -26,7 +26,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
   const refreshToken = useCallback(
     async (currentToken: string) => {
       try {
-        const response = await fetch('http://localhost:8000/auth/refresh-token', {
+        const response = await fetch('process.env.BACKEND_URL0/auth/refresh-token', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${currentToken}`,
@@ -52,7 +52,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
   const validateTokenWithBackend = useCallback(
     async (token: string) => {
       try {
-        const response = await fetch('http://localhost:8000/auth/validate-token', {
+        const response = await fetch('process.env.BACKEND_URL0/auth/validate-token', {
           method: 'POST',
           headers: {
             Authorization: `Bearer ${token}`,
@@ -79,7 +79,6 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) =
 
   useEffect(() => {
     const validateAuth = () => {
-
       try {
         const token = localStorage.getItem('accessToken');
 

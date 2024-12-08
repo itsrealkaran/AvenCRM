@@ -41,7 +41,7 @@ const Page = () => {
     const token = localStorage.getItem('accessToken');
 
     try {
-      const response = await axios.get('http://localhost:8000/company/payments', {
+      const response = await axios.get('process.env.BACKEND_URL0/company/payments', {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
@@ -77,7 +77,7 @@ const Page = () => {
 
       // Using the same base URL as the fetch payments endpoint
       const response = await axios.put(
-        `http://localhost:8000/company/payments/verify?id=${paymentId}`,
+        `process.env.BACKEND_URL0/company/payments/verify?id=${paymentId}`,
         { isVerfied: verified, id: paymentId }, // Match the property name with the backend
         {
           headers: {

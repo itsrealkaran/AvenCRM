@@ -26,7 +26,7 @@ interface FormData {
 const Page = () => {
   const [adduser, setadd] = useState(false);
   const [refresh, setRefresh] = useState(false);
-  const [updateOrCreate, setUpdateOrCreate] = useState<"UPDATE" | "CREATE">();
+  const [updateOrCreate, setUpdateOrCreate] = useState<'UPDATE' | 'CREATE'>();
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
 
   const [agent, setagent] = useState('false');
@@ -51,7 +51,7 @@ const Page = () => {
 
   const getUser = useCallback(async () => {
     try {
-      const res = await axios.get('http://localhost:8000/admin/agent/getAll', {
+      const res = await axios.get('process.env.BACKEND_URL0/admin/agent/getAll', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
@@ -77,61 +77,73 @@ const Page = () => {
     }
   };
 
-  const addUser = async() => {
+  const addUser = async () => {
     console.log(formData);
-    const response = await axios.post('http://localhost:8000/admin/agent/add', {
-      name: formData.name,
-      dob: new Date(),
-      email: formData.email,
-      phoneNo: formData.phone,
-      role: formData.role,
-      gender: formData.gender,
-    },{
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+    const response = await axios.post(
+      'process.env.BACKEND_URL0/admin/agent/add',
+      {
+        name: formData.name,
+        dob: new Date(),
+        email: formData.email,
+        phoneNo: formData.phone,
+        role: formData.role,
+        gender: formData.gender,
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      }
+    );
     setadd(false);
     setRefresh(true);
     console.log(response.data);
   };
 
-  const updateUser = async() => {
-    console.log(formData, "update");
-    const response = await axios.post('http://localhost:8000/admin/agent/update', {
-      name: formData.name,
-      age: new Date(),
-      email: formData.email,
-      phoneNo: formData.phone,
-      role: formData.role,
-      gender: formData.gender,
-      agentId: selectedList[0],
-    },{
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+  const updateUser = async () => {
+    console.log(formData, 'update');
+    const response = await axios.post(
+      'process.env.BACKEND_URL0/admin/agent/update',
+      {
+        name: formData.name,
+        age: new Date(),
+        email: formData.email,
+        phoneNo: formData.phone,
+        role: formData.role,
+        gender: formData.gender,
+        agentId: selectedList[0],
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      }
+    );
     setadd(false);
     setRefresh(true);
     console.log(response.data);
   };
 
-  const deleteUser = async() => {
+  const deleteUser = async () => {
     console.log(selectedList);
-    const response = await axios.post('http://localhost:8000/admin/agent/delete', {
-      agentIds: selectedList,
-    },{
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+    const response = await axios.post(
+      'process.env.BACKEND_URL0/admin/agent/delete',
+      {
+        agentIds: selectedList,
       },
-    });
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+      }
+    );
     setOpenDeletePopup(false);
     setRefresh(true);
     console.log(response.data);
   };
 
-  const openadd = (state?: "UPDATE") => {
-    if(state === "UPDATE"){
+  const openadd = (state?: 'UPDATE') => {
+    if (state === 'UPDATE') {
       setUpdateOrCreate('UPDATE');
       setadd((prev) => !prev);
     } else {
@@ -160,7 +172,7 @@ const Page = () => {
               </div>
 
               <div
-                onClick={() => openadd("UPDATE")}
+                onClick={() => openadd('UPDATE')}
                 className={`bg-[#5932EA] px-2 py-1 text-sm text-white ${selectedList.length > 0 && selectedList.length < 2 ? 'block' : 'hidden'} rounded-[4px] tracking-tight`}
               >
                 <button>Update User</button>
@@ -201,7 +213,7 @@ const Page = () => {
                     <button onClick={deleteUser}>Yes</button>
                   </div>
                   <div className='cursor-pointer rounded-[4px] bg-[#5932EA] px-2 py-1 text-sm tracking-tight text-white'>
-                    <button>No</button> 
+                    <button>No</button>
                   </div>
                 </div>
               </div>
