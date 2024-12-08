@@ -139,8 +139,8 @@ app.use("/calender", (req, res, next) => {
   next();
 }, manageCalendar);
 
-app.use("/api/companies", (req, res, next) => {
-   // Company routes debug point
+app.use("/superadmin/company", (req, res, next) => {
+   // Superadmin company route debug point
   next();
 }, companyRoutes);
 

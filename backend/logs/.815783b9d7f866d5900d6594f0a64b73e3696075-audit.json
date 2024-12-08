@@ -14,6 +14,11 @@
             "date": 1733596438061,
             "name": "logs/access-2024-12-08.log",
             "hash": "f3263de2db8afc797edad429db70f72c501c25f5e75eb48cbc40ffc783ff0fb1"
+        },
+        {
+            "date": 1733634075822,
+            "name": "logs\\access-2024-12-08.log",
+            "hash": "99ee3414de0175d27173be1ce7458e4cfde577ef37783b7005e4f5e9b4666e54"
         }
     ],
     "hashType": "sha256"
