@@ -10,7 +10,14 @@ router.get("/getAll", authenticateToken, async (req, res) => {
   } else {
     //@ts-ignore
     const adminId = req.user.profileId;
-
+    const isVerified = await db.company.findFirst({
+      where: {
+        adminId,
+      },
+    });
+    if (!isVerified) {
+      res.status(400).json({ err: "not verified" });
+    }
     try {
       const agents = await db.company.findFirst({
         where: {

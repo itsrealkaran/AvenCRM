@@ -6,5 +6,14 @@ export const verifyAdmin = async (id: string) => {
             id
         }
     })
-    admin ? true : false;
+    return admin ? true : false;
+}
+
+export const verifySuperAdmin = async (id: string) => {
+    const admin = await db.superAdmin.findFirst({
+        where: {
+            id
+        }
+    })
+    return admin ? true : false;
 }

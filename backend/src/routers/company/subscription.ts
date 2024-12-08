@@ -1,6 +1,7 @@
 import { Router } from "express";
 import db from "../../db";
 import { authenticateToken } from "../../middleware/authMiddleware";
+import { verifyAdmin } from "../../lib/verifyUser";
 
 const router = Router();
 
@@ -10,6 +11,12 @@ router.get("/subscriptions", authenticateToken, async (req, res) => {
   } else {
     //@ts-ignore
     let id = req.user.profileId;
+
+    const isVerified = await verifyAdmin(id);
+    if(!isVerified){
+      res.status(400).json({ err: "not verified" })
+      return;
+    }
     try {
       const company = await db.company.findFirst({
         where: {
