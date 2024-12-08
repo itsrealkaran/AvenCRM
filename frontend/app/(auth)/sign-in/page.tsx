@@ -55,7 +55,7 @@ export default function SignIn() {
 
     setIsLoading(true);
     try {
-      const response = await fetch('process.env.BACKEND_URL0/auth/sign-in', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

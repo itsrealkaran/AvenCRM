@@ -28,8 +28,8 @@ const Page = () => {
 
   const fetchData = useCallback(async () => {
     try {
-      const res = await axios.get('process.env.BACKEND_URL0/leads');
-      const res2 = await axios.get('process.env.BACKEND_URL0/deals');
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`);
+      const res2 = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals`);
       setLeads(res.data);
       setDeals(res2.data);
     } catch (error) {

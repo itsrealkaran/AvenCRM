@@ -51,7 +51,7 @@ const Page = () => {
 
   const getUser = useCallback(async () => {
     try {
-      const res = await axios.get('process.env.BACKEND_URL0/admin/agent/getAll', {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/getAll`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
@@ -80,7 +80,7 @@ const Page = () => {
   const addUser = async () => {
     console.log(formData);
     const response = await axios.post(
-      'process.env.BACKEND_URL0/admin/agent/add',
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/add`,
       {
         name: formData.name,
         dob: new Date(),
@@ -103,7 +103,7 @@ const Page = () => {
   const updateUser = async () => {
     console.log(formData, 'update');
     const response = await axios.post(
-      'process.env.BACKEND_URL0/admin/agent/update',
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/update`,
       {
         name: formData.name,
         age: new Date(),
@@ -127,7 +127,7 @@ const Page = () => {
   const deleteUser = async () => {
     console.log(selectedList);
     const response = await axios.post(
-      'process.env.BACKEND_URL0/admin/agent/delete',
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/delete`,
       {
         agentIds: selectedList,
       },
