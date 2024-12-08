@@ -227,19 +227,6 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-// Memory usage monitoring with debug point
-setInterval(() => {
-   // Memory usage debug point
-  const used = process.memoryUsage();
-  logger.info('Memory usage', {
-    rss: `${Math.round(used.rss / 1024 / 1024)}MB`,
-    heapTotal: `${Math.round(used.heapTotal / 1024 / 1024)}MB`,
-    heapUsed: `${Math.round(used.heapUsed / 1024 / 1024)}MB`,
-    external: `${Math.round(used.external / 1024 / 1024)}MB`,
-    timestamp: new Date().toISOString()
-  });
-}, 300000);
-
 const PORT = 8000;
 app.listen(PORT, () => {
    // Server start debug point
