@@ -5,13 +5,15 @@
       "type": "node",
       "request": "launch",
       "name": "Debug TypeScript",
-      "skipFiles": ["<node_internals>/**"],
+      "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/nodemon",
       "program": "${workspaceFolder}/src/index.ts",
-      "runtimeArgs": ["-r", "ts-node/register"],
-      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
-      "sourceMaps": true,
+      "restart": true,
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"],
+      "args": ["-r", "ts-node/register"],
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/dist/**/*.js"],
       "env": {
         "NODE_ENV": "development"
       }
