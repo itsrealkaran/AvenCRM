@@ -11,17 +11,6 @@ import { VscRefresh } from 'react-icons/vsc';
 
 import ManageUserList from './components/ManageUserList';
 
-// default button
-// Manage user font size inc ✅
-// second componet height dec  --bhul gaya
-// bg remove
-// updated figma ✅
-// update user if selected only once ✅
-// delete user for multiple user  ✅
-// user , agents in form selection ✅
-// if agent then choose team lead , one more select form, ✅
-// form padding change
-
 const Page = () => {
   const [adduser, setadd] = useState(false);
 

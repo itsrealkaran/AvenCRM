@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
+import axios from 'axios';
 import { IoIosSearch } from 'react-icons/io';
 import { IoDownloadOutline } from 'react-icons/io5';
 import { LuFilter } from 'react-icons/lu';
@@ -21,6 +22,20 @@ const Page = () => {
   const closedeal = () => {
     setdeal(false);
   };
+
+  const [leads, setLeads] = useState<any>();
+  const [deals, setDeals] = useState<any>();
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await axios.get('http://localhost:8000/leads');
+      const res2 = await axios.get('http://localhost:8000/deals');
+      setLeads(res.data);
+      setDeals(res2.data);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    }
+  }, []);
 
   const bakaData = [1, 2, 3, 4, 5, 6, 7, 7, 8, 8, 8, 8];
 
