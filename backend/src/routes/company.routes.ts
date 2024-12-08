@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { protect } from "../middleware/auth";
-import { prisma } from "../lib/prisma";
+import { protect } from "../middleware/auth.js";
+import { prisma } from "../lib/prisma.js";
 
 const router = Router();
 router.use(protect);
@@ -50,3 +50,31 @@ router.post("/", async (req, res) => {
         res.status(500).json({ message: "Failed to create company" });
     }
 });
+
+
+router.put("/:id", async (req, res) => {
+    try {
+        const company = await prisma.company.update({
+            where: { id: req.params.id },
+            data: req.body,
+        });
+        res.json(company);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to update company" });
+    }
+});
+
+
+router.delete("/:id", async (req, res) => {
+    try {
+        const company = await prisma.company.delete({
+            where: { id: req.params.id },
+        });
+        res.json(company);
+    } catch (error) {
+        res.status(500).json({ message: "Failed to delete company" });
+    }
+});
+
+
+export default router;

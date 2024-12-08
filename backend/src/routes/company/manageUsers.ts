@@ -1,7 +1,7 @@
 import { Router } from "express";
-import db from "../../db";
-import { authenticateToken } from "../../middleware/authMiddleware";
-import { verifyAdmin } from "../../lib/verifyUser";
+import db from "../../db/index.js";
+import { authenticateToken } from "../../middleware/authMiddleware.js";
+import { verifyAdmin } from "../../lib/verifyUser.js";
 
 const router = Router();
 
@@ -11,7 +11,12 @@ router.get("/getAll", authenticateToken, async (req, res) => {
   } else {
     //@ts-ignore
     const adminId = req.user.profileId;
-    const isVerified = await db.company.findFirst({
+    const isVerified = await verifyAdmin(adminId);
+    if (!isVerified) {
+      res.status(400).json({ err: "not verified" });
+      return;
+    }
+    const agents = await db.company.findFirst({
       where: {
         adminId,
       },

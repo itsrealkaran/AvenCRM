@@ -1,9 +1,9 @@
 // src/controllers/superadmin/company.controller.ts
 import { Request, Response } from "express";
-import { BaseController } from "./base.controllers";
-import db from "../db";
-import { authenticateToken } from "../middleware/authMiddleware";
-import { verifyAdmin } from "../lib/verifyUser";
+import { BaseController } from "./base.controllers.js";
+import db from "../db/index.js";
+import { authenticateToken } from "../middleware/authMiddleware.js";
+import { verifyAdmin } from "../lib/verifyUser.js";
 
 export class AdminAgentController extends BaseController {
   async createAgent(req: Request, res: Response) {

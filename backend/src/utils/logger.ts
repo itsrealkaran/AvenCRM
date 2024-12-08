@@ -1,5 +1,4 @@
 import winston from 'winston';
-import DailyRotateFile from 'winston-daily-rotate-file';
 import { Request } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import os from 'os';
@@ -119,3 +118,4 @@ import { mkdir } from 'fs/promises';
 mkdir('logs').catch(() => {}); // Ignore if directory exists
 
 export default logger;
+

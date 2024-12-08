@@ -5,14 +5,12 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 import session from "express-session"
 
-import db from '../db/index';
+import db from '../db/index.js';
 import { UserRole } from '@prisma/client';
 
 // Define types for JWT payload and extended Request
 interface JWTPayload {
-  id: string;
-  email: string;
-  companyId?: string;
+  profileId: string;
   role: UserRole;
 }
 
@@ -184,7 +182,7 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
       const accessToken = jwt.sign(
         {
           profileId: user.id,
-          role: role.toLowerCase(),
+          role: role,
           exp: Math.floor(Date.now() / 1000) + (15 * 60) // 15 minutes
         },
         process.env.JWT_SECRET || 'nope'
@@ -194,7 +192,7 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
       const refreshToken = jwt.sign(
         {
           profileId: user.id,
-          role: role.toLowerCase()
+          role: role
         },
         process.env.REFRESH_TOKEN_SECRET || 'refresh-nope',
         { expiresIn: '7d' }
@@ -260,7 +258,7 @@ router.post('/validate-token', verifyToken, ((req: Request, res: Response) => {
   res.status(200).json({ 
     valid: true,
     user: {
-      id: user?.id,
+      id: user?.profileId,
       role: user?.role
     }
   });
@@ -270,7 +268,7 @@ router.post('/validate-token', verifyToken, ((req: Request, res: Response) => {
 router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) => {
   try {
     const user = (req as AuthenticatedRequest).user;
-    if (!user?.id) {
+    if (!user?.profileId || !user?.role) {
       return res.status(401).json({ message: 'Invalid user data' });
     }
 
@@ -280,21 +278,21 @@ router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) 
     switch(user.role) {
       case UserRole.ADMIN:
         userDB = await db.admin.findUnique({
-          where: { id: user.id },
+          where: { id: user.profileId },
           select: { id: true, }
         });
         userRole = UserRole.ADMIN;
         break;
       case UserRole.SUPERADMIN:
         userDB = await db.superAdmin.findUnique({
-          where: { id: user.id },
+          where: { id: user.profileId },
           select: { id: true }
         });
         userRole = UserRole.SUPERADMIN;
         break;
       case UserRole.AGENT:
         userDB = await db.agent.findUnique({
-          where: { id: user.id },
+          where: { id: user.profileId },
           select: { id: true, role: true }
         });
         userRole = UserRole.AGENT;

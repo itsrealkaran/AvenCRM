@@ -1,8 +1,7 @@
 import { Router } from "express";
-import db from "../../db";
-import { authenticateToken } from "../../middleware/authMiddleware";
-import { verifyAdmin } from "../../lib/verifyUser";
-import prisma from "../../db";
+import db from "../../db/index.js";
+import { authenticateToken } from "../../middleware/authMiddleware.js";
+import { verifyAdmin } from "../../lib/verifyUser.js";
 
 const router = Router();
 
@@ -62,7 +61,7 @@ router.put(`/verify`, authenticateToken, async (req, res) => {
     }
 
     try {
-        const payment = await prisma.payment.update({
+        const payment = await db.payment.update({
             where: {
                 id: id
             },
