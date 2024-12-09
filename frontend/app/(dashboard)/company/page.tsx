@@ -12,6 +12,7 @@ import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from 'r
 import { VscRefresh } from 'react-icons/vsc';
 
 import ManageUserList from './components/ManageUserList';
+import { set } from 'date-fns';
 
 interface FormData {
   name: string;
@@ -69,11 +70,12 @@ const Page = () => {
     console.log(selectedList);
   }, [agent, selectedList, refresh]);
 
-  const addItem = (i: number, id: string) => {
-    if (selectedList.includes(id)) {
-      setSelectedList(selectedList.filter((item) => item !== id));
+  const addItem = (id: string, name: string, email: string, phone: number, role: string) => {
+    const isSelected = selectedList.some(item => item.id === id);
+    if (isSelected) {
+      setSelectedList(selectedList.filter((item) => item.id !== id));
     } else {
-      setSelectedList([...selectedList, id]);
+      setSelectedList([...selectedList, { id, name, email, phone, role }]);
     }
   };
 
@@ -111,7 +113,7 @@ const Page = () => {
         phoneNo: formData.phone,
         role: formData.role,
         gender: formData.gender,
-        agentId: selectedList[0],
+        agentId: selectedList[0].id,
       },
       {
         headers: {
@@ -142,11 +144,29 @@ const Page = () => {
     console.log(response.data);
   };
 
-  const openadd = (state?: 'UPDATE') => {
+  const openadd = (name: string, age: string, gender: string, phone: string, email: string, state?: 'UPDATE' | 'CREATE',) => {
     if (state === 'UPDATE') {
+      console.log(name, age, gender, phone, email);
+      console.log(formData);
+      setFormData({
+        name,
+        age,
+        gender,
+        phone,
+        email,
+        role: 'AGENT',
+      });
       setUpdateOrCreate('UPDATE');
       setadd((prev) => !prev);
     } else {
+      setFormData({
+        name: '',
+        age: '',
+        gender: '',
+        phone: '',
+        email: '',
+        role: 'AGENT',
+      });
       setagent('');
       setUpdateOrCreate('CREATE');
       setadd((prev) => !prev);
@@ -172,13 +192,13 @@ const Page = () => {
               </div>
 
               <div
-                onClick={() => openadd('UPDATE')}
+                onClick={() => openadd(selectedList[0].name, selectedList[0].age, selectedList[0].gender, selectedList[0].phone, selectedList[0].email, 'UPDATE')}
                 className={`bg-[#5932EA] px-2 py-1 text-sm text-white ${selectedList.length > 0 && selectedList.length < 2 ? 'block' : 'hidden'} rounded-[4px] tracking-tight`}
               >
                 <button>Update User</button>
               </div>
               <div
-                onClick={() => openadd()}
+                onClick={() => openadd("", "", "", "", "", "CREATE")}
                 className='rounded-[4px] bg-[#5932EA] px-2 py-1 text-sm tracking-tight text-white'
               >
                 <button>Add Users</button>
@@ -222,7 +242,7 @@ const Page = () => {
 
           {/* this is the option designation div  */}
 
-          <div className='mt-10 flex w-full items-center justify-between pb-5 pl-28 pr-16 text-sm'>
+          <div className='mt-10 flex w-full items-center justify-between pb-5 px-10 text-sm'>
             <div className='rounded-lg bg-[#F7F7FA] px-8 py-[5px] text-[0.8rem] font-semibold'>
               <h1 className='opacity-80'>Designated person</h1>
             </div>
@@ -264,7 +284,7 @@ const Page = () => {
             <div className='h-[80%] w-[40%] rounded-lg bg-white py-5 pl-14 pr-10'>
               {/* this is the close button div */}
               <div
-                onClick={() => openadd()}
+                onClick={() => setadd(false)}
                 className='flex w-full cursor-pointer items-center justify-end text-[1.5rem] opacity-80'
               >
                 <IoClose />
@@ -459,7 +479,7 @@ const Page = () => {
 
               <div className='mt-5 flex w-full items-center justify-end gap-2 text-sm tracking-tighter'>
                 <div
-                  onClick={() => openadd()}
+                  onClick={() => setadd(false)}
                   className='cursor-pointer rounded-sm border px-3 py-1'
                 >
                   Cancel

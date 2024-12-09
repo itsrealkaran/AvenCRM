@@ -2,7 +2,7 @@ import Image from 'next/image';
 import { Contact } from 'lucide-react';
 
 interface ManageUserListProps {
-  func: (i: number, id: string) => void;
+  func: (id: string, name: string, email: string, phone: number, role: string) => void;
   index: number;
   name: string;
   email: string;
@@ -11,13 +11,13 @@ interface ManageUserListProps {
   id: string;
 }
 
-const ManageUserList = ({ func, index, name, email, phone, role, id }: ManageUserListProps) => {
+const ManageUserList = ({ func, name, email, phone, role, id }: ManageUserListProps) => {
   return (
     <div className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center text-md gap-4  py-6 rounded-lg bg-[#F5F5F5] px-5 py-4'>
       {/* Checkbox */}
       <div className='flex items-center'>
         <input
-          onClick={() => func(index, id)}
+          onClick={() => func(id, name, email, phone, role)}
           className='h-5 w-5 cursor-pointer'
           type='checkbox'
           name=''
