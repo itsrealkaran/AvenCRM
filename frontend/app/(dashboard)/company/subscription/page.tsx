@@ -60,7 +60,7 @@ const Page = () => {
               </div>
 
               <div className='mt-6'>
-                <h3 className='font-semibold text-gray-900'>What's included</h3>
+                <h3 className='font-semibold text-gray-900'>What&apos;s included</h3>
                 <ul className='mt-4 space-y-3'>
                   {[
                     'All Analytics features',
@@ -123,7 +123,7 @@ const Page = () => {
               </div>
 
               <div className='mt-6'>
-                <h3 className='font-semibold text-gray-900'>What's included</h3>
+                <h3 className='font-semibold text-gray-900'>What&apos;s included</h3>
                 <ul className='mt-4 space-y-3'>
                   {[
                     'All Analytics features',
