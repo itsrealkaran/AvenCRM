@@ -59,20 +59,30 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
       status: formData.status,
       propertyType: formData.propertyType,
       location: formData.location,
+      expectedDate: new Date(),
+      notes: '',
     };
     console.log(data);
 
     try {
-        debugger;
-        
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
+      debugger;
+
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('Access token not found');
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        data: data,
+        body: JSON.stringify(data),
       });
 
-      console.log(response.data);
+      const responseData = await response.json();
+      console.log(responseData);
     } catch (error) {
       console.log(error);
     }

@@ -53,15 +53,16 @@ router.post("/", async (req: Request, res: Response) => {
     });
     
 
-    const { name, phoneNo, email, leadAmount, source, expectedDate, notes } = req.body;
-    
+    const { name, phone, email, leadAmount, source, expectedDate, notes } = req.body;
+    let leadAmnt = Number(leadAmount);
+
     try {
         const lead = await db.lead.create({
             data: {
                 name,
-                phone: phoneNo,
+                phone: phone,
                 email,
-                leadAmount,
+                leadAmount: leadAmnt ?? 0,
                 source,
                 expectedDate,
                 notes,
