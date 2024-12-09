@@ -45,9 +45,29 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 
 router.post("/", async (req: Request, res: Response) => {
+
+    const agentId = req.user?.profileId;
+    const company = await db.agent.findUnique({
+        where: { id: agentId },
+        select: { companyId: true }
+    });
+    
+
+    const { name, phoneNo, email, leadAmount, source, expectedDate, notes } = req.body;
+    
     try {
         const lead = await db.lead.create({
-            data: req.body,
+            data: {
+                name,
+                phone: phoneNo,
+                email,
+                leadAmount,
+                source,
+                expectedDate,
+                notes,
+                agentId: req.user?.profileId ?? '',
+                companyId: company?.companyId || '',
+            },
         });
         res.json(lead);
     } catch (error) {
