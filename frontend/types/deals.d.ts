@@ -1,16 +1,17 @@
-export type Lead = {
+export type Deal = {
   id: string;
   name: string;
   email?: string;
   phone?: string;
   companyId: string;
   agentId: string;
-  leadAmount?: number;
+  dealAmount?: number;
   source?: string;
-  status: LeadStatus;
+  status: DealStatus;
   propertyType?: string;
   budget?: number;
   location?: string;
+  expectedCloseDate?: Date;
   lastContactDate?: Date;
   notes?: string;
   socialProfiles?: any;
@@ -18,7 +19,7 @@ export type Lead = {
   updatedAt?: Date;
 };
 
-export enum LeadStatus {
+export enum DealStatus {
   NEW = 'NEW',
   CONTACTED = 'CONTACTED',
   QUALIFIED = 'QUALIFIED',

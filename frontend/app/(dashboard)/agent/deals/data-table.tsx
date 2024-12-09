@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Lead } from '@/types/leads';
+import { Deal } from '@/types/deals';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -28,8 +28,9 @@ import {
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  onEdit?: (lead: Lead) => void;
-  onDelete?: (leadId: string) => void;
+  onEdit?: (deal: Deal) => void;
+  onDelete?: (dealId: string) => void;
+  onSelectionChange?: (selectedItems: Deal[]) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -37,9 +38,22 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
+  onSelectionChange,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = React.useState({});
+
+  const handleRowSelectionChange = React.useCallback(
+    (updatedSelection: typeof rowSelection) => {
+      setRowSelection(updatedSelection);
+      if (onSelectionChange) {
+        const selectedRows = data.filter((_, index) => updatedSelection[index]);
+        onSelectionChange(selectedRows as Deal[]);
+      }
+    },
+    [data, onSelectionChange]
+  );
 
   const table = useReactTable({
     data,
@@ -53,7 +67,9 @@ export function DataTable<TData, TValue>({
     state: {
       sorting,
       columnFilters,
+      rowSelection,
     },
+    onRowSelectionChange: handleRowSelectionChange,
     meta: {
       onEdit,
       onDelete,
@@ -64,7 +80,7 @@ export function DataTable<TData, TValue>({
     <div>
       <div className='flex items-center py-4'>
         <Input
-          placeholder='Filter leads...'
+          placeholder='Filter deals...'
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className='max-w-sm'

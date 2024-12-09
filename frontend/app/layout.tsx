@@ -3,7 +3,8 @@ import localFont from 'next/font/local';
 
 import './globals.css';
 
-import { ToastProvider } from '@/components/ui/toast';
+import { Toaster as Sonner } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
 
 import { Providers } from './providers';
 
@@ -32,7 +33,9 @@ export default function RootLayout({
     <html lang='en'>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
-          <ToastProvider>{children}</ToastProvider>
+          {children}
+          <Sonner />
+          <Toaster />
         </Providers>
       </body>
     </html>
