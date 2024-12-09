@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { protect } from '../middleware/auth.js';
 import { Response, Request } from 'express';
 import { prisma } from '../lib/prisma.js';
+import bcrypt from 'bcrypt';
 
 const router = Router();
 router.use(protect);
@@ -44,7 +45,7 @@ router.post("/", async (req: Request, res: Response) => {
 
     const { name, email, dob, phone, gender } = req.body;
 
-    let password = "testpassword";
+    let password = bcrypt.hashSync("123456", 12);
     const companyId = company.id;
 
     try {

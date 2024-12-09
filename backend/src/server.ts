@@ -8,14 +8,16 @@ import session, { SessionOptions } from 'express-session';
 // import { companyMonitoring } from './routes/company/companyMonitoring.js';
 // import { manageSubscription } from './routes/company/subscription.js';
 // import { manageCalendar } from './routes/calander.js';
-// import adminRoutes from './routes/company/admin/agent.routes.js';
-// import companyRoutes from './routes/company.routes.js';
+import adminRoutes from './routes/company/admin/agent.routes.js';
 import superAdminRoutes from './routes/superadmin.routes.js';
 import agentRoutes from './routes/agent.routes.js';
+import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
 import { managePayment  } from './routes/company/managePayment.js';
+import { Router } from 'express';
 
 
 const app = express();
@@ -125,6 +127,8 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 app.use('/auth', authRouter);
 app.use('/superadmin', superAdminRoutes);
 app.use('/agent', agentRoutes);
+app.use('/leads', leadsRoutes);
+app.use('/company', companyRoutes);
 // app.use('/calender', manageCalendar);
 // app.use('/admin/agent', adminRoutes);
 // app.use('/company/agent', agentRouter);
