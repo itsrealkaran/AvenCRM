@@ -1,14 +1,14 @@
 // src/routes/superadmin/company.routes.ts
 import { Router, Request, Response } from 'express';
-import { AdminAgentController } from '../../../controllers/company.controller';
-import { authenticateToken } from '../../../middleware/authMiddleware';
+import { AdminAgentController } from '../../../controllers/company.controller.js';
 import { UserRole } from '@prisma/client';
+import { protect } from '../../../middleware/auth.js';
 
 const router = Router();
 const controller = new AdminAgentController();
 
 // Apply authentication middleware
-router.use(authenticateToken);
+router.use(protect);
 
 // Apply role middleware as a function call
 // const roleMiddleware = checkRole([UserRole.SUPERADMIN, UserRole.ADMIN, ]);

@@ -45,8 +45,6 @@ export const protect = async (
     // 2) Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret') as JwtPayload;
 
-    console.log(decoded);
-
     if (!decoded || decoded.role !== UserRole.SUPERADMIN && decoded.role !== UserRole.ADMIN && decoded.role !== UserRole.AGENT) {
       return next(new AppError('Invalid token', 401));  
     }
@@ -63,7 +61,7 @@ export const protect = async (
     } else if (decoded.role === UserRole.ADMIN) {
       user = await prisma.admin.findUnique({
         where: {
-          id: decoded.profileId || 'dummyadmin'
+          id: decoded.profileId
         }
       });
     } else if (decoded.role === UserRole.AGENT) {
