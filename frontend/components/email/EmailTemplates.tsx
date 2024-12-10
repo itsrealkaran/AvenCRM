@@ -1,15 +1,9 @@
+'use client';
+
 import React, { useState } from 'react';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useToast } from '@/components/ui/use-toast';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 interface Template {
   id: string;
@@ -85,13 +82,13 @@ export function EmailTemplates() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Email Templates</h2>
+    <div className='space-y-4'>
+      <div className='flex justify-between items-center'>
+        <h2 className='text-lg font-semibold'>Email Templates</h2>
         <Button onClick={() => setIsCreateOpen(true)}>Create Template</Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
         {templates.map((template) => (
           <Card key={template.id}>
             <CardHeader>
@@ -101,24 +98,20 @@ export function EmailTemplates() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className='space-y-2'>
                 <div>
                   <Label>Subject</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {template.subject}
-                  </p>
+                  <p className='text-sm text-muted-foreground'>{template.subject}</p>
                 </div>
                 <div>
                   <Label>Preview</Label>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {template.body}
-                  </p>
+                  <p className='text-sm text-muted-foreground line-clamp-3'>{template.body}</p>
                 </div>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" size="sm">
+                <div className='flex justify-end gap-2'>
+                  <Button variant='outline' size='sm'>
                     Edit
                   </Button>
-                  <Button variant="ghost" size="sm">
+                  <Button variant='ghost' size='sm'>
                     Use Template
                   </Button>
                 </div>
@@ -137,50 +130,40 @@ export function EmailTemplates() {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className='space-y-4'>
             <div>
-              <Label htmlFor="name">Template Name</Label>
+              <Label htmlFor='name'>Template Name</Label>
               <Input
-                id="name"
+                id='name'
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
 
             <div>
-              <Label htmlFor="subject">Subject</Label>
+              <Label htmlFor='subject'>Subject</Label>
               <Input
-                id="subject"
+                id='subject'
                 value={formData.subject}
-                onChange={(e) =>
-                  setFormData({ ...formData, subject: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               />
             </div>
 
             <div>
-              <Label htmlFor="body">Template Body</Label>
+              <Label htmlFor='body'>Template Body</Label>
               <Textarea
-                id="body"
+                id='body'
                 rows={8}
                 value={formData.body}
-                onChange={(e) =>
-                  setFormData({ ...formData, body: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, body: e.target.value })}
               />
             </div>
 
-            <div className="flex justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCreateOpen(false)}
-              >
+            <div className='flex justify-end gap-4'>
+              <Button type='button' variant='outline' onClick={() => setIsCreateOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={loading}>
+              <Button type='submit' disabled={loading}>
                 {loading ? 'Creating...' : 'Create Template'}
               </Button>
             </div>

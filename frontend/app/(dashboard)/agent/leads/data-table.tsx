@@ -43,7 +43,6 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
-  onSelectionChange,
   disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(

@@ -32,7 +32,6 @@ const leadFormSchema = z.object({
   budget: z.string().optional(),
   location: z.string().optional(),
   notes: z.string().optional(),
-  expectedCloseDate: z.date(),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
@@ -58,7 +57,6 @@ export function EditLeadDialog({
     defaultValues: {
       status: '',
       source: '',
-      expectedCloseDate: new Date(),
     },
   });
 
