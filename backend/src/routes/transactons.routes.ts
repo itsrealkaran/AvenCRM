@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { protect } from "../middleware/auth.js";
 import { Request } from "express";
+import { PlanTier } from "@prisma/client";
 
 const router = Router();
 router.use(protect);
@@ -29,9 +30,34 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 
 router.post("/", async (req: Request, res: Response) => {
+
+    const agentId = req.user?.profileId;
+    if (!agentId) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    const company = await prisma.agent.findUnique({
+        where: { id: agentId },
+        select: { companyId: true }
+    });
+    if (!company) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const companyId = company.companyId;
+    const { amount, type, transactionMethod, invoiceNumber , date, planType } = req.body;
+
     try {
         const transaction = await prisma.transaction.create({
-            data: req.body,
+            data: {  
+                amount: amount,
+                type: type,
+                transactionMethod: transactionMethod, 
+                companyId: companyId, 
+                agentId: agentId,
+                planType: PlanTier.BASIC,
+                invoiceNumber: invoiceNumber,
+                date: date,
+            },
         });
         res.json(transaction);
     } catch (error) {
@@ -41,10 +67,39 @@ router.post("/", async (req: Request, res: Response) => {
 
 
 router.put("/:id", async (req: Request, res: Response) => {
+
+    const userId = req.user?.profileId;
+    if (!userId) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const company = await prisma.agent.findUnique({
+        where: { id: userId },
+        select: { companyId: true }
+    });
+
+    if (!company) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const companyId = company.companyId;
+
+    const { amount, type, transactionMethod, invoiceNumber, date, planType, receiptUrl } = req.body;
+
     try {
         const transaction = await prisma.transaction.update({
             where: { id: req.params.id },
-            data: req.body,
+            data: {
+                amount: amount,
+                type: type,
+                transactionMethod: transactionMethod, 
+                companyId: companyId, 
+                agentId: userId,
+                planType: PlanTier.BASIC,
+                invoiceNumber: invoiceNumber,
+                date: date,
+                receiptUrl: receiptUrl
+            },
         });
         res.json(transaction);
     } catch (error) {

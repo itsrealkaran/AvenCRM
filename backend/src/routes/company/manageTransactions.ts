@@ -26,12 +26,12 @@ router.get("/", authenticateToken, async (req, res) => {
             if (!company) {
                 res.status(404).json({ message: "heckerrrrr" });
             } else {
-                const payments = await db.payment.findMany({
+                const transactions = await db.transaction.findMany({
                     where: {
                         companyId: company.id
                     }
                 });
-                res.status(200).send(payments);
+                res.status(200).send(transactions);
             }
         } catch (err) {
             res.status(500).json(err);
@@ -61,7 +61,7 @@ router.put(`/verify`, authenticateToken, async (req, res) => {
     }
 
     try {
-        const payment = await db.payment.update({
+        const transaction = await db.transaction.update({
             where: {
                 id: id
             },
@@ -69,16 +69,16 @@ router.put(`/verify`, authenticateToken, async (req, res) => {
                 isVerfied: isVerfied
             }
         }); 
-        res.status(200).send(payment);
+        res.status(200).send(transaction);
 
     } catch (err) {
-        res.status(500).json({ message: "Failed to update payment status", error: err });
+        res.status(500).json({ message: "Failed to update transaction status", error: err });
     }
 });
 
 
 router.post("/", authenticateToken, async (req, res) => {
-    const { amount, paymentMethod, type } = req.body;
+    const { amount, transactionMethod, type } = req.body;
     if (!req.user) {
         res.status(400).json({ message: "bad auth" });
     } else {
@@ -95,15 +95,16 @@ router.post("/", authenticateToken, async (req, res) => {
                 res.status(404).json({ message: "heckerrrrr" });
             } else {
                 const comapanyID = agent.companyId;
-                const payment = await db.payment.create({
+                const transaction = await db.transaction.create({
                     data: {
                         amount,
-                        paymentMethod,
+                        transactionMethod: transactionMethod,
                         type,
-                        companyId: comapanyID
+                        companyId: comapanyID,
+                        agentId: agent.id
                     }
                 });
-                res.status(201).send(payment);
+                res.status(201).send(transaction);
             }
 
         } catch (err) {

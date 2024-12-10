@@ -26,9 +26,9 @@ const menuItems = [
     reff: '/company/subscription',
   },
   {
-    heading: 'transaction',
+    heading: 'transactions',
     icons: GrTransaction,
-    reff: '/company/transaction',
+    reff: '/company/transactions',
   },
   {
     heading: 'calender',

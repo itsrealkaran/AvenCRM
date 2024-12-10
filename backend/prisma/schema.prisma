@@ -39,7 +39,7 @@ enum DealStatus {
   CLOSED_LOST
 }
 
-enum PaymentType {
+enum TransactionType {
   INCOME
   EXPENSE
   SUBSCRIPTION
@@ -312,7 +312,7 @@ model Deal {
   updatedAt     DateTime    @updatedAt
 }
 
-// Payment Model
+//  Model
 model Transaction {
   id             String      @id @default(cuid())
   
@@ -320,10 +320,10 @@ model Transaction {
   company        Company     @relation(fields: [companyId], references: [id])
   companyId      String
   
-  // Payment Details
+  // Tranasctions Details
   amount         Float
   date           DateTime    @default(now())
-  type           PaymentType
+  type           TransactionType
   agent          Agent       @relation(fields: [agentId], references: [id])
   agentId        String
 
@@ -336,7 +336,7 @@ model Transaction {
   totalAmount    Float?
   
   // Additional Financial Info
-  paymentMethod  String?
+  transactionMethod  String?
   receiptUrl     String?
   
   createdAt     DateTime    @default(now())
