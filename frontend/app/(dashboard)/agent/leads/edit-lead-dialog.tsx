@@ -32,7 +32,7 @@ const leadFormSchema = z.object({
   budget: z.string().optional(),
   location: z.string().optional(),
   notes: z.string().optional(),
-  expectedDate: z.date(),
+  expectedCloseDate: z.date(),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
@@ -58,7 +58,7 @@ export function EditLeadDialog({
     defaultValues: {
       status: '',
       source: '',
-      expectedDate: new Date(),
+      expectedCloseDate: new Date(),
     },
   });
 
@@ -81,8 +81,6 @@ export function EditLeadDialog({
 
   const editLead = useMutation({
     mutationFn: async (values: LeadFormValues) => {
-      debugger;
-
       const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('Access token not found');

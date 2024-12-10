@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -20,7 +19,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
-const leadFormSchema = z.object({
+const dealFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
@@ -34,18 +33,21 @@ const leadFormSchema = z.object({
   expectedCloseDate: z.string(),
 });
 
-type LeadFormValues = z.infer<typeof leadFormSchema>;
+type DealFormValues = z.infer<typeof dealFormSchema>;
 
-interface CreateLeadDialogProps {
+interface CreateDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function CreateDealDialog({ open, onOpenChange }: CreateLeadDialogProps) {
+export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) {
   const queryClient = useQueryClient();
-  const form = useForm<LeadFormValues>({
-    resolver: zodResolver(leadFormSchema),
+  const form = useForm<DealFormValues>({
+    resolver: zodResolver(dealFormSchema),
     defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
       status: '',
       source: '',
       expectedCloseDate: new Date().toISOString().split('T')[0],
@@ -53,11 +55,12 @@ export function CreateDealDialog({ open, onOpenChange }: CreateLeadDialogProps) 
       budget: '',
       location: '',
       dealAmount: '',
+      notes: '',
     },
   });
 
-  const createLead = useMutation({
-    mutationFn: async (values: LeadFormValues) => {
+  const createDeal = useMutation({
+    mutationFn: async (values: DealFormValues) => {
       const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('Access token not found');
@@ -85,25 +88,25 @@ export function CreateDealDialog({ open, onOpenChange }: CreateLeadDialogProps) 
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
       onOpenChange(false);
       form.reset();
-      toast.success('Lead created successfully');
+      toast.success('Deal created successfully');
     },
     onError: () => {
-      toast.error('Failed to create lead');
+      toast.error('Failed to create deal');
     },
   });
 
-  function onSubmit(values: LeadFormValues) {
-    createLead.mutate(values);
+  function onSubmit(values: DealFormValues) {
+    createDeal.mutate(values);
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[600px]'>
         <DialogHeader>
-          <DialogTitle>Create New Lead</DialogTitle>
+          <DialogTitle>Create New Deal</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
@@ -152,7 +155,7 @@ export function CreateDealDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                 name='dealAmount'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Lead Amount</FormLabel>
+                    <FormLabel>Deal Amount</FormLabel>
                     <FormControl>
                       <Input type='number' placeholder='10000' {...field} />
                     </FormControl>

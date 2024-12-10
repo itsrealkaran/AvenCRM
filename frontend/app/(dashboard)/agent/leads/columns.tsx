@@ -7,6 +7,7 @@ import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,32 @@ const getStatusColor = (status: LeadStatus) => {
 };
 
 export const columns: ColumnDef<Lead>[] = [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <div className='px-1'>
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label='Select all'
+        />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className='px-1'>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label='Select row'
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: 'name',
     header: ({ column }) => {

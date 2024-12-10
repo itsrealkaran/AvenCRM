@@ -10,9 +10,12 @@ import {
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  Row,
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
+import { Trash } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,13 +27,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useConfirm } from '@/hooks/use-confirm';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onEdit?: (deal: Deal) => void;
-  onDelete?: (dealId: string) => void;
+  onDelete: (rows: Row<TData>[]) => void;
   onSelectionChange?: (selectedItems: Deal[]) => void;
+  disabled?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -39,21 +44,16 @@ export function DataTable<TData, TValue>({
   onEdit,
   onDelete,
   onSelectionChange,
+  disabled,
 }: DataTableProps<TData, TValue>) {
+  const [ConfirmDialog, confirm] = useConfirm(
+    'Are You Sure?',
+    'You are about to perform a bulk delete.'
+  );
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
-
-  const handleRowSelectionChange = React.useCallback(
-    (updatedSelection: typeof rowSelection) => {
-      setRowSelection(updatedSelection);
-      if (onSelectionChange) {
-        const selectedRows = data.filter((_, index) => updatedSelection[index]);
-        onSelectionChange(selectedRows as Deal[]);
-      }
-    },
-    [data, onSelectionChange]
-  );
 
   const table = useReactTable({
     data,
@@ -69,7 +69,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
       rowSelection,
     },
-    onRowSelectionChange: handleRowSelectionChange,
+    onRowSelectionChange: setRowSelection,
     meta: {
       onEdit,
       onDelete,
@@ -78,6 +78,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
+      <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input
           placeholder='Filter deals...'
@@ -85,6 +86,29 @@ export function DataTable<TData, TValue>({
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className='max-w-sm'
         />
+        {table.getFilteredSelectedRowModel().rows.length > 0 && (
+          <Button
+            disabled={disabled}
+            size={'sm'}
+            variant={'outline'}
+            className='ml-auto font-normal test-xs text-red-600'
+            onClick={async () => {
+              const ok = await confirm();
+
+              if (ok) {
+                toast.loading('Deleting...', {
+                  id: 'delete',
+                });
+
+                onDelete(table.getFilteredSelectedRowModel().rows);
+                table.resetRowSelection();
+              }
+            }}
+          >
+            <Trash className='size-4 mr-2 bg-f' />
+            Delete({table.getFilteredSelectedRowModel().rows.length})
+          </Button>
+        )}
       </div>
       <div className='rounded-md border'>
         <Table>

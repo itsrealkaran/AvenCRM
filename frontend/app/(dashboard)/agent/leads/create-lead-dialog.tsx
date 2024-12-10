@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -31,7 +30,7 @@ const leadFormSchema = z.object({
   budget: z.string().optional(),
   location: z.string().optional(),
   notes: z.string().optional(),
-  expectedDate: z.date(),
+  expectedCloseDate: z.string(),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
@@ -46,19 +45,32 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
       status: '',
       source: '',
-      expectedDate: new Date(),
+      expectedCloseDate: new Date().toISOString().split('T')[0],
+      propertyType: '',
+      budget: '',
+      location: '',
+      leadAmount: '',
+      notes: '',
     },
   });
 
   const createLead = useMutation({
     mutationFn: async (values: LeadFormValues) => {
-      debugger;
       const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('Access token not found');
       }
+
+      // Transform the date to ISO string before sending to backend
+      const payload = {
+        ...values,
+        expectedCloseDate: new Date(values.expectedCloseDate).toISOString(),
+      };
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
         method: 'POST',
@@ -66,7 +78,7 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -186,6 +198,19 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
                     <Textarea placeholder='Add any additional notes here...' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='expectedCloseDate'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Expected Close Date</FormLabel>
+                  <FormControl>
+                    <Input type='date' {...field} value={field.value} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

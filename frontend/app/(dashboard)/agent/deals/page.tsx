@@ -7,6 +7,7 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
@@ -70,6 +71,34 @@ export default function DealsPage() {
     },
   });
 
+  const bulkDeleteDeals = useMutation({
+    mutationFn: async (dealIds: string[]) => {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        throw new Error('Access token not found');
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ dealIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete deals');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      toast.success('Deals deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete deals');
+    },
+  });
+
   const handleEdit = (deal: Deal) => {
     setSelectedDeal(deal);
     setIsEditDialogOpen(true);
@@ -81,12 +110,11 @@ export default function DealsPage() {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete ${selectedRows.length} deals?`)) {
+  const handleBulkDelete = async (dealIds: string[]) => {
+    if (window.confirm(`Are you sure you want to delete ${dealIds.length} deals?`)) {
       try {
-        await Promise.all(selectedRows.map((deal) => deleteDeal.mutate(deal.id)));
+        await bulkDeleteDeals.mutateAsync(dealIds);
         toast.success('Deals deleted successfully');
-        setSelectedRows([]);
       } catch (error) {
         toast.error('Failed to delete some deals');
       }
@@ -98,7 +126,15 @@ export default function DealsPage() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className='flex flex-col space-y-3'>
+        <Skeleton className='h-[125px] w-[250px] rounded-xl' />
+        <div className='space-y-2'>
+          <Skeleton className='h-4 w-[250px]' />
+          <Skeleton className='h-4 w-[200px]' />
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -109,18 +145,6 @@ export default function DealsPage() {
           <p className='text-muted-foreground'>Manage and track your deals in one place</p>
         </div>
         <div className='flex gap-2'>
-          {selectedRows.length > 0 && (
-            <>
-              {selectedRows.length === 1 && (
-                <Button onClick={() => handleEdit(selectedRows[0])} variant='outline'>
-                  Edit Selected
-                </Button>
-              )}
-              <Button onClick={handleBulkDelete} variant='destructive'>
-                Delete Selected ({selectedRows.length})
-              </Button>
-            </>
-          )}
           <Button onClick={() => setIsCreateDialogOpen(true)}>
             <Plus className='mr-2 h-4 w-4' /> Add New Deal
           </Button>
@@ -132,7 +156,10 @@ export default function DealsPage() {
           columns={columns}
           data={deals}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={async (row) => {
+            const dealIds = row.map((row) => row.original.id);
+            await handleBulkDelete(dealIds);
+          }}
           onSelectionChange={handleSelectionChange}
         />
       </div>

@@ -19,6 +19,8 @@ import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
 import { managePayment  } from './routes/company/managePayment.js';
 import { Router } from 'express';
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler.js';
 
 
 const app = express();
@@ -142,14 +144,20 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const reqLogger = getRequestLogger(req);
   reqLogger.error('Unhandled error', {
     error: err.message,
-    stack: err.stack,
     url: req.url,
     method: req.method,
     body: req.body,
     query: req.query,
     headers: req.headers,
-    timestamp: new Date().toISOString()
+    session: req.session,
+    user: req.user,
+    requestId: req.headers['x-request-id']
   });
+
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
   
   res.status(500).json({ 
     error: 'Something broke!',
