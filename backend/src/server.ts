@@ -11,6 +11,7 @@ import session, { SessionOptions } from 'express-session';
 import adminRoutes from './routes/company/admin/agent.routes.js';
 import superAdminRoutes from './routes/superadmin.routes.js';
 import agentRoutes from './routes/agent.routes.js';
+import dealsRoutes from './routes/deals.routes.js';
 import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
@@ -28,7 +29,14 @@ const app = express();
 
 
 // Configure CORS with specific options
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Type', 'Authorization']
+}));
+
 
 
 // Body parsing Middleware

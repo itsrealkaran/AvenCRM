@@ -78,10 +78,21 @@ router.post("/", async (req: Request, res: Response) => {
 
 
 router.put("/:id", async (req: Request, res: Response) => {
+    const { name, phone, email, leadAmount, source, expectedDate, notes } = req.body;
+    let leadAmnt = Number(leadAmount);
+    
     try {
         const lead = await db.lead.update({
             where: { id: req.params.id },
-            data: req.body,
+            data: {
+                name,
+                phone,
+                email,
+                leadAmount: leadAmnt ?? 0,
+                source,
+                expectedDate,
+                notes,
+            },
         });
         res.json(lead);
     } catch (error) {

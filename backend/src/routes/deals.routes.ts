@@ -2,6 +2,7 @@ import { Router } from "express";
 import db from "../db/index.js";
 import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
+import { DealStatus } from "@prisma/client";
 
 
 const router = Router();
@@ -45,9 +46,30 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 
 router.post("/", async (req: Request, res: Response) => {
+    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
+    let dealValue = Number(dealAmount);
+
+
+    const agentId = req.user?.profileId ?? '';
+    const company = await db.agent.findUnique({
+        where: { id: agentId },
+        select: { companyId: true }
+    });
+    const companyId = company?.companyId || '';
+
     try {
         const deal = await db.deal.create({
-            data: req.body,
+            data: {
+                name: name,
+                status: DealStatus.ACTIVE,
+                dealAmount: dealValue,
+                email: email,
+                expectedCloseDate: expectedCloseDate,
+                notes: notes,
+                companyId: companyId,
+                agentId: agentId,
+                propertyType: propertyType
+            },
         });
         res.json(deal);
     } catch (error) {
