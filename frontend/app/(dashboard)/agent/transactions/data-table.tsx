@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Deal } from '@/types/deals';
+import { Transaction } from '@/types/transactions';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -32,9 +32,9 @@ import { useConfirm } from '@/hooks/use-confirm';
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  onEdit?: (deal: Deal) => void;
+  onEdit?: (transaction: Transaction) => void;
   onDelete: (rows: Row<TData>[]) => void;
-  onSelectionChange?: (selectedItems: Deal[]) => void;
+  onSelectionChange?: (selectedItems: Transaction[]) => void;
   disabled?: boolean;
 }
 
@@ -81,9 +81,9 @@ export function DataTable<TData, TValue>({
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input
-          placeholder='Filter deals...'
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+          placeholder='Filter transactions...'
+          value={(table.getColumn('invoiceNumber')?.getFilterValue() as string) ?? ''}
+          onChange={(event) => table.getColumn('invoiceNumber')?.setFilterValue(event.target.value)}
           className='max-w-sm'
         />
         {table.getFilteredSelectedRowModel().rows.length > 0 && (

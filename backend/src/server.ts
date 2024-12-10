@@ -2,25 +2,22 @@ import express, { Request, Response, NextFunction } from 'express';
 import authRouter from './routes/auth.routes.js';
 import "dotenv/config.js";
 import session, { SessionOptions } from 'express-session';
-// import { agentRouter } from './routes/company/manageUsers.js';
-// import { manageLeads } from './routes/agents/manageLeads.js';
-// import { manageDeals } from './routes/agents/manageDeals.js';
-// import { companyMonitoring } from './routes/company/companyMonitoring.js';
-// import { manageSubscription } from './routes/company/subscription.js';
-// import { manageCalendar } from './routes/calander.js';
+
 import adminRoutes from './routes/company/admin/agent.routes.js';
 import superAdminRoutes from './routes/superadmin.routes.js';
 import agentRoutes from './routes/agent.routes.js';
 import dealsRoutes from './routes/deals.routes.js';
 import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
-import paymentRoutes from './routes/payment.routes.js';
+import transctionRoutes from './routes/transactons.routes.js'
+
 import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
-import { managePayment  } from './routes/company/managePayment.js';
-import { Router } from 'express';
-import { manageCalendar } from './routes/calander.js';
-import { agentRouter } from './routes/company/manageUsers.js';
+
+import { notFoundHandler } from './middleware/notFoundHandler.js';
+import { errorHandler } from './middleware/errorHandler.js';
+
+import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
 import { propertyRoutes } from './routes/propertyRoutes.js';
@@ -133,13 +130,15 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 app.use('/auth', authRouter);
 app.use('/superadmin', superAdminRoutes);
 app.use('/agent', agentRoutes);
+app.use('/deals', dealsRoutes);
+app.use('/transactions', transctionRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/company', companyRoutes);
 app.use('/calender', manageCalendar);
 app.use('/company/moniter', companyMonitoring);
-app.use('/company/subsciption', manageSubscription);
-app.use('/property', propertyRoutes)
-// app.use('/company/payments', managePayment);
+// app.use('/company/subsciption', manageSubscription);
+app.use('/company/admin', adminRoutes);
+app.use("/property", propertyRoutes);
 
 // Enhanced error handling middleware with debugging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -148,14 +147,20 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const reqLogger = getRequestLogger(req);
   reqLogger.error('Unhandled error', {
     error: err.message,
-    stack: err.stack,
     url: req.url,
     method: req.method,
     body: req.body,
     query: req.query,
     headers: req.headers,
-    timestamp: new Date().toISOString()
+    session: req.session,
+    user: req.user,
+    requestId: req.headers['x-request-id']
   });
+
+
+  app.use(notFoundHandler);
+  app.use(errorHandler);
+
   
   res.status(500).json({ 
     error: 'Something broke!',

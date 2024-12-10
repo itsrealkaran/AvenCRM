@@ -18,12 +18,12 @@ router.get("/", async (req, res) => {
       if (!companyId) {
         return res.status(400).json({ err: "not verified" });
       }
-      const payments = await db.payment.findMany({
+      const transactions = await db.transaction.findMany({
         where: {
           companyId: companyId,
         },
       });
-      res.send(payments);
+      res.send(transactions);
     } catch (err) {
       res.status(500).json(err);
     }

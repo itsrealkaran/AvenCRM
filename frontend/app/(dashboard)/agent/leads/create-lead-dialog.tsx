@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -31,7 +30,6 @@ const leadFormSchema = z.object({
   budget: z.string().optional(),
   location: z.string().optional(),
   notes: z.string().optional(),
-  expectedDate: z.date(),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
@@ -46,15 +44,21 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
       status: '',
       source: '',
-      expectedDate: new Date(),
+      propertyType: '',
+      budget: '',
+      location: '',
+      leadAmount: '',
+      notes: '',
     },
   });
 
   const createLead = useMutation({
     mutationFn: async (values: LeadFormValues) => {
-      debugger;
       const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('Access token not found');

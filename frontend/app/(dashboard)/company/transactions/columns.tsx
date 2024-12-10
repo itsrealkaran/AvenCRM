@@ -1,6 +1,6 @@
 'use client';
 
-import { Lead, LeadStatus } from '@/types/leads';
+import { Transaction } from '@/types/transactions';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';
@@ -17,20 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const getStatusColor = (status: LeadStatus) => {
-  const colors = {
-    NEW: 'bg-blue-100 text-blue-800',
-    CONTACTED: 'bg-purple-100 text-purple-800',
-    QUALIFIED: 'bg-yellow-100 text-yellow-800',
-    PROPOSAL: 'bg-indigo-100 text-indigo-800',
-    NEGOTIATION: 'bg-orange-100 text-orange-800',
-    WON: 'bg-green-100 text-green-800',
-    LOST: 'bg-red-100 text-red-800',
-  };
-  return colors[status] || 'bg-gray-100 text-gray-800';
-};
-
-export const columns: ColumnDef<Lead>[] = [
+export const columns: ColumnDef<Transaction>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -58,29 +45,21 @@ export const columns: ColumnDef<Lead>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: 'name',
+    accessorKey: 'invoiceNumber',
     header: ({ column }) => {
       return (
         <Button
           variant='ghost'
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
-          Name
+          Invoice Number
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );
     },
   },
   {
-    accessorKey: 'email',
-    header: 'Email',
-  },
-  {
-    accessorKey: 'phone',
-    header: 'Phone',
-  },
-  {
-    accessorKey: 'leadAmount',
+    accessorKey: 'amount',
     header: ({ column }) => {
       return (
         <Button
@@ -93,7 +72,7 @@ export const columns: ColumnDef<Lead>[] = [
       );
     },
     cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('leadAmount'));
+      const amount = parseFloat(row.getValue('amount'));
       const formatted = new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
@@ -102,27 +81,41 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'type',
+    header: 'Type',
+  },
+  {
+    accessorKey: 'planType',
+    header: 'Plan',
+  },
+  {
+    accessorKey: 'isVerfied',
     header: 'Status',
     cell: ({ row }) => {
-      const status: LeadStatus = row.getValue('status');
-      return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
+      const isVerified = row.getValue('isVerfied');
+      return (
+        <Badge
+          className={isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+        >
+          {isVerified ? 'Verified' : 'Pending'}
+        </Badge>
+      );
     },
   },
   {
-    accessorKey: 'createdAt',
-    header: 'Created',
+    accessorKey: 'date',
+    header: 'Date',
     cell: ({ row }) => {
-      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+      return format(new Date(row.getValue('date')), 'MMM d, yyyy');
     },
   },
   {
     id: 'actions',
     cell: ({ row, table }) => {
-      const lead = row.original as Lead;
+      const transaction = row.original;
       const meta = table.options.meta as {
-        onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
+        onEdit?: (transaction: Transaction) => void;
+        onDelete?: (transactionId: string) => void;
       };
 
       return (
@@ -135,15 +128,18 @@ export const columns: ColumnDef<Lead>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(lead.id)}>
-              Copy lead ID
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
+              Copy transaction ID
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit lead
+            <DropdownMenuItem onClick={() => meta.onEdit?.(transaction)}>
+              <Pencil className='mr-2 h-4 w-4' /> Edit transaction
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
-              <Trash className='mr-2 h-4 w-4' /> Delete lead
+            <DropdownMenuItem
+              onClick={() => meta.onDelete?.(transaction.id)}
+              className='text-red-600'
+            >
+              <Trash className='mr-2 h-4 w-4' /> Delete transaction
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

@@ -79,10 +79,20 @@ router.post("/", async (req: Request, res: Response) => {
 
 
 router.put("/:id", async (req: Request, res: Response) => {
+    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
+    let dealValue = Number(dealAmount);
     try {
         const deal = await db.deal.update({
             where: { id: req.params.id },
-            data: req.body,
+            data: {
+                name: name,
+                status: status,
+                dealAmount: dealValue,
+                email: email,
+                expectedCloseDate: expectedCloseDate,
+                notes: notes,
+                propertyType: propertyType
+            },
         });
         res.json(deal);
     } catch (error) {
@@ -102,7 +112,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 router.delete("/", async (req: Request, res: Response) => {
-    const { dealIds } = req.body;
+    const { dealIds } = req.    body;
 
     try {
         const deal = await db.deal.deleteMany({
