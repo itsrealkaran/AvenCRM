@@ -1,12 +1,13 @@
 import { Router } from "express";
 import db from "../db/index.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import { protect } from "../middleware/auth.js";
 
 const router = Router();
+router.use(protect)
 
-router.get("/getEvents", authenticateToken, async (req, res) => {
+router.get("/getEvents", async (req, res) => {
   try {
-    console.log(req.user);
     if (!req.user) {
       res.status(400).json({ message: "bad auth" });
     } else {
@@ -25,9 +26,9 @@ router.get("/getEvents", authenticateToken, async (req, res) => {
   }
 });
 
-router.post("/createEvent", authenticateToken, async (req, res) => {
+router.post("/createEvent", async (req, res) => {
   try {
-    const { title, description, startTime, endTime, location, type } =
+    const { title, description, startTime, endTime, type } =
       req.body;
     if (!req.user) {
       res.status(400).json({ message: "bad auth" });

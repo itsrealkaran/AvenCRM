@@ -19,15 +19,27 @@ import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
 import { managePayment  } from './routes/company/managePayment.js';
 import { Router } from 'express';
+
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
+
+import { manageCalendar } from './routes/calander.js'
+import { companyMonitoring } from './routes/company/companyMonitoring.js';
+import { manageSubscription } from './routes/company/subscription.js';
+
 
 
 const app = express();
 
 
 // Configure CORS with specific options
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:3000',
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+  exposedHeaders: ['Content-Type', 'Authorization']
+}));
 
 
 
@@ -126,15 +138,9 @@ app.use('/superadmin', superAdminRoutes);
 app.use('/agent', agentRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/company', companyRoutes);
-app.use('/deals', dealsRoutes);
-app.use('/payment', paymentRoutes);
-// app.use('/calender', manageCalendar);
-// app.use('/admin/agent', adminRoutes);
-// app.use('/company/agent', agentRouter);
-// app.use('/company/moniter', companyMonitoring);
-// app.use('/company/subsciption', manageSubscription);
-// app.use('/client/leads', manageLeads);
-// app.use('/client/deals', manageDeals);
+app.use('/calender', manageCalendar);
+app.use('/company/moniter', companyMonitoring);
+app.use('/company/subsciption', manageSubscription);
 // app.use('/company/payments', managePayment);
 
 // Enhanced error handling middleware with debugging
