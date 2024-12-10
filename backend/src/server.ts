@@ -23,6 +23,7 @@ import { manageCalendar } from './routes/calander.js';
 import { agentRouter } from './routes/company/manageUsers.js';
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
+import { propertyRoutes } from './routes/propertyRoutes.js';
 
 
 const app = express();
@@ -137,6 +138,7 @@ app.use('/company', companyRoutes);
 app.use('/calender', manageCalendar);
 app.use('/company/moniter', companyMonitoring);
 app.use('/company/subsciption', manageSubscription);
+app.use('/property', propertyRoutes)
 // app.use('/company/payments', managePayment);
 
 // Enhanced error handling middleware with debugging

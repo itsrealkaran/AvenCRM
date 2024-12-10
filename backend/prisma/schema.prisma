@@ -481,22 +481,29 @@ model Property {
   id              String   @id @default(cuid())
   title           String
   description     String
-  address         String
   price           Float
-  propertyType    String
-  area            Float
-  bedrooms        Int?
-  bathrooms       Int?
+  address         String
+  sqft            Int
+  
+  propertySummary Json
+  bathrooms       Json
+  interiorFeatures Json
+  buildingFeatures Json
+  heatingNcooling Json
+  exteriorFeatures Json
+  measurements    Json
+  parking Json
+  lotFeatures     Json
+  rooms           Json[]
   images          String[] // URLs of property images
-  additionalInfo  Json?    // Any extra details like amenities, etc.
 
   // Created and updated timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
 // Relationships
-  createdBy       Agent?   @relation(fields: [createdById], references: [id])
-  createdById     String?
+  createdBy       Agent?   @relation(fields: [creatorId], references: [id])
+  creatorId       String?
 }
 
 // Page Builder Model
