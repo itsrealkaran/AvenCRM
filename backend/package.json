@@ -5,8 +5,8 @@
   "main": "dist/server.js",
   "type": "module",
   "scripts": {
-    "dev": "nodemon --exec node --loader ts-node/esm src/server.ts | pino-pretty",
-    "debug": "nodemon --inspect --exec node --loader ts-node/esm src/server.ts | pino-pretty",
+    "dev": "NODE_ENV=development nodemon --exec 'node --loader ts-node/esm' src/server.ts | pino-pretty",
+    "debug": "NODE_ENV=development nodemon --inspect --exec 'node --loader ts-node/esm' src/server.ts | pino-pretty",
     "start": "node dist/server.js",
     "build": "tsc",
     "lint": "eslint . --ext .ts",

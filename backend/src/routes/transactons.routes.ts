@@ -8,76 +8,76 @@ router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
     try {
-        const payments = await prisma.payment.findMany();
-        res.json(payments);
+        const transactions = await prisma.transaction.findMany();
+        res.json(transactions);
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch payments" });
+        res.status(500).json({ message: "Failed to fetch transactions" });
     }
 });
 
 
 router.get("/:id", async (req: Request, res: Response) => {
     try {
-        const payment = await prisma.payment.findUnique({
+        const transaction = await prisma.transaction.findUnique({
             where: { id: req.params.id },
         });
-        res.json(payment);
+        res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to fetch payment" });
+        res.status(500).json({ message: "Failed to fetch transaction" });
     }
 });
 
 
 router.post("/", async (req: Request, res: Response) => {
     try {
-        const payment = await prisma.payment.create({
+        const transaction = await prisma.transaction.create({
             data: req.body,
         });
-        res.json(payment);
+        res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to create payment" });
+        res.status(500).json({ message: "Failed to create transaction" });
     }
 });
 
 
 router.put("/:id", async (req: Request, res: Response) => {
     try {
-        const payment = await prisma.payment.update({
+        const transaction = await prisma.transaction.update({
             where: { id: req.params.id },
             data: req.body,
         });
-        res.json(payment);
+        res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to update payment" });
+        res.status(500).json({ message: "Failed to update transaction" });
     }
 });
 
 
 router.delete("/:id", async (req: Request, res: Response) => {
     try {
-        const payment = await prisma.payment.delete({
+        const transaction = await prisma.transaction.delete({
             where: { id: req.params.id },
         });
-        res.json(payment);
+        res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to delete payment" });
+        res.status(500).json({ message: "Failed to delete transaction" });
     }
 });
 
 router.delete("/", async (req: Request, res: Response) => {
-    const { paymentIds } = req.body;
+    const { transactionIds } = req.body;
 
     try {
-        const payment = await prisma.payment.deleteMany({
+        const transaction = await prisma.transaction.deleteMany({
             where: {
                 id: {
-                    in: paymentIds
+                    in: transactionIds
                 }
             }
         });
-        res.json(payment);
+        res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to delete payment" });
+        res.status(500).json({ message: "Failed to delete transaction" });
     }
 });
 
@@ -85,7 +85,7 @@ router.delete("/", async (req: Request, res: Response) => {
 router.post("/verify", async (req: Request, res: Response) => {
     const { isVerfied } = req.body;
     try {
-        const payment = await prisma.payment.update({
+        const transaction = await prisma.transaction.update({
             where: {
                 id: req.body.id
             },
@@ -93,9 +93,9 @@ router.post("/verify", async (req: Request, res: Response) => {
                 isVerfied: isVerfied
             }
         });
-        res.json(payment);
+        res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to verify payment" });
+        res.status(500).json({ message: "Failed to verify transaction" });
     }
 });
 

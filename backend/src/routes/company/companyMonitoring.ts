@@ -1,7 +1,6 @@
 import { Router } from "express";
 import db from "../../db/index.js";
-import { verifyAdmin, verifyAdminCompany } from "../../lib/verifyUser.js";
-import { authenticateToken } from "../../middleware/authMiddleware.js";
+import { verifyAdminCompany } from "../../lib/verifyUser.js";
 import { protect } from "../../middleware/auth.js";
 
 const router = Router();
