@@ -11,18 +11,17 @@ interface PropertyBoxProps {
   bathrooms: number;
 }
 
-const PropertyBox = ({
-  img,
-  address,
-  price,
-  landSize,
-  bedrooms,
-  bathrooms,
-}: PropertyBoxProps) => {
+const PropertyBox = ({ img, address, price, landSize, bedrooms, bathrooms }: PropertyBoxProps) => {
   return (
     <div className='flex flex-col w-72 rounded-md border-[1px] border-gray-300 justify-between pb-4'>
       <div className=''>
-        <Image src={img} alt={address} height={100} width={100} className='w-full h-full rounded-t-md' />
+        <Image
+          src={img}
+          alt={address}
+          height={100}
+          width={100}
+          className='w-full h-full rounded-t-md'
+        />
       </div>
       <div className='mx-2'>
         <div className='flex flex-col'>

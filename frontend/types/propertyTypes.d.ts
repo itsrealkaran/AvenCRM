@@ -1,4 +1,4 @@
- export type PropertyData = {
+export type PropertyData = {
   id: number;
   address: string;
   price: number;
@@ -26,7 +26,7 @@
     appliaanceIncluded: string;
     flooring: string;
     basementType: string;
-  }
+  };
   buildingFeatures: {
     features: string;
     foundationType: string;
@@ -46,7 +46,7 @@
   parking: {
     squareFootage: string;
     totalFinishedArea: number;
-  }
+  };
   measurements: {
     sqft: number;
     totalfinishSqft: number;
