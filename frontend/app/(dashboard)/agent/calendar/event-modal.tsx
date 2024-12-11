@@ -61,7 +61,6 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
           <div>
             <Label htmlFor='title'>Title</Label>
             <Input id='title' {...register('title', { required: 'Title is required' })} />
-            {errors.title && <span className='text-red-500 text-sm'></span>}
           </div>
           <div>
             <Label htmlFor='description'>Description</Label>
@@ -74,7 +73,6 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
               type='datetime-local'
               {...register('start', { required: 'Start date is required' })}
             />
-            {errors.start && <span className='text-red-500 text-sm'></span>}
           </div>
           <div>
             <Label htmlFor='end'>End Date</Label>
