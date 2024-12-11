@@ -2,6 +2,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
+import { set } from 'date-fns';
 import { ConciergeBell } from 'lucide-react';
 import { BsGenderNeuter } from 'react-icons/bs';
 import { FaUser } from 'react-icons/fa6';
@@ -11,8 +12,9 @@ import { LuFilter } from 'react-icons/lu';
 import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from 'react-icons/md';
 import { VscRefresh } from 'react-icons/vsc';
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 import ManageUserList from './components/ManageUserList';
-import { set } from 'date-fns';
 
 interface FormData {
   name: string;
@@ -49,9 +51,10 @@ const Page = () => {
 
   const [list, setList] = useState<any[]>([]);
   const [selectedList, setSelectedList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const getUser = useCallback(async () => {
-    debugger;
+    setLoading(true);
 
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
@@ -64,6 +67,8 @@ const Page = () => {
     } catch (error) {
       console.error('Error fetching users:', error);
       setRefresh(false);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -73,7 +78,7 @@ const Page = () => {
   }, [agent, selectedList, refresh, getUser]);
 
   const addItem = (id: string, name: string, email: string, phone: number, role: string) => {
-    const isSelected = selectedList.some(item => item.id === id);
+    const isSelected = selectedList.some((item) => item.id === id);
     if (isSelected) {
       setSelectedList(selectedList.filter((item) => item.id !== id));
     } else {
@@ -146,7 +151,14 @@ const Page = () => {
     console.log(response.data);
   };
 
-  const openadd = (name: string, age: string, gender: string, phone: string, email: string, state?: 'UPDATE' | 'CREATE',) => {
+  const openadd = (
+    name: string,
+    age: string,
+    gender: string,
+    phone: string,
+    email: string,
+    state?: 'UPDATE' | 'CREATE'
+  ) => {
     if (state === 'UPDATE') {
       console.log(name, age, gender, phone, email);
       console.log(formData);
@@ -175,6 +187,51 @@ const Page = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className='container mx-auto py-10'>
+        <div className='flex justify-between items-center p-5'>
+          <div className='space-y-3'>
+            <Skeleton className='h-8 w-64' />
+            <Skeleton className='h-4 w-48' />
+          </div>
+          <Skeleton className='h-10 w-40' />
+        </div>
+
+        <div className='space-y-4 p-6'>
+          <div className='flex justify-between items-center'>
+            <Skeleton className='h-10 w-64' />
+            <Skeleton className='h-10 w-32' />
+          </div>
+
+          <div className='rounded-md border'>
+            <div className='space-y-4'>
+              {[...Array(5)].map((_, idx) => (
+                <div key={idx} className='flex items-center justify-between p-4 border-b'>
+                  <div className='flex items-center space-x-4'>
+                    <Skeleton className='h-4 w-4' />
+                    <Skeleton className='h-4 w-32' />
+                    <Skeleton className='h-4 w-24' />
+                    <Skeleton className='h-4 w-20' />
+                    <Skeleton className='h-4 w-16' />
+                    <Skeleton className='h-8 w-40' />
+                    <Skeleton className='h-4 w-24' />
+                  </div>
+                  <Skeleton className='h-8 w-8' />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className='flex justify-end space-x-2 mt-4'>
+            <Skeleton className='h-8 w-24' />
+            <Skeleton className='h-8 w-24' />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className='relative w-full overflow-hidden bg-[#F6F9FE] p-3'>
@@ -194,13 +251,22 @@ const Page = () => {
               </div>
 
               <div
-                onClick={() => openadd(selectedList[0].name, selectedList[0].age, selectedList[0].gender, selectedList[0].phone, selectedList[0].email, 'UPDATE')}
+                onClick={() =>
+                  openadd(
+                    selectedList[0].name,
+                    selectedList[0].age,
+                    selectedList[0].gender,
+                    selectedList[0].phone,
+                    selectedList[0].email,
+                    'UPDATE'
+                  )
+                }
                 className={`bg-[#5932EA] px-2 py-1 text-sm text-white ${selectedList.length > 0 && selectedList.length < 2 ? 'block' : 'hidden'} rounded-[4px] tracking-tight`}
               >
                 <button>Update User</button>
               </div>
               <div
-                onClick={() => openadd("", "", "", "", "", "CREATE")}
+                onClick={() => openadd('', '', '', '', '', 'CREATE')}
                 className='rounded-[4px] bg-[#5932EA] px-2 py-1 text-sm tracking-tight text-white'
               >
                 <button>Add Users</button>

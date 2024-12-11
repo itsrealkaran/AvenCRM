@@ -108,8 +108,8 @@ export const columns: ColumnDef<Transaction>[] = [
             disabled={isVerified || meta.isStatusLoading}
           >
             {meta.isStatusLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <div className='flex items-center gap-2'>
+                <div className='h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent' />
               </div>
             ) : isVerified ? (
               'Verified'
@@ -125,8 +125,8 @@ export const columns: ColumnDef<Transaction>[] = [
             disabled={!isVerified || meta.isStatusLoading}
           >
             {meta.isStatusLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              <div className='flex items-center gap-2'>
+                <div className='h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent' />
               </div>
             ) : !isVerified ? (
               'Unverified'

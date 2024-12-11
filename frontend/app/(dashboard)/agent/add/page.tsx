@@ -2,8 +2,8 @@
 
 import React, { useState } from 'react';
 import { PropertyData } from '@/types/propertyTypes';
-import { Maximize2, Printer, Share2 } from 'lucide-react';
 import axios from 'axios';
+import { Maximize2, Printer, Share2 } from 'lucide-react';
 
 const Page = () => {
   const [formData, setFormData] = useState<PropertyData>({
@@ -116,11 +116,11 @@ const Page = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/property`, {
-      formData
+      formData,
     });
     console.log(response.data);
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className='p-6 rounded-lg shadow-sm space-y-8 bg-gray-100'>
       {/* Header */}
