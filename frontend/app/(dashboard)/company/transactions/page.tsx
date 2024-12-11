@@ -38,6 +38,7 @@ export default function TransactionsPage() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
   const queryClient = useQueryClient();
+  const [isStatusLoading, setIsStatusLoading] = useState(false);
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ['transactions'],
@@ -103,6 +104,59 @@ export default function TransactionsPage() {
     },
   });
 
+  const updateTransactionStatus = useMutation({
+    mutationFn: async ({
+      transactionId,
+      isVerified,
+    }: {
+      transactionId: string;
+      isVerified: boolean;
+    }) => {
+      setIsStatusLoading(true);
+      const loadingToast = toast.loading(
+        `${isVerified ? 'Verifying' : 'Unverifying'} transaction...`
+      );
+
+      try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          throw new Error('Access token not found');
+        }
+
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/verify/${transactionId}`,
+          {
+            method: 'PUT',
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ isVerified }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to update transaction status');
+        }
+
+        toast.success(`Transaction ${isVerified ? 'verified' : 'unverified'} successfully`, {
+          id: loadingToast,
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Failed to update status';
+        toast.error(errorMessage, { id: loadingToast });
+        throw error;
+      } finally {
+        setIsStatusLoading(false);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    },
+  });
+
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsEditDialogOpen(true);
@@ -131,11 +185,44 @@ export default function TransactionsPage() {
 
   if (isLoading) {
     return (
-      <div className='flex flex-col space-y-3'>
-        <Skeleton className='w-[800px] h-[80px]' />
-        <div className='space-y-2'>
-          <Skeleton className='h-4 w-[250px]' />
-          <Skeleton className='h-4 w-[200px]' />
+      <div className='container mx-auto py-10'>
+        <div className='flex justify-between items-center p-5'>
+          <div className='space-y-3'>
+            <Skeleton className='h-8 w-64' />
+            <Skeleton className='h-4 w-48' />
+          </div>
+          <Skeleton className='h-10 w-40' />
+        </div>
+
+        <div className='space-y-4 p-6'>
+          <div className='flex justify-between items-center'>
+            <Skeleton className='h-10 w-64' />
+            <Skeleton className='h-10 w-32' />
+          </div>
+
+          <div className='rounded-md border'>
+            <div className='space-y-4'>
+              {[...Array(5)].map((_, idx) => (
+                <div key={idx} className='flex items-center justify-between p-4 border-b'>
+                  <div className='flex items-center space-x-4'>
+                    <Skeleton className='h-4 w-4' />
+                    <Skeleton className='h-4 w-32' />
+                    <Skeleton className='h-4 w-24' />
+                    <Skeleton className='h-4 w-20' />
+                    <Skeleton className='h-4 w-16' />
+                    <Skeleton className='h-8 w-40' />
+                    <Skeleton className='h-4 w-24' />
+                  </div>
+                  <Skeleton className='h-8 w-8' />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className='flex justify-end space-x-2 mt-4'>
+            <Skeleton className='h-8 w-24' />
+            <Skeleton className='h-8 w-24' />
+          </div>
         </div>
       </div>
     );
@@ -165,6 +252,10 @@ export default function TransactionsPage() {
             await handleBulkDelete(transactionIds);
           }}
           onSelectionChange={handleSelectionChange}
+          onStatusChange={async (transactionId, isVerified) => {
+            await updateTransactionStatus.mutateAsync({ transactionId, isVerified });
+          }}
+          disabled={deleteTransaction.isPending || bulkDeleteTransactions.isPending}
         />
       </div>
 

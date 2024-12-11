@@ -91,14 +91,50 @@ export const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: 'isVerfied',
     header: 'Status',
-    cell: ({ row }) => {
-      const isVerified = row.getValue('isVerfied');
+    cell: ({ row, table }) => {
+      const isVerified = row.getValue('isVerfied') as boolean;
+      const meta = table.options.meta as {
+        onStatusChange?: (transactionId: string, isVerified: boolean) => void;
+        isStatusLoading?: boolean;
+      };
+
       return (
-        <Badge
-          className={isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
-        >
-          {isVerified ? 'Verified' : 'Pending'}
-        </Badge>
+        <div className='flex gap-2'>
+          <Button
+            size='sm'
+            variant={isVerified ? 'default' : 'outline'}
+            onClick={() => meta.onStatusChange?.(row.original.id, true)}
+            className='w-24 bg-green-600 text-white'
+            disabled={isVerified || meta.isStatusLoading}
+          >
+            {meta.isStatusLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              </div>
+            ) : isVerified ? (
+              'Verified'
+            ) : (
+              'Verify'
+            )}
+          </Button>
+          <Button
+            size='sm'
+            variant={!isVerified ? 'destructive' : 'outline'}
+            onClick={() => meta.onStatusChange?.(row.original.id, false)}
+            className='w-24 bg-red-600 text-white hover:bg-red-500 hover:text-white'
+            disabled={!isVerified || meta.isStatusLoading}
+          >
+            {meta.isStatusLoading ? (
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+              </div>
+            ) : !isVerified ? (
+              'Unverified'
+            ) : (
+              'Deny'
+            )}
+          </Button>
+        </div>
       );
     },
   },

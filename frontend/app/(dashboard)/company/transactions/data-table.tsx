@@ -35,6 +35,7 @@ interface DataTableProps<TData, TValue> {
   onEdit?: (transaction: Transaction) => void;
   onDelete: (rows: Row<TData>[]) => void;
   onSelectionChange?: (selectedItems: Transaction[]) => void;
+  onStatusChange?: (transactionId: string, isVerified: boolean) => void;
   disabled?: boolean;
 }
 
@@ -44,6 +45,7 @@ export function DataTable<TData, TValue>({
   onEdit,
   onDelete,
   onSelectionChange,
+  onStatusChange,
   disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
@@ -73,6 +75,7 @@ export function DataTable<TData, TValue>({
     meta: {
       onEdit,
       onDelete,
+      onStatusChange,
     },
   });
 

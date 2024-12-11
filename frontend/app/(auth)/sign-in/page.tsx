@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -51,9 +52,9 @@ export default function SignIn() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    debugger;
-
     setIsLoading(true);
+    const loadingToast = toast.loading('Signing in...');
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`, {
         method: 'POST',
@@ -67,24 +68,28 @@ export default function SignIn() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Sign-in failed');
-      }
-
       const data = await response.json();
-      console.log('Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Invalid credentials');
+      }
 
       if (data.access_token) {
         localStorage.setItem('accessToken', data.access_token);
+        toast.success('Successfully signed in!', {
+          id: loadingToast,
+        });
         await new Promise((resolve) => setTimeout(resolve, 1000));
         const redirectPath = values.role === 'ADMIN' ? '/company' : `/${values.role.toLowerCase()}`;
         router.push(redirectPath);
       } else {
-        throw new Error('No access token received');
+        throw new Error('Authentication failed: No access token received');
       }
     } catch (error) {
-      console.error('Error signing in:', error);
-      // You can add a toast notification here if you want
+      const errorMessage = error instanceof Error ? error.message : 'Failed to sign in';
+      toast.error(errorMessage, {
+        id: loadingToast,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +154,14 @@ export default function SignIn() {
             )}
           />
           <Button type='submit' className='w-full' disabled={isLoading}>
-            {isLoading ? 'Signing In...' : 'Sign In'}
+            {isLoading ? (
+              <div className='flex items-center gap-2'>
+                <div className='h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent' />
+                Signing In...
+              </div>
+            ) : (
+              'Sign In'
+            )}
           </Button>
         </form>
       </Form>
