@@ -57,6 +57,8 @@
     frontage: string;
     landDepth: string;
   };
+  images: string[];
+  agentId: string;
 };
 
 type room = {

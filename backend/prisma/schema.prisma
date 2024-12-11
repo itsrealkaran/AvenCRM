@@ -504,6 +504,7 @@ model Property {
   price           Float
   address         String
   sqft            Int
+  bedrooms        Int?
   
   propertySummary Json
   bathrooms       Json
