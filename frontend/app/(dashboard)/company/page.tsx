@@ -50,8 +50,10 @@ const Page = () => {
   const [selectedList, setSelectedList] = useState<any[]>([]);
 
   const getUser = useCallback(async () => {
+    debugger;
+
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/getAll`, {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
         },
@@ -67,7 +69,7 @@ const Page = () => {
   useEffect(() => {
     getUser();
     console.log(selectedList);
-  }, [agent, selectedList, refresh]);
+  }, [agent, selectedList, refresh, getUser]);
 
   const addItem = (i: number, id: string) => {
     if (selectedList.includes(id)) {
@@ -80,7 +82,7 @@ const Page = () => {
   const addUser = async () => {
     console.log(formData);
     const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/add`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`,
       {
         name: formData.name,
         dob: new Date(),
@@ -102,20 +104,22 @@ const Page = () => {
 
   const updateUser = async () => {
     console.log(formData, 'update');
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/update`,
+    const response = await axios.put(
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`,
       {
         name: formData.name,
-        age: new Date(),
+        dob: new Date(),
         email: formData.email,
-        phoneNo: formData.phone,
+        phone: formData.phone,
         role: formData.role,
         gender: formData.gender,
-        agentId: selectedList[0],
       },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+        },
+        params: {
+          id: selectedList[0],
         },
       }
     );
@@ -126,17 +130,14 @@ const Page = () => {
 
   const deleteUser = async () => {
     console.log(selectedList);
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/agent/delete`,
-      {
+    const response = await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+      },
+      data: {
         agentIds: selectedList,
       },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      }
-    );
+    });
     setOpenDeletePopup(false);
     setRefresh(true);
     console.log(response.data);

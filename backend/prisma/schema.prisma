@@ -39,7 +39,7 @@ enum DealStatus {
   CLOSED_LOST
 }
 
-enum PaymentType {
+enum TransactionType {
   INCOME
   EXPENSE
   SUBSCRIPTION
@@ -76,6 +76,18 @@ enum Gender {
   OTHERS
 }
 
+// Email related enums
+enum EmailProvider {
+  GMAIL
+  OUTLOOK
+}
+
+enum EmailStatus {
+  PENDING
+  SENT
+  FAILED
+  SCHEDULED
+}
 
 // Superuser/Platform Company Model
 model SuperAdmin {
@@ -118,7 +130,7 @@ model Company {
   users        Agent[]
   leads        Lead[]
   deals        Deal[]
-  payments     Payment[]
+  transactions Transaction[]
   teams        Team[]
   
   createdAt    DateTime @default(now())
@@ -127,6 +139,9 @@ model Company {
   EmailCampaign EmailCampaign[]
 
   CompanyAuditLog CompanyAuditLog[]
+  EmailTemplate EmailTemplate[]
+
+  EmailAccount EmailAccount[]
 }
 
 // Plan Model for different subscription tiers
@@ -214,10 +229,11 @@ model Agent {
   updatedAt   DateTime   @updatedAt
 
   EmailCampaignRecipient EmailCampaignRecipient[]
-
+  EmailAccount EmailAccount[]
   Property Property[]
-
   PageBuilder PageBuilder[]
+
+  Transaction Transaction[]
 }
 
 // Lead Model
@@ -296,18 +312,20 @@ model Deal {
   updatedAt     DateTime    @updatedAt
 }
 
-// Payment Model
-model Payment {
+//  Model
+model Transaction {
   id             String      @id @default(cuid())
   
   // Relations
   company        Company     @relation(fields: [companyId], references: [id])
   companyId      String
   
-  // Payment Details
+  // Tranasctions Details
   amount         Float
   date           DateTime    @default(now())
-  type           PaymentType
+  type           TransactionType
+  agent          Agent       @relation(fields: [agentId], references: [id])
+  agentId        String
 
   planType       PlanTier?
   isVerfied      Boolean     @default(false)
@@ -318,7 +336,7 @@ model Payment {
   totalAmount    Float?
   
   // Additional Financial Info
-  paymentMethod  String?
+  transactionMethod  String?
   receiptUrl     String?
   
   createdAt     DateTime    @default(now())
@@ -409,6 +427,8 @@ model EmailCampaign {
   
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
+
+  Email Email[]
 }
 
 // Email Campaign Recipient Tracking
@@ -481,22 +501,105 @@ model Property {
   id              String   @id @default(cuid())
   title           String
   description     String
-  address         String
   price           Float
-  propertyType    String
-  area            Float
+  address         String
+  sqft            Int
   bedrooms        Int?
-  bathrooms       Int?
+  
+  propertySummary Json
+  bathrooms       Json
+  interiorFeatures Json
+  buildingFeatures Json
+  heatingNcooling Json
+  exteriorFeatures Json
+  measurements    Json
+  parking Json
+  lotFeatures     Json
+  rooms           Json[]
   images          String[] // URLs of property images
-  additionalInfo  Json?    // Any extra details like amenities, etc.
 
   // Created and updated timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
 // Relationships
-  createdBy       Agent?   @relation(fields: [createdById], references: [id])
-  createdById     String?
+  createdBy       Agent?   @relation(fields: [creatorId], references: [id])
+  creatorId       String?
+}
+
+// Email Account Integration
+model EmailAccount {
+  id            String        @id @default(cuid())
+  provider      EmailProvider
+  email         String
+  accessToken   String
+  refreshToken  String
+  expiresAt     DateTime
+  isActive      Boolean       @default(true)
+  
+  // Relations
+  user          Agent         @relation(fields: [userId], references: [id])
+  userId        String
+  company       Company       @relation(fields: [companyId], references: [id])
+  companyId     String
+  
+  sentEmails    Email[]
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Email Model
+model Email {
+  id              String          @id @default(cuid())
+  subject         String
+  body            String          @db.Text
+  scheduledFor    DateTime?
+  sentAt          DateTime?
+  status          EmailStatus     @default(PENDING)
+  
+  // Relations
+  sender          EmailAccount    @relation(fields: [emailAccountId], references: [id])
+  emailAccountId  String
+  
+  campaign        EmailCampaign?  @relation(fields: [campaignId], references: [id])
+  campaignId      String?
+  
+  recipients      EmailRecipient[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+// Email Recipient Model
+model EmailRecipient {
+  id            String    @id @default(cuid())
+  name          String?
+  openedAt      DateTime?
+  clickedAt     DateTime?
+  
+  // Relations
+  email         Email     @relation(fields: [emailId], references: [id])
+  emailId       String
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Email Template Model
+model EmailTemplate {
+  id          String    @id @default(cuid())
+  name        String
+  subject     String
+  body        String    @db.Text
+  isGlobal    Boolean   @default(false)
+  
+  // Relations
+  company     Company   @relation(fields: [companyId], references: [id])
+  companyId   String
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 // Page Builder Model
