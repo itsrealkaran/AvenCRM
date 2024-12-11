@@ -137,15 +137,15 @@ router.delete("/", async (req: Request, res: Response) => {
 });
 
 
-router.post("/verify", async (req: Request, res: Response) => {
-    const { isVerfied } = req.body;
+router.put("/verify/:id", async (req: Request, res: Response) => {
+    const { isVerified } = req.body;
     try {
         const transaction = await prisma.transaction.update({
             where: {
-                id: req.body.id
+                id: req.params.id
             },
             data: {
-                isVerfied: isVerfied
+                isVerfied: isVerified
             }
         });
         res.json(transaction);
