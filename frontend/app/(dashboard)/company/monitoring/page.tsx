@@ -51,7 +51,7 @@ export default function MonitoringPage() {
       <div className='flex justify-between items-center'>
         <div>
           <h1 className='text-3xl font-bold text-gray-900'>Company Monitoring</h1>
-          <p className='text-gray-500 mt-1'>Track your company's performance and metrics</p>
+          <p className='text-gray-500 mt-1'>Track your companys performance and metrics</p>
         </div>
         <div className='flex items-center gap-4'>
           <div className='flex items-center bg-white rounded-lg border shadow-sm'>

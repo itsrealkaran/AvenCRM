@@ -7,9 +7,8 @@ import axios from 'axios';
 
 import PropertyBox from '../../../components/PropertyBox';
 import houseImg from '../../../public/house.webp';
-import PropertyListing from './components/PropertyListing';
 
-const page = () => {
+const Page = () => {
   const [response, setResponse] = useState([]);
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
@@ -56,4 +55,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

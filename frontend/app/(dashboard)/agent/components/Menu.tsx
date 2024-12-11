@@ -32,17 +32,9 @@ const Menu: React.FC<MenuProps> = ({
     >
       <div className='flex items-center gap-3'>
         <div className='flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-200'>
-          {Icon && (
-            <Icon
-              className={`h-5 w-5 ${isActive ? 'text-white' : 'text-gray-600 group-hover:text-primary'}`}
-            />
-          )}
+          {Icon && <Icon />}
         </div>
-        <span
-          className={`text-sm font-medium capitalize ${isActive ? 'text-white' : 'text-gray-700 group-hover:text-primary'}`}
-        >
-          {heading}
-        </span>
+        <span className={`text-sm font-medium capitalize`}>{heading}</span>
       </div>
       <FaAngleRight
         className={`h-4 w-4 transition-transform duration-200 
