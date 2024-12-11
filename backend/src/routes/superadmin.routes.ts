@@ -1,21 +1,28 @@
 import { Router } from "express";
-import { prisma } from "../lib/prisma";
-import { protect } from "../middleware/auth";
+import { prisma } from "../lib/prisma.js";
+import { protect } from "../middleware/auth.js";
 
 const router = Router();
-router.use(protect);  
+router.use(protect);
 
 router.get("/", async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "SUPERADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   try {
     const superAdmins = await prisma.superAdmin.findMany();
     res.json(superAdmins);
   } catch (error) {
-    res.status(500).json({ message: "Failed to fetch super admins" });  
+    res.status(500).json({ message: "Failed to fetch super admins" });
   }
 });
 
-
 router.get("/:id", async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "SUPERADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   try {
     const superAdmin = await prisma.superAdmin.findUnique({
       where: { id: req.params.id },
@@ -26,14 +33,17 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", async (req, res) => { 
-
+router.post("/", async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "SUPERADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   const data = {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
   };
-     
+
   try {
     const superAdmin = await prisma.superAdmin.create({
       data: data,
@@ -45,6 +55,10 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "SUPERADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   const data = {
     name: req.body.name,
     email: req.body.email,
@@ -62,6 +76,10 @@ router.put("/:id", async (req, res) => {
 });
 
 router.delete("/:id", async (req, res) => {
+  const role = req.user?.role;
+  if (role !== "SUPERADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
   try {
     const superAdmin = await prisma.superAdmin.delete({
       where: { id: req.params.id },
@@ -71,6 +89,5 @@ router.delete("/:id", async (req, res) => {
     res.status(500).json({ message: "Failed to delete super admin" });
   }
 });
-
 
 export default router;

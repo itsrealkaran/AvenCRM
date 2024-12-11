@@ -168,7 +168,7 @@ CREATE TABLE "Payment" (
     "invoiceNumber" TEXT,
     "taxRate" DOUBLE PRECISION,
     "totalAmount" DOUBLE PRECISION,
-    "paymentMethod" TEXT,
+    "transactionMethod" TEXT,
     "receiptUrl" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
