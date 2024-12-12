@@ -13,7 +13,7 @@ interface PropertyBoxProps {
 
 const PropertyBox = ({ img, address, price, landSize, bedrooms, bathrooms }: PropertyBoxProps) => {
   return (
-    <div className='flex flex-col w-72 rounded-md border-[1px] border-gray-300 justify-between pb-4'>
+    <div className='flex flex-col w-72 rounded-md border-[1px] bg-white border-gray-300 justify-between pb-4'>
       <div className=''>
         <Image
           src={img}
@@ -40,8 +40,8 @@ const PropertyBox = ({ img, address, price, landSize, bedrooms, bathrooms }: Pro
             <p className='text-sm'>Pushkar</p>
           </div>
           <div className='flex items-center gap-2'>
-            <Share1Icon className='h-4 w-4 bg-gray-300' />
-            <Heart className='h-4 w-4 bg-gray-300' />
+            <Share1Icon className='h-4 w-4 ' />
+            <Heart className='h-4 w-4' />
           </div>
         </div>
       </div>

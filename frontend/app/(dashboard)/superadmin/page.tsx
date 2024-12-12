@@ -25,7 +25,7 @@ const Page = () => {
 
   return (
     <div className='w-full h-full overflow-y-auto'>
-      <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 mb-24'>
+      <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 mb-8'>
         {/* Stats Section */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8'>
           <StatsCard

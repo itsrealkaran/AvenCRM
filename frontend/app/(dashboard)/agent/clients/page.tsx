@@ -14,7 +14,7 @@ export default function MonitoringDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className='container mx-auto p-6'>
+    <div className='container mx-auto p-6 h-full overflow-y-auto'>
       <h1 className='text-3xl font-bold mb-6'>Real Estate Monitoring Dashboard</h1>
       <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
         <TabsList className='grid w-full grid-cols-5'>

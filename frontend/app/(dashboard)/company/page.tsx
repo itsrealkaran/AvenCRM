@@ -48,6 +48,7 @@ const Page = () => {
 
   const [list, setList] = useState<any[]>([]);
   const [selectedList, setSelectedList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const getUser = useCallback(async () => {
     debugger;
@@ -64,6 +65,15 @@ const Page = () => {
       console.error('Error fetching users:', error);
       setRefresh(false);
     }
+  }, []);
+
+  useEffect(() => {
+    // Simulate loading delay
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
@@ -156,9 +166,9 @@ const Page = () => {
 
   return (
     <>
-      <div className='relative w-full overflow-hidden bg-[#F6F9FE] p-3'>
+      <div className='relative w-full h-full p-3'>
         {/* this is the top most div with the filter options  */}
-        <div className='w-full bg-white'>
+        <div className='w-full h-fit bg-white rounded-md'>
           {/* this is the top level filter div  */}
           <div className='flex w-full items-center justify-between px-4 pt-5'>
             {/* this is the main heading */}
@@ -198,7 +208,7 @@ const Page = () => {
           {/* delete popup */}
 
           {openDeletePopup && (
-            <div className='absolute top-0 left-0 z-10 flex h-full w-full items-center justify-center bg-black/50'>
+            <div className='absolute top-0 left-0 z-10 flex h-full w-full items-center justify-center rounded-md bg-black/50'>
               <div className='w-[30%] rounded-lg bg-white p-5'>
                 <div className='flex items-center justify-between'>
                   <div className='text-[1.2rem] font-semibold'>Delete User</div>
@@ -241,21 +251,39 @@ const Page = () => {
 
         {/* this is the bottom scrollabel div with the list thingy don't */}
 
-        <div className='mt-3 flex h-[80vh] flex-col gap-2 overflow-y-auto bg-white px-3 py-5 text-sm font-semibold'>
+        <div className='mt-3 flex h-full flex-col gap-2 overflow-y-auto bg-white px-3 py-5 text-sm font-semibold rounded-md'>
           {/* this is going to be an component  */}
 
-          {list.map((user, i) => (
-            <ManageUserList
-              func={addItem}
-              name={user.name}
-              email={user.email}
-              phone={user.phone}
-              role={user.role}
-              id={user.id}
-              key={i}
-              index={i}
-            />
-          ))}
+          {loading
+            ? // Skeleton UI
+              Array(5)
+                .fill(0)
+                .map((_, i) => (
+                  <div
+                    key={i}
+                    className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center gap-4 py-6 rounded-lg bg-[#F5F5F5] px-5'
+                  >
+                    <div className='flex items-center'>
+                      <div className='h-4 w-4 rounded bg-gray-200 animate-pulse'></div>
+                    </div>
+                    <div className='h-4 w-3/4 rounded bg-gray-200 animate-pulse'></div>
+                    <div className='h-4 w-2/3 rounded bg-gray-200 animate-pulse'></div>
+                    <div className='h-4 w-1/2 rounded bg-gray-200 animate-pulse'></div>
+                    <div className='h-4 w-16 rounded bg-gray-200 animate-pulse'></div>
+                  </div>
+                ))
+            : list.map((user, i) => (
+                <ManageUserList
+                  func={addItem}
+                  name={user.name}
+                  email={user.email}
+                  phone={user.phone}
+                  role={user.role}
+                  id={user.id}
+                  key={i}
+                  index={i}
+                />
+              ))}
         </div>
 
         {adduser ? (

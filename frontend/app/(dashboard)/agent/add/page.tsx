@@ -168,7 +168,10 @@ const Page = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className='p-6 rounded-lg shadow-sm space-y-8 bg-gray-100'>
+    <form
+      onSubmit={handleSubmit}
+      className='p-6 rounded-lg shadow-sm space-y-8 h-[91vh] overflow-y-auto'
+    >
       {/* Header */}
       <div className='flex justify-between items-center'>
         <h2 className='text-xl font-semibold'>Property Details</h2>
@@ -189,12 +192,12 @@ const Page = () => {
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow-sm'>
         <label className='h-32 border-[1px] border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors'>
           Upload Images
-          {/* <input
+          <input
             type='file'
             accept='image/jpeg,image/png'
             onChange={handleFileUpload}
             className='hidden'
-          /> */}
+          />
           <Plus className='text-gray-400' />
         </label>
         {formData.images.map((image, index) => (

@@ -5,11 +5,11 @@ import { FaCheck } from 'react-icons/fa';
 
 const Page = () => {
   return (
-    <div className='min-h-screen bg-gray-50 p-6'>
+    <div className='h-full overflow-y-auto p-6'>
       {/* Pricing Cards */}
       <div className='mb-8 grid grid-cols-1 gap-6 lg:grid-cols-2'>
         {/* Basic Plan */}
-        <div className='overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md'>
+        <div className='rounded-2xl bg-white shadow-sm transition hover:shadow-md'>
           <div className='flex'>
             {/* Plan Details */}
             <div className='flex-1 p-8'>
@@ -148,7 +148,7 @@ const Page = () => {
       </div>
 
       {/* Transaction History */}
-      <div className='rounded-2xl bg-white p-6 shadow-sm'>
+      <div className='rounded-2xl bg-white p-6 shadow-sm mb-6 '>
         <h3 className='mb-6 text-lg font-semibold text-gray-900'>Transaction History</h3>
 
         <div className='mb-4 grid grid-cols-5 gap-4 px-4 text-sm font-medium text-gray-700'>

@@ -8,7 +8,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <SidebarProvider>
       <SideNavBar />
-      <main className='w-full min-w-[80%] bg-[#f0f5fc] overflow-hidden h-screen'>
+      <main className='w-full bg-[#f0f5fc] overflow-hidden h-full'>
         <TopNavigation />
         {children}
       </main>

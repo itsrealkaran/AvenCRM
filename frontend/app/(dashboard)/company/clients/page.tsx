@@ -41,7 +41,7 @@ const Page = () => {
 
   return (
     <div className='h-full w-full overflow-hidden bg-[#F6F9FE] px-3'>
-      <div className='mt-3 w-full bg-white'>
+      <div className='mt-3 w-full bg-white rounded-md'>
         <div className='flex w-full items-center justify-between px-4 pt-5'>
           {/* this is the main heading */}
           <div className='flex items-center gap-3'>
@@ -143,7 +143,7 @@ const Page = () => {
         </div>
       </div>
 
-      <div className='mt-2 flex h-[70vh] w-full flex-col gap-3 overflow-y-auto bg-white px-3 py-5 pb-10'>
+      <div className='mt-2 flex h-[70vh] w-full flex-col gap-3 overflow-y-auto bg-white rounded-md px-3 py-5 pb-10'>
         {/* this is going to be the monitorignList comp  */}
 
         {deal

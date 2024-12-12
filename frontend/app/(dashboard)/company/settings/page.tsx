@@ -43,9 +43,7 @@ const Page = () => {
   ];
 
   return (
-    <div className='min-h-screen bg-gradient-to-b from-[#fafbff] to-white'>
-      <TopNavigation />
-
+    <div className='h-full overflow-y-auto'>
       {/* Header Section */}
       <div className='relative h-[200px] bg-gradient-to-r from-blue-600 to-blue-800'>
         <div className='absolute -bottom-16 left-1/2 transform -translate-x-1/2'>
@@ -65,9 +63,9 @@ const Page = () => {
 
       {/* Main Content */}
       <div className='container mx-auto px-4 pt-24 pb-12'>
-        <div className='grid grid-cols-12 gap-6'>
+        <div className='gap-6'>
           {/* Left Sidebar */}
-          <Card className='col-span-3 h-fit'>
+          {/* <Card className='col-span-3 h-fit'>
             <CardContent className='p-4'>
               <div className='space-y-2'>
                 {tabs.map((tab) => (
@@ -93,7 +91,7 @@ const Page = () => {
                 </Button>
               </div>
             </CardContent>
-          </Card>
+          </Card> */}
 
           {/* Main Content Area */}
           <div className='col-span-9'>

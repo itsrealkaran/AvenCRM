@@ -3,7 +3,11 @@ import React from 'react';
 import Calendar from './event-calendar';
 
 function CalendarPage() {
-  return <Calendar />;
+  return (
+    <div className='w-full pb-12 overflow-y-auto'>
+      <Calendar />
+    </div>
+  );
 }
 
 export default CalendarPage;
