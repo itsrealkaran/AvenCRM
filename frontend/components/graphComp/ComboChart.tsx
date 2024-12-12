@@ -28,6 +28,7 @@ import {
   getYAxisDomain,
   hasOnlyOneValueForKey,
 } from '../../app/(dashboard)/superadmin/lib/chartUtils';
+import { useOnWindowResize } from '../../app/(dashboard)/superadmin/lib/useOnWindowResize';
 import { cx } from '../../app/(dashboard)/superadmin/lib/utils/cx';
 
 //#region Shape
