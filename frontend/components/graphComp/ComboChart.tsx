@@ -27,9 +27,8 @@ import {
   getColorClassName,
   getYAxisDomain,
   hasOnlyOneValueForKey,
-} from '../chartUtils';
-import { useOnWindowResize } from '../useOnWindowResize';
-import { cx } from '../utils/cx';
+} from '../../app/(dashboard)/superadmin/lib/chartUtils';
+import { cx } from '../../app/(dashboard)/superadmin/lib/utils/cx';
 
 //#region Shape
 function deepEqual<T>(obj1: T, obj2: T): boolean {
@@ -371,10 +370,10 @@ const ChartLegend = (
 ) => {
   const legendRef = React.useRef<HTMLDivElement>(null);
 
-  useOnWindowResize(() => {
+  () => {
     const calculateHeight = (height: number | undefined) => (height ? Number(height) + 15 : 60);
     setLegendHeight(calculateHeight(legendRef.current?.clientHeight));
-  });
+  };
 
   const filteredPayload = payload.filter((item: any) => item.type !== 'none');
 
