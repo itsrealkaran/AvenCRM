@@ -46,22 +46,13 @@ const agentPerformanceData = [
 
 export default function MonitoringPage() {
   return (
-    <div className='container mx-auto p-6 space-y-6'>
+    <div className='container mx-auto p-6 space-y-6 h-full pb-8 overflow-y-auto'>
       {/* Header Section */}
       <div className='flex justify-between items-center'>
         <div>
           <h1 className='text-3xl font-bold text-gray-900'>Company Monitoring</h1>
-          <p className='text-gray-500 mt-1'>Track your company's performance and metrics</p>
         </div>
         <div className='flex items-center gap-4'>
-          <div className='flex items-center bg-white rounded-lg border shadow-sm'>
-            <select className='px-4 py-2 rounded-lg outline-none'>
-              <option>Last 7 days</option>
-              <option>Last 30 days</option>
-              <option>Last 90 days</option>
-            </select>
-            <Calendar className='w-4 h-4 mr-2 text-gray-500' />
-          </div>
           <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
             <Filter className='w-4 h-4 text-gray-500' />
           </button>

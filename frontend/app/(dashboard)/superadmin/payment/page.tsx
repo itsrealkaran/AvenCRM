@@ -26,10 +26,8 @@ const Page = () => {
     setfilteropen(false);
   };
   return (
-    <div className='w-full relative bg-[#f0f5fc] h-screen overflow-hidden flex'>
+    <div className='w-full relative bg-[#f0f5fc] h-full overflow-hidden flex'>
       <div className='w-full h-full '>
-        <TopNavigation />
-
         <div className='w-full h-[90%] flex flex-col px-3'>
           <div className='w-full h-[32%] bg-white rounded-t-xl mt-3 pt-2'>
             {/*  this is teh top filter section */}
@@ -84,12 +82,11 @@ const Page = () => {
             {/* this is the final thingy of this page  */}
           </div>
           <div className='w-full h-[65%]    bg-white  overflow-hidden flex flex-col whitespace-nowrap gap-2  px-3'>
-            <div className='overflow-y-auto pt-3 flex flex-col gap-3  pb-8  '>
+            <div className='overflow-y-auto pt-3 flex flex-col gap-3 mb-8  '>
               {[1, 2, 4, 5, 6, 7, 7, 8, 9].map((e, i) => (
                 <InvoiceOverview func={changeModal} open={modal} key={i} />
               ))}
             </div>
-            <div className='w-full h-[7%] backdrop-blur-sm absolute bottom-0'></div>
           </div>
         </div>
       </div>

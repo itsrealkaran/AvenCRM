@@ -10,7 +10,6 @@ import GraphComp from './components/GraphComp';
 import { LineChartHero } from './components/LineChartHero';
 import { RecentActivities } from './components/RecentActivities';
 import { StatsCard } from './components/StatsCard';
-import { TopNavigation } from './components/TopNavigation';
 
 // ye macro hai  puri gand baad mai maregi
 
@@ -25,10 +24,8 @@ const Page = () => {
   // 4 graphs  4 different data arrays needed
 
   return (
-    <div className='w-full min-h-screen bg-[#f0f5fc] overflow-x-hidden'>
-      <div className='w-full max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <TopNavigation />
-
+    <div className='w-full h-full overflow-y-auto'>
+      <div className='w-full mx-auto px-4 sm:px-6 lg:px-8 mb-8'>
         {/* Stats Section */}
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8'>
           <StatsCard
@@ -73,7 +70,26 @@ const Page = () => {
 
           {/* Side Panel */}
           <div className='lg:col-span-4 space-y-4'>
-            <RecentActivities />
+            <div className='gap-4 space-y-5'>
+              <StatsCard
+                label='Email Campaigns'
+                value='45'
+                icon={Mail}
+                description='Active campaigns'
+              />
+              <StatsCard
+                label='Growth Rate'
+                value='23%'
+                icon={TrendingUp}
+                description='Month over month'
+              />
+              <StatsCard
+                label='Security Score'
+                value='98'
+                icon={ShieldCheck}
+                description='System security status'
+              />
+            </div>
             <div className='bg-white rounded-xl p-4 h-[300px]'>
               <GraphComp
                 padding={2}
@@ -83,28 +99,6 @@ const Page = () => {
               />
             </div>
           </div>
-        </div>
-
-        {/* Bottom Stats */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8'>
-          <StatsCard
-            label='Email Campaigns'
-            value='45'
-            icon={Mail}
-            description='Active campaigns'
-          />
-          <StatsCard
-            label='Growth Rate'
-            value='23%'
-            icon={TrendingUp}
-            description='Month over month'
-          />
-          <StatsCard
-            label='Security Score'
-            value='98'
-            icon={ShieldCheck}
-            description='System security status'
-          />
         </div>
       </div>
     </div>

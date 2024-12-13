@@ -45,10 +45,9 @@ const Page = () => {
   }, []);
 
   return (
-    <div className='relative w-full flex h-screen overflow-hidden'>
-      <div className='w-full h-screen '>
-        <TopNavbar />
-        <div className='w-full bg-white h-full  pt-5 mt-3 rounded-xl'>
+    <div className='relative w-full h-full flex justify-center items-center mb-8'>
+      <div className='w-full h-full flex justify-center items-center'>
+        <div className='w-[97%] bg-white h-[97%] pt-5 mt-3 rounded-xl'>
           {/* this is the same as the payment thingy not making in component though kyu ki bhai time ni hai  */}
           <div className='w-full px-4 flex justify-between items-center'>
             {/* this is the main heading */}
@@ -66,8 +65,8 @@ const Page = () => {
 
           {/* the stats contaier */}
 
-          <div className=' px-3 flex flex-col h-full  w-full pt-2'>
-            <div className='flex flex-col h-[84%]  pt-5  pb-16 gap-3  overflow-y-auto '>
+          <div className='flex flex-col h-full w-full px-3 pt-2 overflow-y-scroll '>
+            <div className='flex flex-col gap-3  mb-6 h-full'>
               {[
                 {
                   Cname: 'TATA',

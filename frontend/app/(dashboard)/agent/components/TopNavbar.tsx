@@ -1,5 +1,8 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { CiBellOn } from 'react-icons/ci';
 import { FaAngleDown, FaQuestion } from 'react-icons/fa6';
 import { IoSearch } from 'react-icons/io5';
@@ -7,8 +10,15 @@ import { IoSearch } from 'react-icons/io5';
 // done with it for now
 
 export const TopNavbar = () => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    localStorage.removeItem('accessToken');
+    router.push('/sign-in');
+  };
   return (
-    <div className='w-full px-5 shadow-sm shadow-black/10 z-10   flex justify-between bg-white h-[9%] items-center '>
+    <div className='w-full px-5 shadow-sm relative shadow-black/10 z-10 flex justify-between bg-white h-[9vh] items-center '>
       {/* this is the search bar  */}
 
       <div className='relative w-[20%]  '>
@@ -32,7 +42,10 @@ export const TopNavbar = () => {
           <FaQuestion />
         </div>
 
-        <div className='flex items-center gap-[6px]'>
+        <div
+          className='flex items-center gap-[6px]'
+          onClick={() => setIsDropdownOpen((prev) => !prev)}
+        >
           <div className='w-[37px] h-[37px] rounded-full  overflow-hidden ml-6'>
             <Image
               height={100}
@@ -42,7 +55,7 @@ export const TopNavbar = () => {
               alt='not showing'
             />
           </div>
-          <div className='leading-[0.8rem]'>
+          <div className='leading-[0.8rem] cursor-pointer'>
             <h1 className='font-semibold text-[0.8rem] opacity-90'>Profile</h1>
             <p className='text-[0.55rem] opacity-70'>Manager</p>
           </div>
@@ -50,6 +63,16 @@ export const TopNavbar = () => {
           <div className='ml-1 opacity-70 '>
             <FaAngleDown />
           </div>
+          {isDropdownOpen && (
+            <div className='absolute right-0 top-[120%] z-20 min-w-[150px] rounded-md bg-white py-2 shadow-lg'>
+              <button
+                onClick={handleSignOut}
+                className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

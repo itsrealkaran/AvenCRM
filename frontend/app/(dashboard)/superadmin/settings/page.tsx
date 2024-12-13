@@ -21,11 +21,6 @@ const Page = () => {
 
   const router = useRouter();
 
-  const handleSignOut = () => {
-    localStorage.removeItem('accessToken');
-    router.push('/sign-in');
-  };
-
   const openDets = () => {
     setdetails(true);
     setpassword(false);
@@ -48,13 +43,6 @@ const Page = () => {
       {/* this is the right div  */}
 
       <div className='w-full   h-[100vh]  '>
-        {/* this is the top navigation section  */}
-        <TopNavigation />
-
-        <div>
-          <Button onClick={handleSignOut}>Sign Out</Button>
-        </div>
-
         {/* this is the main image section */}
         <div className='w-full h-[90%] overflow-y-auto'>
           <div className='w-full h-[35%] flex relative items-center justify-center'>

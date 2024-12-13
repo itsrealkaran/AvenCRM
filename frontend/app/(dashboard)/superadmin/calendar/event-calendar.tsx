@@ -51,7 +51,7 @@ export default function Calendar() {
   };
 
   return (
-    <Card className='w-full max-w-6xl mx-auto mt-8'>
+    <Card className='w-full h-full max-w-6xl mx-auto mt-8'>
       <CardContent className='p-6'>
         <div className='mb-4 flex justify-between items-center'>
           <h1 className='text-2xl font-bold'>Event Calendar</h1>

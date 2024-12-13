@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { PropertyData } from '@/types/propertyTypes';
 import axios from 'axios';
-import { Maximize2, Printer, Share2 } from 'lucide-react';
+import { Maximize2, Plus, Printer, Share2 } from 'lucide-react';
 
 const Page = () => {
   const [formData, setFormData] = useState<PropertyData>({
@@ -65,6 +65,8 @@ const Page = () => {
       frontage: '',
       landDepth: '',
     },
+    agentId: '',
+    images: [], // Add images array to store uploaded images
   });
 
   const handleInputChange = (
@@ -113,16 +115,54 @@ const Page = () => {
     }
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.includes('image/jpeg') && !file.type.includes('image/png')) {
+      alert('Please upload only JPEG or PNG files');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-image`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      // Update the form data with the new image URL
+      setFormData((prev) => ({
+        ...prev,
+        images: [...prev.images, response.data.imageUrl],
+      }));
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/property`, {
-      formData,
+      formData
     });
     console.log(response.data);
   };
 
   return (
-    <form onSubmit={handleSubmit} className='p-6 rounded-lg shadow-sm space-y-8 bg-gray-100'>
+    <form
+      onSubmit={handleSubmit}
+      className='p-6 rounded-lg shadow-sm space-y-8 h-[91vh] overflow-y-auto'
+    >
       {/* Header */}
       <div className='flex justify-between items-center'>
         <h2 className='text-xl font-semibold'>Property Details</h2>
@@ -137,6 +177,29 @@ const Page = () => {
             <Maximize2 size={20} />
           </button>
         </div>
+      </div>
+
+      {/* Adding images */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow-sm'>
+        <label className='h-32 border-[1px] border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors'>
+          Upload Images
+          <input
+            type='file'
+            accept='image/jpeg,image/png'
+            onChange={handleFileUpload}
+            className='hidden'
+          />
+          <Plus className='text-gray-400' />
+        </label>
+        {formData.images.map((image, index) => (
+          <div key={index} className='h-32 border-[1px] border-gray-300 rounded-lg overflow-hidden'>
+            <img
+              src={image}
+              alt={`Property image ${index + 1}`}
+              className='w-full h-full object-cover'
+            />
+          </div>
+        ))}
       </div>
 
       {/* Basic Information */}

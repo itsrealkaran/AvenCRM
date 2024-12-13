@@ -13,7 +13,7 @@ interface ManageUserListProps {
 
 const ManageUserList = ({ func, name, email, phone, role, id }: ManageUserListProps) => {
   return (
-    <div className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center text-md gap-4  py-6 rounded-lg bg-[#F5F5F5] px-5 py-4'>
+    <div className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center text-md gap-4 py-6 rounded-lg bg-[#F5F5F5] px-5'>
       {/* Checkbox */}
       <div className='flex items-center'>
         <input

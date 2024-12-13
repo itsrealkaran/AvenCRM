@@ -1,5 +1,8 @@
-import React from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { CiBellOn } from 'react-icons/ci';
 import { FaSearch } from 'react-icons/fa';
 import { FaAngleDown, FaQuestion } from 'react-icons/fa6';
@@ -7,8 +10,16 @@ import { FaAngleDown, FaQuestion } from 'react-icons/fa6';
 // done with it for now
 
 export const TopNavigation = () => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    localStorage.removeItem('accessToken');
+    router.push('/sign-in');
+  };
+
   return (
-    <div className='z-50 flex h-[9%] w-full items-center justify-between bg-white px-5 shadow-lg shadow-black/10'>
+    <div className='z-50 flex py-4 w-full items-center justify-between bg-white px-5 shadow-lg shadow-black/10'>
       {/* this is the search bar  */}
 
       <div className='relative w-[20%]'>
@@ -32,7 +43,10 @@ export const TopNavigation = () => {
           <FaQuestion />
         </div>
 
-        <div className='dropdown relative flex h-fit w-fit cursor-pointer items-center gap-[6px]'>
+        <div
+          className='dropdown relative flex h-fit w-fit cursor-pointer items-center gap-[6px]'
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+        >
           <div className='ml-6 h-[37px] w-[37px] overflow-hidden rounded-full'>
             <Image
               height={100}
@@ -51,7 +65,16 @@ export const TopNavigation = () => {
             <FaAngleDown />
           </div>
 
-          <div className='hover absolute left-2 top-[100%] z-10 w-full bg-black'></div>
+          {isDropdownOpen && (
+            <div className='absolute right-0 top-[120%] z-20 min-w-[150px] rounded-md bg-white py-2 shadow-lg'>
+              <button
+                onClick={handleSignOut}
+                className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
+              >
+                Logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
