@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,20 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { createEvent, deleteEvent, updateEvent } from './api';
 
-export default function EventModal({ isOpen, onClose, event, mutate }: any) {
+interface EventModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  event: any;
+  onSave: (eventData: any) => void;
+  onDelete: (eventId: number) => void;
+}
+
+const formatDateForInput = (date: Date) => {
+  return date.toISOString().slice(0, 16); // Format as YYYY-MM-DDTHH:mm
+};
+
+export default function EventModal({ isOpen, onClose, event, onSave, onDelete }: EventModalProps) {
+  const [loading, setLoading] = useState(false);
   const {
     register,
     handleSubmit,
@@ -19,20 +32,30 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
       ? {
           title: event.title,
           description: event.description,
-          start: event.start,
-          end: event.end,
+          start: formatDateForInput(new Date(event.start)),
+          end: formatDateForInput(new Date(event.end)),
         }
       : {},
   });
 
+  console.log(event);
   const onSubmit = async (data: any) => {
     try {
+      setLoading(true);
       if (event && event.id) {
-        await updateEvent(event.id, data);
+        await updateEvent(event.id, {
+          ...data,
+          id: event.id, // Make sure to include the ID
+        });
+        onSave({
+          ...data,
+          id: event.id,
+        });
       } else {
-        await createEvent(data);
+        const newEvent = await createEvent(data);
+        onSave(newEvent);
       }
-      mutate();
+      setLoading(false);
       onClose();
     } catch (error) {
       console.error('Error saving event:', error);
@@ -42,8 +65,10 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
   const handleDelete = async () => {
     if (event && event.id) {
       try {
+        setLoading(true);
         await deleteEvent(event.id);
-        mutate();
+        onDelete(event.id);
+        setLoading(false);
         onClose();
       } catch (error) {
         console.error('Error deleting event:', error);
@@ -83,10 +108,12 @@ export default function EventModal({ isOpen, onClose, event, mutate }: any) {
             />
           </div>
           <div className='flex justify-between'>
-            <Button type='submit'>{event && event.id ? 'Update Event' : 'Create Event'}</Button>
+            <Button disabled={loading} type='submit'>
+              {event && event.id ? 'Update Event' : loading ? 'Updating...' : loading ? 'Creating...' : 'Create Event'}
+            </Button>
             {event && event.id && (
-              <Button type='button' variant='destructive' onClick={handleDelete}>
-                Delete Event
+              <Button disabled={loading} type='button' variant='destructive' onClick={handleDelete}>
+                {loading ? 'Deleting...' : 'Delete Event'}
               </Button>
             )}
           </div>
