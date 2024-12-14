@@ -18,7 +18,7 @@ interface AuthenticatedRequest extends Request {
   user?: JWTPayload;
 }
 
-const router = Router();
+const router: Router = Router();
 
 //manual signup route
 router.post('/sign-up', (async (req: Request, res: Response) => {

@@ -6,7 +6,7 @@ import bcrypt from "bcrypt";
 import { UserRole } from "@prisma/client";
 import { verifyAdminCompany } from "../lib/verifyUser.js";
 
-const router = Router();
+const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
