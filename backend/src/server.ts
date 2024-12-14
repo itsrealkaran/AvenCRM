@@ -21,7 +21,7 @@ import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
 import { propertyRoutes } from './routes/propertyRoutes.js';
-
+import emailRoutes from './routes/email.routes.js';
 
 const app = express();
 
@@ -127,18 +127,20 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 });
 
 // API Routes
-app.use('/auth', authRouter);
-app.use('/superadmin', superAdminRoutes);
-app.use('/agent', agentRoutes);
-app.use('/deals', dealsRoutes);
-app.use('/transactions', transctionRoutes);
-app.use('/leads', leadsRoutes);
-app.use('/company', companyRoutes);
-app.use('/calender', manageCalendar);
-app.use('/company/moniter', companyMonitoring);
+app.use('/api', authRouter);
+app.use('/api', adminRoutes);
+app.use('/api', superAdminRoutes);
+app.use('/api', agentRoutes);
+app.use('/api', dealsRoutes);
+app.use('/api', leadsRoutes);
+app.use('/api', companyRoutes);
+app.use('/api', transctionRoutes);
+app.use('/api', emailRoutes);
+app.use('/api/calender', manageCalendar);
+app.use('/api/company/moniter', companyMonitoring);
 // app.use('/company/subsciption', manageSubscription);
-app.use('/company/admin', adminRoutes);
-app.use("/property", propertyRoutes);
+app.use('/api/company/admin', adminRoutes);
+app.use("/api/property", propertyRoutes);
 
 // Enhanced error handling middleware with debugging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

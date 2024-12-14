@@ -6,10 +6,6 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight } from 'lucide-react';
 
 export default function Home() {
-  const router = useRouter();
-  useEffect(() => {
-    router.push('/sign-in');
-  });
   return (
     <div className='bg-gradient-to-b from-white to-gray-50'>
       <main className='min-h-screen'>

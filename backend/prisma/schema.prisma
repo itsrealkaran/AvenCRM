@@ -142,6 +142,10 @@ model Company {
   EmailTemplate EmailTemplate[]
 
   EmailAccount EmailAccount[]
+
+  EmailTemplateModel EmailTemplateModel[]
+
+  EmailLogModel EmailLogModel[]
 }
 
 // Plan Model for different subscription tiers
@@ -234,6 +238,12 @@ model Agent {
   PageBuilder PageBuilder[]
 
   Transaction Transaction[]
+
+  EmailTemplateModel EmailTemplateModel[]
+
+  EmailProviderModel EmailProviderModel[]
+
+  EmailLogModel EmailLogModel[]
 }
 
 // Lead Model
@@ -617,4 +627,44 @@ model PageBuilder {
   createdBy       Agent    @relation(fields: [createdById], references: [id])
   createdById     String
   allowedAdmins   Admin[]  @relation("AllowedAdmins")
+}
+
+model EmailProviderModel {
+  id            String    @id @default(cuid())
+  provider      String    // "GMAIL" or "OUTLOOK"
+  accessToken   String
+  refreshToken  String
+  expiresAt     DateTime
+  user          Agent     @relation(fields: [userId], references: [id])
+  userId        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model EmailTemplateModel {
+  id          String    @id @default(cuid())
+  name        String
+  subject     String
+  content     String
+  company     Company   @relation(fields: [companyId], references: [id])
+  companyId   String
+  createdBy   Agent     @relation(fields: [userId], references: [id])
+  userId      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model EmailLogModel {
+  id          String    @id @default(cuid())
+  from        String
+  to          String[]
+  subject     String
+  content     String
+  status      String    // "SENT", "FAILED", "PENDING"
+  error       String?
+  user        Agent     @relation(fields: [userId], references: [id])
+  userId      String
+  company     Company   @relation(fields: [companyId], references: [id])
+  companyId   String
+  createdAt   DateTime  @default(now())
 }
