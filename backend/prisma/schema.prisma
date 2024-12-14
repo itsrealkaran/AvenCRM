@@ -397,15 +397,10 @@ model CalendarEvent {
   // Event Details
   title              String
   description        String?
-  startTime          DateTime
-  endTime            DateTime
-  
-  // Event Type and Location
-  type               EventType
-  location           String?
+  start             DateTime
+  end               DateTime
   
   setterId           String
-
   
   // Audit
   createdAt          DateTime             @default(now())
