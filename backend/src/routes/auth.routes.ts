@@ -13,6 +13,7 @@ interface JWTPayload {
   id: string;
   role: UserRole;
   companyId?: string
+  exp?: number
 }
 
 interface AuthenticatedRequest extends Request {

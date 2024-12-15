@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2, Mail, MousePointerClick, User } from 'lucide-react';
 import {
   CartesianGrid,
@@ -36,11 +36,7 @@ export default function EmailAnalyticsSection() {
   const [campaignData, setCampaignData] = useState<CampaignAnalytics[]>([]);
   const { toast } = useToast();
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       // Fetch overview data
       const overviewResponse = await fetch(
@@ -52,7 +48,12 @@ export default function EmailAnalyticsSection() {
 
       // Fetch campaign analytics
       const campaignResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/analytics/campaigns`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/analytics/campaigns`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        }
       );
       if (!campaignResponse.ok) throw new Error('Failed to fetch campaign data');
       const campaignData = await campaignResponse.json();
@@ -66,7 +67,11 @@ export default function EmailAnalyticsSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) {
     return (

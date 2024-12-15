@@ -6,13 +6,6 @@ import { EmailCampaignStatus, EmailProvider, EmailStatus, UserRole, Prisma } fro
 import { z } from 'zod';
 
 // Define custom types for request with user
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-    companyId?: string;
-  };
-}
 
 // Validation schemas
 const createTemplateSchema = z.object({
@@ -41,7 +34,7 @@ const sendBulkEmailSchema = z.object({
 });
 
 export class EmailController {
-  async provideRedirectUrl(req: AuthenticatedRequest, res: Response) {
+  async provideRedirectUrl(req: Request, res: Response) {
       try {
           const { provider } = req.query;
           if (!provider) {
@@ -77,7 +70,7 @@ export class EmailController {
       }
   }
 
-  async connectEmailAccount(req: AuthenticatedRequest, res: Response) {
+  async connectEmailAccount(req: Request, res: Response) {
     try {
       const { provider, code } = req.body;
       const userId = req.user?.id;
@@ -104,7 +97,7 @@ export class EmailController {
     }
   }
 
-  async getEmailAccounts(req: AuthenticatedRequest, res: Response) {
+  async getEmailAccounts(req: Request, res: Response) {
     try {
       const userId = req.user?.id;
 
@@ -132,7 +125,7 @@ export class EmailController {
     }
   }
 
-  async disconnectEmailAccount(req: AuthenticatedRequest, res: Response) {
+  async disconnectEmailAccount(req: Request, res: Response) {
     try {
       const { accountId } = req.params;
       const userId = req.user?.id;
@@ -163,7 +156,7 @@ export class EmailController {
     }
   }
 
-  async createEmailTemplate(req: AuthenticatedRequest, res: Response) {
+  async createEmailTemplate(req: Request, res: Response) {
     try {
       const result = createTemplateSchema.safeParse(req.body);
       
@@ -195,7 +188,7 @@ export class EmailController {
     }
   }
 
-  async getEmailTemplates(req: AuthenticatedRequest, res: Response) {
+  async getEmailTemplates(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
       const { category, search, page = 1, limit = 10 } = req.query;
@@ -245,7 +238,7 @@ export class EmailController {
     }
   }
 
-  async sendBulkEmail(req: AuthenticatedRequest, res: Response) {
+  async sendBulkEmail(req: Request, res: Response) {
     try {
       const userId = req.user?.id;
 
@@ -285,7 +278,7 @@ export class EmailController {
     }
   }
 
-  async getEmailCampaigns(req: AuthenticatedRequest, res: Response) {
+  async getEmailCampaigns(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
       const { status, search, startDate, endDate, page = 1, limit = 10 } = req.query;
@@ -375,7 +368,7 @@ export class EmailController {
     }
   }
 
-  async getCampaignStats(req: AuthenticatedRequest, res: Response) {
+  async getCampaignStats(req: Request, res: Response) {
     try {
       const { campaignId } = req.params;
       const companyId = req.user?.companyId;
@@ -499,7 +492,7 @@ export class EmailController {
     }
   }
 
-  async getTemplateById(req: AuthenticatedRequest, res: Response) {
+  async getTemplateById(req: Request, res: Response) {
     try {
       const { templateId } = req.params;
       const companyId = req.user?.companyId;
@@ -530,7 +523,7 @@ export class EmailController {
     }
   }
 
-  async updateTemplate(req: AuthenticatedRequest, res: Response) {
+  async updateTemplate(req: Request, res: Response) {
     try {
       const { templateId } = req.params;
       const companyId = req.user?.companyId;
@@ -569,7 +562,7 @@ export class EmailController {
     }
   }
 
-  async deleteTemplate(req: AuthenticatedRequest, res: Response) {
+  async deleteTemplate(req: Request, res: Response) {
     try {
       const { templateId } = req.params;
       const companyId = req.user?.companyId;
@@ -602,7 +595,7 @@ export class EmailController {
     }
   }
 
-  async deleteCampaign(req: AuthenticatedRequest, res: Response) {
+  async deleteCampaign(req: Request, res: Response) {
     try {
       const { campaignId } = req.params;
       const companyId = req.user?.companyId;
@@ -635,7 +628,7 @@ export class EmailController {
     }
   }
 
-  async cancelCampaign(req: AuthenticatedRequest, res: Response) {
+  async cancelCampaign(req: Request, res: Response) {
     try {
       const { campaignId } = req.params;
       const companyId = req.user?.companyId;
@@ -670,7 +663,7 @@ export class EmailController {
     }
   }
 
-  async getEmailAnalyticsOverview(req: AuthenticatedRequest, res: Response) {
+  async getEmailAnalyticsOverview(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
       const { startDate, endDate } = req.query;
@@ -718,7 +711,7 @@ export class EmailController {
     }
   }
 
-  async getCampaignAnalytics(req: AuthenticatedRequest, res: Response) {
+  async getCampaignAnalytics(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
       const { startDate, endDate } = req.query;
@@ -769,7 +762,7 @@ export class EmailController {
     }
   }
 
-  async validateEmail(req: AuthenticatedRequest, res: Response) {
+  async validateEmail(req: Request, res: Response) {
     try {
       const { email } = req.body;
 
@@ -793,7 +786,7 @@ export class EmailController {
     }
   }
 
-  async sendTestEmail(req: AuthenticatedRequest, res: Response) {
+  async sendTestEmail(req: Request, res: Response) {
     try {
       const { email, subject, content } = req.body;
       const userId = req.user?.id;

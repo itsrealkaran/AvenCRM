@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 
 const formSchema = z.object({
-  email: z.string({
+  email: z.string().email({
     message: 'Please enter a valid email address.',
   }),
   password: z.string().min(4, {
@@ -40,6 +40,7 @@ const formSchema = z.object({
 
 export default function SignIn() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,12 +55,15 @@ export default function SignIn() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     toast.loading('Signing in...');
+
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
+        credentials: 'include', // Important for handling cookies
         body: JSON.stringify({
           email: values.email,
           password: values.password,
@@ -68,28 +72,37 @@ export default function SignIn() {
       });
 
       if (!response.ok) {
-        toast.error('Sign-in failed. Please try again.');
         throw new Error('Sign-in failed');
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (data.access_token) {
+        // Store the access token
         localStorage.setItem('accessToken', data.access_token);
+
+        // Set the token as an HTTP-only cookie
+        document.cookie = `accessToken=${data.access_token}; path=/; secure; samesite=strict`;
+
         toast.success('Sign-in successful!');
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const redirectPath = values.role === 'ADMIN' ? '/company' : `/${values.role.toLowerCase()}`;
-        router.push(redirectPath);
+
+        // Get the callback URL or use the default route based on role
+        const callbackUrl = searchParams.get('callbackUrl');
+        const defaultPath = values.role === 'ADMIN' ? '/company' : `/${values.role.toLowerCase()}`;
+
+        // Redirect after a short delay to show the success message
+        setTimeout(() => {
+          router.push(callbackUrl || defaultPath);
+        }, 1000);
       } else {
-        toast.error('Sign-in failed. No access token received.');
+        throw new Error('No access token received');
       }
     } catch (error) {
       console.error('Error signing in:', error);
-      toast.error('Sign-in failed. Please try again.');
+      toast.error('Sign-in failed. Please check your credentials and try again.');
     } finally {
-      setIsLoading(false);
       toast.dismiss();
+      setIsLoading(false);
     }
   }
 
