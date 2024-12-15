@@ -1,58 +1,52 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { PropertyData } from '@/types/propertyTypes';
-import axios from 'axios';
+import { useState } from 'react';
 
-import PropertyBox from '../../../components/PropertyBox';
-import houseImg from '../../../public/house.webp';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const Page = () => {
-  const [response, setResponse] = useState([]);
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const fetchData = async () => {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/property`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setResponse(res.data);
-      console.log(res.data);
-    };
-    fetchData();
-  }, []);
+import { Calendar } from './components/calendar';
+import { ClientManagement } from './components/client-manangment';
+import { PerformanceMetrics } from './components/performance-metrics';
+import { PropertyListings } from './components/property-listing';
+import { TaskManager } from './components/task-manager';
+
+export default function MonitoringDashboard() {
+  const [activeTab, setActiveTab] = useState('overview');
 
   return (
-    <div className='w-full h-full relative overflow-y-auto gap-2'>
-      <div className='w-full mt-8 flex justify-center items-center'>
-        <h2 className='text-center text-lg justify-self-center'>Properties Listing</h2>
-        <Link
-          href={'/agent/add'}
-          className='bg-violet-600 text-white p-2 px-4 rounded-md absolute right-24'
-        >
-          Add
-        </Link>
-        <button className='bg-violet-600 text-white p-2 px-4 rounded-md absolute right-2'>
-          Delete
-        </button>
-      </div>
-      <div className='flex flex-wrap gap-2 m-6 '>
-        {response.map((item: PropertyData) => (
-          <PropertyBox
-            key={item.id}
-            img={houseImg}
-            address={item.address}
-            price={item.price}
-            landSize={item.sqft}
-            bedrooms={item.bedrooms}
-            bathrooms={item.bathrooms.partailBathrooms}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
+    <section className='container mx-auto p-6 h-full overflow-y-scroll'>
+      <Card className='bg-white p-4 h-full'>
+        <h1 className='text-3xl font-bold mb-6'>Monitoring Dashboard</h1>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
+          <TabsList className='grid w-full grid-cols-2'>
+            <TabsTrigger value='overview'>Overview</TabsTrigger>
+            <TabsTrigger value='tasks'>Tasks</TabsTrigger>
+          </TabsList>
 
-export default Page;
+          <TabsContent value='overview'>
+            <div className='grid gap-6'>
+              <PerformanceMetrics />
+              <div className='grid grid-cols-2 gap-6'>
+                <div className='col-span-1'>
+                  <TaskManager />
+                </div>
+                <div className='col-span-1'>
+                  <Calendar />
+                </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value='properties'>
+            <PropertyListings />
+          </TabsContent>
+
+          <TabsContent value='tasks'>
+            <TaskManager />
+          </TabsContent>
+        </Tabs>
+      </Card>
+    </section>
+  );
+}

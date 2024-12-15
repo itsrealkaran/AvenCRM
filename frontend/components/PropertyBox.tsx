@@ -3,7 +3,7 @@ import { Share1Icon } from '@radix-ui/react-icons';
 import { Heart } from 'lucide-react';
 
 interface PropertyBoxProps {
-  img: StaticImageData;
+  imgurl: string;
   address: string;
   price: number;
   landSize: number;
@@ -11,12 +11,19 @@ interface PropertyBoxProps {
   bathrooms: number;
 }
 
-const PropertyBox = ({ img, address, price, landSize, bedrooms, bathrooms }: PropertyBoxProps) => {
+const PropertyBox = ({
+  imgurl,
+  address,
+  price,
+  landSize,
+  bedrooms,
+  bathrooms,
+}: PropertyBoxProps) => {
   return (
     <div className='flex flex-col w-72 rounded-md border-[1px] bg-white border-gray-300 justify-between pb-4'>
       <div className=''>
         <Image
-          src={img}
+          src={'https://plus.unsplash.com/premium_photo-1689609950097-1e6b05dfdba6?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwyfHx8ZW58MHx8fHx8'}
           alt={address}
           height={100}
           width={100}

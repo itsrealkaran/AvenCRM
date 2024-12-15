@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -51,9 +52,8 @@ export default function SignIn() {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    debugger;
-
     setIsLoading(true);
+    toast.loading('Signing in...');
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`, {
         method: 'POST',
@@ -68,6 +68,7 @@ export default function SignIn() {
       });
 
       if (!response.ok) {
+        toast.error('Sign-in failed. Please try again.');
         throw new Error('Sign-in failed');
       }
 
@@ -76,17 +77,19 @@ export default function SignIn() {
 
       if (data.access_token) {
         localStorage.setItem('accessToken', data.access_token);
+        toast.success('Sign-in successful!');
         await new Promise((resolve) => setTimeout(resolve, 1000));
         const redirectPath = values.role === 'ADMIN' ? '/company' : `/${values.role.toLowerCase()}`;
         router.push(redirectPath);
       } else {
-        throw new Error('No access token received');
+        toast.error('Sign-in failed. No access token received.');
       }
     } catch (error) {
       console.error('Error signing in:', error);
-      // You can add a toast notification here if you want
+      toast.error('Sign-in failed. Please try again.');
     } finally {
       setIsLoading(false);
+      toast.dismiss();
     }
   }
 
@@ -148,7 +151,11 @@ export default function SignIn() {
               </FormItem>
             )}
           />
-          <Button type='submit' className='w-full' disabled={isLoading}>
+          <Button
+            type='submit'
+            className='w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded'
+            disabled={isLoading}
+          >
             {isLoading ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>

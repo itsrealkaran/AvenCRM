@@ -94,8 +94,12 @@ export function ClientManagement() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Client Management</CardTitle>
-        <CardDescription>Manage your real estate clients</CardDescription>
+        <CardTitle className='flex items-center text-4xl font-black text-primary'>
+          Client Management
+        </CardTitle>
+        <CardDescription className='text-lg text-muted-foreground'>
+          Manage your real estate clients
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className='flex justify-between items-center mb-4'>

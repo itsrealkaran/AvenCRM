@@ -25,11 +25,11 @@ const menuItems = [
   { heading: 'Dashboard', icons: LayoutDashboard, reff: '/agent' },
   { heading: 'Clients', icons: Users, reff: '/agent/clients' },
   { heading: 'Property', icons: Building2, reff: '/agent/property' },
-  { heading: 'Marketing', icons: Target, reff: '/agent/marketing' },
   { heading: 'Page Builder', icons: FileText, reff: '/agent/subscription' },
   { heading: 'Leads', icons: Store, reff: '/agent/leads' },
   { heading: 'Deals', icons: HandshakeIcon, reff: '/agent/deals' },
   { heading: 'Transactions', icons: Wallet, reff: '/agent/transactions' },
+  { heading: 'Calendar', icons: Calendar, reff: '/agent/calendar' },
   { heading: 'Email', icons: Mail, reff: '/agent/email' },
   { heading: 'Settings', icons: Settings, reff: '/agent/settings' },
 ];
