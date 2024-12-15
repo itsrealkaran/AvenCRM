@@ -3,7 +3,7 @@ import db from "../../db/index.js";
 import { verifyAdminCompany } from "../../lib/verifyUser.js";
 import { protect } from "../../middleware/auth.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.use(protect);
 
@@ -15,7 +15,7 @@ router.get("/agentsCount", async (req, res) => {
     res.status(400).json({ message: "bad auth" });
   } else {
     //@ts-ignore
-    let id = req.user.profileId;
+    let id = req.user.id;
     const companyId = await verifyAdminCompany(id);
     if (!companyId) {
       return res.status(400).json({ err: "not verified" });
@@ -38,7 +38,7 @@ router.get("/sales", async (req, res) => {
       res.status(400).json({ message: "bad auth" });
     } else {
       //@ts-ignore
-      let id = req.user.profileId;
+      let id = req.user.id;
       const companyId = await verifyAdminCompany(id);
       if (!companyId) {
         return res.status(400).json({ err: "not verified" });

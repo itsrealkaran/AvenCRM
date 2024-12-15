@@ -4,7 +4,7 @@ import { protect } from "../middleware/auth.js";
 import { Request } from "express";
 import { PlanTier } from "@prisma/client";
 
-const router = Router();
+const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
@@ -31,7 +31,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
 
-    const agentId = req.user?.profileId;
+    const agentId = req.user?.id;
     if (!agentId) {
         return res.status(401).json({ message: "Unauthorized" });
     }
@@ -68,7 +68,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
 
-    const userId = req.user?.profileId;
+    const userId = req.user?.id;
     if (!userId) {
         return res.status(401).json({ message: "Unauthorized" });
     }

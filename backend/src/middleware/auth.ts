@@ -7,14 +7,14 @@ import { prisma } from '../lib/prisma.js';
 import { UserRole } from '@prisma/client';
 
 interface JwtPayload {
-  profileId: string;
+  id: string;
   role: UserRole;
 }
 
 declare global {
   namespace Express {
     interface User {
-      profileId: string;
+      id: string;
       role: UserRole;
     }
     interface Request {
@@ -55,19 +55,19 @@ export const protect = async (
     if (decoded.role === UserRole.SUPERADMIN) {
       user = await prisma.superAdmin.findUnique({
         where: {
-          id: decoded.profileId 
+          id: decoded.id 
         }
       });
     } else if (decoded.role === UserRole.ADMIN) {
       user = await prisma.admin.findUnique({
         where: {
-          id: decoded.profileId
+          id: decoded.id
         }
       });
     } else if (decoded.role === UserRole.AGENT) {
       user = await prisma.agent.findUnique({
         where: {
-          id: decoded.profileId
+          id: decoded.id
         }
       });
     }
@@ -80,7 +80,7 @@ export const protect = async (
     req.user = {
       ...user,
       role: decoded.role,
-      profileId: decoded.profileId
+      id: decoded.id
     };
     next();
   } catch (error) {

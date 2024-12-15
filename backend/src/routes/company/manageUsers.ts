@@ -3,14 +3,14 @@ import db from "../../db/index.js";
 import { authenticateToken } from "../../middleware/authMiddleware.js";
 import { verifyAdmin } from "../../lib/verifyUser.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.get("/getAll", authenticateToken, async (req, res) => {
   if (!req.user) {
     res.status(400).json({ message: "bad auth" });
   } else {
     //@ts-ignore
-    const adminId = req.user.profileId;
+    const adminId = req.user.id;
     const isVerified = await verifyAdmin(adminId);
     if (!isVerified) {
       res.status(400).json({ err: "not verified" });
@@ -47,7 +47,7 @@ router.post("/add", authenticateToken, async (req, res) => {
     res.status(400).json({ message: "bad auth" });
   } else {
     //@ts-ignore
-    const adminId = req.user.profileId;
+    const adminId = req.user.id;
     try {
       const company = await db.company.findFirst({
         where: {
@@ -87,7 +87,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
   } else {
     try {
       //@ts-ignore
-      const adminId = req.user.profileId;
+      const adminId = req.user.id;
       const isVerified = await verifyAdmin(adminId);
       if (!isVerified) {
         res.status(400).json({ err: "not verified" });
@@ -122,7 +122,7 @@ router.delete("/delete", authenticateToken, async (req, res) => {
     res.status(400).json({ message: "bad auth" });
   } else {
     //@ts-ignore
-    const adminId = req.user.profileId;
+    const adminId = req.user.id;
     const isVerified = await verifyAdmin(adminId);
     if (!isVerified) {
       res.status(400).json({ err: "not verified" });

@@ -10,7 +10,7 @@ import { UserRole } from '@prisma/client';
 
 // Define types for JWT payload and extended Request
 interface JWTPayload {
-  profileId: string;
+  id: string;
   role: UserRole;
 }
 
@@ -33,7 +33,7 @@ router.post('/sign-up', (async (req: Request, res: Response) => {
       });
       if (checkExistingProfile) {
         const token = jwt.sign(
-          { profileId: checkExistingProfile.id },
+          { id: checkExistingProfile.id },
           process.env.JWT_SECRET || 'nope',
         );
         res
@@ -53,7 +53,7 @@ router.post('/sign-up', (async (req: Request, res: Response) => {
         },
       });
       const token = jwt.sign(
-        { profileId: profile.id },
+        { id: profile.id },
         process.env.JWT_SECRET || 'nope',
       );
       res.cookie('Authorization', token, {
@@ -83,7 +83,7 @@ router.post('/admin/sign-up', (async (req: Request, res: Response) => {
       });
       if (checkExistingProfile) {
         const token = jwt.sign(
-          { profileId: checkExistingProfile.id },
+          { id: checkExistingProfile.id },
           process.env.JWT_SECRET || 'nope',
         );
         res
@@ -99,7 +99,7 @@ router.post('/admin/sign-up', (async (req: Request, res: Response) => {
         },
       });
       const token = jwt.sign(
-        { profileId: profile.id },
+        { id: profile.id },
         process.env.JWT_SECRET || 'nope',
       );
       res.cookie('Authorization', token, {
@@ -181,7 +181,7 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
       // Generate access token
       const accessToken = jwt.sign(
         {
-          profileId: user.id,
+          id: user.id,
           role: role,
           exp: Math.floor(Date.now() / 1000) + (15 * 60) // 15 minutes
         },
@@ -191,7 +191,7 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
       // Generate refresh token
       const refreshToken = jwt.sign(
         {
-          profileId: user.id,
+          id: user.id,
           role: role
         },
         process.env.REFRESH_TOKEN_SECRET || 'refresh-nope',
@@ -258,7 +258,7 @@ router.post('/validate-token', verifyToken, ((req: Request, res: Response) => {
   res.status(200).json({ 
     valid: true,
     user: {
-      id: user?.profileId,
+      id: user?.id,
       role: user?.role
     }
   });
@@ -268,7 +268,7 @@ router.post('/validate-token', verifyToken, ((req: Request, res: Response) => {
 router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) => {
   try {
     const user = (req as AuthenticatedRequest).user;
-    if (!user?.profileId || !user?.role) {
+    if (!user?.id || !user?.role) {
       return res.status(401).json({ message: 'Invalid user data' });
     }
 
@@ -278,21 +278,21 @@ router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) 
     switch(user.role) {
       case UserRole.ADMIN:
         userDB = await db.admin.findUnique({
-          where: { id: user.profileId },
+          where: { id: user.id },
           select: { id: true, }
         });
         userRole = UserRole.ADMIN;
         break;
       case UserRole.SUPERADMIN:
         userDB = await db.superAdmin.findUnique({
-          where: { id: user.profileId },
+          where: { id: user.id },
           select: { id: true }
         });
         userRole = UserRole.SUPERADMIN;
         break;
       case UserRole.AGENT:
         userDB = await db.agent.findUnique({
-          where: { id: user.profileId },
+          where: { id: user.id },
           select: { id: true, role: true }
         });
         userRole = UserRole.AGENT;
@@ -308,7 +308,7 @@ router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) 
     // Generate new token
     const newToken = jwt.sign(
       { 
-        profileId: userDB.id,
+        id: userDB.id,
         role: userRole,
         exp: Math.floor(Date.now() / 1000) + (15 * 60) // 15 minutes
       },
@@ -319,7 +319,7 @@ router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) 
     // Generate refresh token
     const refreshToken = jwt.sign(
       { 
-        profileId: userDB.id,
+        id: userDB.id,
         role: userRole
       },
       process.env.REFRESH_TOKEN_SECRET || 'refresh-nope',

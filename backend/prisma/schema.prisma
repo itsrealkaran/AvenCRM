@@ -482,7 +482,7 @@ model EmailCampaign {
   // Campaign Details
   title              String
   subject            String
-  content            String
+  content            String @db.Text
   
   // Relationships
   company            Company              @relation(fields: [companyId], references: [id])
@@ -494,16 +494,22 @@ model EmailCampaign {
   status             EmailCampaignStatus  @default(DRAFT)
   scheduledAt        DateTime?
   sentAt             DateTime?
+  completedAt        DateTime?
+  
+  // Analytics
+  totalRecipients    Int                  @default(0)
+  successfulSends    Int                    @default(0)
+  failedSends        Int                  @default(0)
   
   // Recipient Management
   recipients         Json
+  templateId         String?              // Reference to template if used
   
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
   Email Email[]
 }
-
 
 // Email Account Integration
 model EmailAccount {
@@ -534,6 +540,7 @@ model Email {
   scheduledFor    DateTime?
   sentAt          DateTime?
   status          EmailStatus     @default(PENDING)
+  error           String?         @db.Text
   
   // Relations
   sender          EmailAccount    @relation(fields: [emailAccountId], references: [id])
@@ -542,10 +549,15 @@ model Email {
   campaign        EmailCampaign?  @relation(fields: [campaignId], references: [id])
   campaignId      String?
   
+  // Recipients
   recipients      Json
-  
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
+
+  @@index([campaignId])
+  @@index([emailAccountId])
+  @@index([status])
 }
 
 model EmailTemplate {
