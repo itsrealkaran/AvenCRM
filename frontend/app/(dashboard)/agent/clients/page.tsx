@@ -15,7 +15,7 @@ export default function MonitoringDashboard() {
 
   return (
     <div className='container mx-auto p-6 h-full overflow-y-auto'>
-      <h1 className='text-3xl font-bold mb-6'>Real Estate Monitoring Dashboard</h1>
+      <h1 className='text-3xl font-bold mb-6'>Monitoring Dashboard</h1>
       <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-4'>
         <TabsList className='grid w-full grid-cols-5'>
           <TabsTrigger value='overview'>Overview</TabsTrigger>

@@ -19,64 +19,63 @@ export const TopNavigation = () => {
   };
 
   return (
-    <div className='z-50 flex py-4 w-full items-center justify-between bg-white px-5 shadow-lg shadow-black/10'>
-      {/* this is the search bar  */}
+    <nav className='sticky top-0 z-50 w-full bg-card border-b'>
+      <div className='px-4 md:px-6 lg:px-8 h-16 flex items-center justify-between'>
+        {/* Search */}
+        <div className='hidden md:flex relative w-full max-w-sm'>
+          <input className='input-modern pl-10' type='text' placeholder='Search anything...' />
+          <FaSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-muted' />
+        </div>
 
-      <div className='relative w-[20%]'>
-        <input
-          className='w-full rounded-[7px] border border-[#e8f0f6] bg-[#f3f7fa] px-3 py-1 text-[12.5px] outline-none'
-          type='text'
-          placeholder='Search anything...'
-        />
-        <div className='absolute right-4 top-[5px] text-[1rem] font-bold opacity-50'>
-          <FaSearch />
+        {/* Right section */}
+        <div className='flex items-center space-x-4'>
+          {/* Notifications */}
+          <button className='button-modern bg-background hover:bg-input'>
+            <CiBellOn className='h-5 w-5' />
+            <span className='sr-only'>Notifications</span>
+          </button>
+
+          {/* Help */}
+          <button className='button-modern bg-background hover:bg-input'>
+            <FaQuestion className='h-4 w-4' />
+            <span className='sr-only'>Help</span>
+          </button>
+
+          {/* Profile dropdown */}
+          <div className='relative'>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className='flex items-center space-x-3 p-2 rounded-lg hover:bg-background'
+            >
+              <div className='h-8 w-8 overflow-hidden rounded-full ring-2 ring-background'>
+                <Image
+                  src='/images/avatar.png'
+                  alt='Profile'
+                  width={32}
+                  height={32}
+                  className='h-full w-full object-cover'
+                />
+              </div>
+              <FaAngleDown
+                className={`h-4 w-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {isDropdownOpen && (
+              <div className='absolute right-0 mt-2 w-48 rounded-lg bg-card border shadow-lg'>
+                <div className='p-2'>
+                  <button
+                    onClick={handleSignOut}
+                    className='w-full text-left px-3 py-2 text-sm rounded-md hover:bg-background'
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
-
-      {/* this is the notification section  */}
-
-      <div className='flex items-center gap-2'>
-        <div className='flex h-7 w-7 items-center justify-center rounded-[8px] border-[1px] border-black/70 text-[1.2rem] opacity-50'>
-          <CiBellOn />
-        </div>
-        <div className='flex h-7 w-7 items-center justify-center rounded-[8px] border-[1px] border-black/70 text-[1.1rem] opacity-50'>
-          <FaQuestion />
-        </div>
-
-        <div
-          className='dropdown relative flex h-fit w-fit cursor-pointer items-center gap-[6px]'
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        >
-          <div className='ml-6 h-[37px] w-[37px] overflow-hidden rounded-full'>
-            <Image
-              height={100}
-              width={100}
-              className='h-full w-full object-cover'
-              src='https://cdn.pixabay.com/photo/2022/12/01/04/43/girl-7628308_640.jpg'
-              alt='not showing'
-            />
-          </div>
-          <div className='leading-[0.8rem]'>
-            <h1 className='text-[0.8rem] font-semibold opacity-90'>Profile</h1>
-            <p className='text-[0.55rem] opacity-70'>Manager</p>
-          </div>
-
-          <div className='ml-1 opacity-70'>
-            <FaAngleDown />
-          </div>
-
-          {isDropdownOpen && (
-            <div className='absolute right-0 top-[120%] z-20 min-w-[150px] rounded-md bg-white py-2 shadow-lg'>
-              <button
-                onClick={handleSignOut}
-                className='w-full px-4 py-2 text-left text-sm hover:bg-gray-100'
-              >
-                Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </nav>
   );
 };

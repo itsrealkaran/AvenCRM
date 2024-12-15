@@ -76,17 +76,16 @@ enum Gender {
   OTHERS
 }
 
-// Email related enums
-enum EmailProvider {
-  GMAIL
-  OUTLOOK
-}
-
 enum EmailStatus {
   PENDING
   SENT
   FAILED
   SCHEDULED
+}
+
+enum EmailProvider {
+  GMAIL
+  OUTLOOK
 }
 
 // Superuser/Platform Company Model
@@ -97,8 +96,6 @@ model SuperAdmin {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime? @updatedAt
-
-  EmailCampaign EmailCampaign[]
 
   AdminAccessToken AdminAccessToken[]
 
@@ -139,13 +136,8 @@ model Company {
   EmailCampaign EmailCampaign[]
 
   CompanyAuditLog CompanyAuditLog[]
-  EmailTemplate EmailTemplate[]
-
-  EmailAccount EmailAccount[]
-
-  EmailTemplateModel EmailTemplateModel[]
-
-  EmailLogModel EmailLogModel[]
+ 
+  EmailTemplates EmailTemplate[]
 }
 
 // Plan Model for different subscription tiers
@@ -232,18 +224,16 @@ model Agent {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  EmailCampaignRecipient EmailCampaignRecipient[]
-  EmailAccount EmailAccount[]
   Property Property[]
   PageBuilder PageBuilder[]
 
   Transaction Transaction[]
 
-  EmailTemplateModel EmailTemplateModel[]
+  EmailTemplates EmailTemplate[]
 
-  EmailProviderModel EmailProviderModel[]
+  EmailCampaign EmailCampaign[]
 
-  EmailLogModel EmailLogModel[]
+  EmailAccount EmailAccount[]
 }
 
 // Lead Model
@@ -407,53 +397,6 @@ model CalendarEvent {
   updatedAt          DateTime             @updatedAt
 }
 
-// Email Campaign Management Model
-model EmailCampaign {
-  id                 String               @id @default(cuid())
-  
-  // Campaign Details
-  title              String
-  subject            String
-  content            String
-  
-  // Relationships
-  company            Company              @relation(fields: [companyId], references: [id])
-  companyId          String
-  createdBy          SuperAdmin           @relation(fields: [createdById], references: [id])
-  createdById        String
-  
-  // Campaign Tracking
-  status             EmailCampaignStatus  @default(DRAFT)
-  scheduledAt        DateTime?
-  sentAt             DateTime?
-  
-  // Recipient Management
-  recipients         EmailCampaignRecipient[]
-  
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-
-  Email Email[]
-}
-
-// Email Campaign Recipient Tracking
-model EmailCampaignRecipient {
-  id                 String               @id @default(cuid())
-  
-  campaign           EmailCampaign        @relation(fields: [campaignId], references: [id])
-  campaignId         String
-  
-  recipient          Agent                @relation(fields: [recipientId], references: [id])
-  recipientId        String
-  
-  // Recipient Status Tracking
-  status             String                @default("PENDING")
-  openedAt           DateTime?
-  clickedAt          DateTime?
-  
-  createdAt          DateTime             @default(now())
-}
-
 // Comprehensive Audit Logging
 model CompanyAuditLog {
   id                 String               @id @default(cuid())
@@ -532,24 +475,53 @@ model Property {
   creatorId       String?
 }
 
+// Email Campaign
+model EmailCampaign {
+  id                 String               @id @default(cuid())
+  
+  // Campaign Details
+  title              String
+  subject            String
+  content            String
+  
+  // Relationships
+  company            Company              @relation(fields: [companyId], references: [id])
+  companyId          String
+  createdBy          Agent                @relation(fields: [createdById], references: [id])
+  createdById        String
+  
+  // Campaign Tracking
+  status             EmailCampaignStatus  @default(DRAFT)
+  scheduledAt        DateTime?
+  sentAt             DateTime?
+  
+  // Recipient Management
+  recipients         Json
+  
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+
+  Email Email[]
+}
+
+
 // Email Account Integration
 model EmailAccount {
   id            String        @id @default(cuid())
-  provider      EmailProvider
   email         String
   accessToken   String
   refreshToken  String
   expiresAt     DateTime
   isActive      Boolean       @default(true)
-  
+
+  provider      EmailProvider
+
   // Relations
   user          Agent         @relation(fields: [userId], references: [id])
   userId        String
-  company       Company       @relation(fields: [companyId], references: [id])
-  companyId     String
-  
+
   sentEmails    Email[]
-  
+
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 }
@@ -570,44 +542,26 @@ model Email {
   campaign        EmailCampaign?  @relation(fields: [campaignId], references: [id])
   campaignId      String?
   
-  recipients      EmailRecipient[]
+  recipients      Json
   
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 }
 
-// Email Recipient Model
-model EmailRecipient {
-  id            String    @id @default(cuid())
-  name          String?
-  openedAt      DateTime?
-  clickedAt     DateTime?
-  
-  // Relations
-  email         Email     @relation(fields: [emailId], references: [id])
-  emailId       String
-  
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-}
-
-// Email Template Model
 model EmailTemplate {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   name        String
   subject     String
-  body        String    @db.Text
-  isGlobal    Boolean   @default(false)
-  
-  // Relations
-  company     Company   @relation(fields: [companyId], references: [id])
+  content     String   @db.Text
+  variables   String[] // Array of variable names used in template
+  company     Company  @relation(fields: [companyId], references: [id])
   companyId   String
-  
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  createdBy   Agent     @relation(fields: [createdById], references: [id])
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
-// Page Builder Model
 model PageBuilder {
   id              String   @id @default(cuid())
   title           String
@@ -622,44 +576,4 @@ model PageBuilder {
   createdBy       Agent    @relation(fields: [createdById], references: [id])
   createdById     String
   allowedAdmins   Admin[]  @relation("AllowedAdmins")
-}
-
-model EmailProviderModel {
-  id            String    @id @default(cuid())
-  provider      String    // "GMAIL" or "OUTLOOK"
-  accessToken   String
-  refreshToken  String
-  expiresAt     DateTime
-  user          Agent     @relation(fields: [userId], references: [id])
-  userId        String
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-}
-
-model EmailTemplateModel {
-  id          String    @id @default(cuid())
-  name        String
-  subject     String
-  content     String
-  company     Company   @relation(fields: [companyId], references: [id])
-  companyId   String
-  createdBy   Agent     @relation(fields: [userId], references: [id])
-  userId      String
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-}
-
-model EmailLogModel {
-  id          String    @id @default(cuid())
-  from        String
-  to          String[]
-  subject     String
-  content     String
-  status      String    // "SENT", "FAILED", "PENDING"
-  error       String?
-  user        Agent     @relation(fields: [userId], references: [id])
-  userId      String
-  company     Company   @relation(fields: [companyId], references: [id])
-  companyId   String
-  createdAt   DateTime  @default(now())
 }
