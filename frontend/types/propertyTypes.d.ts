@@ -1,5 +1,5 @@
 export type PropertyData = {
-  id: number;
+  id: string;
   address: string;
   price: number;
   bedrooms: number;
