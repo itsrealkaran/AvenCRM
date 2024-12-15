@@ -511,7 +511,7 @@ model Property {
   parking Json
   lotFeatures     Json
   rooms           Json[]
-  images          String[] // URLs of property images
+  images          Json[] // URLs of property images
 
   // Created and updated timestamps
   createdAt       DateTime @default(now())

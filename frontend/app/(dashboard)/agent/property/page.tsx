@@ -47,7 +47,7 @@ const Page = () => {
   );
 
   return (
-    <div className='relative overflow-y-auto gap-2'>
+    <div className='relative h-full overflow-y-auto gap-2'>
       <div className='w-full mt-8 flex justify-center items-center'>
         <h2 className='text-center text-xl font-semibold justify-self-center'>Properties Listing</h2>
         <Link
@@ -72,7 +72,7 @@ const Page = () => {
             <PropertyBox
               key={item.id}
               id={item.id}
-              img={houseImg}
+              imageUrl={item.images[0].imageUrl}
               address={item.address}
               price={item.price}
               landSize={item.sqft}

@@ -1,30 +1,24 @@
 import { Router } from "express";
 import { protect } from "../middleware/auth.js";
 import { prisma } from "../lib/prisma.js";
-import AWS from "aws-sdk";
 import multer from "multer";
 import fs from "fs";
 import { v4 as uuidv4 } from 'uuid';
+import crypto from "crypto"
+import { uploadFile } from "../utils/s3.js";
 
 const router = Router();
 
 router.use(protect);
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
+// Configure multer upload middleware
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// Create S3 instance
-const s3 = new AWS.S3();
+//random file name generator
+const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
 
-// Configure multer-s3 upload middleware
-const upload = multer({ 
-  dest: 'uploads/', // Destination folder for temporary file storage
-  limits: { fileSize: 10 * 1024 * 1024 } // Limit file size to 10MB
-});
-
+//get all properties
 router.get("/", async (req, res) => {
   try {
     const properties = await prisma.property.findMany();
@@ -58,7 +52,7 @@ router.post("/", async (req, res) => {
     } = req.body.formData;
 
     // Basic validation
-    console.log(req.body.formData);
+    console.log(req.file);
     if (!title || !description || !price || !address) {
       return res.status(400).json({
         message:
@@ -108,10 +102,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.post("/upload-image", async (req, res) => {
+router.post("/upload-image",upload.single('image'), async (req, res) => {
   try {
     // Check if file was uploaded
-    console.log(req.file);
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -122,31 +115,12 @@ router.post("/upload-image", async (req, res) => {
       return res.status(500).json({ error: 'S3 bucket name is not configured' });
     }
 
+    const imageName = generateFileName()
+
     // Generate unique filename
-    const fileExtension = req.file.originalname.split('.').pop();
-    const filename = `uploads/${uuidv4()}.${fileExtension}`;
+    const file = await uploadFile(req.file.buffer, imageName, req.file.mimetype);
 
-    const uploadParams = {
-      Bucket: bucketName,
-      Key: filename,
-      Body: fs.createReadStream(req.file.path),
-      ContentType: req.file.mimetype,
-      ACL: "public-read"
-    };
-
-    // Upload to S3
-    const uploadResult = await s3.upload(uploadParams).promise();
-
-    // Delete the temporary file after successful upload
-    fs.unlinkSync(req.file.path);
-
-    // Send response
-    res.json({ 
-      message: 'File uploaded successfully',
-      imageUrl: uploadResult.Location,
-      key: uploadResult.Key
-    });
-
+    res.status(200).json({imageUrl: `https://${bucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${imageName}`});
   } catch (error) {
     console.error('Error uploading file:', error);
     

@@ -15,19 +15,19 @@ import { useRouter } from 'next/navigation';
 
 interface PropertyBoxProps {
   id: string;
-  img: StaticImageData;
   address: string;
   price: number;
   landSize: number;
   bedrooms: number;
   bathrooms: number;
+  imageUrl: string
 }
 
-const PropertyBox = ({ id, img, address, price, landSize, bedrooms, bathrooms }: PropertyBoxProps) => {
+const PropertyBox = ({ id, address, price, landSize, bedrooms, bathrooms, imageUrl }: PropertyBoxProps) => {
   const router = useRouter();
   return (
     <Card className='flex flex-col w-80 rounded-md border-[1px] bg-white border-gray-300 justify-between'>
-      <Image src={img} alt={address} width={300} height={300} className='w-full rounded-t-md' />
+      <Image src={imageUrl} alt={address} width={300} height={300} className='w-full rounded-t-md' />
       <div>
         <CardHeader>
           <CardTitle className='text-lg font-semibold'>{address}</CardTitle>

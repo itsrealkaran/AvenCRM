@@ -38,8 +38,8 @@ const PropertyDetails = () => {
   }
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="mb-8 bg-white rounded-lg p-6">
-      <h2 className="text-2xl font-semibold border-b border-gray-300 pb-2 mb-4">{title}</h2>
+    <div className="mb-8 bg-white rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow duration-300">
+      <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
       {children}
     </div>
   );
@@ -63,89 +63,129 @@ const PropertyDetails = () => {
   );
 
   return (
-    <div className="w-screen px-20 py-8 bg-[#F6F9FE]">
+    <div className="max-w-7xl mx-auto px-4 my-6 rounded-lg sm:px-6 lg:px-8 py-12 bg-[#F6F9FE]">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{property.address}</h1>
-        <p className="text-xl text-gray-600 mb-4">{property.title}</p>
-        <div className="text-2xl font-bold text-violet-600">${property.price.toLocaleString()}</div>
+      <div className="mb-10 space-y-3">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-4xl font-bold text-gray-900">{property.address}</h1>
+          <span className="px-4 py-1.5 bg-violet-100 whitespace-nowrap text-violet-700 rounded-full text-sm font-semibold">
+            For Sale
+          </span>
+        </div>
+        <p className="text-xl text-gray-600">{property.title}</p>
+        <div className="text-3xl font-bold text-violet-600">${property.price.toLocaleString()}</div>
       </div>
 
       {/* Images */}
-      <div className="mb-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {property.images.map((image, index) => (
-          <div key={index} className="relative h-64 rounded-lg overflow-hidden">
-            <Image src={image} alt={`Property image ${index + 1}`} fill className="object-cover" />
-          </div>
-        ))}
-      </div>
-
-      {/* Basic Info */}
-      <Section title="Basic Information">
-        <FeatureGrid items={[
-          { title: 'Bedrooms', value: property.bedrooms },
-          { title: 'Total Bathrooms', value: property.bathrooms.totalBathrooms },
-          { title: 'Partial Bathrooms', value: property.bathrooms.partailBathrooms }
-        ]} />
-      </Section>
-
-      {/* Interior Features */}
-      <Section title="Interior Features">
-        <FeatureGrid items={[
-          { title: 'Appliances Included', value: property.interiorFeatures.appliaanceIncluded },
-          { title: 'Flooring', value: property.interiorFeatures.flooring },
-          { title: 'Basement Type', value: property.interiorFeatures.basementType }
-        ]} />
-      </Section>
-
-      {/* Building Features */}
-      <Section title="Building Features">
-        <FeatureGrid items={[
-          { title: 'Features', value: property.buildingFeatures.features },
-          { title: 'Foundation Type', value: property.buildingFeatures.foundationType },
-          { title: 'Style', value: property.buildingFeatures.style },
-          { title: 'Construction Material', value: property.buildingFeatures.constructionMaterial }
-        ]} />
-      </Section>
-
-      {/* Heating & Cooling */}
-      <Section title="Heating & Cooling">
-        <FeatureGrid items={[
-          { title: 'Cooling', value: property.heatingNcooling.cooling },
-          { title: 'Fireplace', value: property.heatingNcooling.fireplace },
-          { title: 'Heating Type', value: property.heatingNcooling.heatingType }
-        ]} />
-      </Section>
-
-      {/* Property Summary */}
-      <Section title="Property Summary">
-        <FeatureGrid items={[
-          { title: 'Property Type', value: property.propertySummary.propertyType },
-          { title: 'Building Type', value: property.propertySummary.buildingType },
-          { title: 'Square Footage', value: `${property.propertySummary.squareFootage} sq ft` },
-          { title: 'Community', value: property.propertySummary.communityName },
-          { title: 'Year Built', value: property.propertySummary.buildIn },
-          { title: 'Annual Property Tax', value: `$${property.propertySummary.annualPropretyTax.toLocaleString()}` }
-        ]} />
-      </Section>
-
-      {/* Rooms */}
-      <Section title="Rooms">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {property.rooms.map((room, index) => (
-            <div key={index} className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold mb-2">{room.roomType}</h3>
-              <p>Level: {room.level}</p>
-              <p>Dimensions: {room.width}' × {room.length}' × {room.height}'</p>
+      <div className="mb-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="relative h-[600px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+          <Image src={property.images[0]?.imageUrl} alt="Main property image" fill className="object-cover" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          {property.images.slice(1, 5).map((image: any, index: number) => (
+            <div key={index} className="relative h-[290px] rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <Image src={image.imageUrl} alt={`Property image ${index + 2}`} fill className="object-cover" />
             </div>
           ))}
         </div>
-      </Section>
+      </div>
 
-      {/* Description */}
-      <Section title="Description">
-        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{property.description}</p>
-      </Section>
+      {/* Quick Stats */}
+      <div className="mb-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="text-gray-500 text-sm mb-1">Bedrooms</div>
+          <div className="text-2xl font-bold text-gray-900">{property.bedrooms}</div>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="text-gray-500 text-sm mb-1">Bathrooms</div>
+          <div className="text-2xl font-bold text-gray-900">{property.bathrooms.totalBathrooms}</div>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="text-gray-500 text-sm mb-1">Partial Baths</div>
+          <div className="text-2xl font-bold text-gray-900">{property.bathrooms.partailBathrooms}</div>
+        </div>
+        <div className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+          <div className="text-gray-500 text-sm mb-1">Square Feet</div>
+          <div className="text-2xl font-bold text-gray-900">{property.sqft}</div>
+        </div>
+      </div>
+
+      {/* Interior Features */}
+      <div className="space-y-8">
+        <Section title="Interior Features">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Object.entries(property.interiorFeatures).map(([key, value], index) => (
+              <div key={index} className="bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300">
+                <h3 className="text-gray-500 text-sm mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                <p className="text-lg font-semibold text-gray-900">{value}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* Building Features */}
+        <Section title="Building Features">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Object.entries(property.buildingFeatures).map(([key, value], index) => (
+              <div key={index} className="bg-gray-50 rounded-xl p-6">
+                <h3 className="text-gray-500 text-sm mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                <p className="text-lg font-semibold text-gray-900">{value}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* Utilities */}
+        <Section title="Utilities & Features">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {Object.entries(property.lotFeatures).map(([key, value], index) => (
+              <div key={index} className="bg-gray-50 rounded-xl p-6">
+                <h3 className="text-gray-500 text-sm mb-1">{key.replace(/([A-Z])/g, ' $1').trim()}</h3>
+                <p className="text-lg font-semibold text-gray-900">{value}</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* Heating & Cooling */}
+        <Section title="Heating & Cooling">
+          <FeatureGrid items={[
+            { title: 'Cooling', value: property.heatingNcooling.cooling },
+            { title: 'Fireplace', value: property.heatingNcooling.fireplace },
+            { title: 'Heating Type', value: property.heatingNcooling.heatingType }
+          ]} />
+        </Section>
+
+        {/* Property Summary */}
+        <Section title="Property Summary">
+          <FeatureGrid items={[
+            { title: 'Property Type', value: property.propertySummary.propertyType },
+            { title: 'Building Type', value: property.propertySummary.buildingType },
+            { title: 'Square Footage', value: `${property.propertySummary.squareFootage} sq ft` },
+            { title: 'Community', value: property.propertySummary.communityName },
+            { title: 'Year Built', value: property.propertySummary.buildIn },
+            { title: 'Annual Property Tax', value: `$${property.propertySummary.annualPropretyTax.toLocaleString()}` }
+          ]} />
+        </Section>
+
+        {/* Rooms */}
+        <Section title="Rooms">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {property.rooms.map((room, index) => (
+              <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-2">{room.roomType}</h3>
+                <p>Level: {room.level}</p>
+                <p>Dimensions: {room.width}' × {room.length}' × {room.height}'</p>
+              </div>
+            ))}
+          </div>
+        </Section>
+
+        {/* Description */}
+        <Section title="Description">
+          <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{property.description}</p>
+        </Section>
+      </div>
     </div>
   );
 };

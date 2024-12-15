@@ -4,10 +4,11 @@ import React, { useState } from 'react';
 import { PropertyData } from '@/types/propertyTypes';
 import axios from 'axios';
 import { Maximize2, Plus, Printer, Share2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const Page = () => {
   const [formData, setFormData] = useState<PropertyData>({
-    id: 0,
+    id: '',
     address: '',
     price: 0,
     bedrooms: 0,
@@ -68,6 +69,8 @@ const Page = () => {
     agentId: '',
     images: [], // Add images array to store uploaded images
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
@@ -125,12 +128,14 @@ const Page = () => {
     }
 
     try {
+      setIsLoading(true);
       const token = localStorage.getItem('accessToken');
-      const formData = new FormData();
-      formData.append('file', file);
+      const uploadFormData = new FormData(); // Renamed to `uploadFormData`
+      uploadFormData.append('image', file);
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-image`,
-        formData,
+        uploadFormData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -138,13 +143,15 @@ const Page = () => {
           },
         }
       );
+      setIsLoading(false);
 
       // Update the form data with the new image URL
       setFormData((prev) => ({
         ...prev,
-        images: [...prev.images, response.data.imageUrl],
+        images: [...prev.images, response.data],
       }));
     } catch (error) {
+      setIsLoading(false);
       console.error('Error uploading image:', error);
       alert('Failed to upload image');
     }
@@ -152,19 +159,27 @@ const Page = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
-    const token = localStorage.getItem('accessToken');
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/property`,
-      {
-        formData,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+    try {
+      setIsLoading(true);
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/property`,
+        {
+          formData,
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setIsLoading(false);
+      router.push('/agent/property');
+    } catch (error) {
+      setIsLoading(false);
+      console.error('Error uploading image:', error);
+      alert('Failed to save data');
+    }
   };
 
   return (
@@ -192,21 +207,44 @@ const Page = () => {
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow-sm'>
         <label className='h-32 border-[1px] border-gray-300 rounded-lg flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors'>
           Upload Images
-          <input
-            type='file'
-            accept='image/jpeg,image/png'
-            onChange={handleFileUpload}
-            className='hidden'
-          />
-          <Plus className='text-gray-400' />
+          {!isLoading && (
+            <input
+              type='file'
+              name='image'
+              formEncType='multipart/form-data'
+              accept='image/jpeg,image/png'
+              onChange={handleFileUpload}
+              className='hidden'
+            />
+          )}
+          {isLoading ? (
+            <span className='animate-spin rounded-full h-5 w-5 border-t-2 border-violet-600'></span>
+          ) : (
+            <Plus className='text-gray-400' />
+          )}
         </label>
-        {formData.images.map((image, index) => (
-          <div key={index} className='h-32 border-[1px] border-gray-300 rounded-lg overflow-hidden'>
+        {formData.images.map((image: any, index) => (
+          <div
+            key={index}
+            className='h-32 relative border-[1px] border-gray-300 rounded-lg overflow-hidden'
+          >
             <img
-              src={image}
+              src={image.imageUrl}
               alt={`Property image ${index + 1}`}
               className='w-full h-full object-cover'
             />
+            <button
+              type='button'
+              onClick={() => {
+                setFormData((prev) => ({
+                  ...prev,
+                  images: prev.images.filter((img: any) => img.imageUrl !== image.imageUrl),
+                }));
+              }}
+              className='absolute top-2 right-2 p-2 bg-rose-50 hover:bg-rose-100 rounded-lg'
+            >
+              <Plus className='text-rose-600 rotate-45' />
+            </button>
           </div>
         ))}
       </div>
@@ -818,9 +856,10 @@ const Page = () => {
       <div className='flex justify-end pt-6 bg-white p-6 rounded-lg shadow-sm'>
         <button
           type='submit'
+          disabled={isLoading}
           className='px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2'
         >
-          Save Property
+          {isLoading ? 'Saving...' : 'Save Property'}
         </button>
       </div>
     </form>

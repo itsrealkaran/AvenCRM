@@ -57,7 +57,7 @@ export type PropertyData = {
     frontage: string;
     landDepth: string;
   };
-  images: string[];
+  images: Json[];
   agentId: string;
 };
 
