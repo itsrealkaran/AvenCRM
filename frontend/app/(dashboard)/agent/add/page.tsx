@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { PropertyData } from '@/types/propertyTypes';
 import axios from 'axios';
 import { Maximize2, Plus, Printer, Share2 } from 'lucide-react';
@@ -14,6 +15,7 @@ const Page = () => {
     sqft: 0,
     description: '',
     title: '',
+    imageUrl: '',
     propertySummary: {
       propertyType: '',
       buildingType: '',
@@ -202,10 +204,12 @@ const Page = () => {
         </label>
         {formData.images.map((image, index) => (
           <div key={index} className='h-32 border-[1px] border-gray-300 rounded-lg overflow-hidden'>
-            <img
+            <Image
               src={image}
               alt={`Property image ${index + 1}`}
               className='w-full h-full object-cover'
+              width={100}
+              height={100}
             />
           </div>
         ))}

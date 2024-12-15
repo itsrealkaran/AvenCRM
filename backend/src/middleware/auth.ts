@@ -9,6 +9,7 @@ import { UserRole } from '@prisma/client';
 interface JwtPayload {
   id: string;
   role: UserRole;
+  companyId?: string
 }
 
 declare global {
@@ -16,6 +17,7 @@ declare global {
     interface User {
       id: string;
       role: UserRole;
+      companyId?: string
     }
     interface Request {
       user?: User;
@@ -80,7 +82,8 @@ export const protect = async (
     req.user = {
       ...user,
       role: decoded.role,
-      id: decoded.id
+      id: decoded.id,
+      companyId: decoded.companyId
     };
     next();
   } catch (error) {

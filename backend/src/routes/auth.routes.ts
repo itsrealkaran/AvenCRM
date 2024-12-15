@@ -12,6 +12,7 @@ import { UserRole } from '@prisma/client';
 interface JWTPayload {
   id: string;
   role: UserRole;
+  companyId?: string
 }
 
 interface AuthenticatedRequest extends Request {
@@ -183,7 +184,8 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
         {
           id: user.id,
           role: role,
-          exp: Math.floor(Date.now() / 1000) + (15 * 60) // 15 minutes
+          companyId: user.companyId || user.company.id,
+          exp: Math.floor(Date.now() / 1000) + (60 * 60) // 60 minutes
         },
         process.env.JWT_SECRET || 'nope'
       );
@@ -192,7 +194,8 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
       const refreshToken = jwt.sign(
         {
           id: user.id,
-          role: role
+          role: role,
+          companyId: user.companyId || user.company.id
         },
         process.env.REFRESH_TOKEN_SECRET || 'refresh-nope',
         { expiresIn: '7d' }
@@ -203,7 +206,7 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: 15 * 60 * 1000 // 15 minutes
+        maxAge: 60 * 60 * 1000 // 60 minutes
       });
 
       return res.status(200).json({

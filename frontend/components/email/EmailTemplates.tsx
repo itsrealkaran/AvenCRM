@@ -41,7 +41,7 @@ export function EmailTemplates() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch('/api/email/templates');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`);
       const data = await response.json();
       setTemplates(data);
     } catch (error) {
@@ -54,7 +54,7 @@ export function EmailTemplates() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/email/templates', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

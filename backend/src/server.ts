@@ -10,6 +10,7 @@ import dealsRoutes from './routes/deals.routes.js';
 import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
 import transctionRoutes from './routes/transactons.routes.js'
+import emailRoutes from './routes/email.routes.js';
 
 import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
@@ -130,7 +131,7 @@ app.use('/company', companyRoutes);
 app.use('/transction', transctionRoutes);
 app.use('/calender', manageCalendar);
 app.use('/company/moniter', companyMonitoring);
-//app.use('/email', emailRoutes);
+app.use('/email', emailRoutes);
 app.use('/company/admin', adminRoutes);
 app.use("/property", propertyRoutes);
 

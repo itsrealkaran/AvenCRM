@@ -1,21 +1,64 @@
 import { PrismaClient, EmailStatus } from '@prisma/client';
-import { EmailService } from '../services/email/emailService.js';
+import { emailService } from '../services/email.service.js';
 import { Queue, Worker, Job } from 'bullmq';
 import { Redis } from 'ioredis';
+
+interface EmailJobData {
+  emailId: string;
+}
+
+interface EmailWithRelations {
+  id: string;
+  subject: string;
+  body: string;
+  scheduledFor: Date | null;
+  sentAt: Date | null;
+  status: EmailStatus;
+  error: string | null;
+  emailAccountId: string;
+  sender: {
+    email: string;
+  };
+  recipients: Array<{ emailId: string; id?: string }>;
+}
 
 const prisma = new PrismaClient();
 const redisConnection = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
+  maxRetriesPerRequest: null,
 });
 
-const emailQueue = new Queue('email-queue', { connection: redisConnection });
+redisConnection.on('error', (error: Error) => {
+  console.error('Redis connection error:', error);
+});
 
-const emailService = new EmailService(prisma, emailQueue);
+redisConnection.on('connect', () => {
+  console.log('Connected to Redis 2');
+});
 
-const processEmail = async (job: Job<any, void, string> | undefined) => {
-  if (!job) return;
+redisConnection.on('disconnect', () => {
+  console.log('Disconnected from Redis');
+});
 
+redisConnection.on('reconnecting', () => {
+  console.log('Reconnecting to Redis');
+});
+
+export const emailQueue = new Queue<EmailJobData>('email-queue', {
+  connection: redisConnection,
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: {
+      type: 'exponential',
+      delay: 1000,
+    },
+    removeOnComplete: true,
+    removeOnFail: false,
+  },
+});
+
+const processEmail = async (job: Job<EmailJobData>): Promise<void> => {
   const { emailId } = job.data;
 
   try {
@@ -23,24 +66,46 @@ const processEmail = async (job: Job<any, void, string> | undefined) => {
       where: { id: emailId },
       include: {
         sender: true,
-        recipients: true,
       },
-    });
+    }) as unknown as EmailWithRelations;
 
-    if (!email) throw new Error('Email not found');
+    if (!email) {
+      throw new Error(`Email not found with ID: ${emailId}`);
+    }
+
+    if (!email.emailAccountId) {
+      throw new Error('No email account associated with this email');
+    }
 
     const transporter = await emailService.createTransporter(email.emailAccountId);
 
-    // Send email to each recipient
-    for (const recipient of email.recipients) {
+    // Update job progress
+    await job.updateProgress(10);
+
+    const recipients = email.recipients; 
+    const totalRecipients = recipients.length;
+    if (totalRecipients === 0) {
+      throw new Error('No recipients found for this email');
+    }
+
+    for (let i = 0; i < totalRecipients; i++) {
+      const recipient = recipients[i];
+      if (!recipient?.emailId) {
+        console.warn(`Skipping invalid recipient at index ${i}`);
+        continue;
+      }
+
       await transporter.sendMail({
         from: email.sender.email,
         to: recipient.emailId,
         subject: email.subject,
         text: email.body,
-        // Add tracking pixel for open tracking
-        html: `${email.body}<img src="${process.env.API_URL}/api/email/track/${recipient.id}/open" width="1" height="1" />`,
+        html: `${email.body}${recipient.id ? `<img src="${process.env.API_URL}/api/email/track/${recipient.id}/open" width="1" height="1" />` : ''}`,
       });
+
+      // Update progress for each recipient
+      const progress = Math.round(((i + 1) / totalRecipients) * 90) + 10;
+      await job.updateProgress(progress);
     }
 
     // Update email status
@@ -59,6 +124,7 @@ const processEmail = async (job: Job<any, void, string> | undefined) => {
       where: { id: emailId },
       data: {
         status: EmailStatus.FAILED,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
       },
     });
 
@@ -67,17 +133,33 @@ const processEmail = async (job: Job<any, void, string> | undefined) => {
 };
 
 // Create worker
-const worker = new Worker('email-queue', processEmail, {
+const worker = new Worker<EmailJobData>('email-queue', processEmail, {
   connection: redisConnection,
-  concurrency: 5, // Process 5 jobs at a time
+  concurrency: 5,
+  limiter: {
+    max: 50,
+    duration: 1000 * 60, // 1 minute
+  },
 });
 
-worker.on('completed', (job: Job<any, void, string> | undefined): void => {
-  console.log(`Job ${job?.id} completed`);
+worker.on('error', (error: Error): void => {
+  console.error('Worker error:', error);
 });
 
-worker.on('failed', (job: Job<any, void, string> | undefined, error: Error): void => {
+worker.on('active', (job: Job<EmailJobData>): void => {
+  console.log(`Job ${job.id} is active`);
+});
+
+worker.on('progress', (job: Job<EmailJobData>, progress: number | object): void => {
+  console.log(`Job ${job.id} progress: ${typeof progress === 'number' ? progress : JSON.stringify(progress)}%`);
+});
+
+worker.on('completed', (job: Job<EmailJobData>): void => {
+  console.log(`Job ${job.id} completed`);
+});
+
+worker.on('failed', (job: Job<EmailJobData> | undefined, error: Error): void => {
   console.error(`Job ${job?.id} failed:`, error);
 });
 
-export { emailQueue };
+export { worker };

@@ -508,7 +508,7 @@ model EmailCampaign {
   createdAt          DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
 
-  Email Email[]
+  emails             Email[]
 }
 
 // Email Account Integration

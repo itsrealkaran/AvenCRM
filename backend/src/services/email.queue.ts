@@ -6,6 +6,19 @@ import { EmailJobData, EmailJobResult } from '../types/email.types.js';
 const redisConnection = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
+  maxRetriesPerRequest: null,
+});
+
+redisConnection.on('error', (error: Error) => {
+  console.error('Redis connection error:', error);
+});
+
+redisConnection.on('connect', () => {
+  console.log('Connected to Redis');
+});
+
+redisConnection.on('disconnect', () => {
+  console.log('Disconnected from Redis');
 });
 
 // Create email queue
@@ -56,6 +69,22 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
     },
   }
 );
+
+worker.on('completed', (job: Job<EmailJobData, EmailJobResult>) => {
+  console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+});
+
+worker.on('failed', (job: Job<EmailJobData, EmailJobResult> | undefined, error: Error) => {
+  console.error(`Job ${job?.id} failed with reason:`, error);
+});
+
+worker.on('error', (error: Error) => {
+  console.error('Worker error:', error);
+});
+
+worker.on('progress', (job: Job<EmailJobData, EmailJobResult>) => {
+  console.log(`Job ${job.id} progress: ${job.progress}%`);
+});
 
 // Event handlers
 const queueEvents = new QueueEvents('email-queue', {
