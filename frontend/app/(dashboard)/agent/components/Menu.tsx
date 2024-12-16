@@ -1,5 +1,5 @@
 import React from 'react';
-import Link from '@/node_modules/next/link';
+import Link from 'next/link';
 import { FaAngleRight } from 'react-icons/fa6';
 
 interface MenuProps {
@@ -8,17 +8,9 @@ interface MenuProps {
   heading: string;
   reff: string;
   isActive: boolean;
-  onClick: () => void;
 }
 
-const Menu: React.FC<MenuProps> = ({
-  icons: Icon,
-  heading,
-  reff,
-  isActive,
-  onClick,
-  className,
-}) => {
+const Menu: React.FC<MenuProps> = ({ icons: Icon, heading, reff, isActive, className }) => {
   return (
     <Link
       href={reff}
@@ -28,12 +20,13 @@ const Menu: React.FC<MenuProps> = ({
             ? 'bg-primary text-white'
             : 'text-gray-600 hover:bg-primary/10 hover:text-primary'
         }`}
-      onClick={onClick}
     >
       <div className='flex items-center gap-3'>
         <div className='flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-200'></div>
         <span
-          className={`text-sm font-medium capitalize whitespace-nowrap ${isActive ? 'text-white' : 'text-gray-700 group-hover:text-primary'}`}
+          className={`text-sm font-medium capitalize whitespace-nowrap ${
+            isActive ? 'text-white' : 'text-gray-700 group-hover:text-primary'
+          }`}
         >
           {heading}
         </span>
@@ -41,7 +34,7 @@ const Menu: React.FC<MenuProps> = ({
       <FaAngleRight
         className={`h-4 w-4 transition-transform duration-200 
         ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-primary'} 
-        ${isActive ? 'rotate-90' : 'group-hover:translate-x-1'}`}
+        ${isActive ? '' : 'group-hover:translate-x-1'}`}
       />
     </Link>
   );

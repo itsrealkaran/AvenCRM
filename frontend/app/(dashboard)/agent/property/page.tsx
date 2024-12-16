@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { PropertyData } from '@/types/propertyTypes';
 import axios from 'axios';
+<<<<<<< HEAD
 
 import PropertyBox from '../../../../components/PropertyBox';
 import houseImg from '../../../../public/house.webp';
@@ -11,26 +12,53 @@ import houseImg from '../../../../public/house.webp';
 const Page = () => {
   const [response, setResponse] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+=======
+import { toast } from 'sonner';
+
+import LoadingTableSkeleton from '@/components/loading-table';
+import PropertyBox from '@/components/PropertyBox';
+
+const Page = () => {
+  const [response, setResponse] = useState([]);
+  const [loading, setLoading] = useState(true);
+>>>>>>> main
 
   useEffect(() => {
     const token = localStorage.getItem('accessToken');
     const fetchData = async () => {
+<<<<<<< HEAD
+=======
+      setLoading(true);
+      toast.loading('Fetching Properties');
+>>>>>>> main
       try {
         const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/property`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
+<<<<<<< HEAD
         setResponse(res.data);
       } catch (error) {
         console.error('Error fetching properties:', error);
       } finally {
         setIsLoading(false);
+=======
+        toast.success('Properties Fetched');
+        setResponse(res.data);
+        console.log(res.data);
+      } catch (error) {
+        toast.error('Error fetching properties');
+      } finally {
+        toast.dismiss();
+        setLoading(false);
+>>>>>>> main
       }
     };
     fetchData();
   }, []);
 
+<<<<<<< HEAD
   const PropertySkeleton = () => (
     <div className="bg-gray-100 rounded-lg p-4 w-80 h-[400px] animate-pulse">
       <div className="w-full h-[200px] bg-gray-200 rounded-md mb-4"></div>
@@ -52,6 +80,18 @@ const Page = () => {
         <h2 className='text-center text-xl font-semibold justify-self-center'>Properties Listing</h2>
         <Link
           href={'/agent/property/add'}
+=======
+  if (loading) {
+    return <LoadingTableSkeleton />;
+  }
+
+  return (
+    <div className='w-full h-full relative overflow-y-auto gap-2'>
+      <div className='w-full mt-8 flex justify-center items-center'>
+        <h2 className='text-center text-lg justify-self-center'>Properties Listing</h2>
+        <Link
+          href={'/agent/add'}
+>>>>>>> main
           className='bg-violet-600 text-white p-2 px-4 rounded-md absolute right-24'
         >
           Add
@@ -61,6 +101,7 @@ const Page = () => {
         </button>
       </div>
       <div className='flex flex-wrap gap-2 m-6 '>
+<<<<<<< HEAD
         {isLoading ? (
           <>
             {[...Array(6)].map((_, index) => (
@@ -81,6 +122,19 @@ const Page = () => {
             />
           ))
         )}
+=======
+        {response.map((item: PropertyData) => (
+          <PropertyBox
+            key={item.id}
+            imgurl={item.imageUrl}
+            address={item.address}
+            price={item.price}
+            landSize={item.sqft}
+            bedrooms={item.bedrooms}
+            bathrooms={item.bathrooms.partailBathrooms}
+          />
+        ))}
+>>>>>>> main
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import EventModal from './event-modal';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+
 import { createEvent, fetchEvents, updateEvent } from './api';
 
 // Setup the localizer for BigCalendar

@@ -3,7 +3,7 @@ import agentRoutes from './agent.routes.js';
 import authRoutes from './auth.routes.js';
 
 
-const router = Router();
+const router: Router = Router();
 
 router.use('/agent', agentRoutes);
 router.use('/auth', authRoutes);

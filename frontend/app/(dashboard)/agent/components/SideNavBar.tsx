@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from '@/node_modules/next/link';
+import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   Building2,
   Calendar,
@@ -23,69 +24,26 @@ import Menu from './Menu';
 const menuItems = [
   { heading: 'Dashboard', icons: LayoutDashboard, reff: '/agent' },
   { heading: 'Clients', icons: Users, reff: '/agent/clients' },
-  {
-    heading: 'Property',
-    icons: Building2,
-    reff: '/agent/property',
-  },
-  {
-    heading: 'Marketing',
-    icons: Target,
-    reff: '/agent/marketing',
-  },
-  {
-    heading: 'Page Builder',
-    icons: FileText,
-    reff: '/agent/subscription',
-  },
-  {
-    heading: 'Leads',
-    icons: Store,
-    reff: '/agent/leads',
-  },
-  {
-    heading: 'Deals',
-    icons: HandshakeIcon,
-    reff: '/agent/deals',
-  },
-  {
-    heading: 'Transactions',
-    icons: Wallet,
-    reff: '/agent/transactions',
-  },
-  {
-    heading: 'Monitoring',
-    icons: LineChart,
-    reff: '/agent/monitoring',
-  },
+  { heading: 'Property', icons: Building2, reff: '/agent/property' },
+  { heading: 'Page Builder', icons: FileText, reff: '/agent/subscription' },
+  { heading: 'Leads', icons: Store, reff: '/agent/leads' },
+  { heading: 'Deals', icons: HandshakeIcon, reff: '/agent/deals' },
+  { heading: 'Transactions', icons: Wallet, reff: '/agent/transactions' },
+  { heading: 'Calendar', icons: Calendar, reff: '/agent/calendar' },
   { heading: 'Email', icons: Mail, reff: '/agent/email' },
-  {
-    heading: 'Settings',
-    icons: Settings,
-    reff: '/agent/settings',
-  },
+  { heading: 'Settings', icons: Settings, reff: '/agent/settings' },
 ];
 
 const SideNavBar: React.FC = () => {
-  const [activeLink, setActiveLink] = useState<string>('/agent'); // This state tracks the active link
-
-  // Function to handle the active menu item change
-  const handleMenuClick = (id: string) => {
-    setActiveLink(id);
-  };
+  const pathname = usePathname(); // Get the current pathname
 
   return (
     <div className='sticky top-0 z-10 h-screen w-[18%] select-none bg-white px-8 pt-10 shadow-xl shadow-black/20'>
-      {/* this is the top level heading display div  */}
-
+      {/* Top heading */}
       <div className='flex w-full items-center gap-[5px]'>
-        {/* this is the settings button */}
-
         <div className='text-[2rem] text-primary'>
           <MenuIcon className='w-8 h-8' />
         </div>
-
-        {/* this is the main heading  */}
 
         <Link
           href='/dashboard'
@@ -96,16 +54,15 @@ const SideNavBar: React.FC = () => {
         </Link>
       </div>
 
+      {/* Navigation menu */}
       <div className='mt-[35px] flex h-fit w-full flex-col gap-[2px]'>
-        {/* this is the single menu component  */}
         {menuItems.map((item, index) => (
           <Menu
             key={index}
             icons={item.icons}
             heading={item.heading}
             reff={item.reff}
-            isActive={activeLink === item.reff} // Pass active state
-            onClick={() => handleMenuClick(item.reff)} // Set active link on click
+            isActive={pathname === item.reff} // Compare pathname to item.reff
           />
         ))}
       </div>

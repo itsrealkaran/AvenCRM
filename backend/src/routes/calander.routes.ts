@@ -2,15 +2,15 @@ import { Router } from "express";
 import db from "../db/index.js";
 import { protect } from "../middleware/auth.js";
 
-const router = Router();
+const router: Router = Router();
 router.use(protect)
 
 router.get("/getEvents", async (req, res) => {
   try {
-    if (!req.user || !req.user.profileId) {
+    if (!req.user || !req.user.id) {
       res.status(400).json({ message: "bad auth" });
     } else {
-      let id = req.user.profileId;
+      let id = req.user.id;
 
       const events = await db.calendarEvent.findMany({
         where: {
@@ -29,11 +29,11 @@ router.put("/update/:id", async (req, res) => {
     const { title, description, start, end } = req.body;
     const eventId = req.params.id
     
-    if (!req.user || !req.user.profileId) {
+    if (!req.user || !req.user.id) {
       return res.status(400).json({ message: "bad auth" });
     }
     
-    const setterId = req.user.profileId;
+    const setterId = req.user.id;
 
     // Ensure proper date conversion and validation
     if (!start || !end) {
@@ -73,10 +73,10 @@ router.post("/createEvent", async (req, res) => {
     const { title, description, start, end } =
       req.body;
       console.log(req.body);
-    if (!req.user || !req.user.profileId) {
+    if (!req.user || !req.user.id) {
       return res.status(400).json({ message: "bad auth" });
     } else {
-      const id = req.user.profileId;
+      const id = req.user.id;
 
       // Ensure proper date conversion and validation
       if (!start || !end) {
@@ -111,10 +111,10 @@ router.post("/createEvent", async (req, res) => {
 router.delete("/delete/:id", async (req, res) => {
   try {
     const eventId = req.params.id
-    if (!req.user || !req.user.profileId) {
+    if (!req.user || !req.user.id) {
       res.status(400).json({ message: "bad auth" });
     } else {
-      let id = req.user.profileId;
+      let id = req.user.id;
 
       const events = await db.calendarEvent.delete({
         where: {

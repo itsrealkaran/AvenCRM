@@ -2,7 +2,7 @@ import { Router } from "express";
 import db from "../../db/index.js";
 import { authenticateToken } from "../../middleware/authMiddleware.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.get("/getall", authenticateToken, async (req, res) => {
   if (!req.user) {
@@ -10,7 +10,7 @@ router.get("/getall", authenticateToken, async (req, res) => {
   } else {
 
     //@ts-ignore
-    const adminId = req.user.profileId;
+    const adminId = req.user.id;
 
     try {
       const company = await db.company.findFirst({

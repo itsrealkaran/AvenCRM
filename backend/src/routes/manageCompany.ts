@@ -3,14 +3,14 @@ import { authenticateToken } from "../middleware/authMiddleware.js";
 import db from "../db/index.js";
 import { verifySuperAdmin } from "../lib/verifyUser.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.get("/getAll", authenticateToken, async(req, res) => {
   if (!req.user) {
     res.status(400).json({ message: "bad auth" });
   } else {
     //@ts-ignore
-    let id = req.user.profileId;
+    let id = req.user.id;
     const isVerified = await verifySuperAdmin(id);
     if (!isVerified) {
       res.status(400).json({ err: "not verified" });

@@ -42,11 +42,12 @@ export function ComposeEmail({ open, onClose }: ComposeEmailProps) {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/email/send', {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/send`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...emailData,
           recipients: emailData.recipients.split(',').map((email) => email.trim()),

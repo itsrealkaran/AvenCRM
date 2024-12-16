@@ -13,7 +13,7 @@ export class AdminAgentController extends BaseController {
         return res.status(400).json({ message: "bad auth" });
       } else {
         //@ts-ignore
-        const adminId = req.user.profileId;
+        const adminId = req.user.id;
         try {
           const company = await db.company.findFirst({
             where: {
@@ -51,7 +51,7 @@ export class AdminAgentController extends BaseController {
         return res.status(400).json({ message: "bad auth" });
       } else {
         //@ts-ignore
-        const adminId = req.user.profileId;
+        const adminId = req.user.id;
         const isVerified = await db.company.findFirst({
           where: {
             adminId,
@@ -87,7 +87,7 @@ export class AdminAgentController extends BaseController {
       } else {
         try {
           //@ts-ignore
-          const adminId = req.user.profileId;
+          const adminId = req.user.id;
           const isVerified = await verifyAdmin(adminId);
           if (!isVerified) {
             return res.status(400).json({ err: "not verified" });
@@ -125,7 +125,7 @@ export class AdminAgentController extends BaseController {
       } else {
         try {
           //@ts-ignore
-          const adminId = req.user.profileId;
+          const adminId = req.user.id;
           const isVerified = await verifyAdmin(adminId);
           if (!isVerified) {
             res.status(400).json({ err: "not verified" });
@@ -160,7 +160,7 @@ export class AdminAgentController extends BaseController {
         res.status(400).json({ message: "bad auth" });
       } else {
         //@ts-ignore
-        const adminId = req.user.profileId;
+        const adminId = req.user.id;
         const isVerified = await verifyAdmin(adminId);
         if (!isVerified) {
           res.status(400).json({ err: "not verified" });
@@ -199,7 +199,7 @@ export class AdminAgentController extends BaseController {
         res.status(400).json({ message: "bad auth" });
       } else {
         //@ts-ignore
-        const adminId = req.user.profileId;
+        const adminId = req.user.id;
 
         try {
           const company = await db.company.findFirst({
@@ -227,7 +227,7 @@ export class AdminAgentController extends BaseController {
         res.status(400).json({ message: "bad auth" });
       } else {
         //@ts-ignore
-        const adminId = req.user.profileId;
+        const adminId = req.user.id;
 
         try {
           const company = await db.company.findFirst({

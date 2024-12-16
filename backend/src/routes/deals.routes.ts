@@ -5,7 +5,7 @@ import { Response, Request } from "express";
 import { DealStatus } from "@prisma/client";
 
 
-const router = Router();
+const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
@@ -50,7 +50,7 @@ router.post("/", async (req: Request, res: Response) => {
     let dealValue = Number(dealAmount);
 
 
-    const agentId = req.user?.profileId ?? '';
+    const agentId = req.user?.id ?? '';
     const company = await db.agent.findUnique({
         where: { id: agentId },
         select: { companyId: true }

@@ -4,7 +4,7 @@ import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 
 
-const router = Router();
+const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
@@ -46,7 +46,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
 
-    const agentId = req.user?.profileId;
+    const agentId = req.user?.id;
     const company = await db.agent.findUnique({
         where: { id: agentId },
         select: { companyId: true }
@@ -66,7 +66,7 @@ router.post("/", async (req: Request, res: Response) => {
                 source,
                 expectedDate,
                 notes,
-                agentId: req.user?.profileId ?? '',
+                agentId: req.user?.id ?? '',
                 companyId: company?.companyId || '',
             },
         });

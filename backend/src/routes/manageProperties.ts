@@ -1,7 +1,7 @@
 import { Router } from "express";
 import db from "../db/index.js"
 
-const router = Router()
+const router: Router = Router()
 
 router.get("/getAll", async(req, res) => {
     try {

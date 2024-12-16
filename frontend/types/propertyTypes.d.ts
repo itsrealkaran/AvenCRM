@@ -6,6 +6,7 @@ export type PropertyData = {
   sqft: number;
   description: string;
   title: string;
+  imageUrl: string;
   propertySummary: {
     propertyType: string;
     buildingType: string;

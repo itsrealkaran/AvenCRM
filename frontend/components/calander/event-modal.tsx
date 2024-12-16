@@ -109,7 +109,13 @@ export default function EventModal({ isOpen, onClose, event, onSave, onDelete }:
           </div>
           <div className='flex justify-between'>
             <Button disabled={loading} type='submit'>
-              {event && event.id ? 'Update Event' : loading ? 'Updating...' : loading ? 'Creating...' : 'Create Event'}
+              {event && event.id
+                ? 'Update Event'
+                : loading
+                  ? 'Updating...'
+                  : loading
+                    ? 'Creating...'
+                    : 'Create Event'}
             </Button>
             {event && event.id && (
               <Button disabled={loading} type='button' variant='destructive' onClick={handleDelete}>

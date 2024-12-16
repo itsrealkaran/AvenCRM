@@ -3,14 +3,14 @@ import db from "../../db/index.js";
 import { authenticateToken } from "../../middleware/authMiddleware.js";
 import { verifyAdmin } from "../../lib/verifyUser.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.get("/", authenticateToken, async (req, res) => {
     if (!req.user) {
         res.status(400).json({ message: "bad auth" });
     } else {
         //@ts-ignore
-        let id = req.user.profileId;
+        let id = req.user.id;
 
         const isVerified = await verifyAdmin(id);
         if(!isVerified){
@@ -53,7 +53,7 @@ router.put(`/verify`, authenticateToken, async (req, res) => {
     }
 
     //@ts-ignore
-    let adminId = req.user.profileId;
+    let adminId = req.user.id;
     const isAdmin = await verifyAdmin(adminId);
     if(!isAdmin){
         res.status(400).json({ err: "not verified" })
@@ -83,7 +83,7 @@ router.post("/", authenticateToken, async (req, res) => {
         res.status(400).json({ message: "bad auth" });
     } else {
         //@ts-ignore
-        let id = req.user.profileId;
+        let id = req.user.id;
         try {
             const agent = await db.agent.findFirst({
                 where: {

@@ -10,6 +10,7 @@ import dealsRoutes from './routes/deals.routes.js';
 import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
 import transctionRoutes from './routes/transactons.routes.js'
+import emailRoutes from './routes/email.routes.js';
 
 import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
@@ -21,16 +22,35 @@ import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
 import { propertyRoutes } from './routes/propertyRoutes.js';
+<<<<<<< HEAD
 import { propertyView } from './routes/publicPropertyView.js';
 
+=======
+import cookieParser from 'cookie-parser';
+>>>>>>> main
 
 const app = express();
 
+// Use cookie-parser middleware
+app.use(cookieParser());
 
 // Configure CORS with specific options
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? 'https://avencrm.com'  // Replace with your actual production domain
+    : 'http://localhost:3000',
+  credentials: true,  // This is important for handling cookies
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Authorization'],
+}));
 
-
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
 
 // Body parsing Middleware
 app.use(express.json());
@@ -123,15 +143,16 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 
 // API Routes
 app.use('/auth', authRouter);
+app.use('/admin', adminRoutes);
 app.use('/superadmin', superAdminRoutes);
 app.use('/agent', agentRoutes);
 app.use('/deals', dealsRoutes);
-app.use('/transactions', transctionRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/company', companyRoutes);
+app.use('/transction', transctionRoutes);
 app.use('/calender', manageCalendar);
 app.use('/company/moniter', companyMonitoring);
-// app.use('/company/subsciption', manageSubscription);
+app.use('/email', emailRoutes);
 app.use('/company/admin', adminRoutes);
 app.use("/property", propertyRoutes);
 app.use("/getProperty", propertyView);

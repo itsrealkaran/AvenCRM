@@ -39,7 +39,7 @@ export function EmailList({ type }: EmailListProps) {
 
   const fetchEmails = async () => {
     try {
-      const response = await fetch(`/api/email/${type}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/${type}`);
       const data = await response.json();
       setEmails(data);
     } catch (error) {

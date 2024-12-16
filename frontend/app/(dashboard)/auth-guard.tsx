@@ -3,8 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { jwtDecode } from 'jwt-decode';
-
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface JWTPayload {
   profileId: string;
@@ -14,172 +13,94 @@ interface JWTPayload {
 
 interface AuthGuardProps {
   children: React.ReactNode;
-  requiredRoles?: string[];
 }
 
-const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles = [] }) => {
+const protectedRoutes = {
+  '/agent': ['AGENT'],
+  '/company': ['ADMIN'],
+  '/superadmin': ['SUPERADMIN'],
+};
+
+const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { toast } = useToast();
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  const refreshToken = useCallback(
-    async (currentToken: string) => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh-token`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${currentToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
+  const refreshToken = useCallback(async () => {
+    try {
+      toast.loading('Authenticating...');
+      const currentToken = localStorage.getItem('accessToken');
+      if (!currentToken) throw new Error('No access token found');
 
-        if (response.ok) {
-          const { accessToken } = await response.json();
-          localStorage.setItem('accessToken', accessToken);
-        } else {
-          throw new Error('Token refresh failed');
-        }
-      } catch (error) {
-        console.error('Token refresh failed:', error);
-        setIsAuthorized(false);
-        router.push('/sign-in');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh-token`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${currentToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) throw new Error('Token refresh failed');
+
+      toast.dismiss();
+      toast.success('Authentication successful');
+
+      const { accessToken } = await response.json();
+      localStorage.setItem('accessToken', accessToken);
+      return accessToken;
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Authentication failed');
+      throw error;
+    }
+  }, []);
+
+  const validateAccess = useCallback(async () => {
+    try {
+      let token = localStorage.getItem('accessToken');
+      if (!token) throw new Error('No access token found');
+
+      // Decode token
+      let decoded = jwtDecode<JWTPayload>(token);
+
+      // Check if token is about to expire (less than 2 minutes remaining)
+      if (decoded.exp * 1000 - Date.now() < 2 * 60 * 1000) {
+        // Refresh token
+        token = await refreshToken();
+        decoded = jwtDecode<JWTPayload>(token as string);
       }
-    },
-    [router]
-  );
 
-  const validateTokenWithBackend = useCallback(
-    async (token: string) => {
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/validate-token`, {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+      // Get user role and current route
+      const userRole = decoded.role;
+      const currentRoute = Object.entries(protectedRoutes).find(([route]) =>
+        pathname.startsWith(route)
+      );
 
-        if (!response.ok) {
-          throw new Error('Invalid token');
-        }
-      } catch (error) {
-        toast({
-          title: 'Token validation failed',
-          description: (error as unknown as string) || 'Please sign in to continue',
-          variant: 'destructive',
-        });
-        localStorage.removeItem('accessToken');
-        setIsAuthorized(false);
-        router.push('/sign-in');
+      // Check if current route requires authentication
+      if (currentRoute && !currentRoute[1].includes(userRole)) {
+        throw new Error('Insufficient permissions');
       }
-    },
-    [router]
-  );
+
+      setIsAuthorized(true);
+    } catch (error) {
+      console.error('Auth Error:', error);
+      localStorage.removeItem('accessToken');
+      setIsAuthorized(false);
+      router.push('/sign-in');
+    }
+  }, [pathname, router, refreshToken]);
 
   useEffect(() => {
-    const validateAuth = () => {
-      try {
-        const token = localStorage.getItem('accessToken');
+    validateAccess();
 
-        if (!token) {
-          // toast({
-          //   title: 'Authentication Error',
-          //   description: 'Please sign in to continue',
-          //   variant: 'destructive',
-          // });
-          localStorage.removeItem('accessToken');
-          setIsAuthorized(false);
-          router.push('/sign-in');
-          return;
-        }
-
-        // Decode and validate token
-        const decoded = jwtDecode<JWTPayload>(token);
-
-        // Check token expiration
-        if (decoded.exp * 1000 < Date.now()) {
-          localStorage.removeItem('accessToken');
-          // toast({
-          //   title: 'Token Expired',
-          //   description: 'Please sign in to continue',
-          //   variant: 'destructive',
-          // });
-          router.push('/sign-in');
-          return;
-        }
-
-        // Get user role from token
-        const userRole = decoded.role?.toLowerCase();
-
-        // Validate role-based access
-        const currentPath = pathname.split('/')[1]?.toLowerCase();
-        if (
-          !userRole ||
-          (currentPath &&
-            !(currentPath === userRole || (currentPath === 'company' && userRole === 'admin')))
-        ) {
-          // toast({
-          //   title: 'Insufficient permissions',
-          //   description: 'You do not have access to this page',
-          //   variant: 'destructive',
-          // });
-          localStorage.removeItem('accessToken');
-          setIsAuthorized(false);
-          router.push('/');
-          return;
-        }
-
-        // Additional role validation if specific roles are required
-        if (requiredRoles.length > 0 && !requiredRoles.includes(userRole)) {
-          // toast({
-          //   title: 'Insufficient permissions',
-          //   description: 'You do not have access to this page',
-          //   variant: 'destructive',
-          // });
-          localStorage.removeItem('accessToken');
-          setIsAuthorized(false);
-          router.push('/');
-          return;
-        }
-
-        // Validate token with backend
-        validateTokenWithBackend(token);
-
-        setIsAuthorized(true);
-      } catch (error: any) {
-        console.error('Auth Error:', error);
-        setIsAuthorized(false);
-        localStorage.removeItem('accessToken');
-
-        // toast({
-        //   title: 'Authentication Error',
-        //   description: error.message || 'Please sign in to continue',
-        //   variant: 'destructive',
-        // });
-
-        router.push('/sign-in');
-      }
-    };
-
-    validateAuth();
-
-    // Set up token refresh interval
-    const refreshInterval = setInterval(
-      () => {
-        const token = localStorage.getItem('accessToken');
-        if (token) {
-          refreshToken(token);
-        }
-      },
-      14 * 60 * 1000
-    ); // Refresh token every 14 minutes
-
+    // Set up token refresh interval (every 14 minutes)
+    const refreshInterval = setInterval(refreshToken, 14 * 60 * 1000);
     return () => clearInterval(refreshInterval);
-  }, [pathname, router, requiredRoles, refreshToken, validateTokenWithBackend]);
+  }, [validateAccess, refreshToken]);
 
+  // Show nothing while checking authentication
   if (!isAuthorized) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return <>{children}</>;
