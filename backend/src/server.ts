@@ -77,12 +77,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-// app.use(requestLogger);
-logger.info(`Server started successfully`, {
-  port: 8000,
-  environment: process.env.NODE_ENV || 'development',
-  nodeVersion: process.version,
-});
 
 // Add a middleware to log requests with detailed debugging
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -206,7 +200,6 @@ process.on('unhandledRejection', (reason, promise) => {
 
 const PORT = 8000;
 app.listen(PORT, () => {
-   // Server start debug point
   logger.info(`Server started successfully`, {
     port: PORT,
     environment: process.env.NODE_ENV || 'development',

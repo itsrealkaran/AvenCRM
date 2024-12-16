@@ -1,7 +1,6 @@
 import winston from 'winston';
 import { Request } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import os from 'os';
 
 // Define log levels with more granularity
 const levels = {
@@ -26,13 +25,6 @@ const colors = {
 // Tell winston that we want to link specific colors with specific log levels
 winston.addColors(colors);
 
-// Define which logs to show based on the environment
-const level = () => {
-  const env = process.env.NODE_ENV || 'development';
-  const isDevelopment = env === 'development';
-  return isDevelopment ? 'trace' : 'http';
-};
-
 // Create custom format for console output
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
@@ -50,18 +42,13 @@ const consoleFormat = winston.format.combine(
 // Create custom format for file output
 const fileFormat = winston.format.combine(
   winston.format.timestamp(),
-  winston.format.metadata({ fillWith: ['timestamp', 'requestId', 'duration', 'hostname', 'pid'] }),
+  winston.format.metadata({ fillWith: ['timestamp', 'requestId'] }),
   winston.format.json()
 );
 
 // Create the logger instance
 const logger = winston.createLogger({
-  level: level(),
   levels,
-  defaultMeta: {
-    hostname: os.hostname(),
-    pid: process.pid
-  },
   transports: [
     // Remove file transports to prevent logging to files
     // Add console transport for all environments
@@ -89,16 +76,12 @@ export const getRequestLogger = (req: Request) => {
   const timer = startTimer();
   
   const logWithContext = (level: string, message: string, meta = {}) => {
-    const duration = timer();
     logger.log({
       level,
       message,
       requestId,
-      duration,
       url: req.url,
       method: req.method,
-      userAgent: req.get('user-agent'),
-      ip: req.ip,
       ...meta
     });
   };
@@ -112,10 +95,5 @@ export const getRequestLogger = (req: Request) => {
     trace: (message: string, meta = {}) => logWithContext('trace', message, meta)
   };
 };
-
-// Create directory for logs
-import { mkdir } from 'fs/promises';
-mkdir('logs').catch(() => {}); // Ignore if directory exists
-
 export default logger;
 

@@ -143,8 +143,23 @@ class EmailService {
         }
       });
 
+      if (!campaign) {
+        throw new Error('Failed to create campaign');
+      }
+
+      const emailAccounts = await prisma.emailAccount.findMany({
+        where: {
+          userId,
+          isActive: true
+        }
+      });
+
+      if (emailAccounts.length === 0) {
+        throw new Error('No active email accounts found');
+      }
+
       await this.scheduleEmail({
-        emailAccountId: userId,
+        emailAccountId: emailAccounts[0].id,
         recipients,
         subject,
         content,
@@ -270,7 +285,7 @@ class EmailService {
     }
   }
 
-  private processTemplate(template: string, variables: Record<string, any>): string {
+  processTemplate(template: string, variables: Record<string, any>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, variable) => 
       variables[variable]?.toString() || match
     );
