@@ -205,8 +205,8 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
       // Set secure cookie
       res.cookie('Authorization', accessToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 60 * 60 * 1000 // 60 minutes
       });
 

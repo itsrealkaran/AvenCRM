@@ -52,7 +52,9 @@ export default function EmailAnalyticsSection() {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+            credentials: 'include',
           },
+          credentials: 'include',
         }
       );
       if (!campaignResponse.ok) throw new Error('Failed to fetch campaign data');

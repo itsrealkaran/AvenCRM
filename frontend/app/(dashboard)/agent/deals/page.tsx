@@ -25,6 +25,7 @@ async function getDeals(): Promise<Deal[]> {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    credentials: 'include',
   });
   if (!response.ok) {
     throw new Error('Failed to fetch deals');

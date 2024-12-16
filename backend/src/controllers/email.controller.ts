@@ -174,6 +174,7 @@ export class EmailController {
       const template = await prisma.emailTemplate.create({
         data: {
           ...result.data,
+          description: result.data.description || '',
           createdById: userId,
           companyId
         }
@@ -199,8 +200,7 @@ export class EmailController {
 
       const where = {
         OR: [
-          { companyId },
-          { isGlobal: true }
+          { companyId }
         ],
         ...(category ? { category: category as string } : {}),
         ...(search ? {

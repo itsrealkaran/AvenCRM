@@ -82,8 +82,7 @@ export default function SignIn() {
         localStorage.setItem('accessToken', data.access_token);
 
         // Set the token as an HTTP-only cookie
-        document.cookie = `accessToken=${data.access_token}; path=/; secure; samesite=strict`;
-
+        document.cookie = `Authorization=${data.access_token}; path=/; secure; HttpOnly`;
         toast.success('Sign-in successful!');
 
         // Get the callback URL or use the default route based on role

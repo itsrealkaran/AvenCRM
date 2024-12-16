@@ -569,6 +569,7 @@ model EmailTemplate {
   company     Company  @relation(fields: [companyId], references: [id])
   companyId   String
   createdBy   Agent     @relation(fields: [createdById], references: [id])
+  description String
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

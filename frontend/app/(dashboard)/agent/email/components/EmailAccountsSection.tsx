@@ -49,6 +49,7 @@ export default function EmailAccountsSection() {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch accounts');
       const data = await response.json();
@@ -80,6 +81,7 @@ export default function EmailAccountsSection() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: 'include',
         }
       );
       if (!response.ok) throw new Error('Failed to get redirect URL');
@@ -107,6 +109,7 @@ export default function EmailAccountsSection() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: 'include',
         }
       );
       if (!response.ok) throw new Error('Failed to disconnect account');

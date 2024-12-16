@@ -41,7 +41,9 @@ export function EmailTemplates() {
 
   const fetchTemplates = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
+        credentials: 'include',
+      });
       const data = await response.json();
       setTemplates(data);
     } catch (error) {
@@ -60,6 +62,7 @@ export function EmailTemplates() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to create template');

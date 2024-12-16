@@ -75,10 +75,13 @@ export default function EmailCampaignSection() {
 
   const fetchCampaigns = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch campaigns');
       const data = await response.json();
-      setCampaigns(data);
+      console.log(data);
+      setCampaigns(data.campaigns);
     } catch (error) {
       toast({
         title: 'Error',
@@ -92,10 +95,13 @@ export default function EmailCampaignSection() {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch templates');
       const data = await response.json();
-      setTemplates(data);
+      console.log(data);
+      setTemplates(data.templates);
     } catch (error) {
       toast({
         title: 'Error',
@@ -128,6 +134,7 @@ export default function EmailCampaignSection() {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           scheduledAt: formData.scheduledAt.toISOString(),

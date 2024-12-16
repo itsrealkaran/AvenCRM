@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
 
 import {
@@ -61,16 +61,15 @@ export default function EmailTemplatesSection() {
     variables: '',
   });
 
-  useEffect(() => {
-    fetchTemplates();
-  }, []);
-
-  const fetchTemplates = async () => {
+  const fetchTemplates = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
+        credentials: 'include',
+      });
       if (!response.ok) throw new Error('Failed to fetch templates');
       const data = await response.json();
-      setTemplates(data);
+      console.log(data);
+      setTemplates(data.templates);
     } catch (error) {
       toast({
         title: 'Error',
@@ -80,7 +79,11 @@ export default function EmailTemplatesSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,6 +96,7 @@ export default function EmailTemplatesSection() {
       const response = await fetch(endpoint, {
         method,
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           ...formData,
           variables: formData.variables
@@ -127,6 +131,7 @@ export default function EmailTemplatesSection() {
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates/${templateId}`,
         {
           method: 'DELETE',
+          credentials: 'include',
         }
       );
       if (!response.ok) throw new Error('Failed to delete template');
@@ -261,54 +266,56 @@ export default function EmailTemplatesSection() {
       </Dialog>
 
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-        {templates.map((template) => (
-          <Card key={template.id}>
-            <CardHeader>
-              <CardTitle>{template.name}</CardTitle>
-              <CardDescription>{template.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className='space-y-2'>
-                <div>
-                  <span className='font-medium'>Subject:</span> {template.subject}
-                </div>
-                {template.variables && template.variables.length > 0 && (
+        {templates &&
+          templates.map((template) => (
+            <Card key={template.id}>
+              <CardHeader>
+                <CardTitle>{template.name}</CardTitle>
+                <CardDescription>{template.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className='space-y-2'>
                   <div>
-                    <span className='font-medium'>Variables:</span> {template.variables.join(', ')}
+                    <span className='font-medium'>Subject:</span> {template.subject}
                   </div>
-                )}
-              </div>
-            </CardContent>
-            <CardFooter className='justify-between'>
-              <Button variant='outline' size='sm' onClick={() => handleEdit(template)}>
-                <Edit className='h-4 w-4 mr-2' />
-                Edit
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant='destructive' size='sm'>
-                    <Trash2 className='h-4 w-4 mr-2' />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Template</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete this template? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteTemplate(template.id)}>
+                  {template.variables && template.variables.length > 0 && (
+                    <div>
+                      <span className='font-medium'>Variables:</span>{' '}
+                      {template.variables.join(', ')}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className='justify-between'>
+                <Button variant='outline' size='sm' onClick={() => handleEdit(template)}>
+                  <Edit className='h-4 w-4 mr-2' />
+                  Edit
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant='destructive' size='sm'>
+                      <Trash2 className='h-4 w-4 mr-2' />
                       Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardFooter>
-          </Card>
-        ))}
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Template</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete this template? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => deleteTemplate(template.id)}>
+                        Delete
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </CardFooter>
+            </Card>
+          ))}
       </div>
 
       {templates.length === 0 && (

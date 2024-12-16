@@ -47,6 +47,7 @@ export function ComposeEmail({ open, onClose }: ComposeEmailProps) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({
           ...emailData,
           recipients: emailData.recipients.split(',').map((email) => email.trim()),

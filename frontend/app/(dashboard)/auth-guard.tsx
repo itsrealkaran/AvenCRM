@@ -85,7 +85,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     } catch (error) {
       console.error('Auth Error:', error);
       localStorage.removeItem('accessToken');
-      setIsAuthorized(false)
+      setIsAuthorized(false);
       router.push('/sign-in');
     }
   }, [pathname, router, refreshToken]);
