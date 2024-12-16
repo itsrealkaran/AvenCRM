@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 import { columns } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
@@ -134,40 +135,44 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className='container mx-auto py-10'>
-      <div className='flex justify-between items-center p-5'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Transactions Management</h1>
-          <p className='text-muted-foreground'>Manage and track your transactions in one place</p>
+    <section className='flex-1 space-y-4 p-4 md:p-6'>
+      <Card className='container mx-auto py-10'>
+        <div className='flex justify-between items-center p-5'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight text-primary'>
+              Transactions Management
+            </h1>
+            <p className='text-muted-foreground'>Manage and track your transactions in one place</p>
+          </div>
+          <div className='flex gap-2'>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className='mr-2 h-4 w-4' /> Add New Transaction
+            </Button>
+          </div>
         </div>
-        <div className='flex gap-2'>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className='mr-2 h-4 w-4' /> Add New Transaction
-          </Button>
-        </div>
-      </div>
 
-      <div className='space-4 p-6'>
-        <DataTable
-          columns={columns}
-          data={transactions}
+        <div className='space-4 p-6'>
+          <DataTable
+            columns={columns}
+            data={transactions}
+            onEdit={handleEdit}
+            onDelete={async (row) => {
+              const transactionIds = row.map((row) => row.original.id);
+              await handleBulkDelete(transactionIds);
+            }}
+            onSelectionChange={handleSelectionChange}
+          />
+        </div>
+
+        <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+        <EditTransactionDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          transaction={selectedTransaction}
           onEdit={handleEdit}
-          onDelete={async (row) => {
-            const transactionIds = row.map((row) => row.original.id);
-            await handleBulkDelete(transactionIds);
-          }}
-          onSelectionChange={handleSelectionChange}
+          onDelete={handleDelete}
         />
-      </div>
-
-      <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      <EditTransactionDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        transaction={selectedTransaction}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-    </div>
+      </Card>
+    </section>
   );
 }

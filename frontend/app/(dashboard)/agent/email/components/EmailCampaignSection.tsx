@@ -2,11 +2,19 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
 import {
   Dialog,
   DialogContent,
@@ -57,11 +65,44 @@ interface EmailCampaign {
   createdAt: string;
 }
 
+interface Recipient {
+  type: 'EXTERNAL' | 'AGENT' | 'ADMIN' | 'CLIENT';
+  email: string;
+  name?: string;
+  variables?: Record<string, string>;
+  recipientId?: string;
+}
+
+interface Agent {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Admin {
+  id: string;
+  name: string;
+  email: string;
+}
+
+interface Client {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export default function EmailCampaignSection() {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [admins, setAdmins] = useState<Admin[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedRecipientType, setSelectedRecipientType] = useState<
+    'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL'
+  >('AGENT');
+  const [customRecipient, setCustomRecipient] = useState({ email: '', name: '' });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -70,7 +111,7 @@ export default function EmailCampaignSection() {
     subject: '',
     content: '',
     scheduledAt: new Date(),
-    recipients: [] as { email: string; name?: string; type: string }[],
+    recipients: [] as Recipient[],
   });
 
   const fetchCampaigns = useCallback(async () => {
@@ -111,10 +152,64 @@ export default function EmailCampaignSection() {
     }
   }, [toast]);
 
+  const fetchAgents = useCallback(async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agents`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch agents');
+      const data = await response.json();
+      setAgents(data.agents);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch agents',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+  const fetchAdmins = useCallback(async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admins`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch admins');
+      const data = await response.json();
+      setAdmins(data.admins);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch admins',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
+  const fetchClients = useCallback(async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch clients');
+      const data = await response.json();
+      setClients(data.clients);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch clients',
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+
   useEffect(() => {
     fetchCampaigns();
     fetchTemplates();
-  }, [fetchCampaigns, fetchTemplates]);
+    fetchAgents();
+    fetchAdmins();
+    fetchClients();
+  }, [fetchCampaigns, fetchTemplates, fetchAgents, fetchAdmins, fetchClients]);
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
@@ -207,6 +302,38 @@ export default function EmailCampaignSection() {
         return 'secondary';
       default:
         return 'outline';
+    }
+  };
+
+  const handleRecipientTypeChange = (type: 'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL') => {
+    setSelectedRecipientType(type);
+    setCustomRecipient({ email: '', name: '' });
+  };
+
+  const addRecipient = (recipient: Recipient) => {
+    if (!formData.recipients.some((r) => r.email === recipient.email)) {
+      setFormData((prev) => ({
+        ...prev,
+        recipients: [...prev.recipients, recipient],
+      }));
+    }
+  };
+
+  const removeRecipient = (email: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      recipients: prev.recipients.filter((r) => r.email !== email),
+    }));
+  };
+
+  const addCustomRecipient = () => {
+    if (customRecipient.email && customRecipient.name) {
+      addRecipient({
+        type: 'EXTERNAL',
+        email: customRecipient.email,
+        name: customRecipient.name,
+      });
+      setCustomRecipient({ email: '', name: '' });
     }
   };
 
@@ -319,6 +446,145 @@ export default function EmailCampaignSection() {
                     />
                   </PopoverContent>
                 </Popover>
+              </div>
+
+              <div className='grid w-full gap-2'>
+                <Label>Recipients</Label>
+                <div className='space-y-4'>
+                  <Select value={selectedRecipientType} onValueChange={handleRecipientTypeChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select recipient type' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='AGENT'>Agents</SelectItem>
+                      <SelectItem value='ADMIN'>Admins</SelectItem>
+                      <SelectItem value='CLIENT'>Clients</SelectItem>
+                      <SelectItem value='EXTERNAL'>External Recipients</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {selectedRecipientType === 'EXTERNAL' ? (
+                    <div className='grid grid-cols-2 gap-2'>
+                      <div>
+                        <Label>Name</Label>
+                        <Input
+                          value={customRecipient.name}
+                          onChange={(e) =>
+                            setCustomRecipient((prev) => ({ ...prev, name: e.target.value }))
+                          }
+                          placeholder='John Doe'
+                        />
+                      </div>
+                      <div>
+                        <Label>Email</Label>
+                        <Input
+                          value={customRecipient.email}
+                          onChange={(e) =>
+                            setCustomRecipient((prev) => ({ ...prev, email: e.target.value }))
+                          }
+                          placeholder='john@example.com'
+                          type='email'
+                        />
+                      </div>
+                      <Button
+                        type='button'
+                        onClick={addCustomRecipient}
+                        className='col-span-2'
+                        variant='secondary'
+                      >
+                        Add Recipient
+                      </Button>
+                    </div>
+                  ) : (
+                    <Command className='border rounded-lg'>
+                      <CommandInput
+                        placeholder={`Search ${selectedRecipientType.toLowerCase()}s...`}
+                      />
+                      <CommandEmpty>No {selectedRecipientType.toLowerCase()}s found.</CommandEmpty>
+                      <CommandGroup>
+                        {selectedRecipientType === 'AGENT' &&
+                          agents.map((agent) => (
+                            <CommandItem
+                              key={agent.id}
+                              onSelect={() =>
+                                addRecipient({
+                                  type: 'AGENT',
+                                  email: agent.email,
+                                  name: agent.name,
+                                  recipientId: agent.id,
+                                })
+                              }
+                            >
+                              <Users className='mr-2 h-4 w-4' />
+                              {agent.name}
+                            </CommandItem>
+                          ))}
+                        {selectedRecipientType === 'ADMIN' &&
+                          admins.map((admin) => (
+                            <CommandItem
+                              key={admin.id}
+                              onSelect={() =>
+                                addRecipient({
+                                  type: 'ADMIN',
+                                  email: admin.email,
+                                  name: admin.name,
+                                  recipientId: admin.id,
+                                })
+                              }
+                            >
+                              <Users className='mr-2 h-4 w-4' />
+                              {admin.name}
+                            </CommandItem>
+                          ))}
+                        {selectedRecipientType === 'CLIENT' &&
+                          clients.map((client) => (
+                            <CommandItem
+                              key={client.id}
+                              onSelect={() =>
+                                addRecipient({
+                                  type: 'CLIENT',
+                                  email: client.email,
+                                  name: client.name,
+                                  recipientId: client.id,
+                                })
+                              }
+                            >
+                              <Users className='mr-2 h-4 w-4' />
+                              {client.name}
+                            </CommandItem>
+                          ))}
+                      </CommandGroup>
+                    </Command>
+                  )}
+
+                  {formData.recipients.length > 0 && (
+                    <div className='border rounded-lg p-4 space-y-2'>
+                      <Label>Selected Recipients</Label>
+                      <div className='flex flex-wrap gap-2'>
+                        {formData.recipients.map((recipient) => (
+                          <Badge
+                            key={recipient.email}
+                            variant='secondary'
+                            className='flex items-center gap-2'
+                          >
+                            <span>
+                              {recipient.name} ({recipient.email})
+                            </span>
+                            <Button
+                              type='button'
+                              variant='ghost'
+                              size='sm'
+                              className='h-4 w-4 p-0'
+                              onClick={() => removeRecipient(recipient.email)}
+                            >
+                              <X className='h-3 w-3' />
+                            </Button>
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 

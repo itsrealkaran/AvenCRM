@@ -25,7 +25,7 @@ const menuItems = [
   { heading: 'Dashboard', icons: LayoutDashboard, reff: '/agent' },
   { heading: 'Clients', icons: Users, reff: '/agent/clients' },
   { heading: 'Property', icons: Building2, reff: '/agent/property' },
-  { heading: 'Page Builder', icons: FileText, reff: '/agent/subscription' },
+  { heading: 'Page Builder', icons: FileText, reff: '/agent/page-builder' },
   { heading: 'Leads', icons: Store, reff: '/agent/leads' },
   { heading: 'Deals', icons: HandshakeIcon, reff: '/agent/deals' },
   { heading: 'Transactions', icons: Wallet, reff: '/agent/transactions' },

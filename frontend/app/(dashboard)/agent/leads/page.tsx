@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -130,40 +131,42 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className='container mx-auto py-10'>
-      <div className='flex justify-between items-center p-5'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Leads Management</h1>
-          <p className='text-muted-foreground'>Manage and track your leads in one place</p>
+    <section className='flex-1 space-y-4 p-4 md:p-6'>
+      <Card className='container mx-auto py-10'>
+        <div className='flex justify-between items-center p-5'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight text-primary'>Leads Management</h1>
+            <p className='text-muted-foreground'>Manage and track your leads in one place</p>
+          </div>
+          <div className='flex gap-2'>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className='mr-2 h-4 w-4' /> Add New Lead
+            </Button>
+          </div>
         </div>
-        <div className='flex gap-2'>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className='mr-2 h-4 w-4' /> Add New Lead
-          </Button>
-        </div>
-      </div>
 
-      <div className='space-4 p-6'>
-        <DataTable
-          columns={columns}
-          data={leads}
+        <div className='space-4 p-6'>
+          <DataTable
+            columns={columns}
+            data={leads}
+            onEdit={handleEdit}
+            onDelete={async (row) => {
+              const leadIds = row.map((row) => row.original.id);
+              await handleBulkDelete(leadIds);
+            }}
+            onSelectionChange={handleSelectionChange}
+          />
+        </div>
+
+        <CreateLeadDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+        <EditLeadDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          lead={selectedLead}
           onEdit={handleEdit}
-          onDelete={async (row) => {
-            const leadIds = row.map((row) => row.original.id);
-            await handleBulkDelete(leadIds);
-          }}
-          onSelectionChange={handleSelectionChange}
+          onDelete={handleDelete}
         />
-      </div>
-
-      <CreateLeadDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      <EditLeadDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        lead={selectedLead}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-    </div>
+      </Card>
+    </section>
   );
 }

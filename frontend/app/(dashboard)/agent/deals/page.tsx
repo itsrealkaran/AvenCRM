@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
@@ -131,40 +132,42 @@ export default function DealsPage() {
   }
 
   return (
-    <div className='container mx-auto py-10'>
-      <div className='flex justify-between items-center p-5'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Deals Management</h1>
-          <p className='text-muted-foreground'>Manage and track your deals in one place</p>
+    <section className='flex-1 space-y-4 p-4 md:p-8 pt-6'>
+      <Card className='container mx-auto py-10'>
+        <div className='flex justify-between items-center p-5'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight text-primary'>Deals Management</h1>
+            <p className='text-muted-foreground'>Manage and track your deals in one place</p>
+          </div>
+          <div className='flex gap-2'>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className='mr-2 h-4 w-4' /> Add New Deal
+            </Button>
+          </div>
         </div>
-        <div className='flex gap-2'>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className='mr-2 h-4 w-4' /> Add New Deal
-          </Button>
-        </div>
-      </div>
 
-      <div className='space-4 p-6'>
-        <DataTable
-          columns={columns}
-          data={deals}
+        <div className='space-4 p-6'>
+          <DataTable
+            columns={columns}
+            data={deals}
+            onEdit={handleEdit}
+            onDelete={async (row) => {
+              const dealIds = row.map((row) => row.original.id);
+              await handleBulkDelete(dealIds);
+            }}
+            onSelectionChange={handleSelectionChange}
+          />
+        </div>
+
+        <CreateDealDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+        <EditDealDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          deal={selectedDeal}
           onEdit={handleEdit}
-          onDelete={async (row) => {
-            const dealIds = row.map((row) => row.original.id);
-            await handleBulkDelete(dealIds);
-          }}
-          onSelectionChange={handleSelectionChange}
+          onDelete={handleDelete}
         />
-      </div>
-
-      <CreateDealDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      <EditDealDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        deal={selectedDeal}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-    </div>
+      </Card>
+    </section>
   );
 }
