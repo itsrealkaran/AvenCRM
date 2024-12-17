@@ -9,7 +9,8 @@ import {
   EmailProvider as EmailProviderEnum, 
   EmailStatus,
   EmailAccount,
-  Prisma
+  Prisma,
+  EmailAccountStatus
 } from '@prisma/client';
 import { emailQueue } from './email.queue.js';
 
@@ -84,6 +85,8 @@ class EmailService {
           expiresAt: tokens.expiresAt,
           email,
           isActive: true,
+          status: EmailAccountStatus.ACTIVE,
+          lastError: ''
         }
       });
     } catch (error) {
@@ -94,16 +97,30 @@ class EmailService {
 
   async scheduleEmail(data: EmailJobData): Promise<string> {
     try {
-      const jobId = await emailQueue.add('send-email', data, {
-        delay: data.scheduledFor ? new Date(data.scheduledFor).getTime() - Date.now() : 0,
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 1000
-        },
-        removeOnComplete: true,
-        removeOnFail: false
-      });
+      let jobId: any;
+      if(data.recipients.length > 1) {
+        jobId = await emailQueue.add('send-bulk-email', data, {
+          delay: data.scheduledFor ? new Date(data.scheduledFor).getTime() - Date.now() : 0,
+          attempts: 1,
+          backoff: {
+            type: 'exponential',
+            delay: 1000
+          },
+          removeOnComplete: true,
+          removeOnFail: false
+        });
+      } else {
+        jobId = await emailQueue.add('send-email', data, {
+          delay: data.scheduledFor ? new Date(data.scheduledFor).getTime() - Date.now() : 0,
+          attempts: 1,
+          backoff: {
+            type: 'exponential',
+            delay: 1000
+          },
+          removeOnComplete: true,
+          removeOnFail: false
+        });
+      }
 
       return jobId.id ?? '';
     } catch (error) {

@@ -80,9 +80,6 @@ export const getRequestLogger = (req: Request) => {
       level,
       message,
       requestId,
-      url: req.url,
-      method: req.method,
-      ...meta
     });
   };
 

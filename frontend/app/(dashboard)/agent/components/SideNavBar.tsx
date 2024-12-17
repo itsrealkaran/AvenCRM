@@ -23,7 +23,6 @@ import Menu from './Menu';
 
 const menuItems = [
   { heading: 'Dashboard', icons: LayoutDashboard, reff: '/agent' },
-  { heading: 'Clients', icons: Users, reff: '/agent/clients' },
   { heading: 'Property', icons: Building2, reff: '/agent/property' },
   { heading: 'Page Builder', icons: FileText, reff: '/agent/page-builder' },
   { heading: 'Leads', icons: Store, reff: '/agent/leads' },

@@ -360,7 +360,7 @@ export default function EmailCampaignSection() {
             Create Campaign
           </Button>
         </DialogTrigger>
-        <DialogContent className='sm:max-w-[725px]'>
+        <DialogContent className='overflow-y-auto max-h-[90vh] md:max-h-[90vh] p-4 lg:min-w-[725px]'>
           <DialogHeader>
             <DialogTitle>Create Email Campaign</DialogTitle>
             <DialogDescription>
@@ -490,7 +490,7 @@ export default function EmailCampaignSection() {
                         type='button'
                         onClick={addCustomRecipient}
                         className='col-span-2'
-                        variant='secondary'
+                        variant='default'
                       >
                         Add Recipient
                       </Button>
@@ -562,11 +562,7 @@ export default function EmailCampaignSection() {
                       <Label>Selected Recipients</Label>
                       <div className='flex flex-wrap gap-2'>
                         {formData.recipients.map((recipient) => (
-                          <Badge
-                            key={recipient.email}
-                            variant='secondary'
-                            className='flex items-center gap-2'
-                          >
+                          <Badge key={recipient.email} className='flex items-center gap-2'>
                             <span>
                               {recipient.name} ({recipient.email})
                             </span>

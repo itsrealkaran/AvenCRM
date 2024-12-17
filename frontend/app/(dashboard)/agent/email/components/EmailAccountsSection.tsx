@@ -30,8 +30,8 @@ interface EmailAccount {
   id: string;
   provider: 'GMAIL' | 'OUTLOOK';
   email: string;
-  connected: boolean;
-  lastSynced?: string;
+  isActive: boolean;
+  updatedAt: string;
 }
 
 export default function EmailAccountsSection() {
@@ -116,7 +116,7 @@ export default function EmailAccountsSection() {
       await fetchEmailAccounts();
       toast({
         title: 'Success',
-        description: 'Email account disconnected successfully',
+        description: 'Email account disisActive successfully',
       });
     } catch (error) {
       toast({
@@ -142,7 +142,7 @@ export default function EmailAccountsSection() {
           <Mail className='mr-2 h-4 w-4' />
           Connect Gmail
         </Button>
-        <Button onClick={() => connectAccount('OUTLOOK')}>
+        <Button onClick={() => connectAccount('OUTLOOK')} variant={'outline'}>
           <Mail className='mr-2 h-4 w-4' />
           Connect Outlook
         </Button>
@@ -165,12 +165,12 @@ export default function EmailAccountsSection() {
                 <TableCell>{account.email}</TableCell>
                 <TableCell>{account.provider}</TableCell>
                 <TableCell>
-                  <Badge variant={account.connected ? 'default' : 'destructive'}>
-                    {account.connected ? 'Connected' : 'Disconnected'}
+                  <Badge variant={account.isActive ? 'default' : 'destructive'}>
+                    {account.isActive ? 'Connected' : 'Disconnected'}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {account.lastSynced ? new Date(account.lastSynced).toLocaleString() : 'Never'}
+                  {account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'Never'}
                 </TableCell>
                 <TableCell>
                   <AlertDialog>
@@ -203,7 +203,7 @@ export default function EmailAccountsSection() {
       ) : (
         <div className='text-center p-8 border rounded-lg bg-muted'>
           <Mail className='mx-auto h-12 w-12 opacity-50 mb-4' />
-          <h3 className='text-lg font-medium'>No email accounts connected</h3>
+          <h3 className='text-lg font-medium'>No email accounts isActive</h3>
           <p className='text-sm text-muted-foreground mt-2'>
             Connect your email account to start sending emails
           </p>

@@ -88,6 +88,12 @@ enum EmailProvider {
   OUTLOOK
 }
 
+enum EmailAccountStatus {
+  ACTIVE
+  NEEDS_REAUTH
+  DISABLED
+}
+
 // Superuser/Platform Company Model
 model SuperAdmin {
   id        String   @id @default(cuid())
@@ -518,6 +524,7 @@ model EmailAccount {
   accessToken   String
   refreshToken  String
   expiresAt     DateTime
+  idToken       String?
   isActive      Boolean       @default(true)
 
   provider      EmailProvider
@@ -525,6 +532,9 @@ model EmailAccount {
   // Relations
   user          Agent         @relation(fields: [userId], references: [id])
   userId        String
+
+  status        EmailAccountStatus
+  lastError     String
 
   sentEmails    Email[]
 

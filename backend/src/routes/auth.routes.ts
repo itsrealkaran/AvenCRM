@@ -139,7 +139,8 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
               id: true,
               email: true,
               password: true,
-              name: true
+              name: true,
+              company: true
             }
           });
           break;

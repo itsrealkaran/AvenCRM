@@ -40,7 +40,10 @@ export default function EmailAnalyticsSection() {
     try {
       // Fetch overview data
       const overviewResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/analytics/overview`
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/analytics/overview`,
+        {
+          credentials: 'include',
+        }
       );
       if (!overviewResponse.ok) throw new Error('Failed to fetch overview');
       const overviewData = await overviewResponse.json();
@@ -93,7 +96,7 @@ export default function EmailAnalyticsSection() {
             <Mail className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{overview?.totalEmails.toLocaleString()}</div>
+            <div className='text-2xl font-bold'>{overview?.totalEmails}</div>
           </CardContent>
         </Card>
 
@@ -125,7 +128,7 @@ export default function EmailAnalyticsSection() {
             <User className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>{overview?.totalOpens.toLocaleString()}</div>
+            <div className='text-2xl font-bold'>{overview?.totalOpens}</div>
           </CardContent>
         </Card>
       </div>

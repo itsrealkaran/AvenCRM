@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { emailService } from '../services/email.service.js';
 import logger from '../utils/logger.js';
-import { EmailCampaignStatus, EmailProvider, EmailStatus, UserRole, Prisma } from '@prisma/client';
+import { EmailCampaignStatus, EmailProvider, EmailStatus, UserRole, Prisma, EmailAccountStatus } from '@prisma/client';
 import { z } from 'zod';
 
 // Define custom types for request with user
@@ -142,9 +142,8 @@ export class EmailController {
         return res.status(404).json({ error: 'Email account not found' });
       }
 
-      await prisma.emailAccount.update({
-        where: { id: accountId },
-        data: { isActive: false }
+      await prisma.emailAccount.delete({
+        where: { id: accountId }
       });
 
       res.json({ message: 'Email account disconnected successfully' });

@@ -80,8 +80,15 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
       max: 100,
       duration: 1000,
     },
-    lockDuration: 30000, // 30 seconds lock
-    lockRenewTime: 15000, // Renew lock after 15 seconds
+    lockDuration: 120000, // Increased to 2 minutes
+    lockRenewTime: 30000, // Renew lock more frequently
+    settings: {
+     backoffStrategy: (attempt) => {
+        return attempt * 1000;
+      },
+    },
+    maxStalledCount: 5,
+    stalledInterval: 30000,
   }
 );
 
@@ -190,7 +197,7 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
   const { emailAccountId, recipients, subject, content, scheduledFor, campaignId } = job.data;
   
   try {
-    await job.extendLock(job.id ?? '', 30000);
+    await job.updateProgress(1);
     
     const transporter = await emailService.createTransporter(emailAccountId);
     const totalRecipients = recipients.length;
@@ -199,41 +206,59 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
 
     await job.updateProgress(5);
 
-    const BATCH_SIZE = 10;
-    for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-      await job.extendLock(job.id ?? '', 30000);
-      
-      const batch = recipients.slice(i, i + BATCH_SIZE);
-      await Promise.all(batch.map(async (recipient) => {
-        try {
-          const processedContent = emailService.processTemplate(content, recipient.variables || {});
-          
-          const sendMailPromise = transporter.sendMail({
-            from: (await prisma.emailAccount.findUnique({ where: { id: emailAccountId } }))?.email || '',
-            to: recipient.email,
-            subject: subject,
-            html: processedContent
-          });
+    // Start lock renewal interval
+    const lockInterval = setInterval(async () => {
+      try {
+        await job.extendLock(job.id ?? '', 120000);
+      } catch (error) {
+        logger.error('Failed to extend lock:', error);
+      }
+    }, 30000);
 
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error('Email send timeout')), 25000);
-          });
+    try {
+      const BATCH_SIZE = 5; // Reduced batch size for better control
+      for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+        const batch = recipients.slice(i, i + BATCH_SIZE);
+        
+        await Promise.all(batch.map(async (recipient) => {
+          try {
+            const processedContent = emailService.processTemplate(content, recipient.variables || {});
+            
+            const emailAccount = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } });
+            if (!emailAccount) {
+              throw new Error('No email account associated with this email');
+            }
 
-          await Promise.race([sendMailPromise, timeoutPromise]);
-          successCount++;
-        } catch (error) {
-          failedRecipients.push(recipient.email);
-          logger.error(`Failed to send email to ${recipient.email}:`, error);
-        }
-      }));
+            const sendMailPromise = transporter.sendMail({
+              from: emailAccount?.email || '',
+              to: recipient.email,
+              subject: subject,
+              html: processedContent,
+              sender: emailAccount.email || ''
+            });
 
-      const progress = Math.floor((i + batch.length) / totalRecipients * 100);
-      await job.updateProgress(progress);
-      
-      await new Promise(resolve => setTimeout(resolve, 1000));
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Email send timeout')), 25000);
+            });
+
+            await Promise.race([sendMailPromise, timeoutPromise]);
+            successCount++;
+          } catch (error) {
+            failedRecipients.push(recipient.email);
+            logger.error(`Failed to send email to ${recipient.email}:`, error);
+          }
+        }));
+
+        const progress = Math.floor((i + batch.length) / totalRecipients * 100);
+        await job.updateProgress(progress);
+        
+        // Add a small delay between batches to prevent overwhelming
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    } finally {
+      // Clean up the lock renewal interval
+      clearInterval(lockInterval);
     }
-
-    await job.extendLock(job.id ?? '', 30000);
 
     if (campaignId) {
       await prisma.emailCampaign.update({
@@ -264,16 +289,11 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
   } catch (error) {
     logger.error('Error processing bulk email job:', error);
     
-    try {
-      await job.extendLock(job.id ?? '', 30000);
-      if (campaignId) {
-        await prisma.emailCampaign.update({
-          where: { id: campaignId },
-          data: { status: EmailCampaignStatus.FAILED }
-        });
-      }
-    } catch (lockError) {
-      logger.error('Failed to update campaign status due to lock error:', lockError);
+    if (campaignId) {
+      await prisma.emailCampaign.update({
+        where: { id: campaignId },
+        data: { status: EmailCampaignStatus.FAILED }
+      });
     }
 
     throw error;

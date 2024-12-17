@@ -22,11 +22,10 @@ function EmailPage() {
         <h1 className='text-2xl font-bold mb-6'>Email Management</h1>
 
         <Tabs defaultValue='accounts' className='w-full' onValueChange={setActiveTab}>
-          <TabsList className='grid w-full grid-cols-4'>
+          <TabsList className='grid w-full grid-cols-3'>
             <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
             <TabsTrigger value='templates'>Templates</TabsTrigger>
             <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
-            <TabsTrigger value='analytics'>Analytics</TabsTrigger>
           </TabsList>
 
           <TabsContent value='accounts'>
@@ -62,16 +61,6 @@ function EmailPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value='analytics'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Email Analytics</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <EmailAnalyticsSection />
-              </CardContent>
-            </Card>
-          </TabsContent>
         </Tabs>
       </Card>
     </section>
