@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 
+import 'react-datetime/css/react-datetime.css';
 import './globals.css';
 
 import { Toaster as Sonner } from '@/components/ui/sonner';

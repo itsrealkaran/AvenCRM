@@ -419,33 +419,106 @@ export default function EmailCampaignSection() {
               </div>
 
               <div className='grid w-full gap-2'>
-                <Label>Schedule Date</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant='outline'
-                      className={cn(
-                        'w-full justify-start text-left font-normal',
-                        !formData.scheduledAt && 'text-muted-foreground'
-                      )}
-                    >
-                      <CalendarIcon className='mr-2 h-4 w-4' />
-                      {formData.scheduledAt ? (
-                        format(formData.scheduledAt, 'PPP')
-                      ) : (
-                        <span>Pick a date</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className='w-auto p-0'>
-                    <Calendar
-                      mode='single'
-                      selected={formData.scheduledAt}
-                      onSelect={(date) => date && setFormData({ ...formData, scheduledAt: date })}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <Label>Schedule Date and Time</Label>
+                <div className='flex gap-2'>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant='outline'
+                        className={cn(
+                          'w-[240px] justify-start text-left font-normal',
+                          !formData.scheduledAt && 'text-muted-foreground'
+                        )}
+                      >
+                        <CalendarIcon className='mr-2 h-4 w-4' />
+                        {formData.scheduledAt ? (
+                          format(formData.scheduledAt, 'PPP')
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-auto p-0'>
+                      <Calendar
+                        mode='single'
+                        selected={formData.scheduledAt}
+                        onSelect={(date) => {
+                          if (date) {
+                            const currentTime = formData.scheduledAt;
+                            const newDate = new Date(date);
+                            newDate.setHours(currentTime.getHours());
+                            newDate.setMinutes(currentTime.getMinutes());
+                            setFormData({ ...formData, scheduledAt: newDate });
+                          }
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant='outline'
+                        className={cn(
+                          'w-[140px] justify-start text-left font-normal',
+                          !formData.scheduledAt && 'text-muted-foreground'
+                        )}
+                      >
+                        <Clock className='mr-2 h-4 w-4' />
+                        {formData.scheduledAt ? (
+                          format(formData.scheduledAt, 'HH:mm')
+                        ) : (
+                          <span>Pick time</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-auto p-0'>
+                      <div className='p-4 space-y-2'>
+                        <div className='flex gap-2'>
+                          <Select
+                            value={formData.scheduledAt.getHours().toString().padStart(2, '0')}
+                            onValueChange={(value) => {
+                              const newDate = new Date(formData.scheduledAt);
+                              newDate.setHours(parseInt(value));
+                              setFormData({ ...formData, scheduledAt: newDate });
+                            }}
+                          >
+                            <SelectTrigger className='w-[70px]'>
+                              <SelectValue placeholder='HH' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 24 }, (_, i) => (
+                                <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                  {i.toString().padStart(2, '0')}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className='text-2xl'>:</span>
+                          <Select
+                            value={formData.scheduledAt.getMinutes().toString().padStart(2, '0')}
+                            onValueChange={(value) => {
+                              const newDate = new Date(formData.scheduledAt);
+                              newDate.setMinutes(parseInt(value));
+                              setFormData({ ...formData, scheduledAt: newDate });
+                            }}
+                          >
+                            <SelectTrigger className='w-[70px]'>
+                              <SelectValue placeholder='MM' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 60 }, (_, i) => (
+                                <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                  {i.toString().padStart(2, '0')}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className='grid w-full gap-2'>
