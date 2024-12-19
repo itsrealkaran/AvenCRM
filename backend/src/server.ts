@@ -22,12 +22,8 @@ import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
 import { propertyRoutes } from './routes/propertyRoutes.js';
-<<<<<<< HEAD
 import { propertyView } from './routes/publicPropertyView.js';
-
-=======
 import cookieParser from 'cookie-parser';
->>>>>>> main
 
 const app = express();
 
