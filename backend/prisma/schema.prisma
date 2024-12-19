@@ -600,3 +600,5 @@ model PageBuilder {
   createdById     String
   allowedAdmins   Admin[]  @relation("AllowedAdmins")
 }
+
+
