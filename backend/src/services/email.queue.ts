@@ -130,6 +130,9 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
   const { emailAccountId, recipients, subject, content, scheduledFor, campaignId } = job.data;
   
   try {
+    if (scheduledFor && Date.now() > scheduledFor.getTime()) {
+      throw new Error('Email is scheduled for the future');
+    }
     await job.updateProgress(10);
     
     await job.extendLock(job.id ?? '', 30000);

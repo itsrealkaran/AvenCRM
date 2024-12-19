@@ -7,14 +7,6 @@ import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from '
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command';
 import {
   Dialog,
   DialogContent,
@@ -58,10 +50,10 @@ interface EmailCampaign {
   title: string;
   status: 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'COMPLETED' | 'FAILED';
   scheduledAt: string;
-  recipientCount: number;
-  sentCount: number;
-  openRate?: number;
-  clickRate?: number;
+  recipients: Recipient[];
+  successfulSends: number;
+  failedSends: number;
+  totalRecipients: number;
   createdAt: string;
 }
 
@@ -79,26 +71,13 @@ interface Agent {
   email: string;
 }
 
-interface Admin {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-}
-
 export default function EmailCampaignSection() {
+  debugger;
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [admins, setAdmins] = useState<Admin[]>([]);
-  const [clients, setClients] = useState<Client[]>([]);
   const [selectedRecipientType, setSelectedRecipientType] = useState<
     'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL'
   >('AGENT');
@@ -123,6 +102,7 @@ export default function EmailCampaignSection() {
       const data = await response.json();
       console.log(data);
       setCampaigns(data.campaigns);
+      console.log(data.campaigns);
     } catch (error) {
       toast({
         title: 'Error',
@@ -154,12 +134,13 @@ export default function EmailCampaignSection() {
 
   const fetchAgents = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agents`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch agents');
       const data = await response.json();
-      setAgents(data.agents);
+      console.log('agnets', data);
+      setAgents(data);
     } catch (error) {
       toast({
         title: 'Error',
@@ -169,47 +150,11 @@ export default function EmailCampaignSection() {
     }
   }, [toast]);
 
-  const fetchAdmins = useCallback(async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admins`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch admins');
-      const data = await response.json();
-      setAdmins(data.admins);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch admins',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  const fetchClients = useCallback(async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/clients`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch clients');
-      const data = await response.json();
-      setClients(data.clients);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch clients',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
   useEffect(() => {
     fetchCampaigns();
     fetchTemplates();
     fetchAgents();
-    fetchAdmins();
-    fetchClients();
-  }, [fetchCampaigns, fetchTemplates, fetchAgents, fetchAdmins, fetchClients]);
+  }, [fetchCampaigns, fetchTemplates, fetchAgents]);
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
@@ -530,8 +475,6 @@ export default function EmailCampaignSection() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value='AGENT'>Agents</SelectItem>
-                      <SelectItem value='ADMIN'>Admins</SelectItem>
-                      <SelectItem value='CLIENT'>Clients</SelectItem>
                       <SelectItem value='EXTERNAL'>External Recipients</SelectItem>
                     </SelectContent>
                   </Select>
@@ -569,65 +512,36 @@ export default function EmailCampaignSection() {
                       </Button>
                     </div>
                   ) : (
-                    <Command className='border rounded-lg'>
-                      <CommandInput
-                        placeholder={`Search ${selectedRecipientType.toLowerCase()}s...`}
-                      />
-                      <CommandEmpty>No {selectedRecipientType.toLowerCase()}s found.</CommandEmpty>
-                      <CommandGroup>
-                        {selectedRecipientType === 'AGENT' &&
+                    <Select
+                      onValueChange={(value) => {
+                        const selectedAgent = agents.find((agent) => agent.id === value);
+                        if (selectedAgent) {
+                          addRecipient({
+                            type: 'AGENT',
+                            email: selectedAgent.email,
+                            name: selectedAgent.name,
+                            recipientId: selectedAgent.id,
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={`Select ${selectedRecipientType.toLowerCase()}...`}
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {agents &&
                           agents.map((agent) => (
-                            <CommandItem
-                              key={agent.id}
-                              onSelect={() =>
-                                addRecipient({
-                                  type: 'AGENT',
-                                  email: agent.email,
-                                  name: agent.name,
-                                  recipientId: agent.id,
-                                })
-                              }
-                            >
-                              <Users className='mr-2 h-4 w-4' />
-                              {agent.name}
-                            </CommandItem>
+                            <SelectItem key={agent.id} value={agent.id}>
+                              <div className='flex items-center'>
+                                <Users className='mr-2 h-4 w-4' />
+                                <span>{agent.name}</span>
+                              </div>
+                            </SelectItem>
                           ))}
-                        {selectedRecipientType === 'ADMIN' &&
-                          admins.map((admin) => (
-                            <CommandItem
-                              key={admin.id}
-                              onSelect={() =>
-                                addRecipient({
-                                  type: 'ADMIN',
-                                  email: admin.email,
-                                  name: admin.name,
-                                  recipientId: admin.id,
-                                })
-                              }
-                            >
-                              <Users className='mr-2 h-4 w-4' />
-                              {admin.name}
-                            </CommandItem>
-                          ))}
-                        {selectedRecipientType === 'CLIENT' &&
-                          clients.map((client) => (
-                            <CommandItem
-                              key={client.id}
-                              onSelect={() =>
-                                addRecipient({
-                                  type: 'CLIENT',
-                                  email: client.email,
-                                  name: client.name,
-                                  recipientId: client.id,
-                                })
-                              }
-                            >
-                              <Users className='mr-2 h-4 w-4' />
-                              {client.name}
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </Command>
+                      </SelectContent>
+                    </Select>
                   )}
 
                   {formData.recipients.length > 0 && (
@@ -695,14 +609,14 @@ export default function EmailCampaignSection() {
                 <TableCell>
                   <div className='flex items-center'>
                     <Users className='h-4 w-4 mr-2' />
-                    {campaign.recipientCount}
+                    {campaign.recipients.length}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className='space-y-2'>
-                    <Progress value={(campaign.sentCount / campaign.recipientCount) * 100} />
+                    <Progress value={(campaign.successfulSends / campaign.totalRecipients) * 100} />
                     <div className='text-xs text-muted-foreground'>
-                      {campaign.sentCount} of {campaign.recipientCount} sent
+                      {campaign.successfulSends} of {campaign.totalRecipients} sent
                     </div>
                   </div>
                 </TableCell>

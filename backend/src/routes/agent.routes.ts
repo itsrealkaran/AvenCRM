@@ -10,13 +10,8 @@ const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
-  const role = req.user?.role;
-  const adminId = req.user?.id;
-  if (role !== "ADMIN" || !adminId) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
   try {
-    const companyId = await verifyAdminCompany(adminId);
+    const companyId = req.user?.companyId;
     if (!companyId) {
       return res.status(404).json({ message: "Company not found" });
     }
