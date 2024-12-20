@@ -22,6 +22,7 @@ import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
 import { propertyRoutes } from './routes/propertyRoutes.js';
+import { propertyView } from './routes/publicPropertyView.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
@@ -144,6 +145,7 @@ app.use('/company/moniter', companyMonitoring);
 app.use('/email', emailRoutes);
 app.use('/company/admin', adminRoutes);
 app.use("/property", propertyRoutes);
+app.use("/getProperty", propertyView);
 
 // Enhanced error handling middleware with debugging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

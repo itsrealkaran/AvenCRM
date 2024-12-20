@@ -5,11 +5,18 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import multer from "multer";
 import fs from "fs";
 import { v4 as uuidv4 } from 'uuid';
+import crypto from "crypto"
+import { uploadFile } from "../utils/s3.js";
 
 const router: Router = Router();
 
 router.use(protect);
 
+// Configure multer upload middleware
+const storage = multer.memoryStorage();
+
+//random file name generator
+const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
 // Create S3 client
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -24,7 +31,7 @@ const upload = multer({
   dest: 'uploads/', // Destination folder for temporary file storage
   limits: { fileSize: 10 * 1024 * 1024 } // Limit file size to 10MB
 });
-
+//get all properties
 router.get("/", async (req, res) => {
   try {
     const properties = await prisma.property.findMany();
@@ -56,7 +63,7 @@ router.post("/", async (req, res) => {
     } = req.body.formData;
 
     // Basic validation
-    console.log(req.body.formData);
+    console.log(req.file);
     if (!title || !description || !price || !address) {
       return res.status(400).json({
         message:
@@ -106,10 +113,9 @@ router.post("/", async (req, res) => {
   }
 });
 
-router.post("/upload-image", async (req, res) => {
+router.post("/upload-image",upload.single('image'), async (req, res) => {
   try {
     // Check if file was uploaded
-    console.log(req.file);
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
@@ -120,7 +126,11 @@ router.post("/upload-image", async (req, res) => {
       return res.status(500).json({ error: 'S3 bucket name is not configured' });
     }
 
+    const imageName = generateFileName()
+
     // Generate unique filename
+
+    const file = await uploadFile(req.file.buffer, imageName, req.file.mimetype);
     const fileExtension = req.file.originalname.split('.').pop();
     const filename = `uploads/${uuidv4()}.${fileExtension}`;
 
@@ -149,6 +159,7 @@ router.post("/upload-image", async (req, res) => {
       key: filename
     });
 
+    res.status(200).json({imageUrl: `https://${bucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${imageName}`});
   } catch (error) {
     console.error('Error uploading file:', error);
     

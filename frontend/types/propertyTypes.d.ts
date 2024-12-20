@@ -1,5 +1,5 @@
 export type PropertyData = {
-  id: number;
+  id: string;
   address: string;
   price: number;
   bedrooms: number;
@@ -58,7 +58,7 @@ export type PropertyData = {
     frontage: string;
     landDepth: string;
   };
-  images: string[];
+  images: Json[];
   agentId: string;
 };
 

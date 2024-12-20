@@ -5,11 +5,11 @@ import { TopNavbar } from './components/TopNavbar';
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
+    <SidebarProvider className='h-screen w-screen'>
       <SideNavBar />
       <main className='w-full h-screen overflow-hidden bg-[#F6F9FE]'>
         <TopNavbar />
-        {children}
+        <div className='w-[97%] h-[87vh] rounded-lg bg-white m-auto mt-4'>{children}</div>
       </main>
     </SidebarProvider>
   );

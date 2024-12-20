@@ -1,0 +1,4 @@
+1. Use the `pnpm` package manager for any installation or action in this project.
+2 Ensure a type safe code base by using TypeScript.
+3. Use the latest version of Next.js 15 for any setup installation or action in this project.
+4. Ensure a very nice, modern UI while creating or editing TSX components.
