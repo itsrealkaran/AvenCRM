@@ -1,36 +1,23 @@
 import { Router } from "express";
 import { protect } from "../middleware/auth.js";
 import { prisma } from "../lib/prisma.js";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import multer from "multer";
 import fs from "fs";
 import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto"
 import { uploadFile } from "../utils/s3.js";
 
-const router: Router = Router();
+const router = Router();
 
 router.use(protect);
 
 // Configure multer upload middleware
 const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 //random file name generator
 const generateFileName = (bytes = 32) => crypto.randomBytes(bytes).toString('hex')
-// Create S3 client
-const s3Client = new S3Client({
-  region: process.env.AWS_REGION,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
-});
 
-// Configure multer upload middleware
-const upload = multer({ 
-  dest: 'uploads/', // Destination folder for temporary file storage
-  limits: { fileSize: 10 * 1024 * 1024 } // Limit file size to 10MB
-});
 //get all properties
 router.get("/", async (req, res) => {
   try {
@@ -40,6 +27,8 @@ router.get("/", async (req, res) => {
     res.status(500).json({ message: "Failed to fetch properties" });
   }
 });
+
+// Add this POST route after your existing GET route
 
 router.post("/", async (req, res) => {
   try {
@@ -129,35 +118,7 @@ router.post("/upload-image",upload.single('image'), async (req, res) => {
     const imageName = generateFileName()
 
     // Generate unique filename
-
     const file = await uploadFile(req.file.buffer, imageName, req.file.mimetype);
-    const fileExtension = req.file.originalname.split('.').pop();
-    const filename = `uploads/${uuidv4()}.${fileExtension}`;
-
-    // Create upload command
-    const uploadCommand = new PutObjectCommand({
-      Bucket: bucketName,
-      Key: filename,
-      Body: fs.createReadStream(req.file.path),
-      ContentType: req.file.mimetype,
-      ACL: "public-read"
-    });
-
-    // Upload to S3
-    await s3Client.send(uploadCommand);
-
-    // Delete the temporary file after successful upload
-    fs.unlinkSync(req.file.path);
-
-    // Construct the S3 URL
-    const s3Url = `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${filename}`;
-
-    // Send response
-    res.json({ 
-      message: 'File uploaded successfully',
-      imageUrl: s3Url,
-      key: filename
-    });
 
     res.status(200).json({imageUrl: `https://${bucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${imageName}`});
   } catch (error) {

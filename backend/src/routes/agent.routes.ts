@@ -3,7 +3,7 @@ import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 import { prisma } from "../lib/prisma.js";
 import bcrypt from "bcrypt";
-import { UserRole } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { verifyAdminCompany } from "../lib/verifyUser.js";
 
 const router: Router = Router();
@@ -33,14 +33,9 @@ router.get("/:id", async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const companyId = await verifyAdminCompany(adminId);
-    if (!companyId) {
-      return res.status(404).json({ message: "Company not found" });
-    }
     const agent = await prisma.agent.findUnique({
       where: { 
         id: req.params.id,
-        companyId: companyId
       },
     });
     res.json(agent);
@@ -86,7 +81,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
   const role = req.user?.role;
-  const adminId = req.user?.id;
+  const adminId = req.params.id;
   if (role !== "ADMIN" || !adminId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -95,11 +90,6 @@ router.put("/:id", async (req: Request, res: Response) => {
   if(dob)
       dobDate = new Date(dob);
   try {
-    const companyId = await verifyAdminCompany(adminId);
-    if (!companyId) {
-      return res.status(404).json({ message: "Company not found" });
-    }
-
     const agent = await prisma.agent.update({
       where: { id: req.params.id },
       data: {
@@ -147,8 +137,17 @@ router.delete("/", async (req: Request, res: Response) => {
   }
   const { agentIds } = req.body;
 
+  if (!Array.isArray(agentIds)) {
+    return res.status(400).json({ message: "agentIds must be an array" });
+  }
+
   if (agentIds.length === 0) {
     return res.status(400).json({ message: "No agent ids provided" });
+  }
+
+  // Validate that all IDs are valid strings
+  if (!agentIds.every(id => typeof id === 'string' && id.length > 0)) {
+    return res.status(400).json({ message: "Invalid agent IDs format" });
   }
 
   try {
@@ -156,7 +155,7 @@ router.delete("/", async (req: Request, res: Response) => {
     if (!companyId) {
       return res.status(404).json({ message: "Company not found" });
     }
-    const agent = await prisma.agent.deleteMany({
+    await prisma.agent.deleteMany({
       where: {
         id: {
           in: agentIds,
@@ -164,9 +163,13 @@ router.delete("/", async (req: Request, res: Response) => {
         companyId: companyId
       },
     });
-    res.json(agent);
+    res.json({ message: "Agents deleted successfully", count: agentIds.length });
   } catch (error) {
-    res.status(500).json({ message: "Failed to delete agent" });
+    console.error("Failed to delete agents:", error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      return res.status(400).json({ message: "Invalid agent IDs provided" });
+    }
+    res.status(500).json({ message: "Failed to delete agents" });
   }
 });
 

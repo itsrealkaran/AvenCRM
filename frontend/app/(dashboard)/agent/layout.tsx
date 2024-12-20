@@ -9,7 +9,7 @@ export default function CompanyLayout({ children }: { children: React.ReactNode 
       <SideNavBar />
       <main className='w-full h-screen overflow-hidden bg-[#F6F9FE]'>
         <TopNavbar />
-        <div className='w-[97%] h-[87vh] rounded-lg bg-white m-auto mt-4'>{children}</div>
+        <div className='w-[97%] h-[87vh] rounded-lg bg-white m-auto mt-4 overflow-auto'>{children}</div>
       </main>
     </SidebarProvider>
   );

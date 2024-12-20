@@ -131,11 +131,60 @@ export default function TransactionsPage() {
 
   if (isLoading) {
     return (
-      <div className='flex flex-col space-y-3'>
-        <Skeleton className='w-[800px] h-[80px]' />
-        <div className='space-y-2'>
-          <Skeleton className='h-4 w-[250px]' />
-          <Skeleton className='h-4 w-[200px]' />
+      <div className='container mx-auto py-10'>
+        {/* Header Skeleton */}
+        <div className='flex justify-between items-center p-5'>
+          <Skeleton className='h-9 w-64' /> {/* Title */}
+          <Skeleton className='h-10 w-44' /> {/* Add Button */}
+        </div>
+
+        {/* Table Skeleton */}
+        <div className='space-y-4 p-6 rounded-lg border'>
+          {/* Table Header */}
+          <div className='flex items-center justify-between pb-4'>
+            <Skeleton className='h-8 w-[200px]' /> {/* Search bar */}
+            <div className='flex space-x-2'>
+              <Skeleton className='h-8 w-24' /> {/* Filter button */}
+              <Skeleton className='h-8 w-24' /> {/* View button */}
+            </div>
+          </div>
+
+          {/* Table Headers */}
+          <div className='grid grid-cols-7 gap-4 border-b pb-4'>
+            <Skeleton className='h-4 w-4' /> {/* Checkbox */}
+            <Skeleton className='h-4 w-24' />
+            <Skeleton className='h-4 w-32' />
+            <Skeleton className='h-4 w-24' />
+            <Skeleton className='h-4 w-28' />
+            <Skeleton className='h-4 w-20' />
+            <Skeleton className='h-4 w-16' />
+          </div>
+
+          {/* Table Rows */}
+          {Array(5).fill(null).map((_, index) => (
+            <div key={index} className='grid grid-cols-7 gap-4 py-4 border-b'>
+              <Skeleton className='h-4 w-4' /> {/* Checkbox */}
+              <Skeleton className='h-4 w-28' />
+              <Skeleton className='h-4 w-36' />
+              <Skeleton className='h-4 w-28' />
+              <Skeleton className='h-4 w-32' />
+              <Skeleton className='h-4 w-24' />
+              <div className='flex space-x-2'>
+                <Skeleton className='h-8 w-8' /> {/* Edit button */}
+                <Skeleton className='h-8 w-8' /> {/* Delete button */}
+              </div>
+            </div>
+          ))}
+
+          {/* Table Footer */}
+          <div className='flex items-center justify-between pt-4'>
+            <Skeleton className='h-5 w-[200px]' /> {/* Rows per page */}
+            <div className='flex space-x-2'>
+              <Skeleton className='h-8 w-8' /> {/* Prev button */}
+              <Skeleton className='h-8 w-24' /> {/* Page numbers */}
+              <Skeleton className='h-8 w-8' /> {/* Next button */}
+            </div>
+          </div>
         </div>
       </div>
     );

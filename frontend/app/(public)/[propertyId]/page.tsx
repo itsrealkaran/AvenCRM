@@ -60,7 +60,7 @@ const PropertyDetails = () => {
   const FeatureGrid = ({ items }: { items: { title: string; value: string | number }[] }) => (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
       {items.map((item, index) => (
-        <div key={index} className='mb-4'>
+        <div key={index} className='mb-4 bg-gray-50 p-4 rounded-lg'>
           <h3 className='text-lg font-semibold text-gray-700'>{item.title}</h3>
           <p className='text-xl mt-1'>{item.value}</p>
         </div>
@@ -140,7 +140,7 @@ const PropertyDetails = () => {
             {Object.entries(property.interiorFeatures).map(([key, value], index) => (
               <div
                 key={index}
-                className='bg-white rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300'
+                className='bg-gray-50 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow duration-300'
               >
                 <h3 className='text-gray-500 text-sm mb-1'>
                   {key.replace(/([A-Z])/g, ' $1').trim()}

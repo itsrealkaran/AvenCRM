@@ -51,7 +51,6 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
 
   const getUser = useCallback(async () => {
-    debugger;
 
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
@@ -78,7 +77,6 @@ const Page = () => {
 
   useEffect(() => {
     getUser();
-    console.log(selectedList);
   }, [agent, selectedList, refresh, getUser]);
 
   const addItem = (i: number, id: string) => {
@@ -97,7 +95,7 @@ const Page = () => {
         name: formData.name,
         dob: new Date(),
         email: formData.email,
-        phoneNo: formData.phone,
+        phone: formData.phone,
         role: formData.role,
         gender: formData.gender,
       },
@@ -115,7 +113,7 @@ const Page = () => {
   const updateUser = async () => {
     console.log(formData, 'update');
     const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent/${selectedList[0]}`,
       {
         name: formData.name,
         dob: new Date(),
@@ -127,9 +125,6 @@ const Page = () => {
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        params: {
-          id: selectedList[0],
         },
       }
     );
@@ -166,11 +161,11 @@ const Page = () => {
 
   return (
     <>
-      <div className='relative w-full h-full p-3'>
-        {/* this is the top most div with the filter options  */}
-        <div className='w-full h-fit bg-white rounded-md'>
+      <div className='relative flex h-[91vh] w-full flex-col p-3'>
+        {/* Filter options div */}
+        <div className='w-full flex-none bg-white rounded-md'>
           {/* this is the top level filter div  */}
-          <div className='flex w-full items-center justify-between px-4 pt-5'>
+          <div className='flex w-full items-center justify-between border-b-[1px] border-black/20 px-5 py-3'>
             {/* this is the main heading */}
             <div className='text-[1.2rem] font-bold tracking-tight opacity-90'>Manage Users</div>
 
@@ -208,24 +203,34 @@ const Page = () => {
           {/* delete popup */}
 
           {openDeletePopup && (
-            <div className='absolute top-0 left-0 z-10 flex h-full w-full items-center justify-center rounded-md bg-black/50'>
-              <div className='w-[30%] rounded-lg bg-white p-5'>
+            <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-all'>
+              <div className='w-full max-w-md transform rounded-lg bg-white p-6 shadow-xl transition-all'>
                 <div className='flex items-center justify-between'>
-                  <div className='text-[1.2rem] font-semibold'>Delete User</div>
-                  <div className='cursor-pointer' onClick={() => setOpenDeletePopup(false)}>
-                    <IoClose />
-                  </div>
+                  <div className='text-xl font-semibold text-gray-900'>Delete User</div>
+                  <button 
+                    onClick={() => setOpenDeletePopup(false)}
+                    className='rounded-full p-1 hover:bg-gray-100 transition-colors'
+                  >
+                    <IoClose className='h-5 w-5 text-gray-500' />
+                  </button>
                 </div>
-                <div className='mt-5 text-[0.9rem]'>
+                <div className='mt-4 text-sm text-gray-600'>
                   Are you sure you want to delete the selected user?
                 </div>
-                <div className='mt-5 flex items-center justify-end gap-3'>
-                  <div className='cursor-pointer rounded-[4px] bg-[#5932EA] px-2 py-1 text-sm tracking-tight text-white'>
-                    <button onClick={deleteUser}>Yes</button>
-                  </div>
-                  <div className='cursor-pointer rounded-[4px] bg-[#5932EA] px-2 py-1 text-sm tracking-tight text-white'>
-                    <button>No</button>
-                  </div>
+                <div className='mt-6 flex items-center justify-end gap-3'>
+                  <button
+                    onClick={() => setOpenDeletePopup(false)}
+                    className='rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors'
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={deleteUser}
+                    type='button'
+                    className='rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 transition-colors'
+                  >
+                    Delete
+                  </button>
                 </div>
               </div>
             </div>
@@ -249,262 +254,200 @@ const Page = () => {
           </div>
         </div>
 
-        {/* this is the bottom scrollabel div with the list thingy don't */}
-
-        <div className='mt-3 flex h-full flex-col gap-2 overflow-y-auto bg-white px-3 py-5 text-sm font-semibold rounded-md'>
-          {/* this is going to be an component  */}
-
-          {loading
-            ? // Skeleton UI
-              Array(5)
-                .fill(0)
-                .map((_, i) => (
-                  <div
-                    key={i}
-                    className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center gap-4 py-6 rounded-lg bg-[#F5F5F5] px-5'
-                  >
-                    <div className='flex items-center'>
-                      <div className='h-4 w-4 rounded bg-gray-200 animate-pulse'></div>
-                    </div>
-                    <div className='h-4 w-3/4 rounded bg-gray-200 animate-pulse'></div>
-                    <div className='h-4 w-2/3 rounded bg-gray-200 animate-pulse'></div>
-                    <div className='h-4 w-1/2 rounded bg-gray-200 animate-pulse'></div>
-                    <div className='h-4 w-16 rounded bg-gray-200 animate-pulse'></div>
-                  </div>
-                ))
-            : list.map((user, i) => (
-                <ManageUserList
-                  func={addItem}
-                  name={user.name}
-                  email={user.email}
-                  phone={user.phone}
-                  role={user.role}
-                  id={user.id}
-                  key={i}
-                  index={i}
-                />
-              ))}
+        {/* List container with proper height calculation */}
+        <div className='mt-3 flex-1 overflow-hidden rounded-md bg-white'>
+          <div className='h-full overflow-y-auto px-3 py-5 text-sm font-semibold'>
+            <div className='space-y-3'>
+              {loading
+                ? // Skeleton UI
+                  Array(5)
+                    .fill(0)
+                    .map((_, i) => (
+                      <div
+                        key={i}
+                        className='relative grid grid-cols-[auto_2fr_2fr_2fr_1fr] items-center gap-4 py-6 rounded-lg bg-[#F5F5F5] px-5'
+                      >
+                        <div className='flex items-center'>
+                          <div className='h-4 w-4 rounded bg-gray-200 animate-pulse'></div>
+                        </div>
+                        <div className='h-4 w-3/4 rounded bg-gray-200 animate-pulse'></div>
+                        <div className='h-4 w-2/3 rounded bg-gray-200 animate-pulse'></div>
+                        <div className='h-4 w-1/2 rounded bg-gray-200 animate-pulse'></div>
+                        <div className='h-4 w-16 rounded bg-gray-200 animate-pulse'></div>
+                      </div>
+                    ))
+                : list.map((user, i) => (
+                    <ManageUserList
+                      func={addItem}
+                      name={user.name}
+                      email={user.email}
+                      phone={user.phone}
+                      role={user.role}
+                      id={user.id}
+                      key={i}
+                      index={i}
+                    />
+                  ))}
+            </div>
+          </div>
         </div>
 
         {adduser ? (
-          <div className='absolute right-0 top-0 flex h-full w-full items-start justify-center bg-blue-500/30 pt-10 backdrop-blur-sm'>
-            {/* this is the internal div  */}
+          <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
+            <div className='w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all'>
+              <div className='relative p-6'>
+                {/* Header */}
+                <div className='mb-6 flex items-center justify-between border-b pb-4'>
+                  <h2 className='text-xl font-semibold text-gray-900'>
+                    {updateOrCreate === 'UPDATE' ? 'Update User' : 'Create User'}
+                  </h2>
+                  <button
+                    onClick={() => openadd()}
+                    className='rounded-full p-1 hover:bg-gray-100'
+                  >
+                    <IoClose className='h-6 w-6 text-gray-500' />
+                  </button>
+                </div>
 
-            <div className='h-[80%] w-[40%] rounded-lg bg-white py-5 pl-14 pr-10'>
-              {/* this is the close button div */}
-              <div
-                onClick={() => openadd()}
-                className='flex w-full cursor-pointer items-center justify-end text-[1.5rem] opacity-80'
-              >
-                <IoClose />
-              </div>
-              {/* this is the main heading text  */}
-              <div className='mt-2 w-full text-[1.1rem] font-semibold tracking-tight opacity-80'>
-                <h1>Create Users</h1>
-              </div>
-
-              {/* this is the option div */}
-
-              <div className='mt-5 flex w-full flex-col gap-3 border-b-[1px] border-black/20 pb-8'>
-                {/* this is one text field  */}
-                <div className='flex w-full items-center justify-between gap-2'>
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-1'>
-                    <MdOutlineDriveFileRenameOutline />
-                    <div></div>
-                    <h1>Name</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
+                {/* Form Fields */}
+                <div className='space-y-4'>
+                  {/* Name Field */}
+                  <div className='group relative'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                      <MdOutlineDriveFileRenameOutline className='h-4 w-4' />
+                      Name
+                    </label>
                     <input
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold outline-none'
+                      className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                       type='text'
                       name='name'
-                      id='name'
                       value={formData.name}
                       onChange={handleInputChange}
+                      placeholder='Enter name'
                     />
                   </div>
-                </div>
 
-                {/* this is for the age section */}
-                <div className='flex w-full items-center justify-between gap-2'>
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-2'>
-                    <div>
-                      {' '}
-                      <IoMdPerson />
-                    </div>
-                    <h1>Age</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
+                  {/* Age Field */}
+                  <div className='group relative'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                      <IoMdPerson className='h-4 w-4' />
+                      Age
+                    </label>
                     <input
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold outline-none'
+                      className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                       type='text'
                       name='age'
-                      id='age'
                       value={formData.age}
                       onChange={handleInputChange}
+                      placeholder='Enter age'
                     />
                   </div>
-                </div>
 
-                {/* this for the gender  */}
-                <div className='flex w-full items-center justify-between gap-2'>
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-1'>
-                    <div>
-                      {' '}
-                      <BsGenderNeuter />
-                    </div>
-                    <h1>Gender</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
+                  {/* Gender Field */}
+                  <div className='group relative'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                      <BsGenderNeuter className='h-4 w-4' />
+                      Gender
+                    </label>
                     <select
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold text-black/50 outline-none'
+                      className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                       name='gender'
                       value={formData.gender}
                       onChange={handleInputChange}
                     >
                       <option value=''>Select Gender</option>
-                      <option value='MALE'>MALE</option>
-                      <option value='FEMALE'>FEMALE</option>
+                      <option value='MALE'>Male</option>
+                      <option value='FEMALE'>Female</option>
                     </select>
                   </div>
-                </div>
 
-                {/* this is for the phone */}
-
-                <div className='flex w-full items-center justify-between gap-2'>
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-2'>
-                    <div>
-                      {' '}
-                      <MdOutlineLocalPhone />
-                    </div>
-                    <h1>Phone</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
+                  {/* Phone Field */}
+                  <div className='group relative'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                      <MdOutlineLocalPhone className='h-4 w-4' />
+                      Phone
+                    </label>
                     <input
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold outline-none'
+                      className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                       type='text'
                       name='phone'
                       value={formData.phone}
                       onChange={handleInputChange}
+                      placeholder='Enter phone number'
                     />
                   </div>
-                </div>
 
-                {/* this is for the email  */}
-
-                <div className='flex w-full items-center justify-between gap-2'>
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-2'>
-                    <div>
-                      {' '}
-                      <MdEmail />
-                    </div>
-                    <h1>Email</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
+                  {/* Email Field */}
+                  <div className='group relative'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                      <MdEmail className='h-4 w-4' />
+                      Email
+                    </label>
                     <input
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold outline-none'
-                      type='text'
+                      className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                      type='email'
                       name='email'
                       value={formData.email}
                       onChange={handleInputChange}
+                      placeholder='Enter email'
                     />
                   </div>
-                </div>
 
-                {/* this is the for the user status  */}
-
-                <div className='flex w-full items-center justify-between gap-2'>
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-2'>
-                    <div>
-                      {' '}
-                      <FaUser />
-                    </div>
-                    <h1>User Status</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
+                  {/* User Status Field */}
+                  <div className='group relative'>
+                    <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                      <FaUser className='h-4 w-4' />
+                      User Status
+                    </label>
                     <select
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold text-black/50 outline-none'
+                      className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                       name='role'
                       value={formData.role}
                       onChange={handleInputChange}
                     >
-                      <option value='user'>AGENT</option>
-                      <option value='agent'>TEAM_LEADER</option>
+                      <option value='user'>Agent</option>
+                      <option value='agent'>Team Leader</option>
                     </select>
                   </div>
-                </div>
-                <div
-                  className={` ${agent === 'agent' ? 'flex' : 'hidden'} w-full items-center justify-between gap-2`}
-                >
-                  {/* this is the name and the symbol div  */}
-                  <div className='flex items-center gap-2'>
-                    <div>
-                      {' '}
-                      <FaUser />
+
+                  {/* Team Lead Field - Conditional */}
+                  {agent === 'agent' && (
+                    <div className='group relative'>
+                      <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                        <FaUser className='h-4 w-4' />
+                        Team Lead
+                      </label>
+                      <select
+                        className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                        name='cars'
+                      >
+                        <option value='Lead 1'>Lead 1</option>
+                        <option value='Lead 2'>Lead 2</option>
+                      </select>
                     </div>
-                    <h1>Team Lead</h1>
-                  </div>
-
-                  {/* this is the input box field */}
-
-                  <div className='flex h-10 w-[68%] items-center'>
-                    <select
-                      className='h-full w-full rounded-md bg-black/10 px-3 font-semibold text-black/50 outline-none'
-                      name='cars'
-                      id='cars'
-                    >
-                      <option value='Lead 1 '>Lead 1 </option>
-                      <option value='Lead 2 '>Lead 2 </option>
-                    </select>
-                  </div>
+                  )}
                 </div>
-              </div>
 
-              {/* this is the last cancel button or add div button  */}
-
-              <div className='mt-5 flex w-full items-center justify-end gap-2 text-sm tracking-tighter'>
-                <div
-                  onClick={() => openadd()}
-                  className='cursor-pointer rounded-sm border px-3 py-1'
-                >
-                  Cancel
-                </div>
-                <div
-                  onClick={updateOrCreate === 'UPDATE' ? updateUser : addUser}
-                  className='cursor-pointer rounded-sm bg-[#5932EA] px-3 py-1 text-white'
-                >
-                  {updateOrCreate === 'UPDATE' ? 'Update' : 'Add'}
+                {/* Action Buttons */}
+                <div className='mt-6 flex items-center justify-end gap-3 border-t pt-4'>
+                  <button
+                    onClick={() => openadd()}
+                    className='rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50'
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={updateOrCreate === 'UPDATE' ? updateUser : addUser}
+                    disabled={loading}
+                    className='rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
+                  >
+                    {loading ? 'Loading...' : updateOrCreate === 'UPDATE' ? 'Update' : 'Add'}
+                  </button>
                 </div>
               </div>
             </div>
           </div>
-        ) : (
-          <></>
-        )}
+        ) : null}
       </div>
     </>
   );
