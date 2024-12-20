@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { PropertyData } from '@/types/propertyTypes';
 import axios from 'axios';
 import { Maximize2, Plus, Printer, Share2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 const Page = () => {
   const [formData, setFormData] = useState<PropertyData>({
@@ -225,7 +225,6 @@ const Page = () => {
             <Plus className='text-gray-400' />
           )}
         </label>
-<<<<<<< HEAD:frontend/app/(dashboard)/agent/property/add/page.tsx
         {formData.images.map((image: any, index) => (
           <div
             key={index}
@@ -233,12 +232,6 @@ const Page = () => {
           >
             <img
               src={image.imageUrl}
-=======
-        {formData.images.map((image, index) => (
-          <div key={index} className='h-32 border-[1px] border-gray-300 rounded-lg overflow-hidden'>
-            <Image
-              src={image}
->>>>>>> main:frontend/app/(dashboard)/agent/add/page.tsx
               alt={`Property image ${index + 1}`}
               className='w-full h-full object-cover'
               width={100}
