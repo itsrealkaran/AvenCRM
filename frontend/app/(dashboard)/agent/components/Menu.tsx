@@ -22,7 +22,9 @@ const Menu: React.FC<MenuProps> = ({ icons: Icon, heading, reff, isActive, class
         }`}
     >
       <div className='flex items-center gap-3'>
-        <div className='flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-200'></div>
+        <div className='flex h-8 w-8 items-center justify-center rounded-md transition-colors duration-200'>
+          {Icon && <Icon />}
+        </div>
         <span
           className={`text-sm font-medium capitalize whitespace-nowrap ${
             isActive ? 'text-white' : 'text-gray-700 group-hover:text-primary'

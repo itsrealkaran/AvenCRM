@@ -178,7 +178,7 @@ model Admin {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime?   @updatedAt
 
-  PageBuilder PageBuilder[] @relation("AllowedAdmins")
+  PropertyTemplate PropertyTemplate[] @relation("AllowedAdmins")
 }
 
 // Team Model
@@ -231,7 +231,7 @@ model Agent {
   updatedAt   DateTime   @updatedAt
 
   Property Property[]
-  PageBuilder PageBuilder[]
+  PropertyTemplate PropertyTemplate[]
 
   Transaction Transaction[]
 
@@ -585,11 +585,10 @@ model EmailTemplate {
   updatedAt   DateTime @updatedAt
 }
 
-model PageBuilder {
+model PropertyTemplate {
   id              String   @id @default(cuid())
-  title           String
-  content         Json     // JSON containing text, designs, image references, etc.
-  isPublic        Boolean  @default(false) // Privacy setting: public/private
+  imageUrl        String
+  contentMetaData Json[] // array of { id: 1, text: 'text', x: 620, y: 420, font: '400 18px sans-serif', maxWidth: 150, lineHeight: 30 }
 
   // Created and updated timestamps
   createdAt       DateTime @default(now())

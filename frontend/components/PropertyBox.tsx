@@ -34,21 +34,21 @@ const PropertyBox = ({
 }: PropertyBoxProps) => {
   const router = useRouter();
   return (
-    <Card className='flex flex-col w-80 rounded-md border-[1px] bg-white border-gray-300 justify-between'>
+    <Card className='w-80 h-[380px] rounded-md border-[1px] bg-white border-gray-300'>
       <Image
         src={imageUrl}
         alt={address}
         width={300}
         height={300}
-        className='w-full rounded-t-md'
+        className='w-full h-[50%] rounded-t-md'
       />
-      <div>
-        <CardHeader>
-          <CardTitle className='text-lg font-semibold'>{address}</CardTitle>
+      <div className='h-[45%]'>
+        <CardHeader className='p-4'>
+          <CardTitle className='text-lg font-semibold truncate'>{address}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className='px-4'>
           <div className='flex justify-between items-center mb-2'>
-            <div className='flex items-center'>
+            <div className='flex items-center text-purple-600'>
               <DollarSign className='h-4 w-4 mr-1' />
               <span className='font-semibold'>{price.toLocaleString()}</span>
             </div>
@@ -68,7 +68,7 @@ const PropertyBox = ({
             </div>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className='px-4'>
           <Button onClick={() => router.push(`/${id}`)} variant='outline' className='w-full'>
             <Home className='mr-2 h-4 w-4' />
             View Details

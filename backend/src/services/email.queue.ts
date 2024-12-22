@@ -11,18 +11,28 @@ const redisConnection = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   maxRetriesPerRequest: null,
+  retryStrategy(times) {
+    const delay = Math.min(times * 50, 2000);
+    return delay;
+  }
 });
+
+let isConnected = false;
 
 redisConnection.on('error', (error: Error) => {
   console.error('Redis connection error:', error);
 });
 
 redisConnection.on('connect', () => {
-  console.log('Connected to Redis');
+  if (!isConnected) {
+    console.log('Connected to Redis');
+    isConnected = true;
+  }
 });
 
 redisConnection.on('disconnect', () => {
   console.log('Disconnected from Redis');
+  isConnected = false;
 });
 
 // Create email queue

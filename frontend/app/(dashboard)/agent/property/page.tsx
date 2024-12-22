@@ -73,7 +73,7 @@ const Page = () => {
             <PropertyBox
               key={item.id}
               id={item.id}
-              imageUrl={item.images[0].imageUrl}
+              imageUrl={item.images[0].imageUrl || ''}
               address={item.address}
               price={item.price}
               landSize={item.sqft}

@@ -187,7 +187,7 @@ const Page = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className='p-6 rounded-lg shadow-sm space-y-8 h-[91vh] overflow-y-auto'
+      className='p-6 rounded-lg shadow-sm space-y-8 h-full overflow-y-auto'
     >
       {/* Header */}
       <div className='flex justify-between items-center'>
