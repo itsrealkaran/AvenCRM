@@ -13,6 +13,7 @@ import { columns } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
 import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
+import { Card } from '@/components/ui/card';
 
 async function getTransactions(): Promise<Transaction[]> {
   const token = localStorage.getItem('accessToken');
@@ -191,7 +192,9 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className='container mx-auto py-10'>
+    <section className='p-4'>
+      <Card>
+      <div className='container mx-auto py-10'>
       <div className='flex justify-between items-center p-5'>
         <div>
           <h1 className='text-3xl font-bold tracking-tight'>Transactions Management</h1>
@@ -225,5 +228,7 @@ export default function TransactionsPage() {
         onDelete={handleDelete}
       />
     </div>
+      </Card>
+    </section>
   );
 }
