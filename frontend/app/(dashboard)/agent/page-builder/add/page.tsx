@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface TextPosition {
   id: number;
@@ -14,9 +14,33 @@ interface TextPosition {
 
 export default function Home() {
   const [textPositions, setTextPositions] = useState<TextPosition[]>([
-    { id: 1, text: 'WELCOME HOME', x: 250, y: 100, font: 'bold 36px Arial', maxWidth: 500, lineHeight: 40 },
-    { id: 2, text: 'INFO', x: 250, y: 160, font: '200 20px sans-serif', maxWidth: 500, lineHeight: 30 },
-    { id: 3, text: '~author', x: 620, y: 420, font: '400 18px sans-serif', maxWidth: 150, lineHeight: 30 },
+    {
+      id: 1,
+      text: 'WELCOME HOME',
+      x: 250,
+      y: 100,
+      font: 'bold 36px Arial',
+      maxWidth: 500,
+      lineHeight: 40,
+    },
+    {
+      id: 2,
+      text: 'INFO',
+      x: 250,
+      y: 160,
+      font: '200 20px sans-serif',
+      maxWidth: 500,
+      lineHeight: 30,
+    },
+    {
+      id: 3,
+      text: '~author',
+      x: 620,
+      y: 420,
+      font: '400 18px sans-serif',
+      maxWidth: 150,
+      lineHeight: 30,
+    },
   ]);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,7 +61,14 @@ export default function Home() {
     }
   }, []);
 
-  const wrapText = (context: CanvasRenderingContext2D, text: string, x: number, y: number, maxWidth: number, lineHeight: number) => {
+  const wrapText = (
+    context: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number
+  ) => {
     const words = text.split(' ');
     let line = '';
     const lines = [];
@@ -57,14 +88,14 @@ export default function Home() {
     lines.push(line);
 
     for (let i = 0; i < lines.length; i++) {
-      context.fillText(lines[i], x, y + (i * lineHeight));
+      context.fillText(lines[i], x, y + i * lineHeight);
     }
   };
 
   const drawCanvas = () => {
     const canvas = canvasRef.current;
     const img = imageRef.current;
-    
+
     if (!canvas || !img) return;
 
     const ctx = canvas.getContext('2d');
@@ -72,14 +103,14 @@ export default function Home() {
 
     canvas.width = 800;
     canvas.height = 533;
-      
+
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      
+
     textPositions.forEach((pos) => {
       if (pos.text) {
         ctx.font = pos.font;
         ctx.fillStyle = 'black';
-        
+
         if (pos.maxWidth && pos.lineHeight) {
           // Use text wrapping for longer texts
           wrapText(ctx, pos.text, pos.x, pos.y, pos.maxWidth, pos.lineHeight);
@@ -98,10 +129,8 @@ export default function Home() {
   }, [textPositions, imageLoaded]);
 
   const handleTextChange = (id: number, text: string) => {
-    setTextPositions(prevPositions =>
-      prevPositions.map(pos =>
-        pos.id === id ? { ...pos, text } : pos
-      )
+    setTextPositions((prevPositions) =>
+      prevPositions.map((pos) => (pos.id === id ? { ...pos, text } : pos))
     );
   };
 
@@ -113,41 +142,38 @@ export default function Home() {
     const link = document.createElement('a');
     link.download = 'image-with-text.png';
     link.href = dataUrl;
-    
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex items-center  gap-4">
-        <div className="relative">
-          <canvas
-            ref={canvasRef}
-            className="border border-gray-300"
-          />
+    <div className='container mx-auto p-4'>
+      <div className='flex items-center  gap-4'>
+        <div className='relative'>
+          <canvas ref={canvasRef} className='border border-gray-300' />
         </div>
-        
-        <div className="grid grid-cols-1 gap-4 w-full max-w-md">
+
+        <div className='grid grid-cols-1 gap-4 w-full max-w-md'>
           {textPositions.map((pos) => (
-            <div key={pos.id} className="flex gap-2">
+            <div key={pos.id} className='flex gap-2'>
               <input
-                type="text"
+                type='text'
                 value={pos.text}
                 onChange={(e) => handleTextChange(pos.id, e.target.value)}
                 placeholder={`Text Position ${pos.id}`}
-                className="border border-gray-300 rounded px-3 py-2 w-full"
+                className='border border-gray-300 rounded px-3 py-2 w-full'
               />
-              <div className="text-sm text-gray-500">
+              <div className='text-sm text-gray-500'>
                 (x: {pos.x}, y: {pos.y})
               </div>
             </div>
           ))}
-          
+
           <button
             onClick={handleDownload}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded"
+            className='bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded'
           >
             Download Image
           </button>

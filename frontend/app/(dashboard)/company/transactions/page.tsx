@@ -7,13 +7,13 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { columns } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
 import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
-import { Card } from '@/components/ui/card';
 
 async function getTransactions(): Promise<Transaction[]> {
   const token = localStorage.getItem('accessToken');
@@ -162,20 +162,22 @@ export default function TransactionsPage() {
           </div>
 
           {/* Table Rows */}
-          {Array(5).fill(null).map((_, index) => (
-            <div key={index} className='grid grid-cols-7 gap-4 py-4 border-b'>
-              <Skeleton className='h-4 w-4' /> {/* Checkbox */}
-              <Skeleton className='h-4 w-28' />
-              <Skeleton className='h-4 w-36' />
-              <Skeleton className='h-4 w-28' />
-              <Skeleton className='h-4 w-32' />
-              <Skeleton className='h-4 w-24' />
-              <div className='flex space-x-2'>
-                <Skeleton className='h-8 w-8' /> {/* Edit button */}
-                <Skeleton className='h-8 w-8' /> {/* Delete button */}
+          {Array(5)
+            .fill(null)
+            .map((_, index) => (
+              <div key={index} className='grid grid-cols-7 gap-4 py-4 border-b'>
+                <Skeleton className='h-4 w-4' /> {/* Checkbox */}
+                <Skeleton className='h-4 w-28' />
+                <Skeleton className='h-4 w-36' />
+                <Skeleton className='h-4 w-28' />
+                <Skeleton className='h-4 w-32' />
+                <Skeleton className='h-4 w-24' />
+                <div className='flex space-x-2'>
+                  <Skeleton className='h-8 w-8' /> {/* Edit button */}
+                  <Skeleton className='h-8 w-8' /> {/* Delete button */}
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
 
           {/* Table Footer */}
           <div className='flex items-center justify-between pt-4'>
@@ -194,40 +196,40 @@ export default function TransactionsPage() {
   return (
     <section className='p-4'>
       <Card>
-      <div className='container mx-auto py-10'>
-      <div className='flex justify-between items-center p-5'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Transactions Management</h1>
-        </div>
-        <div className='flex gap-2'>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className='mr-2 h-4 w-4' /> Add New Transaction
-          </Button>
-        </div>
-      </div>
+        <div className='container mx-auto py-10'>
+          <div className='flex justify-between items-center p-5'>
+            <div>
+              <h1 className='text-3xl font-bold tracking-tight'>Transactions Management</h1>
+            </div>
+            <div className='flex gap-2'>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className='mr-2 h-4 w-4' /> Add New Transaction
+              </Button>
+            </div>
+          </div>
 
-      <div className='space-4 p-6'>
-        <DataTable
-          columns={columns}
-          data={transactions}
-          onEdit={handleEdit}
-          onDelete={async (row) => {
-            const transactionIds = row.map((row) => row.original.id);
-            await handleBulkDelete(transactionIds);
-          }}
-          onSelectionChange={handleSelectionChange}
-        />
-      </div>
+          <div className='space-4 p-6'>
+            <DataTable
+              columns={columns}
+              data={transactions}
+              onEdit={handleEdit}
+              onDelete={async (row) => {
+                const transactionIds = row.map((row) => row.original.id);
+                await handleBulkDelete(transactionIds);
+              }}
+              onSelectionChange={handleSelectionChange}
+            />
+          </div>
 
-      <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      <EditTransactionDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        transaction={selectedTransaction}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-    </div>
+          <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+          <EditTransactionDialog
+            open={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            transaction={selectedTransaction}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </div>
       </Card>
     </section>
   );

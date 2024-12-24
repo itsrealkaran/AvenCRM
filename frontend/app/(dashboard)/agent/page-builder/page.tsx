@@ -1,12 +1,13 @@
-"use client";
+'use client';
+
+import React from 'react';
+import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { useRouter } from 'next/navigation';
-import React from 'react';
 
 function PageBuilder() {
   const router = useRouter();
-  return(
+  return (
     <div className='flex'>
       this is page builder page
       <Button onClick={() => router.push('/agent/page-builder/add')}>Add</Button>

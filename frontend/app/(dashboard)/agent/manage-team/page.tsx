@@ -206,7 +206,7 @@ const Page = () => {
               <div className='w-full max-w-md transform rounded-lg bg-white p-6 shadow-xl transition-all'>
                 <div className='flex items-center justify-between'>
                   <div className='text-xl font-semibold text-gray-900'>Delete User</div>
-                  <button 
+                  <button
                     onClick={() => setOpenDeletePopup(false)}
                     className='rounded-full p-1 hover:bg-gray-100 transition-colors'
                   >
@@ -300,10 +300,7 @@ const Page = () => {
                   <h2 className='text-xl font-semibold text-gray-900'>
                     {updateOrCreate === 'UPDATE' ? 'Update User' : 'Create User'}
                   </h2>
-                  <button
-                    onClick={() => openadd()}
-                    className='rounded-full p-1 hover:bg-gray-100'
-                  >
+                  <button onClick={() => openadd()} className='rounded-full p-1 hover:bg-gray-100'>
                     <IoClose className='h-6 w-6 text-gray-500' />
                   </button>
                 </div>
