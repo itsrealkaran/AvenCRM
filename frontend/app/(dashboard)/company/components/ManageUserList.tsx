@@ -43,7 +43,7 @@ const ManageUserList = ({ func, index, name, email, phone, role, id }: ManageUse
 
       {/* User status */}
       <div className='text-center capitalize text-blue-700'>
-        <h1>{role}</h1>
+        <h1>{role.split('_').join(' ')}</h1>
       </div>
     </div>
   );

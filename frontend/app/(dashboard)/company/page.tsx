@@ -15,7 +15,7 @@ import ManageUserList from './components/ManageUserList';
 
 interface FormData {
   name: string;
-  age: string;
+  dob: string;
   gender: string;
   phone: string;
   email: string;
@@ -32,7 +32,7 @@ const Page = () => {
   const [agent, setagent] = useState('false');
   const [formData, setFormData] = useState<FormData>({
     name: '',
-    age: '',
+    dob: '',
     gender: '',
     phone: '',
     email: '',
@@ -51,7 +51,6 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
 
   const getUser = useCallback(async () => {
-
     try {
       const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
         headers: {
@@ -93,10 +92,10 @@ const Page = () => {
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`,
       {
         name: formData.name,
-        dob: new Date(),
+        dob: formData.dob,
         email: formData.email,
         phone: formData.phone,
-        role: formData.role,
+        agentRole: formData.role,
         gender: formData.gender,
       },
       {
@@ -116,7 +115,7 @@ const Page = () => {
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent/${selectedList[0]}`,
       {
         name: formData.name,
-        dob: new Date(),
+        dob: formData.dob,
         email: formData.email,
         phone: formData.phone,
         role: formData.role,
@@ -327,19 +326,19 @@ const Page = () => {
                     />
                   </div>
 
-                  {/* Age Field */}
+                  {/* Date of Birth Field */}
                   <div className='group relative'>
                     <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
                       <IoMdPerson className='h-4 w-4' />
-                      Age
+                      Date of Birth
                     </label>
                     <input
                       className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
-                      type='text'
-                      name='age'
-                      value={formData.age}
+                      type='date'
+                      name='dob'
+                      value={formData.dob}
                       onChange={handleInputChange}
-                      placeholder='Enter age'
+                      placeholder='Select date of birth'
                     />
                   </div>
 
@@ -405,8 +404,8 @@ const Page = () => {
                       value={formData.role}
                       onChange={handleInputChange}
                     >
-                      <option value='user'>Agent</option>
-                      <option value='agent'>Team Leader</option>
+                      <option value='AGENT'>Agent</option>
+                      <option value='TEAM_LEADER'>Team Leader</option>
                     </select>
                   </div>
 
@@ -432,7 +431,7 @@ const Page = () => {
                 <div className='mt-6 flex items-center justify-end gap-3 border-t pt-4'>
                   <button
                     onClick={() => openadd()}
-                    className='rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50'
+                    className='rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50'
                   >
                     Cancel
                   </button>

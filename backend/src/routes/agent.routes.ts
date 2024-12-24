@@ -57,7 +57,7 @@ router.post("/", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Company not found" });
     }
 
-    const { name, email, dob, phone, gender } = req.body;
+    const { name, email, dob, phone, gender, agentRole } = req.body;
     
     let password = bcrypt.hashSync("123456", 12);
 
@@ -66,11 +66,11 @@ router.post("/", async (req: Request, res: Response) => {
         name: name,
         email: email,
         password: password,
-        dob: dob,
+        dob: new Date(dob),
         companyId: companyId,
         phone: phone,
         gender: gender,
-        role: UserRole.AGENT,
+        role: agentRole,
       },
     });
     res.json(agent);
