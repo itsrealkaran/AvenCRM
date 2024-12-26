@@ -17,8 +17,8 @@ import {
   AvailableChartColorsKeys,
   constructCategoryColors,
   getColorClassName,
-} from '../../app/(dashboard)/superadmin/lib/chartUtils';
-import { cx } from '../../app/(dashboard)/superadmin/lib/utils/cx';
+} from '../../app/dashboard/superadmin/lib/chartUtils';
+import { cx } from '../../app/dashboard/superadmin/lib/utils/cx';
 
 const sumNumericArray = (arr: number[]): number => arr.reduce((sum, num) => sum + num, 0);
 

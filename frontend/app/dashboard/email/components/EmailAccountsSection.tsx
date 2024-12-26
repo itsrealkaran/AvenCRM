@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { EmailAccount } from '@/types';
 import { Loader2, Mail, Trash2 } from 'lucide-react';
 
 import {
@@ -25,14 +26,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-
-interface EmailAccount {
-  id: string;
-  provider: 'GMAIL' | 'OUTLOOK';
-  email: string;
-  isActive: boolean;
-  updatedAt: string;
-}
 
 export default function EmailAccountsSection() {
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
@@ -203,7 +196,7 @@ export default function EmailAccountsSection() {
       ) : (
         <div className='text-center p-8 border rounded-lg bg-muted'>
           <Mail className='mx-auto h-12 w-12 opacity-50 mb-4' />
-          <h3 className='text-lg font-medium'>No email accounts isActive</h3>
+          <h3 className='text-lg font-medium'>No email accounts is Active</h3>
           <p className='text-sm text-muted-foreground mt-2'>
             Connect your email account to start sending emails
           </p>

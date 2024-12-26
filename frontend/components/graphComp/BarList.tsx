@@ -2,8 +2,8 @@
 
 import React from 'react';
 
-import { cx } from '../../app/(dashboard)/superadmin/lib/utils/cx';
-import { focusRing } from '../../app/(dashboard)/superadmin/lib/utils/focusRing';
+import { cx } from '../../app/dashboard/superadmin/lib/utils/cx';
+import { focusRing } from '../../app/dashboard/superadmin/lib/utils/focusRing';
 
 type Bar<T> = T & {
   key?: string;

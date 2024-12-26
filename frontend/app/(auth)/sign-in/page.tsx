@@ -3,6 +3,8 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { authApi } from '@/services/api';
+import { UserRole } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -33,7 +35,7 @@ const formSchema = z.object({
   password: z.string().min(4, {
     message: 'Password must be at least 4 characters long.',
   }),
-  role: z.enum(['SUPERADMIN', 'ADMIN', 'AGENT'], {
+  role: z.enum([...Object.values(UserRole)] as [UserRole, ...UserRole[]], {
     required_error: 'Please select a user type.',
   }),
 });
@@ -48,7 +50,7 @@ function SignInContent() {
     defaultValues: {
       email: '',
       password: '',
-      role: 'AGENT',
+      role: UserRole.AGENT,
     },
   });
 
@@ -57,38 +59,14 @@ function SignInContent() {
     toast.loading('Signing in...');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/sign-in`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        credentials: 'include', // Important for handling cookies
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-          role: values.role,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Sign-in failed');
-      }
-
-      const data = await response.json();
+      const { data } = await authApi.login(values);
 
       if (data.access_token) {
-        // Store the access token
-        localStorage.setItem('accessToken', data.access_token);
-
-        // Set the token as an HTTP-only cookie
-        document.cookie = `Authorization=${data.access_token}; path=/; secure; HttpOnly`;
         toast.success('Sign-in successful!');
 
         // Get the callback URL or use the default route based on role
         const callbackUrl = searchParams.get('callbackUrl');
-        const defaultPath = values.role === 'ADMIN' ? '/company' : `/${values.role.toLowerCase()}`;
-
+        const defaultPath = `/dashboard`;
         // Redirect after a short delay to show the success message
         setTimeout(() => {
           router.push(callbackUrl || defaultPath);

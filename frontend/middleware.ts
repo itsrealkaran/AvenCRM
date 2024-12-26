@@ -3,14 +3,6 @@ import type { NextRequest } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password', '/reset-password'];
-
-// Protected routes and their allowed roles
-const protectedRoutes = {
-  '/agent': ['AGENT'],
-  '/company': ['ADMIN'],
-  '/superadmin': ['SUPERADMIN'],
-};
 
 interface JWTPayload {
   id: string;
@@ -23,15 +15,13 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    return NextResponse.next();
-  }
 
-  // Check if the current path is a protected route
-  const isProtectedRoute = Object.keys(protectedRoutes).some((route) => pathname.startsWith(route));
 
-  if (!isProtectedRoute) {
-    // If it's not a protected route, proceed normally
+  // Check if the current path is a dashboard route
+  const isDashboardRoute = pathname.startsWith('/dashboard');
+
+  if (!isDashboardRoute) {
+    // If it's not a dashboard route, proceed normally
     return NextResponse.next();
   }
 
@@ -83,22 +73,8 @@ export async function middleware(request: NextRequest) {
       }
     }
 
-    // Get user role and validate access
-    const userRole = decoded.role;
-    const currentRoute = Object.entries(protectedRoutes).find(([route]) =>
-      pathname.startsWith(route)
-    );
-
-    if (currentRoute && !currentRoute[1].includes(userRole)) {
-      // User doesn't have permission for this route
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-
     // If everything is valid, proceed with the request
-    const response = NextResponse.next();
-
-    // No need to manually set Authorization header as it's already in the cookie
-    return response;
+    return NextResponse.next();
   } catch (error) {
     // If token is invalid, redirect to login
     const url = new URL('/sign-in', request.url);
