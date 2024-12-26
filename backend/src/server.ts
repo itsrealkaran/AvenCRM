@@ -2,10 +2,11 @@ import express, { Request, Response, NextFunction } from 'express';
 import authRouter from './routes/auth.routes.js';
 import "dotenv/config.js";
 import session, { SessionOptions } from 'express-session';
+import userRoutes from './routes/user.routes.js';
 
-import adminRoutes from './routes/company/admin/agent.routes.js';
-import superAdminRoutes from './routes/superadmin.routes.js';
-import agentRoutes from './routes/agent.routes.js';
+// import adminRoutes from './routes/company/admin/agent.routes.js';
+// import superAdminRoutes from './routes/superadmin.routes.js';
+// import agentRoutes from './routes/agent.routes.js';
 import dealsRoutes from './routes/deals.routes.js';
 import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
@@ -32,9 +33,7 @@ app.use(cookieParser());
 
 // Configure CORS with specific options
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://avencrm.com'  // Replace with your actual production domain
-    : 'http://localhost:3000',
+  origin: 'http://localhost:3000',
   credentials: true,  // This is important for handling cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
@@ -133,17 +132,14 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 
 // API Routes
 app.use('/auth', authRouter);
-app.use('/admin', adminRoutes);
-app.use('/superadmin', superAdminRoutes);
-app.use('/agent', agentRoutes);
+app.use('/user', userRoutes);
 app.use('/deals', dealsRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/company', companyRoutes);
-app.use('/transction', transctionRoutes);
+app.use('/transaction', transctionRoutes);
 app.use('/calender', manageCalendar);
 app.use('/company/moniter', companyMonitoring);
 app.use('/email', emailRoutes);
-app.use('/company/admin', adminRoutes);
 app.use("/property", propertyRoutes);
 app.use("/getProperty", propertyView);
 

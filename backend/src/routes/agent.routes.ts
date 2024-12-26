@@ -15,7 +15,7 @@ router.get("/", async (req: Request, res: Response) => {
     if (!companyId) {
       return res.status(404).json({ message: "Company not found" });
     }
-    const agents = await prisma.agent.findMany({
+    const agents = await prisma.user.findMany({
       where: {
         companyId: companyId,
       },
@@ -33,7 +33,7 @@ router.get("/:id", async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const agent = await prisma.agent.findUnique({
+    const agent = await prisma.user.findUnique({
       where: { 
         id: req.params.id,
       },
@@ -61,7 +61,7 @@ router.post("/", async (req: Request, res: Response) => {
     
     let password = bcrypt.hashSync("123456", 12);
 
-    const agent = await prisma.agent.create({
+    const agent = await prisma.user.create({
       data: {
         name: name,
         email: email,
@@ -90,7 +90,7 @@ router.put("/:id", async (req: Request, res: Response) => {
   if(dob)
       dobDate = new Date(dob);
   try {
-    const agent = await prisma.agent.update({
+    const agent = await prisma.user.update({
       where: { id: req.params.id },
       data: {
         name: name,
@@ -117,7 +117,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
     if (!companyId) {
       return res.status(404).json({ message: "Company not found" });
     }
-    const agent = await prisma.agent.delete({
+    const agent = await prisma.user.delete({
       where: { 
         id: req.params.id,
         companyId: companyId
@@ -155,7 +155,7 @@ router.delete("/", async (req: Request, res: Response) => {
     if (!companyId) {
       return res.status(404).json({ message: "Company not found" });
     }
-    await prisma.agent.deleteMany({
+    await prisma.user.deleteMany({
       where: {
         id: {
           in: agentIds,

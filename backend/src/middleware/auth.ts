@@ -90,17 +90,13 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
 
       // Verify user still exists
       let user;
-      switch (decoded.role) {
-        case UserRole.ADMIN:
-          user = await prisma.admin.findUnique({ where: { id: decoded.id } });
-          break;
-        case UserRole.SUPERADMIN:
-          user = await prisma.superAdmin.findUnique({ where: { id: decoded.id } });
-          break;
-        case UserRole.AGENT:
-          user = await prisma.agent.findUnique({ where: { id: decoded.id } });
-          break;
-      }
+      
+      user = await prisma.user.findUnique({
+        where: { id: decoded.id, role: decoded.role },
+        include: {
+          company: true
+        }
+      });
 
       if (!user) {
         return res.status(401).json({ message: 'User no longer exists' });

@@ -156,7 +156,7 @@ class EmailService {
           status: EmailCampaignStatus.SCHEDULED,
           scheduledAt: scheduledFor,
           createdById: userId,
-          companyId: agent.companyId
+          companyId: agent.companyId || ''
         }
       });
 
