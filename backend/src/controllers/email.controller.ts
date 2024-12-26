@@ -838,7 +838,7 @@ export class EmailController {
 
       // If recipient is internal (agent/admin), validate and get details
       if (recipient.type === 'AGENT' || recipient.type === 'ADMIN') {
-        const user = await prisma.agent.findFirst({
+        const user = await prisma.user.findFirst({
           where: {
             id: recipient.recipientId,
             companyId

@@ -85,7 +85,7 @@ router.post("/", authenticateToken, async (req, res) => {
         //@ts-ignore
         let id = req.user.id;
         try {
-            const agent = await db.agent.findFirst({
+            const agent = await db.user.findFirst({
                 where: {
                     id: id
                 },

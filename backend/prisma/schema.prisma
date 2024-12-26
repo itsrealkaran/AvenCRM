@@ -94,21 +94,61 @@ enum EmailAccountStatus {
   DISABLED
 }
 
-// Superuser/Platform Company Model
-model SuperAdmin {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime? @updatedAt
+// Unified User Model
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String
+  phone        String?
+  gender       Gender?
+  dob          DateTime?
+  role         UserRole
+  designation  String?
+  lastLogin    DateTime?
+  isActive     Boolean    @default(true)
+  
+  // Company Relations
+  company      Company?    @relation("CompanyUsers", fields: [companyId], references: [id])
+  companyId    String?
 
-  AdminAccessToken AdminAccessToken[]
+  // For ADMIN role - Company they manage
+  managedCompanies Company[] @relation("CompanyAdmin")
+  
+  // Team Relations
+  team  Team?      @relation("TeamMembers", fields: [teamId], references: [id])
+  teamId        String?
+  
+  // Team Leadership
+  leadingTeam   Team?      @relation("TeamLeadership")
+  
+  // Relations for different functionalities
+  leads         Lead[]
+  deals         Deal[]
+  properties    Property[]
+  transactions  Transaction[]
+  emailAccounts EmailAccount[]
+  emailTemplates EmailTemplate[]
+  emailCampaigns EmailCampaign[]
+  pageBuilders   PageBuilder[]
+  supportTickets SupportTicket[]    // Tickets created by user
+  
+  // Admin specific relations
+  allowedPages   PageBuilder[] @relation("AllowedAdmins")
+  
+  // SuperAdmin specific relations
+  adminAccessTokens AdminAccessToken[]
+  adminLoginLogs    AdminLoginLog[]
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 
-  AdminLoginLog AdminLoginLog[]
+  @@index([email])
+  @@index([role])
+  @@index([companyId])
 }
 
-// Company Model
+// Updated Company Model
 model Company {
   id           String   @id @default(cuid())
   name         String
@@ -118,32 +158,48 @@ model Company {
   // Subscription details
   plan         Plan     @relation(fields: [planId], references: [id])
   planId       String
-  planStart   DateTime @default(now())
-  planEnd     DateTime
+  planStart    DateTime @default(now())
+  planEnd      DateTime
   
-  // Detailed company information
+  // Company Information
   address      String?
   phone        String?
   website      String?
   
   // Relations
-  admin        Admin    @relation(fields: [adminId], references: [id])
+  admin        User     @relation("CompanyAdmin", fields: [adminId], references: [id])
   adminId      String   @unique
   
-  users        Agent[]
+  users        User[]   @relation("CompanyUsers")
   leads        Lead[]
   deals        Deal[]
   transactions Transaction[]
   teams        Team[]
   
-  createdAt    DateTime @default(now())
+  emailCampaigns    EmailCampaign[]
+  emailTemplates    EmailTemplate[]
+  companyAuditLogs  CompanyAuditLog[]
+  
+  createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
+}
 
-  EmailCampaign EmailCampaign[]
-
-  CompanyAuditLog CompanyAuditLog[]
- 
-  EmailTemplates EmailTemplate[]
+// Updated Team Model
+model Team {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  
+  company      Company    @relation(fields: [companyId], references: [id])
+  companyId    String
+  
+  teamLeader   User?      @relation("TeamLeadership", fields: [teamLeaderId], references: [id])
+  teamLeaderId String?    @unique
+  
+  members      User[]     @relation("TeamMembers")
+  
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime?  @updatedAt
 }
 
 // Plan Model for different subscription tiers
@@ -160,88 +216,6 @@ model Plan {
   updatedAt    DateTime?   @updatedAt
 }
 
-// Admin Model
-model Admin {
-  id           String     @id @default(cuid())
-  name         String
-  email        String     @unique
-  password     String
-  designation  String?
-  
-  // Relation to Company
-  company      Company?
-  
-  supportTickets SupportTicket[]
-  
-  lastLogin   DateTime?
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime?   @updatedAt
-
-  PropertyTemplate PropertyTemplate[] @relation("AllowedAdmins")
-}
-
-// Team Model
-model Team {
-  id           String     @id @default(cuid())
-  name         String
-  description  String?
-  
-  // Relations
-  company      Company    @relation(fields: [companyId], references: [id])
-  companyId    String
-  
-  teamLeader   Agent?     @relation("TeamLeadership", fields: [teamLeaderId], references: [id])
-  teamLeaderId String      @unique
-  
-  members      Agent[]    @relation("TeamMembers")
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime?   @updatedAt
-}
-
-// Agent/User Model
-model Agent {
-  id           String     @id @default(cuid())
-  name         String
-  email        String     @unique
-  password     String
-  phone        String?
-  gender       Gender
-  dob          DateTime?
-  
-  // Relations
-  company      Company    @relation(fields: [companyId], references: [id])
-  companyId    String
-  
-  // Team Relations
-  team         Team?      @relation("TeamMembers", fields: [teamId], references: [id])
-  teamId       String?
-  
-  // Leadership of Team (optional)
-  leadingTeam  Team?      @relation("TeamLeadership")
-  
-  // Other Relations
-  leads        Lead[]
-  deals        Deal[]
-  
-  role        UserRole   @default(AGENT)
-  lastLogin   DateTime?
-  
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  Property Property[]
-  PropertyTemplate PropertyTemplate[]
-
-  Transaction Transaction[]
-
-  EmailTemplates EmailTemplate[]
-
-  EmailCampaign EmailCampaign[]
-
-  EmailAccount EmailAccount[]
-}
-
 // Lead Model
 model Lead {
   id             String      @id @default(cuid())
@@ -254,7 +228,7 @@ model Lead {
   companyId      String
   
   // Agent Relation
-  agent          Agent       @relation(fields: [agentId], references: [id])
+  agent          User       @relation(fields: [agentId], references: [id])
   agentId        String
   
   // Lead Details
@@ -291,7 +265,7 @@ model Deal {
   company        Company     @relation(fields: [companyId], references: [id])
   companyId      String
   
-  agent          Agent       @relation(fields: [agentId], references: [id])
+  agent          User       @relation(fields: [agentId], references: [id])
   agentId        String
   
   // Deal Specifics
@@ -330,7 +304,7 @@ model Transaction {
   amount         Float
   date           DateTime    @default(now())
   type           TransactionType
-  agent          Agent       @relation(fields: [agentId], references: [id])
+  agent          User       @relation(fields: [agentId], references: [id])
   agentId        String
 
   planType       PlanTier?
@@ -349,29 +323,46 @@ model Transaction {
   updatedAt     DateTime    @updatedAt
 }
 
-// Support Ticket Model
+// Updated EmailAccount Model
+model EmailAccount {
+  id            String        @id @default(cuid())
+  email         String
+  accessToken   String
+  refreshToken  String
+  expiresAt     DateTime
+  idToken       String?
+  isActive      Boolean       @default(true)
+  provider      EmailProvider
+  status        EmailAccountStatus
+  lastError     String
+
+  // Relations
+  user          User          @relation(fields: [userId], references: [id])
+  userId        String
+  sentEmails    Email[]
+
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+// Updated SupportTicket Model
 model SupportTicket {
-  id             String      @id @default(cuid())
+  id           String    @id @default(cuid())
+  title        String
+  description  String
+  status       String    @default("OPEN")
+  priority     String    @default("MEDIUM")
   
   // Relations
-  createdBy      Admin?      @relation(fields: [createdById], references: [id])
-  createdById    String?
-
-  // Ticket Details
-  title          String
-  description    String
-  status         String      @default("OPEN")
-  priority       String      @default("MEDIUM")
+  createdBy    User      @relation(fields: [createdById], references: [id])
+  createdById  String
   
-  // Tagging and Assignment
-  assignedTo     String?
-  tags           String[]
+  assignedTo   String?
+  tags         String[]
+  comments     TicketComment[]
   
-  // Communication Thread
-  comments       TicketComment[]
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 // Ticket Comment Model for Internal Communication
@@ -385,6 +376,31 @@ model TicketComment {
   createdBy      String
   
   createdAt     DateTime    @default(now())
+}
+
+// Updated AdminAccessToken Model
+model AdminAccessToken {
+  id           String    @id @default(cuid())
+  token        String    @unique
+  expiresAt    DateTime
+  isRevoked    Boolean   @default(false)
+  
+  user         User      @relation(fields: [userId], references: [id])
+  userId       String
+  
+  createdAt    DateTime  @default(now())
+}
+
+// Updated AdminLoginLog Model
+model AdminLoginLog {
+  id           String    @id @default(cuid())
+  ipAddress    String
+  userAgent    String?
+  loginTime    DateTime  @default(now())
+  isSuccessful Boolean
+  
+  user         User      @relation(fields: [userId], references: [id])
+  userId       String
 }
 
 model CalendarEvent {
@@ -422,35 +438,6 @@ model CompanyAuditLog {
   createdAt          DateTime             @default(now())
 }
 
-// Administrative Access Token Management
-model AdminAccessToken {
-  id                 String               @id @default(cuid())
-  
-  superAdmin         SuperAdmin           @relation(fields: [superAdminId], references: [id])
-  superAdminId       String
-  
-  // Token Details
-  token              String               @unique
-  expiresAt          DateTime
-  isRevoked          Boolean              @default(false)
-  
-  createdAt          DateTime             @default(now())
-}
-
-// Login Tracking for Security
-model AdminLoginLog {
-  id                 String               @id @default(cuid())
-  
-  superAdmin         SuperAdmin           @relation(fields: [superAdminId], references: [id])
-  superAdminId       String
-  
-  // Login Details
-  ipAddress          String
-  userAgent          String?
-  loginTime          DateTime             @default(now())
-  isSuccessful       Boolean
-}
-
 model Property {
   id              String   @id @default(cuid())
   title           String
@@ -470,14 +457,14 @@ model Property {
   parking Json
   lotFeatures     Json
   rooms           Json[]
-  images          Json[] // URLs of property images
+  images          String[] // URLs of property images
 
   // Created and updated timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
 // Relationships
-  createdBy       Agent?   @relation(fields: [creatorId], references: [id])
+  createdBy       User?   @relation(fields: [creatorId], references: [id])
   creatorId       String?
 }
 
@@ -493,7 +480,7 @@ model EmailCampaign {
   // Relationships
   company            Company              @relation(fields: [companyId], references: [id])
   companyId          String
-  createdBy          Agent                @relation(fields: [createdById], references: [id])
+  createdBy          User                @relation(fields: [createdById], references: [id])
   createdById        String
   
   // Campaign Tracking
@@ -515,31 +502,6 @@ model EmailCampaign {
   updatedAt          DateTime             @updatedAt
 
   emails             Email[]
-}
-
-// Email Account Integration
-model EmailAccount {
-  id            String        @id @default(cuid())
-  email         String
-  accessToken   String
-  refreshToken  String
-  expiresAt     DateTime
-  idToken       String?
-  isActive      Boolean       @default(true)
-
-  provider      EmailProvider
-
-  // Relations
-  user          Agent         @relation(fields: [userId], references: [id])
-  userId        String
-
-  status        EmailAccountStatus
-  lastError     String
-
-  sentEmails    Email[]
-
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
 }
 
 // Email Model
@@ -578,26 +540,25 @@ model EmailTemplate {
   variables   String[] // Array of variable names used in template
   company     Company  @relation(fields: [companyId], references: [id])
   companyId   String
-  createdBy   Agent     @relation(fields: [createdById], references: [id])
+  createdBy   User     @relation(fields: [createdById], references: [id])
   description String
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-model PropertyTemplate {
+model PageBuilder {
   id              String   @id @default(cuid())
-  imageUrl        String
-  contentMetaData Json[] // array of { id: 1, text: 'text', x: 620, y: 420, font: '400 18px sans-serif', maxWidth: 150, lineHeight: 30 }
+  title           String
+  content         Json     // JSON containing text, designs, image references, etc.
+  isPublic        Boolean  @default(false) // Privacy setting: public/private
 
   // Created and updated timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relationships
-  createdBy       Agent    @relation(fields: [createdById], references: [id])
+  createdBy       User    @relation(fields: [createdById], references: [id])
   createdById     String
-  allowedAdmins   Admin[]  @relation("AllowedAdmins")
+  allowedAdmins   User[]  @relation("AllowedAdmins")
 }
-
-

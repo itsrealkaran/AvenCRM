@@ -57,7 +57,7 @@ router.post("/add", authenticateToken, async (req, res) => {
       if (!company) {
         res.status(404).json({ message: "heckerrrrr" });
       } else {
-        const agent = await db.agent.create({
+        const agent = await db.user.create({
           data: {
             name,
             email,
@@ -93,7 +93,7 @@ router.patch("/update", authenticateToken, async (req, res) => {
         res.status(400).json({ err: "not verified" });
       } else {
 
-        const agent = await db.agent.update({
+        const agent = await db.user.update({
           where: {
             id: agentId,
           },
@@ -138,7 +138,7 @@ router.delete("/delete", authenticateToken, async (req, res) => {
     } else {
       const companyId = company.id;
       try {
-        const agents = await db.agent.delete({
+        const agents = await db.user.delete({
           where: {
             id: agentId,
             companyId: companyId,

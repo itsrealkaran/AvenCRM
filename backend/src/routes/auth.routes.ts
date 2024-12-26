@@ -28,7 +28,7 @@ router.post('/sign-up', (async (req: Request, res: Response) => {
 
   try {
     if (email && password) {
-      const checkExistingProfile = await db.agent.findFirst({
+      const checkExistingProfile = await db.user.findFirst({
         where: {
           email,
         },
@@ -43,7 +43,7 @@ router.post('/sign-up', (async (req: Request, res: Response) => {
           .json({ access_token: token });
       }
       const hashedPassword = await bcrypt.hash(password, 12);
-      const profile = await db.agent.create({
+      const profile = await db.user.create({
         data: {
           name,
           email,
@@ -51,7 +51,8 @@ router.post('/sign-up', (async (req: Request, res: Response) => {
           dob,
           phone,
           companyId,
-          gender
+          gender,
+          role: UserRole.AGENT
         },
       });
       const token = jwt.sign(
@@ -78,7 +79,7 @@ router.post('/admin/sign-up', (async (req: Request, res: Response) => {
 
   try {
     if (email && password) {
-      const checkExistingProfile = await db.agent.findFirst({
+      const checkExistingProfile = await db.user.findFirst({
         where: {
           email,
         },
@@ -93,11 +94,12 @@ router.post('/admin/sign-up', (async (req: Request, res: Response) => {
           .json({ access_token: token });
       }
       const hashedPassword = await bcrypt.hash(password, 12);
-      const profile = await db.admin.create({
+      const profile = await db.user.create({
         data: {
           name,
           email,
           password: hashedPassword,
+          role: UserRole.ADMIN,
         },
       });
       const token = jwt.sign(
@@ -133,7 +135,7 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
 
       switch (role.toUpperCase()) {
         case UserRole.ADMIN:
-          user = await db.admin.findUnique({
+          user = await db.user.findUnique({
             where: { email },
             select: {
               id: true,
@@ -145,18 +147,19 @@ router.post('/sign-in', (async (req: Request, res: Response) => {
           });
           break;
         case UserRole.SUPERADMIN:
-          user = await db.superAdmin.findUnique({
+          user = await db.user.findUnique({
             where: { email },
             select: {
               id: true,
               email: true,
               password: true,
-              name: true
+              name: true,
+              role: true
             }
           });
           break;
         case UserRole.AGENT:
-          user = await db.agent.findUnique({
+          user = await db.user.findUnique({
             where: { email },
             select: {
               id: true,
@@ -280,31 +283,19 @@ router.post('/refresh-token', verifyToken, (async (req: Request, res: Response) 
     // Fetch latest user data
     let userRole: UserRole;
     let userDB: any;
-    switch(user.role) {
-      case UserRole.ADMIN:
-        userDB = await db.admin.findUnique({
-          where: { id: user.id },
-          select: { id: true, }
-        });
-        userRole = UserRole.ADMIN;
-        break;
-      case UserRole.SUPERADMIN:
-        userDB = await db.superAdmin.findUnique({
-          where: { id: user.id },
-          select: { id: true }
-        });
-        userRole = UserRole.SUPERADMIN;
-        break;
-      case UserRole.AGENT:
-        userDB = await db.agent.findUnique({
-          where: { id: user.id },
-          select: { id: true, role: true }
-        });
-        userRole = UserRole.AGENT;
-        break;
-      default:
-        return res.status(400).json({ message: 'Invalid role' });
-    }
+   
+    userRole = user.role;
+    userDB = await db.user.findUnique({
+      where: { id: user.id, role: userRole },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        name: true,
+        role: true,
+        companyId: true
+      }
+    });
 
     if (!userDB) {
       return res.status(401).json({ message: 'User not found' });

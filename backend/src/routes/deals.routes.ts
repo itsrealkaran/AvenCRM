@@ -51,7 +51,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 
     const agentId = req.user?.id ?? '';
-    const company = await db.agent.findUnique({
+    const company = await db.user.findUnique({
         where: { id: agentId },
         select: { companyId: true }
     });

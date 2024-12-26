@@ -23,7 +23,7 @@ export class AdminAgentController extends BaseController {
           if (!company) {
             return res.status(404).json({ message: "heckerrrrr" });
           } else {
-            const agent = await db.agent.create({
+            const agent = await db.user.create({
               data: {
                 name,
                 email,
@@ -92,7 +92,7 @@ export class AdminAgentController extends BaseController {
           if (!isVerified) {
             return res.status(400).json({ err: "not verified" });
           } else {
-            const agent = await db.agent.update({
+            const agent = await db.user.update({
               where: {
                 id: agentId,
               },
@@ -130,7 +130,7 @@ export class AdminAgentController extends BaseController {
           if (!isVerified) {
             res.status(400).json({ err: "not verified" });
           } else {
-            const agent = await db.agent.update({
+            const agent = await db.user.update({
               where: {
                 id: agentId,
               },
@@ -177,7 +177,7 @@ export class AdminAgentController extends BaseController {
           const companyId = company.id;
           try {
             agentIds.forEach(async (agentId) => {
-              await db.agent.delete({
+              await db.user.delete({
                 where: {
                   id: agentId,
                   companyId: companyId,

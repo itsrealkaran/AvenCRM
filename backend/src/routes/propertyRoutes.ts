@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import crypto from "crypto"
 import { uploadFile } from "../utils/s3.js";
 
-const router = Router();
+const router: Router = Router();
 
 router.use(protect);
 

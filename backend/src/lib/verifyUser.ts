@@ -1,7 +1,7 @@
 import db from "../db/index.js"
 
 export const verifyAdmin = async (id: string) => {
-    const admin = await db.admin.findFirst({
+    const admin = await db.user.findFirst({
         where: {
             id
         }
@@ -19,7 +19,7 @@ export const verifyAdminCompany = async (id: string) => {
 }
 
 export const verifySuperAdmin = async (id: string) => {
-    const admin = await db.superAdmin.findFirst({
+    const admin = await db.user.findFirst({
         where: {
             id
         }

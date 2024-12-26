@@ -138,7 +138,7 @@ class EmailService {
     scheduledFor?: Date
   ): Promise<string> {
     try {
-      const agent = await prisma.agent.findUnique({ 
+      const agent = await prisma.user.findUnique({ 
         where: { id: userId },
         select: { companyId: true }
       });

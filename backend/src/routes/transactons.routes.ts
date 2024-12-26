@@ -35,7 +35,7 @@ router.post("/", async (req: Request, res: Response) => {
     if (!agentId) {
         return res.status(401).json({ message: "Unauthorized" });
     }
-    const company = await prisma.agent.findUnique({
+    const company = await prisma.user.findUnique({
         where: { id: agentId },
         select: { companyId: true }
     });
@@ -73,7 +73,7 @@ router.put("/:id", async (req: Request, res: Response) => {
         return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const company = await prisma.agent.findUnique({
+    const company = await prisma.user.findUnique({
         where: { id: userId },
         select: { companyId: true }
     });

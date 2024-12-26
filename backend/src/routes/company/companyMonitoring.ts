@@ -21,7 +21,7 @@ router.get("/agentsCount", async (req, res) => {
       return res.status(400).json({ err: "not verified" });
     }
     try {
-      const agents = await db.agent.findMany({
+      const agents = await db.user.findMany({
         where: {
           companyId: companyId,
         },
