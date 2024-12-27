@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-
 import { authApi } from '@/services/api';
 import { User } from '@/types/user';
+import { toast } from 'sonner';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -42,8 +41,8 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   // Show loading state while checking authentication
   if (!isAuthenticated) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-primary"></div>
+      <div className='flex h-screen w-full items-center justify-center'>
+        <div className='h-32 w-32 animate-spin rounded-full border-b-2 border-t-2 border-primary'></div>
       </div>
     );
   }

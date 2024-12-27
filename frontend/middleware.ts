@@ -16,7 +16,6 @@ export async function middleware(request: NextRequest) {
 
   // Allow public routes
 
-
   // Check if the current path is a dashboard route
   const isDashboardRoute = pathname.startsWith('/dashboard');
 

@@ -1,4 +1,4 @@
-import { EmailStatus, EmailProvider, EmailAccountStatus, EmailCampaignStatus } from './enums';
+import { EmailAccountStatus, EmailCampaignStatus, EmailProvider, EmailStatus } from './enums';
 
 export interface EmailAccount {
   id: string;

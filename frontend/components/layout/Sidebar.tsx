@@ -41,7 +41,7 @@ const menuItems: MenuItem[] = [
     icon: LayoutDashboard,
     path: '/dashboard',
     description: 'Overview of your CRM',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
   },
   // SuperAdmin specific items
   {
@@ -53,18 +53,18 @@ const menuItems: MenuItem[] = [
   },
   // Admin specific items
   {
-    heading: 'Manage Users',
+    heading: 'Manage Agents',
     icon: Users,
     path: '/dashboard/users',
     description: 'User management',
-    roles: [UserRole.ADMIN],
+    roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
   },
   {
     heading: 'Monitoring',
     icon: MonitorIcon,
     path: '/dashboard/monitoring',
     description: 'System monitoring',
-    roles: [UserRole.ADMIN],
+    roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
   },
   // Agent specific items
   {
@@ -72,21 +72,21 @@ const menuItems: MenuItem[] = [
     icon: Building2,
     path: '/dashboard/properties',
     description: 'Property management',
-    roles: [UserRole.AGENT],
+    roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
   },
   {
     heading: 'Leads',
     icon: Store,
     path: '/dashboard/leads',
     description: 'Lead management',
-    roles: [UserRole.AGENT, UserRole.ADMIN],
+    roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
   },
   {
     heading: 'Deals',
     icon: HandshakeIcon,
     path: '/dashboard/deals',
     description: 'Deal management',
-    roles: [UserRole.AGENT, UserRole.ADMIN],
+    roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
   },
   // Common items for all roles
   {
@@ -94,28 +94,28 @@ const menuItems: MenuItem[] = [
     icon: Calendar,
     path: '/dashboard/calendar',
     description: 'Schedule and events',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
   },
   {
     heading: 'Email',
     icon: Mail,
     path: '/dashboard/email',
     description: 'Communication hub',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
   },
   {
     heading: 'Transactions',
     icon: Wallet,
     path: '/dashboard/transactions',
     description: 'Transaction history',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
   },
   {
     heading: 'Settings',
     icon: Settings,
     path: '/dashboard/settings',
     description: 'System preferences',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT],
+    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
   },
 ];
 

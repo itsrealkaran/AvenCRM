@@ -1,4 +1,4 @@
-import { LeadStatus, DealStatus } from './enums';
+import { DealStatus, LeadStatus } from './enums';
 
 export interface Lead {
   id: string;

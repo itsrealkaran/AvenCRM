@@ -1,4 +1,4 @@
-import { TransactionType, PlanTier } from './enums';
+import { PlanTier, TransactionType } from './enums';
 
 export interface Transaction {
   id: string;

@@ -2,7 +2,7 @@ export enum UserRole {
   SUPERADMIN = 'SUPERADMIN',
   ADMIN = 'ADMIN',
   TEAM_LEADER = 'TEAM_LEADER',
-  AGENT = 'AGENT'
+  AGENT = 'AGENT',
 }
 
 export enum LeadStatus {
@@ -12,7 +12,7 @@ export enum LeadStatus {
   NEGOTIATION = 'NEGOTIATION',
   WON = 'WON',
   LOST = 'LOST',
-  FOLLOWUP = 'FOLLOWUP'
+  FOLLOWUP = 'FOLLOWUP',
 }
 
 export enum DealStatus {
@@ -20,45 +20,45 @@ export enum DealStatus {
   ACTIVE = 'ACTIVE',
   UNDER_CONTRACT = 'UNDER_CONTRACT',
   CLOSED_WON = 'CLOSED_WON',
-  CLOSED_LOST = 'CLOSED_LOST'
+  CLOSED_LOST = 'CLOSED_LOST',
 }
 
 export enum TransactionType {
   INCOME = 'INCOME',
   EXPENSE = 'EXPENSE',
   SUBSCRIPTION = 'SUBSCRIPTION',
-  COMMISSION = 'COMMISSION'
+  COMMISSION = 'COMMISSION',
 }
 
 export enum PlanTier {
   BASIC = 'BASIC',
   PROFESSIONAL = 'PROFESSIONAL',
   ENTERPRISE = 'ENTERPRISE',
-  CUSTOM = 'CUSTOM'
+  CUSTOM = 'CUSTOM',
 }
 
 export enum Gender {
   MALE = 'MALE',
   FEMALE = 'FEMALE',
-  OTHERS = 'OTHERS'
+  OTHERS = 'OTHERS',
 }
 
 export enum EmailStatus {
   PENDING = 'PENDING',
   SENT = 'SENT',
   FAILED = 'FAILED',
-  SCHEDULED = 'SCHEDULED'
+  SCHEDULED = 'SCHEDULED',
 }
 
 export enum EmailProvider {
   GMAIL = 'GMAIL',
-  OUTLOOK = 'OUTLOOK'
+  OUTLOOK = 'OUTLOOK',
 }
 
 export enum EmailAccountStatus {
   ACTIVE = 'ACTIVE',
   NEEDS_REAUTH = 'NEEDS_REAUTH',
-  DISABLED = 'DISABLED'
+  DISABLED = 'DISABLED',
 }
 
 export enum EmailCampaignStatus {
@@ -66,5 +66,5 @@ export enum EmailCampaignStatus {
   SCHEDULED = 'SCHEDULED',
   SENDING = 'SENDING',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
