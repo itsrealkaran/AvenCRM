@@ -12,7 +12,10 @@ export const authApi = {
 
   refreshToken: () => apiClient.post('/auth/refresh-token'),
 
-  logout: () => apiClient.post('/auth/logout'),
+  logout: () => {
+    localStorage.removeItem('accessToken');
+    // return apiClient.post('/auth/sign-out');
+  },
 };
 
 // Add other API services as needed

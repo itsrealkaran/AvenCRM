@@ -1,6 +1,7 @@
 import React from 'react';
 
 import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
 
 import AuthGuard from './auth-guard';
 
@@ -9,7 +10,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <AuthGuard>
       <div className='flex h-screen'>
         <Sidebar />
-        <main className='flex-1 overflow-y-auto p-8'>{children}</main>
+        <div className='flex-1 flex flex-col'>
+          <Topbar />
+          <main className='flex-1 overflow-y-auto p-8'>{children}</main>
+        </div>
       </div>
     </AuthGuard>
   );
