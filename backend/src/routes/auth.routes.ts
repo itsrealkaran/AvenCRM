@@ -237,4 +237,22 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
   }
 });
 
+// Sign Out
+router.post('/sign-out', (req: Request, res: Response) => {
+  // Clear cookies
+  res.clearCookie('Authorization', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  });
+  
+  res.clearCookie('RefreshToken', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none'
+  });
+
+  res.json({ message: 'Signed out successfully' });
+});
+
 export default router;
