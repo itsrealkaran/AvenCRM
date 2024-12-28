@@ -53,8 +53,8 @@ router.post("/", async (req: Request, res: Response) => {
     });
     
 
-    const { name, phone, email, leadAmount, source, expectedDate, notes } = req.body;
-    let leadAmnt = Number(leadAmount);
+    const { name, phone, email, source, expectedDate, notes } = req.body;
+    
 
     try {
         const lead = await db.lead.create({
@@ -62,7 +62,6 @@ router.post("/", async (req: Request, res: Response) => {
                 name,
                 phone: phone,
                 email,
-                leadAmount: leadAmnt ?? 0,
                 source,
                 expectedDate,
                 notes,
@@ -78,8 +77,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 
 router.put("/:id", async (req: Request, res: Response) => {
-    const { name, phone, email, leadAmount, source, expectedDate, notes } = req.body;
-    let leadAmnt = Number(leadAmount);
+    const { name, phone, email, source, expectedDate    , notes } = req.body;
     
     try {
         const lead = await db.lead.update({
@@ -88,7 +86,6 @@ router.put("/:id", async (req: Request, res: Response) => {
                 name,
                 phone,
                 email,
-                leadAmount: leadAmnt ?? 0,
                 source,
                 expectedDate,
                 notes,
