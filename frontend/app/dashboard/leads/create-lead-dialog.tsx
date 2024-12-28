@@ -37,9 +37,10 @@ type LeadFormValues = z.infer<typeof leadFormSchema>;
 interface CreateLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
-export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) {
+export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
@@ -110,7 +111,7 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input placeholder='John Doe' {...field} />
+                      <Input placeholder='John Doe' disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,7 +124,12 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type='email' placeholder='john@example.com' {...field} />
+                      <Input
+                        type='email'
+                        placeholder='john@example.com'
+                        disabled={isLoading}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -136,13 +142,13 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder='+1 234 567 890' {...field} />
+                      <Input placeholder='+1 234 567 890' disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
+              {/* <FormField
                 control={form.control}
                 name='leadAmount'
                 render={({ field }) => (
@@ -154,7 +160,7 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                     <FormMessage />
                   </FormItem>
                 )}
-              />
+              /> */}
               <FormField
                 control={form.control}
                 name='status'
@@ -162,7 +168,7 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Input placeholder='Status' {...field} />
+                      <Input placeholder='Status' disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -175,7 +181,7 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                   <FormItem>
                     <FormLabel>Property Type</FormLabel>
                     <FormControl>
-                      <Input placeholder='Residential' {...field} />
+                      <Input placeholder='Residential' disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -189,17 +195,28 @@ export function CreateLeadDialog({ open, onOpenChange }: CreateLeadDialogProps) 
                 <FormItem>
                   <FormLabel>Notes</FormLabel>
                   <FormControl>
-                    <Textarea placeholder='Add any additional notes here...' {...field} />
+                    <Textarea
+                      placeholder='Add any additional notes here...'
+                      disabled={isLoading}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className='flex justify-end space-x-4'>
-              <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={isLoading}
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </Button>
-              <Button type='submit'>Create Lead</Button>
+              <Button type='submit' disabled={isLoading}>
+                {isLoading ? 'Creating...' : 'Create Lead'}
+              </Button>
             </div>
           </form>
         </Form>

@@ -164,19 +164,6 @@ export function EditLeadDialog({
               />
               <FormField
                 control={form.control}
-                name='leadAmount'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lead Amount</FormLabel>
-                    <FormControl>
-                      <Input type='number' placeholder='10000' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name='status'
                 render={({ field }) => (
                   <FormItem>

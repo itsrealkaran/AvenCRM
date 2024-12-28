@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -39,6 +40,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
+  const [loading, setLoading] = useState(false);
 
   const { data: leads = [], isLoading } = useQuery({
     queryKey: ['leads'],
@@ -47,6 +49,7 @@ export default function LeadsPage() {
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
+      setLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('Access token not found');
@@ -66,14 +69,17 @@ export default function LeadsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead deleted successfully');
+      setLoading(false);
     },
     onError: () => {
       toast.error('Failed to delete lead');
+      setLoading(false);
     },
   });
 
   const bulkDeleteLeads = useMutation({
     mutationFn: async (leadIds: string[]) => {
+      setLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
         throw new Error('Access token not found');
@@ -127,13 +133,32 @@ export default function LeadsPage() {
   };
 
   if (isLoading) {
-    return <LoadingTableSkeleton />;
+    return (
+      <section className='flex-1 p-2 md:p-4'>
+        <Card className='container mx-auto p-4 md:p-5'>
+          <div className='flex justify-between items-center '>
+            <div>
+              <Skeleton className='h-10 w-60 mb-2' />
+              <Skeleton className='h-6 w-96 bg-black/20' />
+            </div>
+            <div className='flex gap-2'>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className='mr-2 h-4 w-4' /> Add New Lead
+              </Button>
+            </div>
+          </div>
+          <div className='w-full items-center justify-center p-3'>
+            <Skeleton className='w-[95%] h-[400px]' />
+          </div>
+        </Card>
+      </section>
+    );
   }
 
   return (
-    <section className='flex-1 space-y-4 p-4 md:p-6'>
-      <Card className='container mx-auto py-10'>
-        <div className='flex justify-between items-center p-5'>
+    <section className='flex-1 p-2 md:p-4 h-full'>
+      <Card className='container mx-auto p-4 md:p-5'>
+        <div className='flex justify-between items-center '>
           <div>
             <h1 className='text-3xl font-bold tracking-tight text-primary'>Leads Management</h1>
             <p className='text-muted-foreground'>Manage and track your leads in one place</p>

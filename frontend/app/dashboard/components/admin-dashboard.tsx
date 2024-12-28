@@ -22,9 +22,9 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ user }: AdminDashboardProps) {
   return (
-    <div className='space-y-4'>
+    <div className='space-y-4 '>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        <Card>
+        <Card className='bg-white text-primary'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
             <CardTitle className='text-sm font-medium'>Total Agents</CardTitle>
             <Users className='h-4 w-4 text-muted-foreground' />
@@ -88,30 +88,6 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                 <Bar dataKey='deals' fill='#2563eb' radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className='col-span-3'>
-          <CardHeader>
-            <CardTitle>Recent Activities</CardTitle>
-            <CardDescription>Latest agent activities</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className='space-y-8'>
-              {[1, 2, 3].map((_, i) => (
-                <div key={i} className='flex items-center'>
-                  <span className='relative flex h-2 w-2 mr-2'>
-                    <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75'></span>
-                    <span className='relative inline-flex rounded-full h-2 w-2 bg-sky-500'></span>
-                  </span>
-                  <div className='ml-4 space-y-1'>
-                    <p className='text-sm font-medium leading-none'>
-                      New deal closed by Agent {i + 1}
-                    </p>
-                    <p className='text-sm text-muted-foreground'>{i + 2} hours ago</p>
-                  </div>
-                </div>
-              ))}
-            </div>
           </CardContent>
         </Card>
       </div>

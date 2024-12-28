@@ -28,7 +28,7 @@ export default function Topbar() {
   };
 
   return (
-    <div className='h-16 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
+    <div className='h-16 border-b bg-white/70 z-40'>
       <div className='flex h-full items-center px-6 gap-4'>
         <div className='flex flex-1 items-center gap-4 md:gap-6'>
           <div className='relative flex-1 max-w-md'>
