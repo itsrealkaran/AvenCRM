@@ -66,10 +66,10 @@ function SignInContent() {
 
         // Get the callback URL or use the default route based on role
         const callbackUrl = searchParams.get('callbackUrl');
-        const defaultPath = `/dashboard`;
+        const defaultPath = `/${values.role.toLowerCase()}`;
         // Redirect after a short delay to show the success message
         setTimeout(() => {
-          router.push(callbackUrl || defaultPath);
+          router.push(data.user.role.toLowerCase() || callbackUrl || defaultPath);
         }, 1000);
       } else {
         throw new Error('No access token received');

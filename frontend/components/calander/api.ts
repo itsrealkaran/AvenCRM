@@ -9,6 +9,7 @@ export const fetchEvents = async () => {
     headers: {
       Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
     },
+    withCredentials: true,
   });
   return response.data;
 };
@@ -21,6 +22,7 @@ export const createEvent = async (eventData: any) => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       },
+      withCredentials: true,
     }
   );
   return response.data;
@@ -34,6 +36,7 @@ export const updateEvent = async (id: any, eventData: any) => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       },
+      withCredentials: true,
     }
   );
   return response.data;
@@ -46,6 +49,7 @@ export const deleteEvent = async (id: any) => {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       },
+      withCredentials: true,
     }
   );
   return response.data;

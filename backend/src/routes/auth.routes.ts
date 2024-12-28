@@ -157,8 +157,12 @@ router.get('/me', protect, async (req: Request, res: Response) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
+    if (!authUser.role) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+
     const user = await db.user.findUnique({
-      where: { id: authUser.id },
+      where: { id: authUser.id, role: authUser.role },
       include: {
         company: true,
         team: true

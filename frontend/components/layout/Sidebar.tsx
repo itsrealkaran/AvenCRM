@@ -24,8 +24,6 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import apiClient from '@/lib/axios';
-
 interface MenuItem {
   heading: string;
   icon: any;
@@ -34,94 +32,97 @@ interface MenuItem {
   roles: UserRole[];
 }
 
-const menuItems: MenuItem[] = [
-  // Dashboard - available for all roles
-  {
-    heading: 'Dashboard',
-    icon: LayoutDashboard,
-    path: '/dashboard',
-    description: 'Overview of your CRM',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
-  },
-  // SuperAdmin specific items
-  {
-    heading: 'Companies',
-    icon: Building,
-    path: '/dashboard/companies',
-    description: 'Manage companies',
-    roles: [UserRole.SUPERADMIN],
-  },
-  // Admin specific items
-  {
-    heading: 'Manage Agents',
-    icon: Users,
-    path: '/dashboard/users',
-    description: 'User management',
-    roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
-  },
-  {
-    heading: 'Monitoring',
-    icon: MonitorIcon,
-    path: '/dashboard/monitoring',
-    description: 'System monitoring',
-    roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
-  },
-  // Agent specific items
-  {
-    heading: 'Properties',
-    icon: Building2,
-    path: '/dashboard/properties',
-    description: 'Property management',
-    roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
-  },
-  {
-    heading: 'Leads',
-    icon: Store,
-    path: '/dashboard/leads',
-    description: 'Lead management',
-    roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
-  },
-  {
-    heading: 'Deals',
-    icon: HandshakeIcon,
-    path: '/dashboard/deals',
-    description: 'Deal management',
-    roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
-  },
-  // Common items for all roles
-  {
-    heading: 'Calendar',
-    icon: Calendar,
-    path: '/dashboard/calendar',
-    description: 'Schedule and events',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
-  },
-  {
-    heading: 'Email',
-    icon: Mail,
-    path: '/dashboard/email',
-    description: 'Communication hub',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
-  },
-  {
-    heading: 'Transactions',
-    icon: Wallet,
-    path: '/dashboard/transactions',
-    description: 'Transaction history',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
-  },
-  {
-    heading: 'Settings',
-    icon: Settings,
-    path: '/dashboard/settings',
-    description: 'System preferences',
-    roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
-  },
-];
-
 const Sidebar = () => {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+
+  // Extract role from pathname
+  const role = pathname.split('/')[1]; // Assuming the role is in the second segment of the pathname
+
+  const menuItems: MenuItem[] = [
+    // Dashboard - available for all roles
+    {
+      heading: 'Dashboard',
+      icon: LayoutDashboard,
+      path: `/${role}/`,
+      description: 'Overview of your CRM',
+      roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    // SuperAdmin specific items
+    {
+      heading: 'Companies',
+      icon: Building,
+      path: `/${role}/companies`,
+      description: 'Manage companies',
+      roles: [UserRole.SUPERADMIN],
+    },
+    // Admin specific items
+    {
+      heading: 'Manage Agents',
+      icon: Users,
+      path: `/${role}/users`,
+      description: 'User management',
+      roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Monitoring',
+      icon: MonitorIcon,
+      path: `/${role}/monitoring`,
+      description: 'System monitoring',
+      roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
+    },
+    // Agent specific items
+    {
+      heading: 'Properties',
+      icon: Building2,
+      path: `/${role}/property`,
+      description: 'Property management',
+      roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Leads',
+      icon: Store,
+      path: `/${role}/leads`,
+      description: 'Lead management',
+      roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Deals',
+      icon: HandshakeIcon,
+      path: `/${role}/deals`,
+      description: 'Deal management',
+      roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
+    },
+    // Common items for all roles
+    {
+      heading: 'Calendar',
+      icon: Calendar,
+      path: `/${role}/calendar`,
+      description: 'Schedule and events',
+      roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Email',
+      icon: Mail,
+      path: `/${role}/email`,
+      description: 'Communication hub',
+      roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Transactions',
+      icon: Wallet,
+      path: `/${role}/transactions`,
+      description: 'Transaction history',
+      roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Settings',
+      icon: Settings,
+      path: `/${role}/settings`,
+      description: 'System preferences',
+      roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+  ];
 
   useEffect(() => {
     // Fetch user data when component mounts
@@ -143,8 +144,18 @@ const Sidebar = () => {
     fetchUser();
   }, []);
 
+  // Update dashboard path based on role
+  const updatedMenuItems = menuItems.map((item) => {
+    if (item.heading === 'Dashboard') {
+      return { ...item, path: `/${role}` };
+    }
+    return item;
+  });
+
   // Filter menu items based on user role
-  const filteredMenuItems = menuItems.filter((item) => user && item.roles.includes(user.role));
+  const filteredMenuItems = updatedMenuItems.filter(
+    (item) => user && item.roles.includes(user.role)
+  );
 
   return (
     <div className='sticky top-0 z-10 h-screen w-[18%] select-none bg-white px-8 pt-10 shadow-xl shadow-black/20'>
@@ -154,7 +165,7 @@ const Sidebar = () => {
           <MenuIcon className='h-8 w-8' />
         </div>
         <Link
-          href='/dashboard'
+          href={`/dashboard/${role}`}
           className='flex items-end gap-[2px] text-[1.24rem] font-bold text-primary hover:text-primary/90 transition-colors'
         >
           <h1>AvenCRM</h1>

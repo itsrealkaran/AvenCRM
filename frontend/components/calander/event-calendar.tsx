@@ -1,19 +1,19 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import moment from 'moment';
-import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar as BigCalendar, momentLocalizer, Views } from 'react-big-calendar';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
+import { createEvent, deleteEvent, fetchEvents, updateEvent } from './api';
 import EventModal from './event-modal';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { createEvent, fetchEvents, updateEvent } from './api';
+import { toast } from 'react-hot-toast';
 
-// Setup the localizer for BigCalendar
 const localizer = momentLocalizer(moment);
 
 export default function Calendar() {
@@ -22,11 +22,10 @@ export default function Calendar() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await fetchEvents();
-      // Convert string dates to Date objects
       const formattedEvents = data.map((event: any) => ({
         ...event,
         start: new Date(event.start),
@@ -34,62 +33,92 @@ export default function Calendar() {
       }));
       setEvents(formattedEvents);
     } catch (error) {
-      console.error('Error loading events:', error);
+      toast.error('Failed to load events. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleSelectEvent = (event: any) => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
-  const handleSelectSlot = ({ start, end }: { start: Date; end: Date }) => {
-    setSelectedEvent({ start, end });
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
-  };
-
-  const handleCreateOrUpdateEvent = async (eventData: any) => {
-    try {
-      if (eventData.id) {
-        await updateEvent(eventData.id, eventData);
-      } else {
-        const newEvent = await createEvent(eventData);
-        setEvents([...events, newEvent]);
-      }
-      await loadEvents(); // Refresh events from server
-    } catch (error) {
-      console.error('Error handling event:', error);
-    }
-    closeModal();
-  };
-
-  const handleDeleteEvent = async (eventId: number) => {
-    try {
-      setEvents(events.filter((event) => event.id !== eventId));
-      await loadEvents(); // Refresh events from server after delete
-    } catch (error) {
-      console.error('Error deleting event:', error);
-    }
-    closeModal();
-  };
+  }, []);
 
   useEffect(() => {
     loadEvents();
+  }, [loadEvents]);
+
+  const handleSelectEvent = useCallback((event: any) => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleSelectSlot = useCallback(({ start, end }: { start: Date; end: Date }) => {
+    setSelectedEvent({ start, end });
+    setIsModalOpen(true);
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  }, []);
+
+  const handleCreateOrUpdateEvent = useCallback(
+    async (eventData: any) => {
+      try {
+        setLoading(true);
+        if (eventData.id) {
+          await updateEvent(eventData.id, eventData);
+          toast.success('Event updated successfully!');
+        } else {
+          const newEvent = await createEvent(eventData);
+          setEvents((prevEvents) => [...prevEvents, newEvent]);
+          toast.success('Event created successfully!');
+        }
+        await loadEvents();
+      } catch (error) {
+        toast.error('Failed to save event. Please try again.');
+      } finally {
+        setLoading(false);
+        closeModal();
+      }
+    },
+    [closeModal, loadEvents]
+  );
+
+  const handleDeleteEvent = useCallback(
+    async (eventId: number) => {
+      try {
+        setLoading(true);
+        await deleteEvent(eventId);
+        setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventId));
+        toast.success('Event deleted successfully!');
+      } catch (error) {
+        toast.error('Failed to delete event. Please try again.');
+      } finally {
+        setLoading(false);
+        closeModal();
+      }
+    },
+    [closeModal]
+  );
+
+  const eventStyleGetter = useCallback((event: any) => {
+    const style = {
+      backgroundColor: '#3182ce',
+      borderRadius: '5px',
+      opacity: 0.8,
+      color: 'white',
+      border: '0px',
+      display: 'block',
+    };
+    return { style };
   }, []);
 
   return (
-    <Card className='w-full h-full max-w-6xl mx-auto mt-8'>
+    <Card className='w-full h-full max-w-6xl mx-auto mt-8 shadow-lg'>
       <CardContent className='p-6'>
-        <div className='mb-4 flex justify-between items-center'>
-          <h1 className='text-2xl font-bold'>Event Calendar</h1>
-          <Button onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })}>
+        <div className='mb-6 flex justify-between items-center'>
+          <h1 className='text-3xl font-bold text-gray-800'>Event Calendar</h1>
+          <Button
+            onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })}
+            className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+          >
             Create Event
           </Button>
         </div>
@@ -98,20 +127,23 @@ export default function Calendar() {
           events={events}
           startAccessor='start'
           endAccessor='end'
-          style={{ height: 500 }}
+          style={{ height: 600 }}
           onSelectEvent={handleSelectEvent}
           onSelectSlot={handleSelectSlot}
           selectable
+          eventPropGetter={eventStyleGetter}
+          views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+          popup
+          className='rounded-lg shadow-sm'
         />
-        {isModalOpen && (
-          <EventModal
-            isOpen={isModalOpen}
-            onClose={closeModal}
-            event={selectedEvent}
-            onSave={handleCreateOrUpdateEvent}
-            onDelete={handleDeleteEvent}
-          />
-        )}
+        <EventModal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          event={selectedEvent}
+          onSave={handleCreateOrUpdateEvent}
+          onDelete={handleDeleteEvent}
+          loading={loading}
+        />
       </CardContent>
     </Card>
   );

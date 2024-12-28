@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
 
-// List of public routes that don't require authentication
-
 interface JWTPayload {
   id: string;
   role: string;
@@ -11,10 +9,16 @@ interface JWTPayload {
   exp: number;
 }
 
+// List of public routes that don't require authentication
+const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Allow public routes
+  if (publicRoutes.some(route => pathname.startsWith(route))) {
+    return NextResponse.next();
+  }
 
   // Check if the current path is a dashboard route
   const isDashboardRoute = pathname.startsWith('/dashboard');
@@ -49,33 +53,16 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(url);
       }
 
-      // Attempt to refresh the token by calling the backend
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/refresh-token`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to refresh token');
-        }
-
-        // Continue with the request since the cookie will be automatically updated
-        return NextResponse.next();
-      } catch (error) {
-        const url = new URL('/sign-in', request.url);
-        url.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(url);
-      }
+      // Redirect to refresh token endpoint
+      const response = NextResponse.redirect(new URL('/api/auth/refresh-token', request.url));
+      response.headers.set('x-original-path', pathname);
+      return response;
     }
 
-    // If everything is valid, proceed with the request
+    // Token is valid, proceed with the request
     return NextResponse.next();
   } catch (error) {
-    // If token is invalid, redirect to login
+    // Invalid token, redirect to login
     const url = new URL('/sign-in', request.url);
     url.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(url);
@@ -86,11 +73,12 @@ export const config = {
   matcher: [
     /*
      * Match all paths except:
-     * 1. /api (API routes)
+     * 1. /api routes
      * 2. /_next (Next.js internals)
-     * 3. /static (static files)
-     * 4. /favicon.ico, /robots.txt (static files)
+     * 3. /fonts (inside public directory)
+     * 4. /examples (inside public directory)
+     * 5. all root files inside public (e.g. /favicon.ico)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|robots.txt).*)',
+    '/((?!api|_next|fonts|examples|[\\w-]+\\.\\w+).*)',
   ],
 };
