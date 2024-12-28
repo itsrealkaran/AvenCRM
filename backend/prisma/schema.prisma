@@ -246,7 +246,7 @@ model Lead {
   lastContactDate DateTime?
   
   // Additional Details
-  notes          String?
+  notes          Json?
   socialProfiles Json?
 
   
@@ -286,7 +286,7 @@ model Deal {
   estimatedCommission Float?
   
   // Additional Details
-  notes          String?
+  notes          Json?
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

@@ -45,12 +45,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 
 router.post("/", async (req: Request, res: Response) => {
-
-    const agentId = req.user?.id;
-    const company = await db.user.findUnique({
-        where: { id: agentId },
-        select: { companyId: true }
-    });
+    const companyId = req.user?.companyId;
     
 
     const { name, phone, email, source, expectedDate, notes } = req.body;
@@ -66,18 +61,19 @@ router.post("/", async (req: Request, res: Response) => {
                 expectedDate,
                 notes,
                 agentId: req.user?.id ?? '',
-                companyId: company?.companyId || '',
+                companyId: companyId || '',
             },
         });
         res.json(lead);
     } catch (error) {
+        console.log(error);
         res.status(500).json({ message: "Failed to create lead" });
     }
 });
 
 
 router.put("/:id", async (req: Request, res: Response) => {
-    const { name, phone, email, source, expectedDate    , notes } = req.body;
+    const { name, phone, email, source, expectedDate , notes } = req.body;
     
     try {
         const lead = await db.lead.update({
@@ -141,7 +137,7 @@ router.post("/convert", async (req: Request, res: Response) => {
                 dealAmount: dealAmount,
                 email: lead.email,
                 expectedCloseDate: expectedCloseDate ?? lead.expectedDate,
-                notes: lead.notes,
+                notes: '{}',
                 companyId: lead.companyId,
                 agentId: lead.agentId,
             },

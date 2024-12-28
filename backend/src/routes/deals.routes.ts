@@ -49,13 +49,8 @@ router.post("/", async (req: Request, res: Response) => {
     const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
     let dealValue = Number(dealAmount);
 
-
-    const agentId = req.user?.id ?? '';
-    const company = await db.user.findUnique({
-        where: { id: agentId },
-        select: { companyId: true }
-    });
-    const companyId = company?.companyId || '';
+    const companyId = req.user?.companyId || '';
+    const userId = req.user?.id || '';
 
     try {
         const deal = await db.deal.create({
@@ -67,7 +62,7 @@ router.post("/", async (req: Request, res: Response) => {
                 expectedCloseDate: expectedCloseDate,
                 notes: notes,
                 companyId: companyId,
-                agentId: agentId,
+                agentId: userId,
                 propertyType: propertyType
             },
         });
