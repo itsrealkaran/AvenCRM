@@ -2,7 +2,9 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { format } from 'date-fns';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -19,6 +21,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+const noteEntrySchema = z.object({
+  time: z.string(),
+  note: z.string(),
+});
+
 const leadFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email().optional().or(z.literal('')),
@@ -29,7 +36,7 @@ const leadFormSchema = z.object({
   propertyType: z.string().optional(),
   budget: z.string().optional(),
   location: z.string().optional(),
-  notes: z.string().optional(),
+  notes: z.array(noteEntrySchema),
 });
 
 type LeadFormValues = z.infer<typeof leadFormSchema>;
@@ -54,28 +61,41 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       budget: '',
       location: '',
       leadAmount: '',
-      notes: '',
+      notes: [{ time: format(new Date(), "yyyy-MM-dd'T'HH:mm"), note: '' }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'notes',
   });
 
   const createLead = useMutation({
     mutationFn: async (values: LeadFormValues) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify({
+          ...values,
+          notes: values.notes.reduce(
+            (acc, { time, note }) => {
+              if (note.trim()) {
+                acc[time] = note;
+              }
+              return acc;
+            },
+            {} as Record<string, string>
+          ),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create lead');
+        const error = await response.text();
+        throw new Error(error || 'Failed to create lead');
       }
 
       return response.json();
@@ -97,7 +117,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[600px]'>
+      <DialogContent className='sm:max-w-[880px]'>
         <DialogHeader>
           <DialogTitle>Create New Lead</DialogTitle>
         </DialogHeader>
@@ -148,19 +168,6 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                   </FormItem>
                 )}
               />
-              {/* <FormField
-                control={form.control}
-                name='leadAmount'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Lead Amount</FormLabel>
-                    <FormControl>
-                      <Input type='number' placeholder='10000' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
               <FormField
                 control={form.control}
                 name='status'
@@ -188,23 +195,64 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name='notes'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder='Add any additional notes here...'
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            <div className='space-y-4 max-h-[300px] overflow-y-auto p-3'>
+              <div className='flex items-center justify-between'>
+                <FormLabel>Notes</FormLabel>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    append({ time: format(new Date(), "yyyy-MM-dd'T'HH:mm"), note: '' })
+                  }
+                >
+                  <PlusCircle className='w-4 h-4 mr-2' />
+                  Add Note
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <div key={field.id} className='flex gap-4 items-start'>
+                  <FormField
+                    control={form.control}
+                    name={`notes.${index}.time`}
+                    render={({ field }) => (
+                      <FormItem className='flex-shrink-0 w-60'>
+                        <FormControl>
+                          <Input type='datetime-local' {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`notes.${index}.note`}
+                    render={({ field }) => (
+                      <FormItem className='flex-grow'>
+                        <FormControl>
+                          <Textarea
+                            placeholder='Enter note...'
+                            className='resize-none'
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='flex-shrink-0'
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className='w-4 h-4 text-red-500' />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
             <div className='flex justify-end space-x-4'>
               <Button
                 type='button'

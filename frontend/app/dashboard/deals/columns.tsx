@@ -1,13 +1,21 @@
 'use client';
 
-import { Deal, DealStatus } from '@/types/deals';
+import { Deal } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +25,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const getStatusColor = (status: DealStatus) => {
+const getStatusColor = (status: string) => {
   const colors = {
     NEW: 'bg-blue-100 text-blue-800',
     CONTACTED: 'bg-purple-100 text-purple-800',
@@ -80,33 +88,60 @@ export const columns: ColumnDef<Deal>[] = [
     header: 'Phone',
   },
   {
-    accessorKey: 'dealAmount',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Amount
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue('dealAmount'));
-      const formatted = new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
-      return formatted;
-    },
-  },
-  {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status: DealStatus = row.getValue('status');
+      const status: string = row.getValue('status');
       return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
+    },
+  },
+  {
+    accessorKey: 'amount',
+    header: 'Amount',
+    cell: ({ row }) => {
+      const amount = row.getValue('amount');
+      return amount ? `$${amount}` : '-';
+    },
+  },
+  {
+    accessorKey: 'notes',
+    header: 'Notes',
+    cell: ({ row }) => {
+      const notes = row.original.notes || {};
+      const noteCount = Object.keys(notes).length;
+
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant='ghost' size='sm' className='flex items-center gap-2'>
+              <span className='font-medium'>{noteCount}</span>
+              {noteCount === 1 ? 'Note' : 'Notes'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto'>
+            <DialogHeader>
+              <DialogTitle>Notes Timeline</DialogTitle>
+            </DialogHeader>
+            <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-transparent before:via-slate-300 before:to-transparent'>
+              {Object.entries(notes)
+                .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+                .map(([time, note], index) => (
+                  <div key={time} className='relative flex gap-6 items-start'>
+                    <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-slate-50 border border-slate-200 shadow'>
+                      <div className='w-2.5 h-2.5 rounded-full bg-slate-400'></div>
+                    </div>
+                    <div className='flex-1 ml-4 space-y-1 bg-slate-50 rounded-lg p-4 shadow-sm border border-slate-100'>
+                      <div className='text-xs text-slate-500'>
+                        {format(new Date(time), 'MMM d, yyyy HH:mm')}
+                      </div>
+                      <div className='text-sm text-slate-600 whitespace-pre-wrap'>{note}</div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
     },
   },
   {
@@ -117,14 +152,8 @@ export const columns: ColumnDef<Deal>[] = [
     },
   },
   {
-    accessorKey: 'expectedCloseDate',
-    header: 'Expected Close Date',
-    cell: ({ row }) => {
-      return format(new Date(row.getValue('expectedCloseDate')), 'MMM d, yyyy');
-    },
-  },
-  {
     id: 'actions',
+    header: 'Actions',
     cell: ({ row, table }) => {
       const deal = row.original as Deal;
       const meta = table.options.meta as {
@@ -140,17 +169,22 @@ export const columns: ColumnDef<Deal>[] = [
               <MoreHorizontal className='h-4 w-4' />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
+          <DropdownMenuContent align='end' className='w-[160px]'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(deal.id)}>
-              Copy deal ID
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => meta.onEdit?.(deal)}>
               <Pencil className='mr-2 h-4 w-4' /> Edit deal
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => meta.onDelete?.(deal.id)} className='text-red-600'>
-              <Trash className='mr-2 h-4 w-4' /> Delete deal
+              <Trash2 className='mr-2 h-4 w-4' /> Delete deal
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(deal.id);
+                toast.success('Deal ID copied to clipboard');
+              }}
+            >
+              <CopyIcon className='mr-2 h-4 w-4' /> Copy deal ID
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

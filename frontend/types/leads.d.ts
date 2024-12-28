@@ -12,8 +12,8 @@ export type Lead = {
   budget?: number;
   location?: string;
   lastContactDate?: Date;
-  notes?: string;
-  socialProfiles?: any;
+  notes?: Record<string, string>;
+  socialProfiles?: Record<string, any>;
   createdAt: Date;
   updatedAt?: Date;
 };
@@ -22,7 +22,7 @@ export enum LeadStatus {
   NEW = 'NEW',
   CONTACTED = 'CONTACTED',
   QUALIFIED = 'QUALIFIED',
-  PROPOSAL = 'PROPOSAL',
+  // PROPOSAL = 'PROPOSAL',
   NEGOTIATION = 'NEGOTIATION',
   WON = 'WON',
   LOST = 'LOST',

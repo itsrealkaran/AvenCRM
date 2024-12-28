@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Lead } from '@/types/leads';
+import { Lead } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -17,19 +16,18 @@ import { DataTable } from './data-table';
 import { EditLeadDialog } from './edit-lead-dialog';
 
 async function getLeads(): Promise<Lead[]> {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    throw new Error('Access token not found');
-  }
-
   const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
     method: 'GET',
+    credentials: 'include',
     headers: {
-      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
   });
+
   if (!response.ok) {
-    throw new Error('Failed to fetch leads');
+    const error = await response.text();
+    throw new Error(error || 'Failed to fetch leads');
   }
   return response.json();
 }
@@ -50,20 +48,18 @@ export default function LeadsPage() {
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${leadId}`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete lead');
+        const error = await response.text();
+        throw new Error(error || 'Failed to delete lead');
       }
     },
     onSuccess: () => {
@@ -80,21 +76,19 @@ export default function LeadsPage() {
   const bulkDeleteLeads = useMutation({
     mutationFn: async (leadIds: string[]) => {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
         method: 'DELETE',
+        credentials: 'include',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({ leadIds }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete leads');
+        const error = await response.text();
+        throw new Error(error || 'Failed to delete leads');
       }
     },
     onSuccess: () => {
@@ -112,19 +106,20 @@ export default function LeadsPage() {
   };
 
   const handleDelete = async (leadId: string) => {
-    if (window.confirm('Are you sure you want to delete this lead?')) {
-      deleteLead.mutate(leadId);
+    try {
+      await deleteLead.mutateAsync(leadId);
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Failed to delete lead');
     }
   };
 
   const handleBulkDelete = async (leadIds: string[]) => {
-    if (window.confirm(`Are you sure you want to delete ${leadIds.length} leads?`)) {
-      try {
-        await bulkDeleteLeads.mutateAsync(leadIds);
-        toast.success('Leads deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete some leads');
-      }
+    try {
+      await bulkDeleteLeads.mutateAsync(leadIds);
+      toast.success('Leads deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete some leads');
     }
   };
 
@@ -175,10 +170,11 @@ export default function LeadsPage() {
             columns={columns}
             data={leads}
             onEdit={handleEdit}
-            onDelete={async (row) => {
+            onBulkDelete={async (row) => {
               const leadIds = row.map((row) => row.original.id);
               await handleBulkDelete(leadIds);
             }}
+            onDelete={handleDelete}
             onSelectionChange={handleSelectionChange}
           />
         </div>

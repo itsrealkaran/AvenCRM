@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Transaction } from '@/types/transactions';
+import { Transaction } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';

@@ -1,6 +1,6 @@
 'use client';
 
-import { Transaction } from '@/types/transactions';
+import { Transaction } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';

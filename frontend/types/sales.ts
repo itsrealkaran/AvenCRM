@@ -15,7 +15,7 @@ export interface Lead {
   location?: string;
   expectedDate?: Date;
   lastContactDate?: Date;
-  notes?: string;
+  notes?: Record<string, string>;
   socialProfiles?: Record<string, any>;
   createdAt: Date;
   updatedAt?: Date;
@@ -37,7 +37,7 @@ export interface Deal {
   actualCloseDate?: Date;
   commissionRate?: number;
   estimatedCommission?: number;
-  notes?: string;
+  notes?: Record<string, string>;
   createdAt: Date;
-  updatedAt: Date;
+  updatedAt?: Date;
 }

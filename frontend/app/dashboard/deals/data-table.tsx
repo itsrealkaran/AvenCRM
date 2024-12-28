@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Deal } from '@/types/deals';
+import { Deal } from '@/types';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -33,7 +33,8 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onEdit?: (deal: Deal) => void;
-  onDelete: (rows: Row<TData>[]) => void;
+  onDelete: (dealId: string) => void;
+  onBulkDelete: (rows: Row<TData>[]) => void;
   onSelectionChange?: (selectedItems: Deal[]) => void;
   disabled?: boolean;
 }
@@ -43,6 +44,7 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
+  onBulkDelete,
   onSelectionChange,
   disabled,
 }: DataTableProps<TData, TValue>) {
@@ -91,7 +93,7 @@ export function DataTable<TData, TValue>({
             disabled={disabled}
             size={'sm'}
             variant={'outline'}
-            className='ml-auto font-normal test-xs text-red-600'
+            className='ml-auto font-normal test-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
             onClick={async () => {
               const ok = await confirm();
 
@@ -100,12 +102,13 @@ export function DataTable<TData, TValue>({
                   id: 'delete',
                 });
 
-                onDelete(table.getFilteredSelectedRowModel().rows);
+                onBulkDelete(table.getFilteredSelectedRowModel().rows);
+                toast.dismiss('delete');
                 table.resetRowSelection();
               }
             }}
           >
-            <Trash className='size-4 mr-2 bg-f' />
+            <Trash className='size-4 mr-2' />
             Delete({table.getFilteredSelectedRowModel().rows.length})
           </Button>
         )}

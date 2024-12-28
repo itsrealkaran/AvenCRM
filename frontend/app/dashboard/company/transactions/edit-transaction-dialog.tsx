@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Transaction } from '@/types/transactions';
+import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';

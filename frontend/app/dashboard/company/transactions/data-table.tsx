@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Transaction } from '@/types/transactions';
+import { Transaction } from '@/types';
 import {
   ColumnDef,
   ColumnFiltersState,

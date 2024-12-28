@@ -16,6 +16,7 @@ export enum LeadStatus {
 }
 
 export enum DealStatus {
+  NEW_DISCOVERY = 'NEW_DISCOVERY',
   PROSPECT = 'PROSPECT',
   ACTIVE = 'ACTIVE',
   UNDER_CONTRACT = 'UNDER_CONTRACT',

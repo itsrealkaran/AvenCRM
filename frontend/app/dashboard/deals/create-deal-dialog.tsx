@@ -1,8 +1,11 @@
 'use client';
 
+import { Deal, DealStatus } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { format } from 'date-fns';
+import { PlusCircle, Trash2 } from 'lucide-react';
+import { useFieldArray, useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -19,18 +22,37 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+const noteEntrySchema = z.object({
+  time: z.string(),
+  note: z.string(),
+});
+
 const dealFormSchema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.string().email().optional().or(z.literal('')),
+  id: z.string(),
+  name: z.string(),
+  email: z.string().optional(),
   phone: z.string().optional(),
-  dealAmount: z.string().optional(),
-  status: z.string().optional(),
-  source: z.string().optional(),
+  companyId: z.string(),
+  agentId: z.string(),
+  dealAmount: z.string(),
+  status: z.enum([
+    'NEW_DISCOVERY',
+    'PROSPECT',
+    'ACTIVE',
+    'UNDER_CONTRACT',
+    'CLOSED_WON',
+    'CLOSED_LOST',
+  ]),
   propertyType: z.string().optional(),
-  budget: z.string().optional(),
-  location: z.string().optional(),
-  notes: z.string().optional(),
-  expectedCloseDate: z.string(),
+  propertyAddress: z.string().optional(),
+  propertyValue: z.number().optional(),
+  expectedCloseDate: z.date().optional(),
+  actualCloseDate: z.date().optional(),
+  commissionRate: z.number().optional(),
+  estimatedCommission: z.number().optional(),
+  notes: noteEntrySchema.array(),
+  createdAt: z.date(),
+  updatedAt: z.date().optional(),
 });
 
 type DealFormValues = z.infer<typeof dealFormSchema>;
@@ -38,60 +60,60 @@ type DealFormValues = z.infer<typeof dealFormSchema>;
 interface CreateDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreate: (deal: Deal) => void;
 }
 
-export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) {
+export function CreateDealDialog({ open, onOpenChange, onCreate }: CreateDealDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      status: '',
-      source: '',
-      expectedCloseDate: new Date().toISOString().split('T')[0],
-      propertyType: '',
-      budget: '',
-      location: '',
-      dealAmount: '',
-      notes: '',
+      status: DealStatus.NEW_DISCOVERY,
+      notes: [{ time: format(new Date(), "yyyy-MM-dd'T'HH:mm"), note: '' }],
     },
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: 'notes',
   });
 
   const createDeal = useMutation({
     mutationFn: async (values: DealFormValues) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
-      // Transform the date to ISO string before sending to backend
-      const payload = {
-        ...values,
-        expectedCloseDate: new Date(values.expectedCloseDate).toISOString(),
-      };
-
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...values,
+          notes: values.notes.reduce(
+            (acc, { time, note }) => {
+              if (note.trim()) {
+                acc[time] = note.trim();
+              }
+              return acc;
+            },
+            {} as Record<string, string>
+          ),
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create deal');
+        const error = await response.text();
+        throw new Error(error || 'Failed to create deal');
       }
 
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       onOpenChange(false);
       form.reset();
       toast.success('Deal created successfully');
+      onCreate(data);
     },
     onError: () => {
       toast.error('Failed to create deal');
@@ -104,7 +126,7 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[600px]'>
+      <DialogContent className='sm:max-w-[880px]'>
         <DialogHeader>
           <DialogTitle>Create New Deal</DialogTitle>
         </DialogHeader>
@@ -152,19 +174,6 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
               />
               <FormField
                 control={form.control}
-                name='dealAmount'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Deal Amount</FormLabel>
-                    <FormControl>
-                      <Input type='number' placeholder='10000' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
                 name='status'
                 render={({ field }) => (
                   <FormItem>
@@ -178,44 +187,97 @@ export function CreateDealDialog({ open, onOpenChange }: CreateDealDialogProps) 
               />
               <FormField
                 control={form.control}
-                name='propertyType'
+                name='dealAmount'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Property Type</FormLabel>
+                    <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input placeholder='Residential' {...field} />
+                      <Input type='number' placeholder='10000' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='expectedCloseDate'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Expected Close Date</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='date'
+                        {...field}
+                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                        onChange={(e) => field.onChange(new Date(e.target.value))}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name='notes'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Notes</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder='Add any additional notes here...' {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name='expectedCloseDate'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Expected Close Date</FormLabel>
-                  <FormControl>
-                    <Input type='date' {...field} value={field.value} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
+            <div className='space-y-4 max-h-[300px] overflow-y-auto p-3 rounded-lg border bg-slate-50/50'>
+              <div className='flex items-center justify-between sticky top-0 bg-white p-2 rounded-md shadow-sm'>
+                <FormLabel className='text-lg font-semibold'>Notes Timeline</FormLabel>
+                <Button
+                  type='button'
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    append({ time: format(new Date(), "yyyy-MM-dd'T'HH:mm"), note: '' })
+                  }
+                >
+                  <PlusCircle className='w-4 h-4 mr-2' />
+                  Add Note
+                </Button>
+              </div>
+
+              {fields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className='flex gap-4 items-start p-3 bg-white rounded-lg shadow-sm'
+                >
+                  <FormField
+                    control={form.control}
+                    name={`notes.${index}.time`}
+                    render={({ field }) => (
+                      <FormItem className='flex-shrink-0 w-60'>
+                        <FormControl>
+                          <Input type='datetime-local' {...field} className='text-sm' />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name={`notes.${index}.note`}
+                    render={({ field }) => (
+                      <FormItem className='flex-grow'>
+                        <FormControl>
+                          <Textarea
+                            placeholder='Enter note...'
+                            className='resize-none min-h-[80px] text-sm'
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <Button
+                    type='button'
+                    variant='ghost'
+                    size='icon'
+                    className='flex-shrink-0 hover:bg-red-50 hover:text-red-600'
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className='w-4 h-4 text-red-500' />
+                  </Button>
+                </div>
+              ))}
+            </div>
+
             <div className='flex justify-end space-x-4'>
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
