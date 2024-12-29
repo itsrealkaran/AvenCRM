@@ -14,7 +14,7 @@ router.post('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userContro
 router.get('/', userController.getUsers);
 router.get('/:id', userController.getUserById);
 router.put('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.updateUser);
-router.delete('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.deleteUser);
+router.delete('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.deleteUser);
 
 // Team Management Routes
 router.post('/assign-team', validateRole([UserRole.ADMIN, UserRole.TEAM_LEADER]), userController.assignTeam);

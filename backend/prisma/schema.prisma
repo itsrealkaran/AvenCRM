@@ -117,7 +117,7 @@ model User {
   
   // Team Relations
   team  Team?      @relation("TeamMembers", fields: [teamId], references: [id])
-  teamId        String?
+  teamId        String? 
   
   // Team Leadership
   leadingTeam   Team?      @relation("TeamLeadership")

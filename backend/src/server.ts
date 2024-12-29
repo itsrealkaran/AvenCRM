@@ -25,6 +25,7 @@ import { manageSubscription } from './routes/company/subscription.js';
 import { propertyRoutes } from './routes/propertyRoutes.js';
 import { propertyView } from './routes/publicPropertyView.js';
 import cookieParser from 'cookie-parser';
+import { teamRoutes } from './routes/team.routes.js';
 
 const app = express();
 
@@ -133,6 +134,7 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
 // API Routes
 app.use('/auth', authRouter);
 app.use('/user', userRoutes);
+app.use('/team', teamRoutes);
 app.use('/deals', dealsRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/company', companyRoutes);

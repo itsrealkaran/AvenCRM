@@ -1,13 +1,14 @@
-import { Request, Response } from 'express';
-import { UserRole } from '@prisma/client';
-import db from '../db/index.js';
-import bcrypt from 'bcrypt';
+import { Request, Response } from "express";
+import { UserRole } from "@prisma/client";
+import db from "../db/index.js";
+import bcrypt from "bcrypt";
 
 interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     role: UserRole;
     companyId?: string;
+    teamId?: string | null;
   };
 }
 
@@ -15,50 +16,96 @@ export const userController = {
   // User Management (SuperAdmin & Admin)
   async createUser(req: Request, res: Response) {
     const { name, email, agentRole, gender, teamId, phone, dob } = req.body;
-    console.log(req.body);
     const authUser = (req as AuthenticatedRequest).user;
 
     try {
       // Validate permissions
       if (!authUser) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: "Unauthorized" });
       }
-      const companyId = authUser.companyId
+      const companyId = authUser.companyId;
+
+      if (!companyId) {
+        return res.status(400).json({ message: "Company ID is required" });
+      }
 
       // Only SUPERADMIN can create ADMIN, and only ADMIN can create TEAM_LEADER/AGENT
       if (
-        (agentRole === UserRole.ADMIN && authUser.role !== UserRole.SUPERADMIN) ||
-        ([UserRole.TEAM_LEADER, UserRole.AGENT].includes(agentRole) && authUser.role !== UserRole.ADMIN)
+        (agentRole === UserRole.ADMIN &&
+          authUser.role !== UserRole.SUPERADMIN) ||
+        ([UserRole.TEAM_LEADER, UserRole.AGENT].includes(agentRole) &&
+          authUser.role !== UserRole.ADMIN)
       ) {
-        return res.status(403).json({ message: 'Insufficient permissions' });
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
 
-      const hashedPassword = await bcrypt.hash('123456', 12);
-      
-      const user = await db.user.create({
-        data: {
-          name,
-          email,
-          password: hashedPassword,
-          gender,
-          phone,
-          dob: new Date(dob),
-          role: agentRole,
-          companyId,
-        }
-      });
+      const teamId = authUser.teamId;
 
-      res.status(201).json({
-        message: 'User created successfully',
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        }
-      });
+      if (agentRole === UserRole.TEAM_LEADER) {
+        const teamName = name + Math.floor(Math.random() * 1000);
+
+        await db.$transaction(async (tx) => {
+          const user = await tx.user.create({
+            data: {
+              name,
+              email,
+              password: await bcrypt.hash("123456", 12),
+              gender,
+              phone,
+              dob: new Date(dob),
+              role: agentRole,
+              companyId,
+            },
+          });
+
+          await tx.team.create({
+            data: {
+              name: teamName,
+              companyId: companyId,
+              teamLeaderId: user.id,
+              members: {
+                connect: {
+                  id: user.id,
+                },
+              },
+            },
+          });
+
+          return user;
+        });
+
+        return res
+          .status(201)
+          .json({ message: "Team Leader created successfully" });
+      } else {
+        const hashedPassword = await bcrypt.hash("123456", 12);
+
+        const user = await db.user.create({
+          data: {
+            name,
+            email,
+            password: hashedPassword,
+            gender,
+            phone,
+            dob: new Date(dob),
+            role: agentRole,
+            teamId: teamId || null,
+            companyId,
+          },
+        });
+
+        res.status(201).json({
+          message: "User created successfully",
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          },
+        });
+      }
     } catch (error) {
-      res.status(500).json({ message: 'Error creating user', error });
+      res.status(500).json({ message: "Error creating user", error });
     }
   },
 
@@ -69,18 +116,19 @@ export const userController = {
 
     try {
       const user = await db.user.findUnique({ where: { id } });
-      
+
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Permission checks
-      if (!authUser || (
-        authUser.role !== UserRole.SUPERADMIN &&
-        authUser.role !== UserRole.ADMIN &&
-        authUser.id !== id
-      )) {
-        return res.status(403).json({ message: 'Insufficient permissions' });
+      if (
+        !authUser ||
+        (authUser.role !== UserRole.SUPERADMIN &&
+          authUser.role !== UserRole.ADMIN &&
+          authUser.id !== id)
+      ) {
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
 
       const updatedUser = await db.user.update({
@@ -90,16 +138,16 @@ export const userController = {
           email,
           designation,
           isActive,
-          teamId
-        }
+          teamId,
+        },
       });
 
       res.json({
-        message: 'User updated successfully',
-        user: updatedUser
+        message: "User updated successfully",
+        user: updatedUser,
       });
     } catch (error) {
-      res.status(500).json({ message: 'Error updating user', error });
+      res.status(500).json({ message: "Error updating user", error });
     }
   },
 
@@ -109,11 +157,11 @@ export const userController = {
 
     try {
       if (!authUser) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       const whereClause: any = {};
-      
+
       // Filter based on role permissions
       if (authUser.role === UserRole.ADMIN) {
         whereClause.companyId = authUser.companyId;
@@ -123,39 +171,44 @@ export const userController = {
 
       // Additional filters
       if (role) whereClause.role = role;
-      if (companyId && authUser.role === UserRole.SUPERADMIN) whereClause.companyId = companyId;
+      if (companyId && authUser.role === UserRole.SUPERADMIN)
+        whereClause.companyId = companyId;
 
       const users = await db.user.findMany({
-        where: authUser.role === UserRole.ADMIN ? {
-          role: {
-            in: [UserRole.AGENT, UserRole.TEAM_LEADER]
-          }
-        } : whereClause,
+        where:
+          authUser.role === UserRole.ADMIN
+            ? {
+                role: {
+                  in: [UserRole.AGENT, UserRole.TEAM_LEADER],
+                },
+              }
+            : whereClause,
         select: {
           id: true,
           name: true,
           email: true,
+          phone: true,
           role: true,
           designation: true,
           isActive: true,
           company: {
             select: {
               id: true,
-              name: true
-            }
+              name: true,
+            },
           },
           team: {
             select: {
               id: true,
-              name: true
-            }
-          }
-        }
+              name: true,
+            },
+          },
+        },
       });
 
       res.json(users);
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching users', error });
+      res.status(500).json({ message: "Error fetching users", error });
     }
   },
 
@@ -165,7 +218,7 @@ export const userController = {
 
     try {
       if (!authUser) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       const user = await db.user.findUnique({
@@ -174,12 +227,12 @@ export const userController = {
           company: true,
           team: true,
           leads: true,
-          deals: true
-        }
+          deals: true,
+        },
       });
 
       if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+        return res.status(404).json({ message: "User not found" });
       }
 
       // Permission check
@@ -188,43 +241,46 @@ export const userController = {
         authUser.companyId !== user.companyId &&
         authUser.id !== id
       ) {
-        return res.status(403).json({ message: 'Insufficient permissions' });
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
 
       res.json(user);
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching user', error });
+      res.status(500).json({ message: "Error fetching user", error });
     }
   },
 
   async deleteUser(req: Request, res: Response) {
-    const { id } = req.params;
+    const { ids } = req.query;
     const authUser = (req as AuthenticatedRequest).user;
 
     try {
-      const user = await db.user.findUnique({ where: { id } });
-      
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
       // Permission checks
       if (
         !authUser ||
-        (authUser.role !== UserRole.SUPERADMIN && authUser.role !== UserRole.ADMIN)
+        (authUser.role !== UserRole.SUPERADMIN &&
+          authUser.role !== UserRole.ADMIN)
       ) {
-        return res.status(403).json({ message: 'Insufficient permissions' });
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
 
-      // Instead of deleting, deactivate the user
-      await db.user.update({
-        where: { id },
-        data: { isActive: false }
+      if (!ids || typeof ids !== "string") {
+        return res.status(400).json({ message: "User IDs are required" });
+      }
+
+      const userIds = ids.split(",");
+
+      // Verify all users exist and can be deleted
+      const users = await db.user.deleteMany({
+        where: {
+          id: { in: userIds },
+          companyId: authUser.companyId, // Ensure users belong to same company
+        },
       });
 
-      res.json({ message: 'User deactivated successfully' });
+      res.json({ message: "Users deleted successfully" });
     } catch (error) {
-      res.status(500).json({ message: 'Error deactivating user', error });
+      res.status(500).json({ message: "Error deactivating users", error });
     }
   },
 
@@ -234,21 +290,25 @@ export const userController = {
     const authUser = (req as AuthenticatedRequest).user;
 
     try {
-      if (!authUser || (authUser.role !== UserRole.ADMIN && authUser.role !== UserRole.TEAM_LEADER)) {
-        return res.status(403).json({ message: 'Insufficient permissions' });
+      if (
+        !authUser ||
+        (authUser.role !== UserRole.ADMIN &&
+          authUser.role !== UserRole.TEAM_LEADER)
+      ) {
+        return res.status(403).json({ message: "Insufficient permissions" });
       }
 
       const user = await db.user.update({
         where: { id: userId },
-        data: { teamId }
+        data: { teamId },
       });
 
       res.json({
-        message: 'Team assigned successfully',
-        user
+        message: "Team assigned successfully",
+        user,
       });
     } catch (error) {
-      res.status(500).json({ message: 'Error assigning team', error });
+      res.status(500).json({ message: "Error assigning team", error });
     }
   },
 
@@ -260,7 +320,7 @@ export const userController = {
 
     try {
       if (!authUser) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       const metrics = await db.$transaction([
@@ -270,9 +330,9 @@ export const userController = {
             id: id,
             createdAt: {
               gte: startDate ? new Date(startDate as string) : undefined,
-              lte: endDate ? new Date(endDate as string) : undefined
-            }
-          }
+              lte: endDate ? new Date(endDate as string) : undefined,
+            },
+          },
         }),
         // Get deal count
         db.deal.count({
@@ -280,33 +340,33 @@ export const userController = {
             id: id,
             createdAt: {
               gte: startDate ? new Date(startDate as string) : undefined,
-              lte: endDate ? new Date(endDate as string) : undefined
-            }
-          }
+              lte: endDate ? new Date(endDate as string) : undefined,
+            },
+          },
         }),
         // Get closed deals value
         db.deal.aggregate({
           where: {
             id: id,
-            status: 'CLOSED_WON',
+            status: "CLOSED_WON",
             createdAt: {
               gte: startDate ? new Date(startDate as string) : undefined,
-              lte: endDate ? new Date(endDate as string) : undefined
-            }
+              lte: endDate ? new Date(endDate as string) : undefined,
+            },
           },
           _sum: {
-            dealAmount: true
-          }
-        })
+            dealAmount: true,
+          },
+        }),
       ]);
 
       res.json({
         leadCount: metrics[0],
         dealCount: metrics[1],
-        closedDealsValue: metrics[2]._sum.dealAmount ?? 0
+        closedDealsValue: metrics[2]._sum.dealAmount ?? 0,
       });
     } catch (error) {
-      res.status(500).json({ message: 'Error fetching user metrics', error });
+      res.status(500).json({ message: "Error fetching user metrics", error });
     }
-  }
+  },
 };
