@@ -30,7 +30,7 @@ export interface AuthenticatedRequest extends Request {
   user?: JWTPayload;
 }
 
-export const protect = async (req: Request, res: Response, next: NextFunction) => {
+export const protect = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     let token: string | undefined;
 
@@ -38,10 +38,9 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     token = req.cookies.Authorization;
 
     // 2. Then check Authorization header
-    if (!token && req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
+    // if (token && req.headers.authorization?.startsWith('Bearer')) {
+    //   token = req.headers.authorization.split(' ')[1];
+    // }
     if (!token) {
       return res.status(401).json({ message: 'Not authorized to access this route' });
     }
@@ -49,7 +48,6 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     try {
       // Verify token
       let decoded = jwt.verify(token, process.env.JWT_SECRET || 'nope') as JWTPayload;
-
       // Check token expiration
       if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
         // Try to refresh using refresh token
@@ -97,7 +95,6 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
           company: true
         }
       });
-
       if (!user) {
         return res.status(401).json({ message: 'User no longer exists' });
       }
@@ -146,7 +143,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
         }
         return res.status(401).json({ message: 'Token expired' });
       }
-      return res.status(401).json({ message: 'Not authorized to access this route' });
+      return res.status(401).json({ message: 'Not authorized to access this routes' });
     }
   } catch (error) {
     logger.error('Authentication error:', error);

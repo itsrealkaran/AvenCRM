@@ -11,7 +11,7 @@ import { LuFilter } from 'react-icons/lu';
 import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from 'react-icons/md';
 import { VscRefresh } from 'react-icons/vsc';
 
-import ManageUserList from '../../company/components/ManageUserList';
+import ManageUserList from '../company/components/ManageUserList';
 
 interface FormData {
   name: string;

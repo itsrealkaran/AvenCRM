@@ -66,10 +66,16 @@ function SignInContent() {
 
         // Get the callback URL or use the default route based on role
         const callbackUrl = searchParams.get('callbackUrl');
-        const defaultPath = `/${values.role.toLowerCase()}`;
+        let defaultPath = `/${values.role.toLowerCase()}`;
+
+        // Redirect team leaders to /agent route
+        if (data.user.role.toLowerCase() === 'team_leader') {
+          defaultPath = '/agent';
+        }
+
         // Redirect after a short delay to show the success message
         setTimeout(() => {
-          router.push(data.user.role.toLowerCase() || callbackUrl || defaultPath);
+          router.push(callbackUrl || defaultPath);
         }, 1000);
       } else {
         throw new Error('No access token received');

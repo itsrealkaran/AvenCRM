@@ -14,7 +14,8 @@ interface AuthenticatedRequest extends Request {
 export const userController = {
   // User Management (SuperAdmin & Admin)
   async createUser(req: Request, res: Response) {
-    const { name, email, password, role, companyId, teamId, designation } = req.body;
+    const { name, email, agentRole, gender, teamId, phone, dob } = req.body;
+    console.log(req.body);
     const authUser = (req as AuthenticatedRequest).user;
 
     try {
@@ -22,26 +23,28 @@ export const userController = {
       if (!authUser) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
+      const companyId = authUser.companyId
 
       // Only SUPERADMIN can create ADMIN, and only ADMIN can create TEAM_LEADER/AGENT
       if (
-        (role === UserRole.ADMIN && authUser.role !== UserRole.SUPERADMIN) ||
-        ([UserRole.TEAM_LEADER, UserRole.AGENT].includes(role) && authUser.role !== UserRole.ADMIN)
+        (agentRole === UserRole.ADMIN && authUser.role !== UserRole.SUPERADMIN) ||
+        ([UserRole.TEAM_LEADER, UserRole.AGENT].includes(agentRole) && authUser.role !== UserRole.ADMIN)
       ) {
         return res.status(403).json({ message: 'Insufficient permissions' });
       }
 
-      const hashedPassword = await bcrypt.hash(password, 12);
+      const hashedPassword = await bcrypt.hash('123456', 12);
       
       const user = await db.user.create({
         data: {
           name,
           email,
           password: hashedPassword,
-          role,
-          companyId: role === UserRole.AGENT ? companyId : null,
-          teamId,
-          designation
+          gender,
+          phone,
+          dob: new Date(dob),
+          role: agentRole,
+          companyId,
         }
       });
 
@@ -123,7 +126,11 @@ export const userController = {
       if (companyId && authUser.role === UserRole.SUPERADMIN) whereClause.companyId = companyId;
 
       const users = await db.user.findMany({
-        where: whereClause,
+        where: authUser.role === UserRole.ADMIN ? {
+          role: {
+            in: [UserRole.AGENT, UserRole.TEAM_LEADER]
+          }
+        } : whereClause,
         select: {
           id: true,
           name: true,

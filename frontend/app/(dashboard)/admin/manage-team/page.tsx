@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import axios from 'axios';
 import { ConciergeBell } from 'lucide-react';
 import { BsGenderNeuter } from 'react-icons/bs';
 import { FaUser } from 'react-icons/fa6';
@@ -11,7 +10,8 @@ import { LuFilter } from 'react-icons/lu';
 import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from 'react-icons/md';
 import { VscRefresh } from 'react-icons/vsc';
 
-import ManageUserList from '../../company/components/ManageUserList';
+import ManageUserList from '../company/components/ManageUserList';
+import { api } from '@/lib/api';
 
 interface FormData {
   name: string;
@@ -52,11 +52,7 @@ const Page = () => {
 
   const getUser = useCallback(async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
+      const res = await api.get('/user');
       setList(res.data);
       setRefresh(false);
     } catch (error) {
@@ -88,22 +84,14 @@ const Page = () => {
 
   const addUser = async () => {
     console.log(formData);
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`,
-      {
-        name: formData.name,
-        dob: formData.dob,
-        email: formData.email,
-        phone: formData.phone,
-        agentRole: formData.role,
-        gender: formData.gender,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      }
-    );
+    const response = await api.post('/user', {
+      name: formData.name,
+      dob: formData.dob,
+      email: formData.email,
+      phone: formData.phone,
+      agentRole: formData.role,
+      gender: formData.gender,
+    });
     setadd(false);
     setRefresh(true);
     console.log(response.data);
@@ -111,22 +99,14 @@ const Page = () => {
 
   const updateUser = async () => {
     console.log(formData, 'update');
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent/${selectedList[0]}`,
-      {
-        name: formData.name,
-        dob: formData.dob,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        gender: formData.gender,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      }
-    );
+    const response = await api.put(`/user/${selectedList[0]}`, {
+      name: formData.name,
+      dob: formData.dob,
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role,
+      gender: formData.gender,
+    });
     setadd(false);
     setRefresh(true);
     console.log(response.data);
@@ -134,10 +114,7 @@ const Page = () => {
 
   const deleteUser = async () => {
     console.log(selectedList);
-    const response = await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
+    const response = await api.delete('/user', {
       data: {
         agentIds: selectedList,
       },
