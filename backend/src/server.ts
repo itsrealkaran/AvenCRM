@@ -12,6 +12,7 @@ import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';
 import transctionRoutes from './routes/transactons.routes.js'
 import emailRoutes from './routes/email.routes.js';
+import taskRoutes from './routes/task.routes.js';
 
 import cors from "cors"
 import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
@@ -142,6 +143,7 @@ app.use('/company/moniter', companyMonitoring);
 app.use('/email', emailRoutes);
 app.use("/property", propertyRoutes);
 app.use("/getProperty", propertyView);
+app.use('/tasks', taskRoutes);
 
 // Enhanced error handling middleware with debugging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

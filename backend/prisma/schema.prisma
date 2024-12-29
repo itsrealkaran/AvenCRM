@@ -94,6 +94,18 @@ enum EmailAccountStatus {
   DISABLED
 }
 
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+}
+
 // Unified User Model
 model User {
   id           String     @id @default(cuid())
@@ -140,6 +152,8 @@ model User {
   adminAccessTokens AdminAccessToken[]
   adminLoginLogs    AdminLoginLog[]
   
+  tasks         Task[]
+  
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 
@@ -179,6 +193,8 @@ model Company {
   emailCampaigns    EmailCampaign[]
   emailTemplates    EmailTemplate[]
   companyAuditLogs  CompanyAuditLog[]
+  
+  tasks        Task[]
   
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
@@ -561,4 +577,23 @@ model PageBuilder {
   createdBy       User    @relation(fields: [createdById], references: [id])
   createdById     String
   allowedAdmins   User[]  @relation("AllowedAdmins")
+}
+
+model Task {
+  id          String      @id @default(cuid())
+  title       String
+  description String?
+  priority    TaskPriority @default(MEDIUM)
+  status      TaskStatus   @default(TODO)
+  dueDate     DateTime?
+  colorTag    String?
+  
+  // Relations
+  assignedTo  User        @relation(fields: [userId], references: [id])
+  userId      String
+  company     Company     @relation(fields: [companyId], references: [id])
+  companyId   String
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
