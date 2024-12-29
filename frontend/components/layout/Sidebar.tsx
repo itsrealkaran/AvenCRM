@@ -10,6 +10,7 @@ import {
   Building,
   Building2,
   Calendar,
+  CheckSquare,
   FileText,
   HandshakeIcon,
   LayoutDashboard,
@@ -105,6 +106,13 @@ const Sidebar = () => {
       path: `/${role}/`,
       description: 'Deal management',
       roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Tasks',
+      icon: CheckSquare,
+      path: `/${role}/tasks`,
+      description: 'Task management',
+      roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
     },
     // Common items for all roles
     {
