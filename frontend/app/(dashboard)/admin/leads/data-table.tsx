@@ -1,24 +1,18 @@
 'use client';
 
-import React from 'react';
-import { Lead } from '@/types';
+import { useState } from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
+  SortingState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
-  Row,
-  SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { Trash } from 'lucide-react';
-import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -27,16 +21,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useConfirm } from '@/hooks/use-confirm';
+import { Button } from '@/components/ui/button';
 
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  onEdit?: (lead: Lead) => void;
-  onDelete: (leadId: string) => void;
-  onBulkDelete: (rows: Row<TData>[]) => void;
-  onSelectionChange?: (selectedItems: Lead[]) => void;
-  disabled?: boolean;
+  onEdit?: (data: TData) => void;
+  onDelete?: (data: TData) => void;
+  selectedRows?: TData[];
+  onSelectedRowsChange?: (rows: TData[]) => void;
+  onBulkDelete?: (rows: TData[]) => void;
+  pageCount?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -44,75 +40,39 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
+  selectedRows,
+  onSelectedRowsChange,
   onBulkDelete,
-  disabled,
+  pageCount = 1,
+  onPageChange,
 }: DataTableProps<TData, TValue>) {
-  const [ConfirmDialog, confirm] = useConfirm(
-    'Are You Sure?',
-    'You are about to perform a bulk delete.'
-  );
-
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
     state: {
       sorting,
       columnFilters,
-      rowSelection,
-    },
-    onRowSelectionChange: setRowSelection,
-    meta: {
-      onEdit,
-      onDelete,
     },
   });
 
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    onPageChange?.(newPage);
+  };
+
   return (
     <div>
-      <ConfirmDialog />
-      <div className='flex items-center py-4'>
-        <Input
-          placeholder='Filter leads...'
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
-          className='max-w-sm'
-        />
-        {table.getFilteredSelectedRowModel().rows.length > 0 && (
-          <Button
-            disabled={disabled}
-            size={'sm'}
-            variant={'outline'}
-            className='ml-auto font-normal test-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
-            onClick={async () => {
-              const ok = await confirm();
-
-              if (ok) {
-                toast.loading('Deleting...', {
-                  id: 'delete',
-                });
-
-                onBulkDelete(table.getFilteredSelectedRowModel().rows);
-                toast.dismiss('delete');
-                table.resetRowSelection();
-              }
-            }}
-          >
-            <Trash className='size-4 mr-2 bg-f' />
-            Delete({table.getFilteredSelectedRowModel().rows.length})
-          </Button>
-        )}
-      </div>
-      <div className='rounded-md border'>
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -122,7 +82,10 @@ export function DataTable<TData, TValue>({
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
                     </TableHead>
                   );
                 })}
@@ -132,17 +95,26 @@ export function DataTable<TData, TValue>({
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results.
                 </TableCell>
               </TableRow>
@@ -150,20 +122,23 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      <div className='flex items-center justify-end space-x-2 py-4'>
+      <div className="flex items-center justify-end space-x-2 py-4">
         <Button
-          variant='outline'
-          size='sm'
-          onClick={() => table.previousPage()}
-          disabled={!table.getCanPreviousPage()}
+          variant="outline"
+          size="sm"
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
         >
           Previous
         </Button>
+        <div className="text-sm text-muted-foreground">
+          Page {currentPage} of {pageCount}
+        </div>
         <Button
-          variant='outline'
-          size='sm'
-          onClick={() => table.nextPage()}
-          disabled={!table.getCanNextPage()}
+          variant="outline"
+          size="sm"
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === pageCount}
         >
           Next
         </Button>

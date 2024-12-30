@@ -59,6 +59,14 @@ export const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
+    accessorKey: 'agent.name',
+    header: 'Created By',
+    cell: ({ row }) => {
+      const agent = row.original.agent;
+      return agent?.name || 'N/A';
+    },
+  },
+  {
     accessorKey: 'amount',
     header: ({ column }) => {
       return (

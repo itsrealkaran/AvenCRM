@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lead } from '@/types';
+import { Lead, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,21 +9,59 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DataTableFilters } from '@/components/filters/data-table-filters';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';
 import { DataTable } from './data-table';
 import { EditLeadDialog } from './edit-lead-dialog';
 
-async function getLeads(): Promise<Lead[]> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
+interface LeadsResponse {
+  data: Lead[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+interface LeadFilters {
+  page?: number;
+  limit?: number;
+  startDate?: Date;
+  endDate?: Date;
+  createdById?: string;
+  status?: LeadStatus;
+  source?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+async function getLeads(filters: LeadFilters = {}): Promise<LeadsResponse> {
+  const queryParams = new URLSearchParams();
+  
+  if (filters.page) queryParams.append('page', filters.page.toString());
+  if (filters.limit) queryParams.append('limit', filters.limit.toString());
+  if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
+  if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
+  if (filters.createdById) queryParams.append('createdById', filters.createdById);
+  if (filters.status) queryParams.append('status', filters.status);
+  if (filters.source) queryParams.append('source', filters.source);
+  if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+  if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/leads?${queryParams.toString()}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -37,13 +75,32 @@ export default function LeadsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
+  const [filters, setFilters] = useState<LeadFilters>({});
+  const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
 
-  const { data: leads = [], isLoading } = useQuery({
-    queryKey: ['leads'],
-    queryFn: getLeads,
+  const { data: leadsData, isLoading } = useQuery({
+    queryKey: ['leads', filters, page],
+    queryFn: () => getLeads({ ...filters, page, limit: 10 }),
   });
+
+  const leads = leadsData?.data || [];
+  const totalPages = leadsData?.meta?.totalPages || 1;
+
+  const statusOptions = Object.values(LeadStatus).map(status => ({
+    label: status.charAt(0) + status.slice(1).toLowerCase(),
+    value: status,
+  }));
+
+  const handleFilterChange = (newFilters: Partial<LeadFilters>) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
@@ -94,100 +151,80 @@ export default function LeadsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Leads deleted successfully');
+      setSelectedRows([]);
+      setLoading(false);
     },
     onError: () => {
       toast.error('Failed to delete leads');
+      setLoading(false);
     },
   });
 
-  const handleEdit = (lead: Lead) => {
-    setSelectedLead(lead);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDelete = async (leadId: string) => {
-    try {
-      await deleteLead.mutateAsync(leadId);
-    } catch (error) {
-      toast.dismiss();
-      toast.error('Failed to delete lead');
-    }
-  };
-
-  const handleBulkDelete = async (leadIds: string[]) => {
-    try {
-      await bulkDeleteLeads.mutateAsync(leadIds);
-      toast.success('Leads deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete some leads');
-    }
-  };
-
-  const handleSelectionChange = (leads: Lead[]) => {
-    setSelectedRows(leads);
-  };
-
   if (isLoading) {
     return (
-      <section className='flex-1 p-2 md:p-4'>
-        <Card className='container mx-auto p-4 md:p-5'>
-          <div className='flex justify-between items-center '>
-            <div>
-              <Skeleton className='h-10 w-60 mb-2' />
-              <Skeleton className='h-6 w-96 bg-black/20' />
-            </div>
-            <div className='flex gap-2'>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className='mr-2 h-4 w-4' /> Add New Lead
-              </Button>
-            </div>
-          </div>
-          <div className='w-full items-center justify-center p-3'>
-            <Skeleton className='w-[95%] h-[400px]' />
-          </div>
-        </Card>
-      </section>
+      <Card className='p-6'>
+        <Skeleton className='h-[400px] w-full' />
+      </Card>
     );
   }
 
   return (
-    <section className='flex-1 p-2 md:p-4 h-full'>
-      <Card className='container mx-auto p-4 md:p-5'>
-        <div className='flex justify-between items-center '>
-          <div>
-            <h1 className='text-3xl font-bold tracking-tight text-primary'>Leads Management</h1>
-            <p className='text-muted-foreground'>Manage and track your leads in one place</p>
-          </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Lead
-            </Button>
-          </div>
-        </div>
+    <div className='flex flex-col gap-4'>
+      <div className='flex items-center justify-between'>
+        <h1 className='text-2xl font-semibold'>Leads</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className='mr-2 h-4 w-4' />
+          Add Lead
+        </Button>
+      </div>
 
-        <div className='space-4 p-6'>
-          <DataTable
-            columns={columns}
-            data={leads}
-            onEdit={handleEdit}
-            onBulkDelete={async (row) => {
-              const leadIds = row.map((row) => row.original.id);
-              await handleBulkDelete(leadIds);
-            }}
-            onDelete={handleDelete}
-            onSelectionChange={handleSelectionChange}
-          />
-        </div>
+      <DataTableFilters
+        onFilterChange={handleFilterChange}
+        statusOptions={statusOptions}
+        showSourceFilter
+      />
 
-        <CreateLeadDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <Card>
+        <DataTable
+          columns={columns}
+          data={leads}
+          onEdit={(lead) => {
+            setSelectedLead(lead);
+            setIsEditDialogOpen(true);
+          }}
+          onDelete={(lead) => {
+            deleteLead.mutate(lead.id);
+          }}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          onBulkDelete={(rows) => {
+            bulkDeleteLeads.mutate(rows.map((row) => row.id));
+          }}
+          pageCount={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </Card>
+
+      <CreateLeadDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
+
+      {selectedLead && (
         <EditLeadDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           lead={selectedLead}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onEdit={(lead) => {
+            setSelectedLead(lead);
+            setIsEditDialogOpen(true);
+          }}
+          onDelete={async (leadId) => {
+            await deleteLead.mutateAsync(leadId);
+            setSelectedLead(null);
+          }}
         />
-      </Card>
-    </section>
+      )}
+    </div>
   );
 }

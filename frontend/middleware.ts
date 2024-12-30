@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('Authorization')?.value;
 
   if (!accessToken) {
-    // Redirect to login if no token is present
+    // give a warning that user is not authenticated
     const url = new URL('/sign-in', request.url);
     url.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(url);

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Deal } from '@/types';
+import { Deal, DealStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -9,21 +9,61 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { DataTableFilters } from '@/components/filters/data-table-filters';
 
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
 import { DataTable } from './data-table';
 import { EditDealDialog } from './edit-deal-dialog';
 
-async function getDeals(): Promise<Deal[]> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
+interface DealsResponse {
+  data: Deal[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+interface DealFilters {
+  page?: number;
+  limit?: number;
+  startDate?: Date;
+  endDate?: Date;
+  createdById?: string;
+  status?: DealStatus;
+  minAmount?: number;
+  maxAmount?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+async function getDeals(filters: DealFilters = {}): Promise<DealsResponse> {
+  const queryParams = new URLSearchParams();
+  
+  if (filters.page) queryParams.append('page', filters.page.toString());
+  if (filters.limit) queryParams.append('limit', filters.limit.toString());
+  if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
+  if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
+  if (filters.createdById) queryParams.append('createdById', filters.createdById);
+  if (filters.status) queryParams.append('status', filters.status);
+  if (filters.minAmount) queryParams.append('minAmount', filters.minAmount.toString());
+  if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString());
+  if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
+  if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
+
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/deals?${queryParams.toString()}`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    }
+  );
 
   if (!response.ok) {
     const error = await response.text();
@@ -37,13 +77,32 @@ export default function DealsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedRows, setSelectedRows] = useState<Deal[]>([]);
+  const [filters, setFilters] = useState<DealFilters>({});
+  const [page, setPage] = useState(1);
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
 
-  const { data: deals = [], isLoading } = useQuery({
-    queryKey: ['deals'],
-    queryFn: getDeals,
+  const { data: dealsData, isLoading } = useQuery({
+    queryKey: ['deals', filters, page],
+    queryFn: () => getDeals({ ...filters, page, limit: 10 }),
   });
+
+  const deals = dealsData?.data || [];
+  const totalPages = dealsData?.meta?.totalPages || 1;
+
+  const statusOptions = Object.values(DealStatus).map(status => ({
+    label: status.charAt(0) + status.slice(1).toLowerCase(),
+    value: status,
+  }));
+
+  const handleFilterChange = (newFilters: Partial<DealFilters>) => {
+    setFilters(newFilters);
+    setPage(1); // Reset to first page when filters change
+  };
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
 
   const deleteDeal = useMutation({
     mutationFn: async (dealId: string) => {
@@ -94,100 +153,80 @@ export default function DealsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deals deleted successfully');
+      setSelectedRows([]);
+      setLoading(false);
     },
     onError: () => {
       toast.error('Failed to delete deals');
+      setLoading(false);
     },
   });
 
-  const handleEdit = (deal: Deal) => {
-    setSelectedDeal(deal);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleDelete = async (dealId: string) => {
-    try {
-      await deleteDeal.mutateAsync(dealId);
-    } catch (error) {
-      toast.dismiss();
-      toast.error('Failed to delete deal');
-    }
-  };
-
-  const handleBulkDelete = async (dealIds: string[]) => {
-    try {
-      await bulkDeleteDeals.mutateAsync(dealIds);
-      toast.success('Deals deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete some deals');
-    }
-  };
-
-  const handleSelectionChange = (deals: Deal[]) => {
-    setSelectedRows(deals);
-  };
-
   if (isLoading) {
     return (
-      <section className='flex-1 p-2 md:p-4'>
-        <Card className='container mx-auto p-4 md:p-5'>
-          <div className='flex justify-between items-center '>
-            <div>
-              <Skeleton className='h-10 w-60 mb-2' />
-              <Skeleton className='h-6 w-96 bg-black/20' />
-            </div>
-            <div className='flex gap-2'>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className='mr-2 h-4 w-4' /> Add New Deal
-              </Button>
-            </div>
-          </div>
-          <div className='w-full items-center justify-center p-3'>
-            <Skeleton className='w-[95%] h-[400px]' />
-          </div>
-        </Card>
-      </section>
+      <Card className='p-6'>
+        <Skeleton className='h-[400px] w-full' />
+      </Card>
     );
   }
 
   return (
-    <section className='flex-1 p-2 md:p-4 h-full'>
-      <Card className='container mx-auto p-4 md:p-5'>
-        <div className='flex justify-between items-center '>
-          <div>
-            <h1 className='text-3xl font-bold tracking-tight text-primary'>Deals Management</h1>
-            <p className='text-muted-foreground'>Manage and track your deals in one place</p>
-          </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Deal
-            </Button>
-          </div>
-        </div>
+    <div className='flex flex-col gap-4'>
+      <div className='flex items-center justify-between'>
+        <h1 className='text-2xl font-semibold'>Deals</h1>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className='mr-2 h-4 w-4' />
+          Add Deal
+        </Button>
+      </div>
 
-        <div className='space-4 p-6'>
-          <DataTable
-            columns={columns}
-            data={deals}
-            onEdit={handleEdit}
-            onBulkDelete={async (row) => {
-              const dealIds = row.map((row) => row.original.id);
-              await handleBulkDelete(dealIds);
-            }}
-            onDelete={handleDelete}
-            onSelectionChange={handleSelectionChange}
-          />
-        </div>
+      <DataTableFilters
+        onFilterChange={handleFilterChange}
+        statusOptions={statusOptions}
+        showAmountFilter
+      />
 
-        <CreateDealDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      <Card>
+        <DataTable
+          columns={columns}
+          data={deals}
+          onEdit={(deal) => {
+            setSelectedDeal(deal);
+            setIsEditDialogOpen(true);
+          }}
+          onDelete={async (dealId) => {
+            await deleteDeal.mutateAsync(dealId);
+            setSelectedDeal(null);
+          }}
+          selectedRows={selectedRows}
+          onSelectedRowsChange={setSelectedRows}
+          onBulkDelete={(rows) => {
+            bulkDeleteDeals.mutate(rows.map((row) => row.id));
+          }}
+          pageCount={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </Card>
+
+      <CreateDealDialog
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
+
+      {selectedDeal && (
         <EditDealDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           deal={selectedDeal}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={async (dealId) => {
+            await deleteDeal.mutateAsync(dealId);
+            setSelectedDeal(null);
+          }}
+          onEdit={(deal) => {
+            setSelectedDeal(deal);
+          }}
         />
-      </Card>
-    </section>
+      )}
+    </div>
   );
 }

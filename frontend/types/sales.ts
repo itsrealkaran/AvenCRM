@@ -7,6 +7,11 @@ export interface Lead {
   phone?: string;
   companyId: string;
   agentId: string;
+  agent?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   leadAmount?: number;
   source?: string;
   status: LeadStatus;
@@ -28,6 +33,11 @@ export interface Deal {
   phone?: string;
   companyId: string;
   agentId: string;
+  agent?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   dealAmount: number;
   status: DealStatus;
   propertyType?: string;

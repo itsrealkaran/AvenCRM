@@ -7,6 +7,11 @@ export interface Transaction {
   date: Date;
   type: TransactionType;
   agentId: string;
+  agent?: {
+    id: string;
+    name: string;
+    email: string;
+  };
   planType?: PlanTier;
   isVerfied: boolean;
   invoiceNumber?: string;

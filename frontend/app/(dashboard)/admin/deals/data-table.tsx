@@ -32,11 +32,13 @@ import { useConfirm } from '@/hooks/use-confirm';
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  onEdit?: (deal: Deal) => void;
-  onDelete: (dealId: string) => void;
-  onBulkDelete: (rows: Row<TData>[]) => void;
-  onSelectionChange?: (selectedItems: Deal[]) => void;
-  disabled?: boolean;
+  onEdit?: (data: TData) => void;
+  onDelete?: (dealId: string) => void;
+  selectedRows?: TData[];
+  onSelectedRowsChange?: (rows: TData[]) => void;
+  onBulkDelete?: (rows: Row<TData>[]) => void;
+  pageCount?: number;
+  onPageChange?: (page: number) => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -44,9 +46,11 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
+  selectedRows,
+  onSelectedRowsChange,
   onBulkDelete,
-  onSelectionChange,
-  disabled,
+  pageCount,
+  onPageChange,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -90,7 +94,7 @@ export function DataTable<TData, TValue>({
         />
         {table.getFilteredSelectedRowModel().rows.length > 0 && (
           <Button
-            disabled={disabled}
+            disabled={false}
             size={'sm'}
             variant={'outline'}
             className='ml-auto font-normal test-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
@@ -102,7 +106,7 @@ export function DataTable<TData, TValue>({
                   id: 'delete',
                 });
 
-                onBulkDelete(table.getFilteredSelectedRowModel().rows);
+                onBulkDelete?.(table.getFilteredSelectedRowModel().rows);
                 toast.dismiss('delete');
                 table.resetRowSelection();
               }
