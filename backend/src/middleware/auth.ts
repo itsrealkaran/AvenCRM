@@ -10,6 +10,7 @@ interface JWTPayload {
   id: string;
   role: UserRole;
   companyId?: string;
+  teamId?: string | null;
   exp?: number;
 }
 
@@ -98,12 +99,12 @@ export const protect = async (req: AuthenticatedRequest, res: Response, next: Ne
       if (!user) {
         return res.status(401).json({ message: 'User no longer exists' });
       }
-
       // Attach user to request
       (req as AuthenticatedRequest).user = {
         ...user,
         id: user.id,
         role: decoded.role,
+        teamId: user.teamId || null,
         companyId: decoded.companyId,
       };
       next();

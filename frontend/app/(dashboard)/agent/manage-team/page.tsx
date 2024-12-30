@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import axios from 'axios';
+import apiClient from '@/lib/axios';
 import { ConciergeBell } from 'lucide-react';
 import { BsGenderNeuter } from 'react-icons/bs';
 import { FaUser } from 'react-icons/fa6';
@@ -28,6 +28,8 @@ const Page = () => {
   const [refresh, setRefresh] = useState(false);
   const [updateOrCreate, setUpdateOrCreate] = useState<'UPDATE' | 'CREATE'>();
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
+  const [agentRole, setAgentRole] = useState<'AGENT' | 'TEAM_LEADER'>('AGENT');
+  console.log('Initial agentRole:', agentRole);
 
   const [agent, setagent] = useState('false');
   const [formData, setFormData] = useState<FormData>({
@@ -52,11 +54,8 @@ const Page = () => {
 
   const getUser = useCallback(async () => {
     try {
-      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
+      const res = await apiClient.get('/team');
+      console.log(res.data);
       setList(res.data);
       setRefresh(false);
     } catch (error) {
@@ -86,47 +85,16 @@ const Page = () => {
     }
   };
 
-  const addUser = async () => {
-    console.log(formData);
-    const response = await axios.post(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`,
-      {
-        name: formData.name,
-        dob: formData.dob,
-        email: formData.email,
-        phone: formData.phone,
-        agentRole: formData.role,
-        gender: formData.gender,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      }
-    );
-    setadd(false);
-    setRefresh(true);
-    console.log(response.data);
-  };
-
   const updateUser = async () => {
     console.log(formData, 'update');
-    const response = await axios.put(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/agent/${selectedList[0]}`,
-      {
-        name: formData.name,
-        dob: formData.dob,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        gender: formData.gender,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      }
-    );
+    const response = await apiClient.put(`/team/${selectedList[0]}`, {
+      name: formData.name,
+      dob: formData.dob,
+      email: formData.email,
+      phone: formData.phone,
+      role: formData.role,
+      gender: formData.gender,
+    });
     setadd(false);
     setRefresh(true);
     console.log(response.data);
@@ -134,13 +102,8 @@ const Page = () => {
 
   const deleteUser = async () => {
     console.log(selectedList);
-    const response = await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-      data: {
-        agentIds: selectedList,
-      },
+    const response = await apiClient.delete('/team', {
+      data: { ids: selectedList },
     });
     setOpenDeletePopup(false);
     setRefresh(true);
@@ -151,11 +114,8 @@ const Page = () => {
     if (state === 'UPDATE') {
       setUpdateOrCreate('UPDATE');
       setadd((prev) => !prev);
-    } else {
-      setagent('');
-      setUpdateOrCreate('CREATE');
-      setadd((prev) => !prev);
     }
+    setadd(!adduser)
   };
 
   return (
@@ -181,12 +141,6 @@ const Page = () => {
                 className={`bg-[#5932EA] px-2 py-1 text-sm text-white ${selectedList.length > 0 && selectedList.length < 2 ? 'block' : 'hidden'} rounded-[4px] tracking-tight`}
               >
                 <button>Update User</button>
-              </div>
-              <div
-                onClick={() => openadd()}
-                className='rounded-[4px] bg-[#5932EA] px-2 py-1 text-sm tracking-tight text-white'
-              >
-                <button>Add Users</button>
               </div>
               <div className='flex gap-3 text-lg opacity-70'>
                 <IoIosSearch />
@@ -293,7 +247,7 @@ const Page = () => {
 
         {adduser ? (
           <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
-            <div className='w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all'>
+            <div className='w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all overflow-y-auto'>
               <div className='relative p-6'>
                 {/* Header */}
                 <div className='mb-6 flex items-center justify-between border-b pb-4'>
@@ -399,7 +353,11 @@ const Page = () => {
                       className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
                       name='role'
                       value={formData.role}
-                      onChange={handleInputChange}
+                      onChange={(e) => {
+                        console.log('New agent role:');
+                        handleInputChange(e);
+                        setAgentRole(e.target.value === "AGENT" ? "AGENT" : "TEAM_LEADER");
+                      }}
                     >
                       <option value='AGENT'>Agent</option>
                       <option value='TEAM_LEADER'>Team Leader</option>
@@ -407,7 +365,9 @@ const Page = () => {
                   </div>
 
                   {/* Team Lead Field - Conditional */}
-                  {agent === 'agent' && (
+                  <div>
+                  {agentRole === 'AGENT' && (
+                    
                     <div className='group relative'>
                       <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
                         <FaUser className='h-4 w-4' />
@@ -415,13 +375,17 @@ const Page = () => {
                       </label>
                       <select
                         className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
-                        name='cars'
-                      >
+                        name='teamLead'
+                        value={formData.teamLead}
+                        onChange={handleInputChange}
+                        >
                         <option value='Lead 1'>Lead 1</option>
                         <option value='Lead 2'>Lead 2</option>
                       </select>
                     </div>
                   )}
+                  
+                  </div>
                 </div>
 
                 {/* Action Buttons */}
@@ -433,11 +397,11 @@ const Page = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={updateOrCreate === 'UPDATE' ? updateUser : addUser}
+                    onClick={updateUser}
                     disabled={loading}
                     className='rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
                   >
-                    {loading ? 'Loading...' : updateOrCreate === 'UPDATE' ? 'Update' : 'Add'}
+                    {loading ? 'Loading...' : 'Update'}
                   </button>
                 </div>
               </div>

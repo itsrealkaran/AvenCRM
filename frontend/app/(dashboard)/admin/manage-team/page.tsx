@@ -28,6 +28,8 @@ const Page = () => {
   const [refresh, setRefresh] = useState(false);
   const [updateOrCreate, setUpdateOrCreate] = useState<'UPDATE' | 'CREATE'>();
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
+  const [agentRole, setAgentRole] = useState<'AGENT' | 'TEAM_LEADER'>('AGENT');
+
 
   const [agent, setagent] = useState('false');
   const [formData, setFormData] = useState<FormData>({
@@ -36,6 +38,7 @@ const Page = () => {
     gender: '',
     phone: '',
     email: '',
+    teamLead: '',
     role: 'AGENT',
   });
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -44,9 +47,13 @@ const Page = () => {
       ...prev,
       [name]: value,
     }));
+    if(name === 'role'){
+      setAgentRole(value as 'AGENT' | 'TEAM_LEADER');
+    }
   };
 
   const [list, setList] = useState<any[]>([]);
+  const [teams, setTeams] = useState<any[]>([]);
   const [selectedList, setSelectedList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +68,15 @@ const Page = () => {
     }
   }, []);
 
+  const getTeams = useCallback(async () => {
+    try {
+      const res = await api.get('/team/get-teams');
+      setTeams(res.data);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  }, []);
+
   useEffect(() => {
     // Simulate loading delay
     const timer = setTimeout(() => {
@@ -72,6 +88,7 @@ const Page = () => {
 
   useEffect(() => {
     getUser();
+    getTeams();
   }, [agent, selectedList, refresh, getUser]);
 
   const addItem = (i: number, id: string) => {
@@ -90,6 +107,7 @@ const Page = () => {
       email: formData.email,
       phone: formData.phone,
       agentRole: formData.role,
+      teamLead: formData.teamLead,
       gender: formData.gender,
     });
     setadd(false);
@@ -114,11 +132,7 @@ const Page = () => {
 
   const deleteUser = async () => {
     console.log(selectedList);
-    const response = await api.delete('/user', {
-      data: {
-        agentIds: selectedList,
-      },
-    });
+    const response = await api.delete(`/user?ids=${selectedList.join(',')}`);
     setOpenDeletePopup(false);
     setRefresh(true);
     console.log(response.data);
@@ -270,7 +284,7 @@ const Page = () => {
 
         {adduser ? (
           <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'>
-            <div className='w-full max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all'>
+            <div className='w-full h-[90vh] overflow-y-auto max-w-xl transform overflow-hidden rounded-2xl bg-white shadow-2xl transition-all'>
               <div className='relative p-6'>
                 {/* Header */}
                 <div className='mb-6 flex items-center justify-between border-b pb-4'>
@@ -384,7 +398,7 @@ const Page = () => {
                   </div>
 
                   {/* Team Lead Field - Conditional */}
-                  {agent === 'agent' && (
+                  {agentRole === 'AGENT' && (
                     <div className='group relative'>
                       <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
                         <FaUser className='h-4 w-4' />
@@ -392,10 +406,15 @@ const Page = () => {
                       </label>
                       <select
                         className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
-                        name='cars'
+                        name='teamLead'
+                        value={formData.teamLead}
+                        onChange={handleInputChange}
                       >
-                        <option value='Lead 1'>Lead 1</option>
-                        <option value='Lead 2'>Lead 2</option>
+                        {teams.map((team) => (
+                          <option key={team.id} value={team.name}>
+                            {team.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                   )}
