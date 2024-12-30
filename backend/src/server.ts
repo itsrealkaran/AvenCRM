@@ -137,7 +137,7 @@ app.use('/user', userRoutes);
 app.use('/deals', dealsRoutes);
 app.use('/leads', leadsRoutes);
 app.use('/company', companyRoutes);
-app.use('/transaction', transctionRoutes);
+app.use('/transactions', transctionRoutes);
 app.use('/calender', manageCalendar);
 app.use('/company/moniter', companyMonitoring);
 app.use('/email', emailRoutes);

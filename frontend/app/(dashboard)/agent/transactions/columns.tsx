@@ -3,7 +3,7 @@
 import { Transaction } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';
+import { ArrowUpDown, Copy, MoreHorizontal, Pencil, Trash } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -128,9 +128,7 @@ export const columns: ColumnDef<Transaction>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
-              Copy transaction ID
-            </DropdownMenuItem>
+
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => meta.onEdit?.(transaction)}>
               <Pencil className='mr-2 h-4 w-4' /> Edit transaction
@@ -140,6 +138,9 @@ export const columns: ColumnDef<Transaction>[] = [
               className='text-red-600'
             >
               <Trash className='mr-2 h-4 w-4' /> Delete transaction
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
+              <Copy className='mr-2 h-4 w-4' /> Copy transaction ID
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

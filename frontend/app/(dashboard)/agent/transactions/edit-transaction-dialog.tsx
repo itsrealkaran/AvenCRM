@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { api } from '@/lib/api';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -87,44 +88,33 @@ export function EditTransactionDialog({
 
   const editTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
+      if (!transaction) {
+        throw new Error('No transaction selected for editing');
       }
 
-      const payload = {
-        ...values,
-        amount: parseFloat(values.amount),
-        taxRate: values.taxRate ? parseFloat(values.taxRate) : null,
-        date: new Date(values.date).toISOString(),
-      };
+      try {
+        const payload = {
+          ...values,
+          amount: parseFloat(values.amount),
+          taxRate: values.taxRate ? parseFloat(values.taxRate) : null,
+          date: new Date(values.date).toISOString(),
+        };
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/${transaction?.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
+        const response = await api.put(`/transactions/${transaction.id}`, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error updating transaction:', error);
         throw new Error('Failed to update transaction');
       }
-
-      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedTransaction) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       onOpenChange(false);
-      form.reset();
+      onEdit(updatedTransaction);
       toast.success('Transaction updated successfully');
     },
-    onError: () => {
-      toast.error('Failed to update transaction');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to update transaction');
     },
   });
 
