@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { PropertyData } from '@/types/propertyTypes';
+import { Property } from '@/types';
 import axios from 'axios';
 import { Maximize2, Plus, Printer, Share2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const Page = () => {
-  const [formData, setFormData] = useState<PropertyData>({
+  const [formData, setFormData] = useState<Property>({
     id: '',
     address: '',
     price: 0,
@@ -135,16 +136,22 @@ const Page = () => {
       const uploadFormData = new FormData(); // Renamed to `uploadFormData`
       uploadFormData.append('image', file);
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-image`,
-        uploadFormData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      // const response = await axios.post(
+      //   `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-image`,
+      //   uploadFormData,
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${token}`,
+      //       'Content-Type': 'multipart/form-data',
+      //     },
+      //   }
+      // );
+
+      const response = await api.post('/property/upload-image', uploadFormData, {
+        headers: {  
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setIsLoading(false);
 
       // Update the form data with the new image URL

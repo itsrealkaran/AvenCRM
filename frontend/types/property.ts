@@ -1,24 +1,71 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export interface Property {
+export type Property = {
   id: string;
-  title: string;
-  description: string;
-  price: number;
   address: string;
+  price: number;
+  bedrooms: number;
   sqft: number;
-  bedrooms?: number;
-  propertySummary: Record<string, any>;
-  bathrooms: Record<string, any>;
-  interiorFeatures: Record<string, any>;
-  buildingFeatures: Record<string, any>;
-  heatingNcooling: Record<string, any>;
-  exteriorFeatures: Record<string, any>;
-  measurements: Record<string, any>;
-  parking: Record<string, any>;
-  lotFeatures: Record<string, any>;
-  rooms: Record<string, any>[];
-  images: string[];
-  createdAt: Date;
-  updatedAt: Date;
-  creatorId?: string;
-}
+  description: string;
+  title: string;
+  imageUrl: string;
+  propertySummary: {
+    propertyType: string;
+    buildingType: string;
+    squareFootage: number;
+    communityName: string;
+    subdivision: string;
+    storeys: number;
+    landSize: number;
+    buildIn: string;
+    annualPropretyTax: number;
+    parkingType: string;
+  };
+  bathrooms: {
+    totalBathrooms: string;
+    partailBathrooms: number;
+  };
+  interiorFeatures: {
+    appliaanceIncluded: string;
+    flooring: string;
+    basementType: string;
+  };
+  buildingFeatures: {
+    features: string;
+    foundationType: string;
+    style: string;
+    architectureStyle: string;
+    constructionMaterial: string;
+  };
+  heatingNcooling: {
+    cooling: string;
+    fireplace: string;
+    heatingType: string;
+  };
+  exteriorFeatures: {
+    exteriorFinishing: string;
+    roofType: string;
+  };
+  parking: {
+    squareFootage: string;
+    totalFinishedArea: number;
+  };
+  measurements: {
+    sqft: number;
+    totalfinishSqft: number;
+  };
+  rooms: room[];
+  lotFeatures: {
+    fencing: string;
+    frontage: string;
+    landDepth: string;
+  };
+  images: JSON[];
+  agentId: string;
+};
+
+type room = {
+  level: string;
+  roomType: string;
+  width: number;
+  length: number;
+  height: number;
+};

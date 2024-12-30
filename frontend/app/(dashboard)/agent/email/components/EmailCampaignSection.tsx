@@ -72,7 +72,6 @@ interface Agent {
 }
 
 export default function EmailCampaignSection() {
-  debugger;
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,7 +133,7 @@ export default function EmailCampaignSection() {
 
   const fetchAgents = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
         credentials: 'include',
       });
       if (!response.ok) throw new Error('Failed to fetch agents');

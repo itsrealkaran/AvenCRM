@@ -1,4 +1,5 @@
 import { AuthResponse, LoginCredentials, RegisterCredentials, User } from '@/types/user';
+
 import { api } from '@/lib/api';
 
 export const authService = {

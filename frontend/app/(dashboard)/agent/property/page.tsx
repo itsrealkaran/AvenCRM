@@ -2,25 +2,20 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Property } from '@/types';
 import { PropertyData } from '@/types/propertyTypes';
-import axios from 'axios';
 
 import PropertyBox from '@/components/PropertyBox';
+import { api } from '@/lib/api';
 
 const Page = () => {
-  const [response, setResponse] = useState([]);
+  const [response, setResponse] = useState<Property[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('accessToken');
     const fetchData = async () => {
       try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/property`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        });
+        const res = await api.get<Property[]>('/property');
         setResponse(res.data);
       } catch (error) {
         console.error('Error fetching properties:', error);

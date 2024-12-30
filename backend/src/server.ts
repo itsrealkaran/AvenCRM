@@ -4,9 +4,6 @@ import "dotenv/config.js";
 import session, { SessionOptions } from 'express-session';
 import userRoutes from './routes/user.routes.js';
 
-// import adminRoutes from './routes/company/admin/agent.routes.js';
-// import superAdminRoutes from './routes/superadmin.routes.js';
-// import agentRoutes from './routes/agent.routes.js';
 import dealsRoutes from './routes/deals.routes.js';
 import leadsRoutes from './routes/leads.routes.js'
 import companyRoutes from './routes/company.routes.js';

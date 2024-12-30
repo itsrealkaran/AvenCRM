@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction } from 'express';
+import express, { Request, Response, NextFunction, Router } from 'express';
 import Stripe from 'stripe';
 import { protect } from '../middleware/auth.js';
 import { verifyAdmin } from '../lib/verifyUser.js';
@@ -14,7 +14,7 @@ declare global {
   }
 }
 
-const router = express.Router();
+const router: Router = express.Router();
 console.log(process.env.STRIPE_SECRET_KEY)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-12-18.acacia'

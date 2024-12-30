@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
+import { toast } from 'sonner';
 
 interface JWTPayload {
   id: string;
@@ -12,19 +13,35 @@ interface JWTPayload {
 // List of public routes that don't require authentication
 const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
 
+// List of protected routes that require authentication
+const protectedRoutes = ['/dashboard', '/agent', '/admin', '/superadmin'];
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public routes
-  if (publicRoutes.some(route => pathname.startsWith(route))) {
+  // Allow public routes without authentication
+  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+    // If user is already authenticated, redirect to dashboard
+    const accessToken = request.cookies.get('Authorization')?.value;
+    if (accessToken) {
+      try {
+        const decoded = jwtDecode<JWTPayload>(accessToken);
+        if (decoded?.exp * 1000 > Date.now()) {
+          return NextResponse.redirect(new URL(`/${decoded.role.toLowerCase()}`, request.url));
+        }
+      } catch (error) {
+        toast.error('Invalid token');
+        return NextResponse.redirect(new URL('/sign-in', request.url));
+      }
+    }
     return NextResponse.next();
   }
 
-  // Check if the current path is a dashboard route
-  const isDashboardRoute = pathname.startsWith('/dashboard');
+  // Check if the current path requires authentication
+  const requiresAuth = protectedRoutes.some((route) => pathname.startsWith(route));
 
-  if (!isDashboardRoute) {
-    // If it's not a dashboard route, proceed normally
+  if (!requiresAuth) {
+    // If it's not a protected route, proceed normally
     return NextResponse.next();
   }
 
@@ -44,25 +61,22 @@ export async function middleware(request: NextRequest) {
 
     // Check token expiration
     if (decoded?.exp * 1000 < Date.now()) {
-      // Token is expired - try to use refresh token
-      const refreshToken = request.cookies.get('RefreshToken')?.value;
-
-      if (!refreshToken) {
-        const url = new URL('/sign-in', request.url);
-        url.searchParams.set('callbackUrl', pathname);
-        return NextResponse.redirect(url);
-      }
-
-      // Redirect to refresh token endpoint
-      const response = NextResponse.redirect(new URL('/api/auth/refresh-token', request.url));
-      response.headers.set('x-original-path', pathname);
-      return response;
+      // Token is expired - redirect to sign-in
+      const url = new URL('/sign-in', request.url);
+      url.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(url);
     }
 
-    // Token is valid, proceed with the request
-    return NextResponse.next();
+    // Validate role-based access
+    const role = decoded.role.toLowerCase();
+    if (pathname.startsWith(`/${role}`) || pathname.startsWith('/dashboard')) {
+      return NextResponse.next();
+    }
+
+    // Redirect to appropriate role-based route if accessing wrong role route
+    return NextResponse.redirect(new URL(`/${role}`, request.url));
   } catch (error) {
-    // Invalid token, redirect to login
+    // Invalid token - redirect to sign-in
     const url = new URL('/sign-in', request.url);
     url.searchParams.set('callbackUrl', pathname);
     return NextResponse.redirect(url);
@@ -70,15 +84,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    /*
-     * Match all paths except:
-     * 1. /api routes
-     * 2. /_next (Next.js internals)
-     * 3. /fonts (inside public directory)
-     * 4. /examples (inside public directory)
-     * 5. all root files inside public (e.g. /favicon.ico)
-     */
-    '/((?!api|_next|fonts|examples|[\\w-]+\\.\\w+).*)',
-  ],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

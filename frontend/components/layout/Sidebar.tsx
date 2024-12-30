@@ -110,7 +110,7 @@ const Sidebar = () => {
     {
       heading: 'Marketing',
       icon: LineChart,
-      path: `/${role}/`,
+      path: `/${role}/marketing`,
       description: 'Deal management',
       roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
     },

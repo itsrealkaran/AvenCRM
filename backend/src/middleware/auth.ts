@@ -36,7 +36,7 @@ export interface AuthenticatedRequest extends Request {
 
 export const protect = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    let token: string | undefined;
+  let token: string | undefined;
 
     // 1. First check Authorization cookie
     token = req.cookies.Authorization;

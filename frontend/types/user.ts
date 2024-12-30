@@ -15,6 +15,7 @@ export interface User {
   teamId?: string;
   createdAt: Date;
   updatedAt: Date;
+  image?: string;
 }
 
 export interface AuthResponse {

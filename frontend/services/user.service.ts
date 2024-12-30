@@ -1,8 +1,12 @@
 import { User } from '@/types/user';
+
 import { api } from '@/lib/api';
 
 class ApiError extends Error {
-  constructor(public status: number, message: string) {
+  constructor(
+    public status: number,
+    message: string
+  ) {
     super(message);
     this.name = 'ApiError';
   }
@@ -67,5 +71,5 @@ export const userService = {
         error.response?.data?.message || 'Failed to fetch users'
       );
     }
-  }
+  },
 };

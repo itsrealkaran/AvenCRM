@@ -4,6 +4,7 @@ import { createContext, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { LoginCredentials, RegisterCredentials, User } from '@/types/user';
 import { authService } from '@/services/auth.service';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(userData);
     } catch (error) {
       console.error('Failed to load user:', error);
+      toast.error('Failed to load user');
     } finally {
       setLoading(false);
     }

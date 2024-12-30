@@ -13,18 +13,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
+import { SignOutButton } from '@/components/SignOutButton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export default function Topbar() {
   const router = useRouter();
+  const { user } = useAuth();
 
-  const handleSignOut = async () => {
-    try {
-      await authApi.logout();
-      router.push('/sign-in');
-      toast.success('Signed out successfully');
-    } catch (error) {
-      toast.error('Failed to sign out');
-    }
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase();
   };
 
   return (
@@ -38,11 +40,18 @@ export default function Topbar() {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant='ghost' size='icon' className='h-9 w-9 rounded-full border'>
-              <User className='h-5 w-5' />
+            <Button variant='ghost' className='h-9 px-2 gap-2 rounded-full'>
+              <Avatar className='h-8 w-8'>
+                <AvatarImage src={user?.image} />
+                <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
+              </Avatar>
+              <div className='flex flex-col items-start'>
+                <span className='text-sm font-medium'>{user?.name}</span>
+                <span className='text-xs text-muted-foreground capitalize'>{user?.role?.toLowerCase()}</span>
+              </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-40'>
+          <DropdownMenuContent align='end' className='w-56'>
             <DropdownMenuItem onClick={() => router.push('/profile')}>
               <User className='mr-2 h-4 w-4' />
               Profile
@@ -51,10 +60,7 @@ export default function Topbar() {
               <Settings className='mr-2 h-4 w-4' />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSignOut}>
-              <LogOut className='mr-2 h-4 w-4' />
-              Sign out
-            </DropdownMenuItem>
+            <SignOutButton variant="ghost" className="w-full justify-start" />
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
