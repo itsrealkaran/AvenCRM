@@ -2,21 +2,13 @@ import { Request, Response } from "express";
 import { UserRole } from "@prisma/client";
 import db from "../db/index.js";
 import bcrypt from "bcrypt";
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-    companyId?: string;
-    teamId?: string | null;
-  };
-}
+import { AuthenticatedRequest } from '../middleware/auth.js';
 
 export const userController = {
   // User Management (SuperAdmin & Admin)
-  async createUser(req: Request, res: Response) {
+  async createUser(req: AuthenticatedRequest, res: Response) {
     const { name, email, agentRole, gender, teamId, phone, dob } = req.body;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       // Validate permissions
@@ -109,10 +101,10 @@ export const userController = {
     }
   },
 
-  async updateUser(req: Request, res: Response) {
+  async updateUser(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     const { name, email, designation, isActive, teamId } = req.body;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       const user = await db.user.findUnique({ where: { id } });
@@ -151,9 +143,9 @@ export const userController = {
     }
   },
 
-  async getUsers(req: Request, res: Response) {
+  async getUsers(req: AuthenticatedRequest, res: Response) {
     const { role, companyId, teamId } = req.query;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (!authUser) {
@@ -212,9 +204,9 @@ export const userController = {
     }
   },
 
-  async getUserById(req: Request, res: Response) {
+  async getUserById(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (!authUser) {
@@ -250,9 +242,9 @@ export const userController = {
     }
   },
 
-  async deleteUser(req: Request, res: Response) {
+  async deleteUser(req: AuthenticatedRequest, res: Response) {
     const { ids } = req.query;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       // Permission checks
@@ -285,9 +277,9 @@ export const userController = {
   },
 
   // Team Management (Admin & Team Leader)
-  async assignTeam(req: Request, res: Response) {
+  async assignTeam(req: AuthenticatedRequest, res: Response) {
     const { userId, teamId } = req.body;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (
@@ -313,10 +305,10 @@ export const userController = {
   },
 
   // Performance Metrics
-  async getUserMetrics(req: Request, res: Response) {
+  async getUserMetrics(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     const { startDate, endDate } = req.query;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (!authUser) {
@@ -367,6 +359,102 @@ export const userController = {
       });
     } catch (error) {
       res.status(500).json({ message: "Error fetching user metrics", error });
+    }
+  },
+
+  async updateProfile(req: AuthenticatedRequest, res: Response) {
+    const { name, email, gender, phone, dob } = req.body;
+    const authUser = req.user;
+
+    try {
+      if (!authUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await db.user.update({
+        where: { id: authUser.id },
+        data: {
+          name,
+          email,
+          gender,
+          phone,
+          dob: dob ? new Date(dob) : undefined,
+        },
+      });
+
+      res.json(user);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error updating profile" });
+    }
+  },
+
+  async changePassword(req: AuthenticatedRequest, res: Response) {
+    const { currentPassword, newPassword } = req.body;
+    const authUser = req.user;
+
+    try {
+      if (!authUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await db.user.findUnique({ where: { id: authUser.id } });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      if (!isPasswordValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+      await db.user.update({
+        where: { id: authUser.id },
+        data: { password: hashedPassword },
+      });
+
+      res.json({ message: "Password updated successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error changing password" });
+    }
+  },
+
+  async getProfile(req: AuthenticatedRequest, res: Response) {
+    const authUser = req.user;
+
+    try {
+      if (!authUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const user = await db.user.findUnique({
+        where: { id: authUser.id },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          gender: true,
+          phone: true,
+          dob: true,
+          role: true,
+          teamId: true,
+          companyId: true,
+          isActive: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json(user);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Error fetching profile" });
     }
   },
 };

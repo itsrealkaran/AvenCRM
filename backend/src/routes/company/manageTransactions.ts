@@ -66,7 +66,7 @@ router.put(`/verify`, authenticateToken, async (req, res) => {
                 id: id
             },
             data: {
-                isVerfied: isVerfied
+                isVerified: isVerfied
             }
         }); 
         res.status(200).send(transaction);
@@ -94,11 +94,11 @@ router.post("/", authenticateToken, async (req, res) => {
             if (!agent) {
                 res.status(404).json({ message: "heckerrrrr" });
             } else {
-                const comapanyID = agent.companyId;
+                const comapanyID = agent.companyId!;
                 const transaction = await db.transaction.create({
                     data: {
                         amount,
-                        transactionMethod: transactionMethod,
+                        transactionMethod: transactionMethod ?? undefined,
                         type,
                         companyId: comapanyID,
                         agentId: agent.id

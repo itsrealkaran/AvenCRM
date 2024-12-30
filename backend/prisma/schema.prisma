@@ -324,7 +324,7 @@ model Transaction {
   agentId        String
 
   planType       PlanTier?
-  isVerfied      Boolean     @default(false)
+  isVerified      Boolean     @default(false)
   
   // Invoice and Billing
   invoiceNumber  String?

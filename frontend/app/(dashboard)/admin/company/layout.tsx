@@ -5,12 +5,8 @@ import SideNavBar from './components/SideNavbar';
 
 export default function CompanyLayout({ children }: { children: React.ReactNode }) {
   return (
-    <SidebarProvider>
-      <SideNavBar />
-      <main className='w-full h-screen overflow-hidden bg-[#F6F9FE]'>
-        <TopNavbar />
+      <main>
         {children}
       </main>
-    </SidebarProvider>
   );
 }

@@ -3,17 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PlanTier, UserRole } from '@prisma/client';
 import db from '../db/index.js';
-import { protect } from '../middleware/auth.js';
-
-interface JWTPayload {
-  id: string;
-  role: UserRole;
-  companyId?: string;
-}
-
-interface AuthenticatedRequest extends Request {
-  user?: JWTPayload;
-}
+import { protect, AuthenticatedRequest, JWTPayload } from '../middleware/auth.js';
 
 const router: Router = Router();
 
@@ -149,8 +139,8 @@ router.post('/sign-in', async (req: Request, res: Response) => {
 });
 
 // Get Current User
-router.get('/me', protect, async (req: Request, res: Response) => {
-  const authUser = (req as AuthenticatedRequest).user;
+router.get('/me', protect, async (req: AuthenticatedRequest, res: Response) => {
+  const authUser = req.user;
 
   try {
     if (!authUser?.id) {
@@ -180,9 +170,9 @@ router.get('/me', protect, async (req: Request, res: Response) => {
 });
 
 // Change Password
-router.post('/change-password', protect, async (req: Request, res: Response) => {
+router.post('/change-password', protect, async (req: AuthenticatedRequest, res: Response) => {
   const { currentPassword, newPassword } = req.body;
-  const authUser = (req as AuthenticatedRequest).user;
+  const authUser = req.user;
 
   try {
     if (!authUser?.id) {

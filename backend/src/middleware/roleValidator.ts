@@ -1,17 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { UserRole } from '@prisma/client';
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-    companyId?: string;
-  };
-}
+import { AuthenticatedRequest } from './auth.js';
 
 export const validateRole = (allowedRoles: UserRole[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    const user = (req as AuthenticatedRequest).user;
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const user = req.user;
 
     if (!user) {
       return res.status(401).json({ message: 'Unauthorized' });

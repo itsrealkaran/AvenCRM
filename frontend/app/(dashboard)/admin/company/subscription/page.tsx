@@ -1,9 +1,47 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { FaCheck } from 'react-icons/fa';
+import { StripeModal } from '@/components/stripe/stripe-modal';
+
+const plans = {
+  basic: {
+    id: 'BASIC',
+    name: 'Basic',
+    price: 99,
+    features: [
+      'All Analytics features',
+      'Up to 250,000 tracked visits',
+      'Normal support',
+      'Up to 3 team members',
+      'All analytics features',
+      'Normal support',
+    ]
+  },
+  popular: {
+    id: 'PROFESSIONAL',
+    name: 'Popular',
+    price: 199,
+    features: [
+      'All Analytics features',
+      'Up to 1,000,000 tracked visits',
+      'Premium support',
+      'Up to 10 team members',
+      'All analytics features',
+      'Priority support',
+    ]
+  }
+};
 
 const Page = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<typeof plans.basic | typeof plans.popular | null>(null);
+
+  const handlePayment = (plan: typeof plans.basic | typeof plans.popular) => {
+    setSelectedPlan(plan);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className='h-full overflow-y-auto p-6'>
       {/* Pricing Cards */}
@@ -47,7 +85,10 @@ const Page = () => {
                 </div>
               </div>
 
-              <button className='mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700'>
+              <button 
+                onClick={() => handlePayment(plans.basic)}
+                className='mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700'
+              >
                 Pay now
               </button>
             </div>
@@ -55,21 +96,14 @@ const Page = () => {
             {/* Plan Features */}
             <div className='flex-1 border-l border-gray-100 p-8'>
               <div className='flex items-baseline gap-2'>
-                <span className='text-4xl font-bold text-gray-900'>$99</span>
+                <span className='text-4xl font-bold text-gray-900'>${plans.basic.price}</span>
                 <span className='text-sm text-gray-600'>/monthly</span>
               </div>
 
               <div className='mt-6'>
                 <h3 className='font-semibold text-gray-900'>What&apos;s included</h3>
                 <ul className='mt-4 space-y-3'>
-                  {[
-                    'All Analytics features',
-                    'Up to 250,000 tracked visits',
-                    'Normal support',
-                    'Up to 3 team members',
-                    'All analytics features',
-                    'Normal support',
-                  ].map((feature, index) => (
+                  {plans.basic.features.map((feature, index) => (
                     <li key={index} className='flex items-center gap-3'>
                       <div className='flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] text-white'>
                         <FaCheck />
@@ -110,7 +144,10 @@ const Page = () => {
                 Ideal for growing businesses that need more power and features.
               </p>
 
-              <button className='mt-16 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 transition hover:bg-gray-200'>
+              <button 
+                onClick={() => handlePayment(plans.popular)}
+                className='mt-16 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 transition hover:bg-gray-200'
+              >
                 Get Started
               </button>
             </div>
@@ -118,21 +155,14 @@ const Page = () => {
             {/* Plan Features */}
             <div className='flex-1 border-l border-gray-100 p-8'>
               <div className='flex items-baseline gap-2'>
-                <span className='text-4xl font-bold text-gray-900'>$199</span>
+                <span className='text-4xl font-bold text-gray-900'>${plans.popular.price}</span>
                 <span className='text-sm text-gray-600'>/monthly</span>
               </div>
 
               <div className='mt-6'>
                 <h3 className='font-semibold text-gray-900'>What&apos;s included</h3>
                 <ul className='mt-4 space-y-3'>
-                  {[
-                    'All Analytics features',
-                    'Up to 1,000,000 tracked visits',
-                    'Premium support',
-                    'Up to 10 team members',
-                    'All analytics features',
-                    'Priority support',
-                  ].map((feature, index) => (
+                  {plans.popular.features.map((feature, index) => (
                     <li key={index} className='flex items-center gap-3'>
                       <div className='flex h-5 w-5 items-center justify-center rounded-full bg-indigo-600 text-[10px] text-white'>
                         <FaCheck />
@@ -177,6 +207,17 @@ const Page = () => {
           ))}
         </div>
       </div>
+
+      {/* Stripe Modal */}
+      {selectedPlan && (
+        <StripeModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          planId={selectedPlan.id}
+          planName={selectedPlan.name}
+          price={selectedPlan.price}
+        />
+      )}
     </div>
   );
 };

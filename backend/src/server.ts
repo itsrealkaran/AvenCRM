@@ -27,6 +27,7 @@ import { propertyRoutes } from './routes/propertyRoutes.js';
 import { propertyView } from './routes/publicPropertyView.js';
 import cookieParser from 'cookie-parser';
 import { teamRoutes } from './routes/team.routes.js';
+import stripeRoutes from './routes/stripe.routes.js';
 
 const app = express();
 
@@ -36,7 +37,7 @@ app.use(cookieParser());
 // Configure CORS with specific options
 app.use(cors({
   origin: 'http://localhost:3000',
-  credentials: true,  // This is important for handling cookies
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   exposedHeaders: ['Authorization'],
@@ -56,11 +57,11 @@ app.use(express.urlencoded({ extended: true }));
 // Session configuration
 app.use(
   session({
-    secret: 'secret',
+    secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000
     }
@@ -146,6 +147,7 @@ app.use('/email', emailRoutes);
 app.use("/property", propertyRoutes);
 app.use("/getProperty", propertyView);
 app.use('/tasks', taskRoutes);
+app.use('/stripe', stripeRoutes);
 
 // Enhanced error handling middleware with debugging
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
@@ -154,6 +156,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const reqLogger = getRequestLogger(req);
   reqLogger.error('Unhandled error', {
     error: err.message,
+    stack: err.stack,
     url: req.url,
     method: req.method,
     body: req.body,

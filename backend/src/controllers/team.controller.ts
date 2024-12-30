@@ -2,21 +2,13 @@ import { Request, Response } from 'express';
 import { UserRole } from '@prisma/client';
 import db from '../db/index.js';
 import bcrypt from 'bcrypt';
-
-interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    role: UserRole;
-    companyId?: string;
-    teamId?: string;
-  };
-}
+import { AuthenticatedRequest } from '../middleware/auth.js';
 
 export const teamController = {
   // User Management (SuperAdmin & Admin)
-  async createUser(req: Request, res: Response) {
+  async createUser(req: AuthenticatedRequest, res: Response) {
     const { name, email, agentRole, gender, teamLead, phone, dob } = req.body;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       // Validate permissions
@@ -64,10 +56,10 @@ export const teamController = {
     }
   },
 
-  async updateUser(req: Request, res: Response) {
+  async updateUser(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     const { name, email, designation, isActive, teamId } = req.body;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       const user = await db.user.findUnique({ where: { id } });
@@ -105,8 +97,8 @@ export const teamController = {
     }
   },
 
-  async getUsers(req: Request, res: Response) {
-    const authUser = (req as AuthenticatedRequest).user;
+  async getUsers(req: AuthenticatedRequest, res: Response) {
+    const authUser = req.user;
 
     try {
       if (!authUser) {
@@ -136,8 +128,8 @@ export const teamController = {
     }
   },
 
-  async getTeams(req: Request, res: Response) {
-    const authUser = (req as AuthenticatedRequest).user;
+  async getTeams(req: AuthenticatedRequest, res: Response) {
+    const authUser = req.user;
 
     try {
       if (!authUser) {
@@ -157,9 +149,9 @@ export const teamController = {
     }
   },
 
-  async getUserById(req: Request, res: Response) {
+  async getUserById(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (!authUser) {
@@ -195,9 +187,9 @@ export const teamController = {
     }
   },
 
-  async deleteUser(req: Request, res: Response) {
+  async deleteUser(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       const user = await db.user.findUnique({ where: { id } });
@@ -227,9 +219,9 @@ export const teamController = {
   },
 
   // Team Management (Admin & Team Leader)
-  async assignTeam(req: Request, res: Response) {
+  async assignTeam(req: AuthenticatedRequest, res: Response) {
     const { userId, teamId } = req.body;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (!authUser || (authUser.role !== UserRole.ADMIN && authUser.role !== UserRole.TEAM_LEADER)) {
@@ -251,10 +243,10 @@ export const teamController = {
   },
 
   // Performance Metrics
-  async getUserMetrics(req: Request, res: Response) {
+  async getUserMetrics(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
     const { startDate, endDate } = req.query;
-    const authUser = (req as AuthenticatedRequest).user;
+    const authUser = req.user;
 
     try {
       if (!authUser) {

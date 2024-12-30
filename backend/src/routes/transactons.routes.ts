@@ -145,7 +145,7 @@ router.post("/verify", async (req: Request, res: Response) => {
                 id: req.body.id
             },
             data: {
-                isVerfied: isVerfied
+                isVerified: isVerfied
             }
         });
         res.json(transaction);

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../lib/prisma.js";
 import { protect } from "../middleware/auth.js";
+import { UserRole } from "@prisma/client";
 
 const router: Router = Router();
 router.use(protect);
@@ -11,7 +12,9 @@ router.get("/", async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const superAdmins = await prisma.superAdmin.findMany();
+    const superAdmins = await prisma.user.findMany({
+      where: { role: UserRole.SUPERADMIN }
+    });
     res.json(superAdmins);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch super admins" });
@@ -24,8 +27,11 @@ router.get("/:id", async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const superAdmin = await prisma.superAdmin.findUnique({
-      where: { id: req.params.id },
+    const superAdmin = await prisma.user.findUnique({
+      where: { 
+        id: req.params.id,
+        role: UserRole.SUPERADMIN
+      },
     });
     res.json(superAdmin);
   } catch (error) {
@@ -42,10 +48,11 @@ router.post("/", async (req, res) => {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
+    role: UserRole.SUPERADMIN
   };
 
   try {
-    const superAdmin = await prisma.superAdmin.create({
+    const superAdmin = await prisma.user.create({
       data: data,
     });
     res.json(superAdmin);
@@ -65,8 +72,11 @@ router.put("/:id", async (req, res) => {
     password: req.body.password,
   };
   try {
-    const superAdmin = await prisma.superAdmin.update({
-      where: { id: req.params.id },
+    const superAdmin = await prisma.user.update({
+      where: { 
+        id: req.params.id,
+        role: UserRole.SUPERADMIN
+      },
       data: data,
     });
     res.json(superAdmin);
@@ -81,8 +91,11 @@ router.delete("/:id", async (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   try {
-    const superAdmin = await prisma.superAdmin.delete({
-      where: { id: req.params.id },
+    const superAdmin = await prisma.user.delete({
+      where: { 
+        id: req.params.id,
+        role: UserRole.SUPERADMIN
+      },
     });
     res.json(superAdmin);
   } catch (error) {

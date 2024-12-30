@@ -71,6 +71,13 @@ const Sidebar = () => {
       description: 'System monitoring',
       roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
     },
+    {
+      heading: 'Subscription',
+      icon: MonitorIcon,
+      path: `/${role}/company/subscription`,
+      description: 'Subscription management',
+      roles: [UserRole.ADMIN],
+    },
     // Agent specific items
     {
       heading: 'Properties',
