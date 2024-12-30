@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { api } from '@/lib/api';
 
 import { columns } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
@@ -16,21 +17,13 @@ import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
 
 async function getTransactions(): Promise<Transaction[]> {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    throw new Error('Access token not found');
-  }
-
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  if (!response.ok) {
+  try {
+    const response = await api.get('/transactions');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching transactions:', error);
     throw new Error('Failed to fetch transactions');
   }
-  return response.json();
 }
 
 export default function TransactionsPage() {
@@ -47,60 +40,41 @@ export default function TransactionsPage() {
 
   const deleteTransaction = useMutation({
     mutationFn: async (transactionId: string) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/${transactionId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
+      try {
+        await api.delete(`/transactions/${transactionId}`);
+      } catch (error) {
+        console.error('Error deleting transaction:', error);
         throw new Error('Failed to delete transaction');
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transaction deleted successfully');
+      setSelectedRows([]);
     },
-    onError: () => {
-      toast.error('Failed to delete transaction');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete transaction');
     },
   });
 
   const bulkDeleteTransactions = useMutation({
     mutationFn: async (transactionIds: string[]) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ transactionIds }),
-      });
-
-      if (!response.ok) {
+      try {
+        await api.delete('/transactions', {
+          data: { transactionIds },
+        });
+      } catch (error) {
+        console.error('Error bulk deleting transactions:', error);
         throw new Error('Failed to delete transactions');
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transactions deleted successfully');
+      setSelectedRows([]);
     },
-    onError: () => {
-      toast.error('Failed to delete transactions');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete transactions');
     },
   });
 

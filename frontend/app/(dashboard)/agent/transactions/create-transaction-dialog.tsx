@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { api } from '@/lib/api';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -61,32 +62,20 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
 
   const createTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
+      try {
+        const payload = {
+          ...values,
+          amount: parseFloat(values.amount),
+          taxRate: values.taxRate ? parseFloat(values.taxRate) : null,
+          date: new Date(values.date).toISOString(),
+        };
 
-      const payload = {
-        ...values,
-        amount: parseFloat(values.amount),
-        taxRate: values.taxRate ? parseFloat(values.taxRate) : null,
-        date: new Date(values.date).toISOString(),
-      };
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
+        const response = await api.post('/transactions', payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error creating transaction:', error);
         throw new Error('Failed to create transaction');
       }
-
-      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -94,8 +83,8 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
       form.reset();
       toast.success('Transaction created successfully');
     },
-    onError: () => {
-      toast.error('Failed to create transaction');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to create transaction');
     },
   });
 

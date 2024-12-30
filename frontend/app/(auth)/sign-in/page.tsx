@@ -68,10 +68,10 @@ function SignInContent() {
         const callbackUrl = searchParams.get('callbackUrl');
         let defaultPath = `/${values.role.toLowerCase()}`;
 
-        // Redirect team leaders to /agent route
-        if (data.user.role.toLowerCase() === 'team_leader') {
-          defaultPath = '/agent';
-        }
+        // // Redirect team leaders to /agent route
+        // if (data.user.role.toLowerCase() === 'team_leader') {
+        //   defaultPath = '/agent';
+        // }
 
         // Redirect after a short delay to show the success message
         setTimeout(() => {
