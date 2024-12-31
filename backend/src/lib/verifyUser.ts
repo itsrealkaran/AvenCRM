@@ -1,7 +1,7 @@
-import db from "../db/index.js"
+import {prisma} from "../lib/prisma.js"
 
 export const verifyAdmin = async (id: string) => {
-    const admin = await db.user.findFirst({
+    const admin = await prisma.user.findFirst({
         where: {
             id
         }
@@ -10,7 +10,7 @@ export const verifyAdmin = async (id: string) => {
 }
 
 export const verifyAdminCompany = async (id: string) => {
-    const company = await db.company.findFirst({
+    const company = await prisma.company.findFirst({
         where: {
             adminId: id
         }
@@ -19,7 +19,7 @@ export const verifyAdminCompany = async (id: string) => {
 }
 
 export const verifySuperAdmin = async (id: string) => {
-    const admin = await db.user.findFirst({
+    const admin = await prisma.user.findFirst({
         where: {
             id
         }
