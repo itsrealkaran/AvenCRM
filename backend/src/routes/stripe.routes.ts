@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction, Router } from 'express';
 import Stripe from 'stripe';
-import { protect } from '../middleware/auth.js';
+import { AuthenticatedRequest, protect } from '../middleware/auth.js';
 import { verifyAdmin } from '../lib/verifyUser.js';
 import { prisma } from '../lib/prisma.js';
 import { PlanTier, User } from '@prisma/client';
@@ -21,19 +21,19 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 // Protect all routes
-// router.use(protect);
+router.use(protect);
 // router.use(verifyAdmin);
 
 // Create a checkout session
-router.post('/create-checkout-session', async (req: Request, res: Response) => {
+router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { planId, planName, price } = req.body;
+    const { planType, planName, price } = req.body;
     const userId = req.user?.id;
     const companyId = req.user?.companyId;
 
-    // if (!userId || !companyId) {
-    //   return res.status(401).json({ error: 'User not authenticated' });
-    // }
+    if (!userId || !companyId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
 
     // Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
@@ -58,11 +58,11 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
       success_url: `${process.env.FRONTEND_URL}/admin/company/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/admin/company/subscription?canceled=true`,
       metadata: {
-        planId: "planId",
-        userId: "userId",
-        companyI: "companyId"
+        planType,
+        userId,
+        companyId
       },//@ts-ignore
-      customer_email: "req.user?.email.com",
+      customer_email: req.user.email,
     });
 
     res.json({ sessionId: session.id });
@@ -85,45 +85,56 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
 });
 
 // Webhook handler for Stripe events
-router.post('/webhook', express.json({ type: 'application/json' }), async (req: Request, res: Response) => {
-  const sig = req.headers['stripe-signature'];
+router.post(
+  '/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req: Request, res: Response) => {
+    const sig = req.headers['stripe-signature'];
 
-  if (!sig) {
-    return res.status(400).json({ error: 'No Stripe signature found' });
-  }
-
-  try {
-    const event = stripe.webhooks.constructEvent(
-      req.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
-    ); 
-
-    // Handle the event
-    switch (event.type) {
-      case 'checkout.session.completed':
-        const session = event.data.object as Stripe.Checkout.Session;
-        // Update subscription status in your database
-        await handleSuccessfulSubscription(session);
-        break;
-      case 'customer.subscription.deleted':
-        const subscription = event.data.object as Stripe.Subscription;
-        // Handle subscription cancellation
-        await handleSubscriptionCancellation(subscription);
-        break;
-      // Add other event types as needed
+    if (!sig) {
+      return res.status(400).json({ error: 'No Stripe signature found' });
     }
 
-    res.json({ received: true });
-  } catch (error) {
-    console.error('Webhook error:', error);
-    res.status(400).json({ error: 'Webhook error' });
+    try {
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+
+      // Handle the event
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as Stripe.Checkout.Session;
+          await handleSuccessfulSubscription(session);
+          break;
+        case 'customer.subscription.deleted':
+          console.log(event.data)
+          const subscription = event.data.object as Stripe.Subscription;
+          await handleSubscriptionCancellation(subscription);
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(400).json({ error: 'Webhook error' });
+    }
   }
-});
+);
 
 async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
-  const { planId, userId, companyId } = session.metadata || {};
-  if (!planId || !userId || !companyId) {
+  const metadata = session.metadata || {};
+  
+  // Log the metadata for debugging
+  console.log('Session metadata:', metadata);
+  
+  if (!metadata.planType || !metadata.userId || !metadata.companyId) {
+    console.error('Missing metadata:', {
+      planType: metadata.planType,
+      userId: metadata.userId,
+      companyId: metadata.companyId
+    });
     throw new Error('Missing metadata in session');
   }
 
@@ -139,17 +150,17 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
     }
 
     // Create a subscription transaction record
-    await prisma.transaction.create({
+     const transaction = await prisma.transaction.create({
       data: {
-        amount: session.amount_total! / 100, // Convert to dollars
+        amount: session.amount_total! / 100,
         type: 'SUBSCRIPTION',
         company: {
-          connect: { id: companyId }
+          connect: { id: metadata.companyId }
         },
         agent: {
-          connect: { id: userId }
+          connect: { id: metadata.userId }
         },
-        planType: planId as PlanTier,
+        planType: metadata.planType as PlanTier,
         isVerified: true,
         transactionMethod: 'STRIPE',
         receiptUrl,
@@ -158,10 +169,10 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
 
     // Update company subscription details
     await prisma.company.update({
-      where: { id: companyId },
+      where: { id: metadata.companyId },
       data: {
         plan: {
-          connect: { id: planId }
+          connect: { id: transaction.id }
         },
         planStart: new Date(),
         planEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
@@ -196,7 +207,7 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
         agent: {
           connect: { id: metadata.userId }
         },
-        planType: metadata.planId as PlanTier,
+        planType: metadata.planType as PlanTier,
         isVerified: true,
         transactionMethod: 'STRIPE',
         receiptUrl: null,

@@ -48,8 +48,15 @@ app.use((req, res, next) => {
 });
 
 // Body parsing Middleware
-app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  if (req.originalUrl === '/stripe/webhook') {
+    next();
+  } else {
+    express.json()(req, res, next);
+  }
+});
 
 // Session configuration
 app.use(
@@ -68,7 +75,7 @@ app.use(
 // Debug session middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.session) {
-     // Breakpoint for session inspection
+    // Breakpoint for session inspection
     logger.debug('Session data:', { 
       sessionID: req.sessionID,
       session: req.session 
@@ -77,11 +84,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-
 // Add a middleware to log requests with detailed debugging
 app.use((req: Request, res: Response, next: NextFunction) => {
-   // Debugger breakpoint for request inspection
-  
+  // Debugger breakpoint for request inspection
+
   // Add request ID to headers if not present
  // eq.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
   const reqLogger = getRequestLogger(req);
@@ -112,11 +118,11 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 // Root route with debug point
 app.get("/", (req: Request, res: Response, next: NextFunction) => { 
-   // Root route debug point
+  // Root route debug point
   next();
 }, (req: Request, res: Response) => {
-   // Root route response debug point
-   logger.debug('Root route response', {
+  // Root route response debug point
+  logger.debug('Root route response', {
     timestamp: new Date().toISOString(),
     method: req.method,
     url: req.url,
@@ -167,7 +173,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 // Enhanced global error handlers with debugging
 process.on('uncaughtException', (error) => {
-   // Uncaught exception debug point
+  // Uncaught exception debug point
   logger.error('Uncaught Exception', {
     error: error.message,
     stack: error.stack,
@@ -179,7 +185,7 @@ process.on('uncaughtException', (error) => {
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-   // Unhandled rejection debug point
+  // Unhandled rejection debug point
   logger.error('Unhandled Rejection', {
     reason,
     promise,
