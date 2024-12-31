@@ -87,7 +87,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   const reqLogger = getRequestLogger(req);
 
   // Log request details
-  reqLogger.info(`Incoming ${req.method} request to ${req.url}`, {
+  logger.info(`Incoming ${req.method} request to ${req.url}`, {
     method: req.method,
     url: req.url,
     query: req.query,
@@ -99,7 +99,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   const originalSend = res.send;
   res.send = function (body) {
      // Breakpoint for response inspection
-    reqLogger.debug('Response sent', {
+    logger.debug('Response sent', {
       statusCode: res.statusCode,
       responseSize: body ? body.length : 0,
      // headers: res.getHeaders(),

@@ -3,11 +3,17 @@ import { prisma } from "../lib/prisma.js";
 import { protect } from "../middleware/auth.js";
 import { Request } from "express";
 import { PlanTier } from "@prisma/client";
+import { getAllTransactions } from "../controllers/transactions.controller.js";
 
 const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
+
+    if (req.user?.role === 'ADMIN') {
+        return getAllTransactions(req, res);
+    }
+
     try {
         const transactions = await prisma.transaction.findMany({
             include: {

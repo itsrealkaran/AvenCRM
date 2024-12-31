@@ -2,6 +2,7 @@ import { Router } from "express";
 import db from "../db/index.js";
 import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
+import { leadsController } from "../controllers/leads.controller.js";
 
 
 const router: Router = Router();
@@ -10,9 +11,16 @@ router.use(protect);
 router.get("/", async (req: Request, res: Response) => {
 
     // if the user is a company admin, only return leads from their company
+    if(req.user?.role === 'ADMIN') {
+        return leadsController.getAllLeads(req, res);
+    }
+
 
     try {
         const leads = await db.lead.findMany({
+            where: { 
+                agentId: req.user?.id
+            },
             include: {
                 agent: {
                     select: {

@@ -3,11 +3,17 @@ import db from "../db/index.js";
 import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 import { DealStatus } from "@prisma/client";
+import { getAllDeals } from "../controllers/deals.controller.js";
 
 const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
+
+    if (req.user?.role === 'ADMIN') {
+        return getAllDeals(req, res);
+    }
+
     try {
         const deals = await db.deal.findMany({
             include: {
