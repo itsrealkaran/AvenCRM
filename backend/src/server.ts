@@ -12,7 +12,7 @@ import emailRoutes from './routes/email.routes.js';
 import taskRoutes from './routes/task.routes.js';
 
 import cors from "cors"
-import logger, { generateRequestId, getRequestLogger } from './utils/logger.js';
+import logger, { getRequestLogger } from './utils/logger.js';
 
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -89,7 +89,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   // Debugger breakpoint for request inspection
 
   // Add request ID to headers if not present
-  req.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
+ // eq.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
   const reqLogger = getRequestLogger(req);
 
   // Log request details
@@ -98,7 +98,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     url: req.url,
     query: req.query,
     body: req.body,
-    headers: req.headers,
+    //headers: req.headers,
   });
 
   // Debug response
@@ -108,7 +108,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     reqLogger.debug('Response sent', {
       statusCode: res.statusCode,
       responseSize: body ? body.length : 0,
-      headers: res.getHeaders(),
+     // headers: res.getHeaders(),
     });
     return originalSend.call(this, body);
   };
@@ -152,33 +152,22 @@ app.use("/getProperty", propertyView);
 app.use('/tasks', taskRoutes);
 app.use('/stripe', stripeRoutes);
 
-// Enhanced error handling middleware with debugging
+// // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  // Error handling debug point
-  
   const reqLogger = getRequestLogger(req);
-  reqLogger.error('Unhandled error', {
-    error: err.message,
-    stack: err.stack,
+  reqLogger.error(err, {
+    context: 'ErrorHandler',
     url: req.url,
-    method: req.method,
-    body: req.body,
-    query: req.query,
-    headers: req.headers,
-    session: req.session,
-    user: req.user,
-    requestId: req.headers['x-request-id']
+    userId: req.user?.id,
+    sessionId: req.sessionID
   });
- 
 
-  app.use(notFoundHandler);
-  app.use(errorHandler);
-
-  
-  res.status(500).json({ 
-    error: 'Something broke!',
-    message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
-    requestId: req.headers['x-request-id']
+  res.status(err.status || 500).json({
+    error: {
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Internal Server Error',
+      requestId: req.headers['x-request-id'],
+      code: err.code || 'INTERNAL_ERROR'
+    }
   });
 });
 

@@ -1,61 +1,97 @@
 import winston from 'winston';
+import chalk from 'chalk';
 import { Request } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import util from 'util';
 
-// Define log levels with more granularity
+// Define custom log levels with emojis for better visibility
 const levels = {
-  error: 0,    // Critical errors that need immediate attention
-  warn: 1,     // Warning messages for potential issues
-  info: 2,     // General information about app state
-  http: 3,     // HTTP request logging
-  debug: 4,    // Detailed debugging information
-  trace: 5     // Very detailed tracing information
+  error: 0,   // 🔥 Critical errors
+  warn: 1,    // ⚠️ Warnings
+  info: 2,    // ℹ️ General information
+  http: 3,    // 🌐 HTTP requests
+  debug: 4,   // 🐛 Debug information
+  trace: 5    // 🔍 Detailed tracing
 };
 
-// Define different colors for each level
-const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'blue',
-  trace: 'gray'
-};
+// Custom format for better error stack traces
+const errorStackFormat = winston.format((info) => {
+  if (info.error instanceof Error) {
+    return Object.assign({}, info, {
+      stack: info.error.stack,
+      message: info.error.message
+    });
+  }
+  return info;
+});
 
-// Tell winston that we want to link specific colors with specific log levels
-winston.addColors(colors);
+// Create custom format for pretty console output
+const prettyConsoleFormat = winston.format.printf(({ level, message, timestamp, requestId, duration, stack, ...meta }) => {
+  const emoji = {
+    error: '🔥',
+    warn: '⚠️ ',
+    info: 'ℹ️ ',
+    http: '🌐',
+    debug: '🐛',
+    trace: '🔍'
+  }[level] || '';
 
-// Create custom format for console output
-const consoleFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.colorize({ all: true }),
-  winston.format.printf((info) => {
-    const { timestamp, level, message, requestId, duration, ...meta } = info;
-    const requestIdStr = requestId ? ` [${requestId}]` : '';
-    const durationStr = duration ? ` (${duration}ms)` : '';
-    const metaStr = Object.keys(meta).length ? `\n${JSON.stringify(meta, null, 2)}` : '';
-    
-    return `${timestamp} [${level}]${requestIdStr}${durationStr}: ${message}${metaStr}`;
-  })
-);
+  const colorizer = {
+    error: chalk.red,
+    warn: chalk.yellow,
+    info: chalk.green,
+    http: chalk.magenta,
+    debug: chalk.blue,
+    trace: chalk.gray
+  }[level] || chalk.white;
 
-// Create custom format for file output
-const fileFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.metadata({ fillWith: ['timestamp', 'requestId'] }),
-  winston.format.json()
-);
+  let output = `${chalk.gray(timestamp)} ${emoji} ${colorizer(level.toUpperCase())}`;
+  
+  if (requestId) {
+    output += chalk.cyan(` [${requestId}]`);
+  }
+  
+  if (duration) {
+    output += chalk.yellow(` (${duration}ms)`);
+  }
+
+  output += `: ${message}`;
+
+  // Add stack trace for errors
+  if (stack) {
+    output += `\n${chalk.red(stack)}`;
+  }
+
+  // Add metadata if present
+  if (Object.keys(meta).length > 0) {
+    const prettyMeta = util.inspect(meta, { colors: true, depth: 4, breakLength: 100 });
+    output += `\n${prettyMeta}`;
+  }
+
+  return output;
+});
 
 // Create the logger instance
 const logger = winston.createLogger({
   levels,
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    errorStackFormat(),
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    winston.format.colorize(), // Add this line for color support
+    winston.format.json()
+  ),
   transports: [
-    // Remove file transports to prevent logging to files
-    // Add console transport for all environments
     new winston.transports.Console({
-      format: consoleFormat
+      format: winston.format.combine(
+        winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+        prettyConsoleFormat
+      )
     })
-  ]
+  ],
+  exitOnError: false
 });
 
 // Performance monitoring
@@ -63,28 +99,36 @@ const startTimer = () => {
   const start = process.hrtime();
   return () => {
     const diff = process.hrtime(start);
-    return (diff[0] * 1e9 + diff[1]) / 1e6; // Convert to milliseconds
+    return Math.round((diff[0] * 1e9 + diff[1]) / 1e6); // Convert to milliseconds
   };
 };
 
-// Generate a unique request ID
-export const generateRequestId = () => uuidv4();
-
-// Create a function to get a logger instance with request context
+// Request context logger
 export const getRequestLogger = (req: Request) => {
-  const requestId = req.headers['x-request-id'] || generateRequestId();
+  const requestId = req.headers['x-request-id']?.toString() || uuidv4();
   const timer = startTimer();
   
-  const logWithContext = (level: string, message: string, meta = {}) => {
-    logger.log({
+  const logWithContext = (level: string, message: string | Error, meta: Record<string, any> = {}) => {
+    const logData = {
       level,
-      message,
+      message: message instanceof Error ? message.message : message,
       requestId,
-    });
+      // duration,
+      error: message instanceof Error ? message : undefined,
+      ...meta,
+      // request: {
+      //   method: req.method,
+      //   url: req.url,
+      //   // headers: req.headers,
+      //   query: req.query,
+      //   body: req.body,
+      // }
+    };
+    logger.log(logData);
   };
 
   return {
-    error: (message: string, meta = {}) => logWithContext('error', message, meta),
+    error: (message: string | Error, meta = {}) => logWithContext('error', message, meta),
     warn: (message: string, meta = {}) => logWithContext('warn', message, meta),
     info: (message: string, meta = {}) => logWithContext('info', message, meta),
     http: (message: string, meta = {}) => logWithContext('http', message, meta),
@@ -92,5 +136,20 @@ export const getRequestLogger = (req: Request) => {
     trace: (message: string, meta = {}) => logWithContext('trace', message, meta)
   };
 };
-export default logger;
 
+// Global error logger
+export const logGlobalError = (error: Error, type: 'uncaughtException' | 'unhandledRejection') => {
+  logger.error({
+    message: `Global ${type}`,
+    error,
+    stack: error.stack,
+    timestamp: new Date().toISOString(),
+    processInfo: {
+      pid: process.pid,
+      memory: process.memoryUsage(),
+      uptime: process.uptime()
+    }
+  });
+};
+
+export default logger;

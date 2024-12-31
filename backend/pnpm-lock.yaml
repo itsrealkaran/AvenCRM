@@ -50,6 +50,9 @@ importers:
       chalk:
         specifier: ^5.3.0
         version: 5.3.0
+      console-log-colors:
+        specifier: ^0.5.0
+        version: 0.5.0
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -96,8 +99,8 @@ importers:
         specifier: ^6.9.16
         version: 6.9.16
       nodemon:
-        specifier: ^3.1.7
-        version: 3.1.7
+        specifier: ^3.1.9
+        version: 3.1.9
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -1104,6 +1107,10 @@ packages:
   console-control-strings@1.1.0:
     resolution: {integrity: sha512-ty/fTekppD2fIwRvnZAVdeOiGd1c7YXEixbgJTNzqcxJWKQnjJ/V1bNEEE6hygpM3WjwHFUVK6HTjWSzV4a8sQ==}
 
+  console-log-colors@0.5.0:
+    resolution: {integrity: sha512-ixjGY06zMLCnNXeBdDKL6GuS1+/yQ1GorbZ9YsptP6jDgLqk/bBdQ5cTQvVveKUbO8Th6zwIhY8yRwhrpjXk6g==}
+    engines: {node: '>= 4.1.0'}
+
   content-disposition@0.5.4:
     resolution: {integrity: sha512-FveZTNuGw04cxlAiWbzi6zTAL/lhehaWbTtgluJh4/E95DqMwTmha3KZN1aAWA8cFIhHzMZUvLevkw5Rqk+tSQ==}
     engines: {node: '>= 0.6'}
@@ -1865,8 +1872,8 @@ packages:
     resolution: {integrity: sha512-psAuZdTIRN08HKVd/E8ObdV6NO7NTBY3KsC30F7M4H1OnmLCUNaS56FpYxyb26zWLSyYF9Ozch9KYHhHegsiOQ==}
     engines: {node: '>=6.0.0'}
 
-  nodemon@3.1.7:
-    resolution: {integrity: sha512-hLj7fuMow6f0lbB0cD14Lz2xNjwsyruH251Pk4t/yIitCFJbmY1myuLlHm/q06aST4jg6EgAh74PIBBrRqpVAQ==}
+  nodemon@3.1.9:
+    resolution: {integrity: sha512-hdr1oIb2p6ZSxu3PB2JWWYS7ZQ0qvaZsc3hK8DR8f02kRzc8rjYmxAIvdz+aYC+8F2IjNaB7HMcSDg8nQpJxyg==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -3907,6 +3914,8 @@ snapshots:
 
   console-control-strings@1.1.0: {}
 
+  console-log-colors@0.5.0: {}
+
   content-disposition@0.5.4:
     dependencies:
       safe-buffer: 5.2.1
@@ -4725,7 +4734,7 @@ snapshots:
 
   nodemailer@6.9.16: {}
 
-  nodemon@3.1.7:
+  nodemon@3.1.9:
     dependencies:
       chokidar: 3.6.0
       debug: 4.4.0(supports-color@5.5.0)
