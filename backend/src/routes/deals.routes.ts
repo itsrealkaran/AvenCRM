@@ -16,6 +16,9 @@ router.get("/", async (req: Request, res: Response) => {
 
     try {
         const deals = await db.deal.findMany({
+            where: {
+                agentId: req.user?.id
+            },
             include: {
                 agent: {
                     select: {
@@ -44,6 +47,7 @@ router.get("/:id", async (req: Request, res: Response) => {
                         gte: new Date(startDate),
                         lte: new Date(endDate),
                     },
+                    agentId: req.user?.id
                 },
             });
             res.json(deals);

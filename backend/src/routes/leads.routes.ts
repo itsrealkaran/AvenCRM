@@ -3,6 +3,7 @@ import db from "../db/index.js";
 import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 import { leadsController } from "../controllers/leads.controller.js";
+import { DealStatus } from "@prisma/client";
 
 
 const router: Router = Router();
@@ -69,7 +70,7 @@ router.post("/", async (req: Request, res: Response) => {
     const companyId = req.user?.companyId;
     
 
-    const { name, phone, email, source, expectedDate, notes } = req.body;
+    const { name, phone, email, source, expectedDate, notes, status } = req.body;
     
 
     try {
@@ -81,6 +82,7 @@ router.post("/", async (req: Request, res: Response) => {
                 source,
                 expectedDate,
                 notes,
+                status,
                 agentId: req.user?.id ?? '',
                 companyId: companyId || '',
             },
@@ -94,7 +96,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 
 router.put("/:id", async (req: Request, res: Response) => {
-    const { name, phone, email, source, expectedDate , notes } = req.body;
+    const { name, phone, email, source, expectedDate , notes, status } = req.body;
     
     try {
         const lead = await db.lead.update({
@@ -106,6 +108,7 @@ router.put("/:id", async (req: Request, res: Response) => {
                 source,
                 expectedDate,
                 notes,
+                status,
             },
         });
         res.json(lead);
@@ -145,29 +148,54 @@ router.delete("/", async (req: Request, res: Response) => {
 // route to convert lead to deal
 router.post("/convert", async (req: Request, res: Response) => {
     const { leadId, dealAmount, expectedCloseDate } = req.body;
+
+    if (!leadId || !dealAmount) {
+        return res.status(400).json({ message: "Lead ID and deal amount are required" });
+    }
+
     try {
         const lead = await db.lead.findUnique({
             where: { id: leadId },
+            include: {
+                company: true,
+                agent: true,
+            },
         });
+
         if (!lead) {
             return res.status(404).json({ message: "Lead not found" });
         }
-        const deal = await db.deal.create({
-            data: {
-                name: lead.name,
-                dealAmount: dealAmount,
-                email: lead.email,
-                expectedCloseDate: expectedCloseDate ?? lead.expectedDate,
-                notes: '{}',
-                companyId: lead.companyId,
-                agentId: lead.agentId,
-            },
-        });
-        res.json(deal);
+
+        // Start a transaction to ensure data consistency
+        const [deal, updatedLead] = await db.$transaction([
+            db.deal.create({
+                data: {
+                    name: lead.name,
+                    dealAmount: parseFloat(dealAmount.toString()),
+                    email: lead.email,
+                    expectedCloseDate: expectedCloseDate ?? lead.expectedDate,
+                    notes: lead.notes || '{}',
+                    companyId: lead.companyId,
+                    agentId: lead.agentId,
+                    status: DealStatus.ACTIVE,
+                },
+            }),
+            db.lead.update({
+                where: { id: leadId },
+                data: {
+                    status: 'WON',
+                },
+            }),
+        ]);
+
+        res.json({ deal, message: "Lead successfully converted to deal" });
     } catch (error) {
-        res.status(500).json({ message: "Failed to convert lead to deal" });
+        console.error("Error converting lead to deal:", error);
+        res.status(500).json({ 
+            message: "Failed to convert lead to deal",
+            error: error instanceof Error ? error.message : "Unknown error occurred"
+        });
     }
 });
-
 
 export default router;

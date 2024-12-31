@@ -16,6 +16,9 @@ router.get("/", async (req: Request, res: Response) => {
 
     try {
         const transactions = await prisma.transaction.findMany({
+            where: {
+                agentId: req.user?.id
+            },
             include: {
                 agent: {
                     select: {
@@ -36,7 +39,7 @@ router.get("/", async (req: Request, res: Response) => {
 router.get("/:id", async (req: Request, res: Response) => {
     try {
         const transaction = await prisma.transaction.findUnique({
-            where: { id: req.params.id },
+            where: { id: req.params.id, agentId: req.user?.id },
         });
         res.json(transaction);
     } catch (error) {

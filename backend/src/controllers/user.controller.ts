@@ -195,6 +195,8 @@ export const userController = {
               name: true,
             },
           },
+          createdAt: true,
+          updatedAt: true,
         },
       });
 
