@@ -109,21 +109,20 @@ export const getRequestLogger = (req: Request) => {
   const timer = startTimer();
   
   const logWithContext = (level: string, message: string | Error, meta: Record<string, any> = {}) => {
-    const duration = timer();
     const logData = {
       level,
       message: message instanceof Error ? message.message : message,
       requestId,
-      duration,
+      // duration,
       error: message instanceof Error ? message : undefined,
       ...meta,
-      request: {
-        method: req.method,
-        url: req.url,
-        headers: req.headers,
-        query: req.query,
-        body: req.body,
-      }
+      // request: {
+      //   method: req.method,
+      //   url: req.url,
+      //   // headers: req.headers,
+      //   query: req.query,
+      //   body: req.body,
+      // }
     };
     logger.log(logData);
   };

@@ -92,7 +92,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     url: req.url,
     query: req.query,
     body: req.body,
-    headers: req.headers,
+    //headers: req.headers,
   });
 
   // Debug response
@@ -102,7 +102,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     reqLogger.debug('Response sent', {
       statusCode: res.statusCode,
       responseSize: body ? body.length : 0,
-      headers: res.getHeaders(),
+     // headers: res.getHeaders(),
     });
     return originalSend.call(this, body);
   };
