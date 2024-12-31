@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Lead, LeadStatus } from '@/types';
+import { User } from '@/types';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -32,12 +32,10 @@ import { useConfirm } from '@/hooks/use-confirm';
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  onEdit?: (lead: Lead) => void;
-  onDelete: (leadId: string) => void;
+  onEdit?: (user: User) => void;
+  onDelete: (userId: string) => void;
   onBulkDelete: (rows: Row<TData>[]) => void;
-  onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
-  onSelectionChange?: (selectedItems: Lead[]) => void;
-  onConvertToDeal?: (lead: Lead) => void;
+  onViewMetrics?: (userId: string) => void;
   disabled?: boolean;
 }
 
@@ -47,14 +45,12 @@ export function DataTable<TData, TValue>({
   onEdit,
   onDelete,
   onBulkDelete,
-  onStatusChange,
-  onSelectionChange,
-  onConvertToDeal,
+  onViewMetrics,
   disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
-    'You are about to perform a bulk delete.'
+    'You are about to perform a bulk delete of agents. This action cannot be undone.'
   );
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -79,8 +75,7 @@ export function DataTable<TData, TValue>({
     meta: {
       onEdit,
       onDelete,
-      onStatusChange,
-      onConvertToDeal,
+      onViewMetrics,
     },
   });
 
@@ -89,7 +84,7 @@ export function DataTable<TData, TValue>({
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input
-          placeholder='Filter leads...'
+          placeholder='Filter agents...'
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className='max-w-sm'
@@ -104,7 +99,7 @@ export function DataTable<TData, TValue>({
               const ok = await confirm();
 
               if (ok) {
-                toast.loading('Deleting...', {
+                toast.loading('Deleting agents...', {
                   id: 'delete',
                 });
 
@@ -114,7 +109,7 @@ export function DataTable<TData, TValue>({
               }
             }}
           >
-            <Trash className='size-4 mr-2 bg-f' />
+            <Trash className='size-4 mr-2' />
             Delete({table.getFilteredSelectedRowModel().rows.length})
           </Button>
         )}
@@ -150,7 +145,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  No results.
+                  No agents found.
                 </TableCell>
               </TableRow>
             )}

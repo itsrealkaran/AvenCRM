@@ -1,5 +1,6 @@
 'use client';
 
+import { LeadStatus } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -19,6 +20,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 const noteEntrySchema = z.object({
@@ -31,7 +39,7 @@ const leadFormSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   leadAmount: z.string().optional(),
-  status: z.string().optional(),
+  status: z.enum(Object.values(LeadStatus) as [LeadStatus, ...LeadStatus[]]),
   source: z.string().optional(),
   propertyType: z.string().optional(),
   budget: z.string().optional(),
@@ -55,7 +63,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       name: '',
       email: '',
       phone: '',
-      status: '',
+      status: LeadStatus.NEW,
       source: '',
       propertyType: '',
       budget: '',
@@ -179,7 +187,22 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Input placeholder='Status' disabled={isLoading} {...field} />
+                      <Select
+                        onValueChange={(value) => field.onChange(value)}
+                        value={field.value}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Status' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(LeadStatus).map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

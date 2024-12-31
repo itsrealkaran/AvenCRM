@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Lead } from '@/types';
+import { Lead, LeadStatus } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -21,6 +21,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 const noteEntrySchema = z.object({
@@ -33,7 +40,7 @@ const leadFormSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   leadAmount: z.string().optional(),
-  status: z.string().optional(),
+  status: z.enum(Object.values(LeadStatus) as [LeadStatus, ...LeadStatus[]]),
   source: z.string().optional(),
   propertyType: z.string().optional(),
   budget: z.string().optional(),
@@ -62,7 +69,7 @@ export function EditLeadDialog({
   const form = useForm<LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: {
-      status: '',
+      status: LeadStatus.NEW,
       source: '',
       notes: [],
     },
@@ -86,7 +93,7 @@ export function EditLeadDialog({
         email: lead.email || '',
         phone: lead.phone || '',
         leadAmount: lead.leadAmount?.toString() || '',
-        status: lead.status || '',
+        status: lead.status || LeadStatus.NEW,
         source: lead.source || '',
         propertyType: lead.propertyType || '',
         budget: lead.budget?.toString() || '',
@@ -200,7 +207,18 @@ export function EditLeadDialog({
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Input placeholder='Status' {...field} />
+                      <Select {...field}>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Status' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(LeadStatus).map((status) => (
+                            <SelectItem key={status} value={status}>
+                              {status}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>

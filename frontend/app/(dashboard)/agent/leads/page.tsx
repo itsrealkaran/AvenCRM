@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Lead } from '@/types';
+import { Lead, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';
+import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { DataTable } from './data-table';
 import { EditLeadDialog } from './edit-lead-dialog';
 
@@ -35,6 +36,7 @@ async function getLeads(): Promise<Lead[]> {
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
@@ -103,6 +105,31 @@ export default function LeadsPage() {
   const handleEdit = (lead: Lead) => {
     setSelectedLead(lead);
     setIsEditDialogOpen(true);
+  };
+
+  const handleStatusChange = async (leadId: string, newStatus: LeadStatus) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${leadId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (response.ok) {
+        // invalidate the leads query
+        queryClient.invalidateQueries({ queryKey: ['leads'] });
+        toast.success('Lead status updated successfully');
+      } else {
+        const error = await response.text();
+        throw new Error(error || 'Failed to update lead status');
+      }
+    } catch (error) {
+      toast.error('Failed to update lead status');
+    }
   };
 
   const handleDelete = async (leadId: string) => {
@@ -176,6 +203,11 @@ export default function LeadsPage() {
             }}
             onDelete={handleDelete}
             onSelectionChange={handleSelectionChange}
+            onStatusChange={handleStatusChange}
+            onConvertToDeal={(lead) => {
+              setSelectedLead(lead);
+              setIsConvertDialogOpen(true);
+            }}
           />
         </div>
 
@@ -186,6 +218,11 @@ export default function LeadsPage() {
           lead={selectedLead}
           onEdit={handleEdit}
           onDelete={handleDelete}
+        />
+        <ConvertToDealDialog
+          open={isConvertDialogOpen}
+          onOpenChange={setIsConvertDialogOpen}
+          lead={selectedLead}
         />
       </Card>
     </section>

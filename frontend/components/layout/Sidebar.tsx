@@ -60,7 +60,7 @@ const Sidebar = () => {
     {
       heading: 'Manage Agents',
       icon: Users,
-      path: `/${role}/manage-team`,
+      path: `/${role}/manage-agents`,
       description: 'User management',
       roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
     },

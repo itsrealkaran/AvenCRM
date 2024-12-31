@@ -20,6 +20,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { AdminDashboard } from './components/admin-dashboard';
+import { AgentDashboard } from './components/agent-dashboard';
+import { SuperAdminDashboard } from './components/superadmin-dashboard';
+
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -87,10 +91,10 @@ export default function DashboardPage() {
         <h1 className='text-3xl font-bold tracking-tight'>Welcome back, {user.name}!</h1>
       </div>
 
-      Role-specific dashboards
-      {/* {user.role === UserRole.SUPERADMIN && <SuperAdminDashboard user={user} />}
+      {/* Role-specific dashboards */}
+      {user.role === UserRole.SUPERADMIN && <SuperAdminDashboard user={user} />}
       {user.role === UserRole.ADMIN && <AdminDashboard user={user} />}
-      {user.role === UserRole.AGENT && <AgentDashboard user={user} />} */}
+      {user.role === UserRole.AGENT && <AgentDashboard user={user} />}
 
       {/* Common components shown to all roles */}
       <CommonStats />

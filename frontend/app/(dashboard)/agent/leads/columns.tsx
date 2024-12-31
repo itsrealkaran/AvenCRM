@@ -3,7 +3,7 @@
 import { Lead, LeadStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +34,7 @@ const getStatusColor = (status: LeadStatus) => {
     NEGOTIATION: 'bg-orange-100 text-orange-800',
     WON: 'bg-green-100 text-green-800',
     LOST: 'bg-red-100 text-red-800',
+    FOLLOWUP: 'bg-teal-100 text-teal-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
@@ -90,14 +91,51 @@ export const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: 'status',
     header: 'Status',
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const status: LeadStatus = row.getValue('status');
-      return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
+      const lead = row.original as Lead;
+      const meta = table.options.meta as {
+        onEdit?: (lead: Lead) => void;
+        onDelete?: (leadId: string) => void;
+        onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
+      };
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 p-0'>
+              <Badge className={`${getStatusColor(status)} cursor-pointer`}>{status}</Badge>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-[200px]'>
+            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {Object.values(LeadStatus).map((statusOption) => (
+              <DropdownMenuItem
+                key={statusOption}
+                className={status === statusOption ? 'bg-accent' : ''}
+                onClick={async () => {
+                  if (status !== statusOption && meta.onStatusChange) {
+                    toast.promise(meta.onStatusChange(lead.id, statusOption), {
+                      loading: 'Updating status...',
+                      success: 'Status updated successfully',
+                      error: 'Failed to update status',
+                    });
+                  }
+                }}
+              >
+                <Badge className={`${getStatusColor(statusOption)} mr-2`}>{statusOption}</Badge>
+                {/* {statusOption} */}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
     },
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created',
+    header: 'Created At',
     cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },
@@ -162,6 +200,7 @@ export const columns: ColumnDef<Lead>[] = [
       const meta = table.options.meta as {
         onEdit?: (lead: Lead) => void;
         onDelete?: (leadId: string) => void;
+        onConvertToDeal?: (lead: Lead) => void;
       };
 
       return (
@@ -177,6 +216,9 @@ export const columns: ColumnDef<Lead>[] = [
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
               <Pencil className='mr-2 h-4 w-4' /> Edit lead
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onConvertToDeal?.(lead)}>
+              <ArrowRightLeft className='mr-2 h-4 w-4' /> Convert to Deal
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
               <Trash2 className='mr-2 h-4 w-4' /> Delete lead
