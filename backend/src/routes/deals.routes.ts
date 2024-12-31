@@ -4,19 +4,27 @@ import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 import { DealStatus } from "@prisma/client";
 
-
 const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
     try {
-        const deals = await db.deal.findMany();
+        const deals = await db.deal.findMany({
+            include: {
+                agent: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
         res.json(deals);
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch deals" });
     }
 });
-
 
 router.get("/:id", async (req: Request, res: Response) => {
 
@@ -44,7 +52,6 @@ router.get("/:id", async (req: Request, res: Response) => {
     }
 });
 
-
 router.post("/", async (req: Request, res: Response) => {
     const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
     let dealValue = Number(dealAmount);
@@ -71,7 +78,6 @@ router.post("/", async (req: Request, res: Response) => {
         res.status(500).json({ message: "Failed to create deal" });
     }
 });
-
 
 router.put("/:id", async (req: Request, res: Response) => {
     const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
@@ -107,7 +113,7 @@ router.delete("/:id", async (req: Request, res: Response) => {
 });
 
 router.delete("/", async (req: Request, res: Response) => {
-    const { dealIds } = req.    body;
+    const { dealIds } = req.body;
 
     try {
         const deal = await db.deal.deleteMany({
@@ -123,6 +129,4 @@ router.delete("/", async (req: Request, res: Response) => {
     }
 });
 
-
 export default router;
-

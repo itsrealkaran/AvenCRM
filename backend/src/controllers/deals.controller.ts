@@ -1,17 +1,17 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
-import { LeadFilter } from '../types/filters.js';
+import { DealFilter } from '../types/filters.js';
 import { UserRole } from '@prisma/client';
 import { subMonths } from 'date-fns';
 
-export const getAllLeads = async (req: Request, res: Response) => {
+export const getAllDeals = async (req: Request, res: Response) => {
     try {
         const user = req.user;
         if (!user) {
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        const filters = req.query as LeadFilter;
+        const filters = req.query as DealFilter;
         const page = Number(filters.page) || 1;
         const limit = Number(filters.limit) || 10;
         const skip = (page - 1) * limit;
@@ -42,15 +42,24 @@ export const getAllLeads = async (req: Request, res: Response) => {
         if (filters.status) {
             where.status = filters.status;
         }
-        if (filters.source) {
-            where.source = filters.source;
+        if (filters.minAmount) {
+            where.dealAmount = {
+                ...where.dealAmount,
+                gte: Number(filters.minAmount)
+            };
+        }
+        if (filters.maxAmount) {
+            where.dealAmount = {
+                ...where.dealAmount,
+                lte: Number(filters.maxAmount)
+            };
         }
 
         // Get total count for pagination
-        const total = await prisma.lead.count({ where });
+        const total = await prisma.deal.count({ where });
 
-        // Get leads with pagination and filters
-        const leads = await prisma.lead.findMany({
+        // Get deals with pagination and filters
+        const deals = await prisma.deal.findMany({
             where,
             include: {
                 agent: {
@@ -71,7 +80,7 @@ export const getAllLeads = async (req: Request, res: Response) => {
         });
 
         return res.json({
-            data: leads,
+            data: deals,
             meta: {
                 total,
                 page,
@@ -81,7 +90,7 @@ export const getAllLeads = async (req: Request, res: Response) => {
         });
 
     } catch (error) {
-        console.error('Error in getAllLeads:', error);
-        return res.status(500).json({ message: 'Failed to fetch leads' });
+        console.error('Error in getAllDeals:', error);
+        return res.status(500).json({ message: 'Failed to fetch deals' });
     }
 };

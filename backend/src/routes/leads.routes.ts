@@ -8,8 +8,21 @@ const router: Router = Router();
 router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
+
+    // if the user is a company admin, only return leads from their company
+
     try {
-        const leads = await db.lead.findMany();
+        const leads = await db.lead.findMany({
+            include: {
+                agent: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
         res.json(leads);
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch leads" });
@@ -150,4 +163,3 @@ router.post("/convert", async (req: Request, res: Response) => {
 
 
 export default router;
-

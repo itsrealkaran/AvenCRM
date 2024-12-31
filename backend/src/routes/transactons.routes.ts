@@ -9,7 +9,17 @@ router.use(protect);
 
 router.get("/", async (req: Request, res: Response) => {
     try {
-        const transactions = await prisma.transaction.findMany();
+        const transactions = await prisma.transaction.findMany({
+            include: {
+                agent: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
         res.json(transactions);
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch transactions" });
