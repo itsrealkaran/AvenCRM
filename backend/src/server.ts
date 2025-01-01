@@ -25,6 +25,7 @@ import { propertyView } from './routes/publicPropertyView.js';
 import cookieParser from 'cookie-parser';
 import { teamRoutes } from './routes/team.routes.js';
 import stripeRoutes from './routes/stripe.routes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
 
 const app = express();
 
@@ -73,16 +74,16 @@ app.use(
 );
 
 // Debug session middleware
-app.use((req: Request, res: Response, next: NextFunction) => {
-  if (req.session) {
-    // Breakpoint for session inspection
-    logger.debug('Session data:', { 
-      sessionID: req.sessionID,
-      session: req.session 
-    });
-  }
-  next();
-});
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   if (req.session) {
+//     // Breakpoint for session inspection
+//     logger.debug('Session data:', { 
+//       sessionID: req.sessionID,
+//       session: req.session 
+//     });
+//   }
+//   next();
+// });
 
 // Add a middleware to log requests with detailed debugging
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -151,6 +152,7 @@ app.use("/property", propertyRoutes);
 app.use("/getProperty", propertyView);
 app.use('/tasks', taskRoutes);
 app.use('/stripe', stripeRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
+import { connectEmailAccount, disconnectEmailAccount } from './api';
 import EmailAccountsSection from './components/EmailAccountsSection';
 import EmailCampaignSection from './components/EmailCampaignSection';
 import EmailTemplatesSection from './components/EmailTemplatesSection';
@@ -13,6 +14,51 @@ import EmailTemplatesSection from './components/EmailTemplatesSection';
 function EmailPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('accounts');
+
+  const fetchEmailAccounts = async () => {
+    try {
+      const data = await fetchEmailAccounts();
+      // setAccounts(data); // Note: setAccounts is not defined in the provided code
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch email accounts',
+        variant: 'destructive',
+      });
+    } finally {
+      // setLoading(false); // Note: setLoading is not defined in the provided code
+    }
+  };
+
+  const connectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
+    try {
+      const url = await connectEmailAccount(provider);
+      window.location.href = url;
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to connect email account',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const disconnectAccount = async (accountId: string) => {
+    try {
+      await disconnectEmailAccount(accountId);
+      await fetchEmailAccounts();
+      toast({
+        title: 'Success',
+        description: 'Email account disconnected successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to disconnect email account',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <section className='flex-1 space-y-4 p-4 md:p-6'>

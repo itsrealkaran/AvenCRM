@@ -1,80 +1,149 @@
 'use client';
 
-import { User } from '@/types';
-import { DollarSign, Home, TrendingUp, Users } from 'lucide-react';
-import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useEffect, useState } from 'react';
+import { Building2, DollarSign, Target, Users } from 'lucide-react';
+import {
+  Bar,
+  BarChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+import { toast } from 'sonner';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { api } from '@/lib/api';
 
-// Sample data (replace with real data from API)
-const salesData = [
-  { month: 'Jan', agents: 5, deals: 3 },
-  { month: 'Feb', agents: 7, deals: 4 },
-  { month: 'Mar', agents: 10, deals: 6 },
-  { month: 'Apr', agents: 8, deals: 5 },
-  { month: 'May', agents: 12, deals: 8 },
-  { month: 'Jun', agents: 15, deals: 10 },
-];
-
-interface AdminDashboardProps {
-  user: User;
+interface AdminDashboardData {
+  totalDeals: number;
+  activeLeads: number;
+  wonDeals: number;
+  revenue: number;
+  performanceData: {
+    month: string;
+    deals: number;
+  }[];
 }
 
-export function AdminDashboard({ user }: AdminDashboardProps) {
+export function AdminDashboard() {
+  const [dashboardData, setDashboardData] = useState<AdminDashboardData>({
+    totalDeals: 0,
+    activeLeads: 0,
+    wonDeals: 0,
+    revenue: 0,
+    performanceData: [],
+  });
+
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await api.get('/api/dashboard/admin');
+        const data = await response.data;
+        setDashboardData(data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        toast.error('Failed to fetch dashboard data');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className='space-y-4 p-3'>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+          {[...Array(4)].map((_, index) => (
+            <Card key={index} className='bg-gray-200 animate-pulse'>
+              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+                <CardTitle className='text-sm font-medium'>Loading...</CardTitle>
+                <div className='h-8 w-8 rounded-full bg-gray-300'></div>
+              </CardHeader>
+              <CardContent>
+                <div className='text-2xl font-bold text-gray-900'>Loading...</div>
+                <p className='text-xs text-gray-500 mt-1'>Loading...</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className='space-y-4 '>
+    <div className='space-y-4 p-3'>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-        <Card className='bg-white text-primary'>
+        <Card className='bg-white hover:shadow-lg transition-shadow duration-300 border border-gray-100'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Agents</CardTitle>
-            <Users className='h-4 w-4 text-muted-foreground' />
+            <CardTitle className='text-sm font-medium'>Total Deals</CardTitle>
+            <div className='h-8 w-8 rounded-full bg-blue-100 p-2'>
+              <Target className='h-4 w-4 text-blue-600' />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>57</div>
-            <p className='text-xs text-muted-foreground'>+3 new this month</p>
+            <div className='text-2xl font-bold text-gray-900'>{dashboardData.totalDeals}</div>
+            <p className='text-xs text-gray-500 mt-1'>Active deals in pipeline</p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className='bg-white hover:shadow-lg transition-shadow duration-300 border border-gray-100'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Active Listings</CardTitle>
-            <Home className='h-4 w-4 text-muted-foreground' />
+            <CardTitle className='text-sm font-medium'>Active Leads</CardTitle>
+            <div className='h-8 w-8 rounded-full bg-green-100 p-2'>
+              <Users className='h-4 w-4 text-green-600' />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>124</div>
-            <p className='text-xs text-muted-foreground'>+15 new listings</p>
+            <div className='text-2xl font-bold text-gray-900'>{dashboardData.activeLeads}</div>
+            <p className='text-xs text-gray-500 mt-1'>Leads in progress</p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className='bg-white hover:shadow-lg transition-shadow duration-300 border border-gray-100'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Total Revenue</CardTitle>
-            <DollarSign className='h-4 w-4 text-muted-foreground' />
+            <CardTitle className='text-sm font-medium'>Won Deals</CardTitle>
+            <div className='h-8 w-8 rounded-full bg-purple-100 p-2'>
+              <Building2 className='h-4 w-4 text-purple-600' />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>$89,234</div>
-            <p className='text-xs text-muted-foreground'>+20.1% from last month</p>
+            <div className='text-2xl font-bold text-gray-900'>{dashboardData.wonDeals}</div>
+            <p className='text-xs text-gray-500 mt-1'>Successfully closed deals</p>
           </CardContent>
         </Card>
-        <Card>
+
+        <Card className='bg-white hover:shadow-lg transition-shadow duration-300 border border-gray-100'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>Performance</CardTitle>
-            <TrendingUp className='h-4 w-4 text-muted-foreground' />
+            <CardTitle className='text-sm font-medium'>Revenue</CardTitle>
+            <div className='h-8 w-8 rounded-full bg-yellow-100 p-2'>
+              <DollarSign className='h-4 w-4 text-yellow-600' />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold'>92%</div>
-            <p className='text-xs text-muted-foreground'>+2.4% from last month</p>
+            <div className='text-2xl font-bold text-gray-900'>
+              ${dashboardData.revenue.toLocaleString()}
+            </div>
+            <p className='text-xs text-gray-500 mt-1'>Total revenue generated</p>
           </CardContent>
         </Card>
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
-        <Card className='col-span-4'>
+        <Card className='col-span-4 bg-white border border-gray-100'>
           <CardHeader>
-            <CardTitle>Agent Performance</CardTitle>
-            <CardDescription>Monthly agent deals comparison</CardDescription>
+            <CardTitle>Monthly Performance</CardTitle>
+            <CardDescription>Number of deals closed per month</CardDescription>
           </CardHeader>
           <CardContent className='pl-2'>
             <ResponsiveContainer width='100%' height={350}>
-              <BarChart data={salesData}>
+              <BarChart data={dashboardData.performanceData}>
                 <XAxis
                   dataKey='month'
                   stroke='#888888'
@@ -83,10 +152,44 @@ export function AdminDashboard({ user }: AdminDashboardProps) {
                   axisLine={false}
                 />
                 <YAxis stroke='#888888' fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip />
-                <Bar dataKey='agents' fill='#adfa1d' radius={[4, 4, 0, 0]} />
-                <Bar dataKey='deals' fill='#2563eb' radius={[4, 4, 0, 0]} />
+                <Tooltip
+                  contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
+                  labelStyle={{ color: '#111827' }}
+                />
+                <Bar dataKey='deals' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className='col-span-3 bg-white border border-gray-100'>
+          <CardHeader>
+            <CardTitle>Deal Trend</CardTitle>
+            <CardDescription>Monthly deal closure trend</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width='100%' height={350}>
+              <LineChart data={dashboardData.performanceData}>
+                <XAxis
+                  dataKey='month'
+                  stroke='#888888'
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis stroke='#888888' fontSize={12} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
+                  labelStyle={{ color: '#111827' }}
+                />
+                <Line
+                  type='monotone'
+                  dataKey='deals'
+                  stroke='#10b981'
+                  strokeWidth={2}
+                  dot={{ fill: '#10b981' }}
+                />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>

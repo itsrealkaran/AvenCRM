@@ -25,7 +25,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+
+import { connectEmailAccount, disconnectEmailAccount, fetchEmails } from '../api';
 
 export default function EmailAccountsSection() {
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
@@ -34,18 +37,15 @@ export default function EmailAccountsSection() {
 
   const fetchEmailAccounts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
+      const response = await api.get<EmailAccount[]>('/email/accounts');
+      if (!response) {
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch accounts',
+          variant: 'destructive',
+        });
       }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/accounts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch accounts');
-      const data = await response.json();
+      const data = response.data;
       setAccounts(data);
     } catch (error) {
       toast({
@@ -53,6 +53,7 @@ export default function EmailAccountsSection() {
         description: 'Failed to fetch email accounts',
         variant: 'destructive',
       });
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -68,17 +69,9 @@ export default function EmailAccountsSection() {
       if (!token) {
         throw new Error('Access token not found');
       }
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/config?provider=${provider}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to get redirect URL');
-      const { url } = await response.json();
+      const response = await connectEmailAccount(provider);
+      if (!response.data) throw new Error('Failed to get redirect URL');
+      const { url } = response.data;
       window.location.href = url;
     } catch (error) {
       toast({
@@ -95,21 +88,12 @@ export default function EmailAccountsSection() {
       if (!token) {
         throw new Error('Access token not found');
       }
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/accounts/${accountId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to disconnect account');
+      const response = await disconnectEmailAccount(accountId);
+      if (!response) throw new Error('Failed to disconnect account');
       await fetchEmailAccounts();
       toast({
         title: 'Success',
-        description: 'Email account disisActive successfully',
+        description: 'Email account disconnected successfully',
       });
     } catch (error) {
       toast({

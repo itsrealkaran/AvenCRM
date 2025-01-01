@@ -4,7 +4,6 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/services/api';
-import { UserRole } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -20,13 +19,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -35,14 +27,10 @@ const formSchema = z.object({
   password: z.string().min(4, {
     message: 'Password must be at least 4 characters long.',
   }),
-  role: z.enum([...Object.values(UserRole)] as [UserRole, ...UserRole[]], {
-    required_error: 'Please select a user type.',
-  }),
 });
 
 function SignInContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -50,7 +38,6 @@ function SignInContent() {
     defaultValues: {
       email: '',
       password: '',
-      role: UserRole.AGENT,
     },
   });
 
@@ -64,18 +51,10 @@ function SignInContent() {
       if (data.access_token) {
         toast.success('Sign-in successful!');
 
-        // Get the callback URL or use the default route based on role
-        const callbackUrl = searchParams.get('callbackUrl');
-        let defaultPath = `/${values.role.toLowerCase()}`;
-
-        // // Redirect team leaders to /agent route
-        // if (data.user.role.toLowerCase() === 'team_leader') {
-        //   defaultPath = '/agent';
-        // }
-
-        // Redirect after a short delay to show the success message
+        // Redirect to the callback URL or default dashboard
+        const callbackUrl = `/${data.user.role.toLowerCase()}` || '/dashboard';
         setTimeout(() => {
-          router.push(callbackUrl || defaultPath);
+          router.push(callbackUrl);
         }, 1000);
       } else {
         throw new Error('No access token received');
@@ -90,79 +69,67 @@ function SignInContent() {
   }
 
   return (
-    <div className='space-y-6'>
-      <div className='space-y-2 text-center'>
-        <h1 className='text-3xl font-bold'>Sign In</h1>
-        <p className='text-gray-500 dark:text-gray-400'>
-          Enter your credentials to access your account
-        </p>
-      </div>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-          <FormField
-            control={form.control}
-            name='role'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>User Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+    <div className='flex justify-center items-center min-h-screen bg-gray-100 dark:bg-gray-900 rounded-3xl'>
+      <div className='w-full max-w-md p-8 bg-white dark:bg-gray-800 shadow-lg rounded-lg'>
+        <div className='text-center mb-6'>
+          <h1 className='text-2xl font-bold text-gray-800 dark:text-white'>Welcome Back</h1>
+          <p className='text-sm text-gray-600 dark:text-gray-400'>Sign in to continue</p>
+        </div>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            <FormField
+              control={form.control}
+              name='email'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
                   <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select user type' />
-                    </SelectTrigger>
+                    <Input
+                      placeholder='you@example.com'
+                      type='email'
+                      {...field}
+                      className='rounded-lg border-gray-300 focus:ring-primary focus:border-primary'
+                    />
                   </FormControl>
-                  <SelectContent>
-                    <SelectItem value='SUPERADMIN'>Super Admin</SelectItem>
-                    <SelectItem value='ADMIN'>Admin</SelectItem>
-                    <SelectItem value='AGENT'>Agent</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name='email'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder='Enter your email' {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name='password'
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type='password' placeholder='Enter your password' {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type='submit'
-            className='w-full bg-primary hover:bg-primary/90 text-white font-bold py-2 px-4 rounded'
-            disabled={isLoading}
-          >
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </Button>
-        </form>
-      </Form>
-      <div className='text-center'>
-        <p className='text-sm text-gray-500 dark:text-gray-400'>
-          Don&apos;t have an account?{' '}
-          <Link href='/sign-up' className='text-primary hover:underline'>
-            Sign Up
-          </Link>
-        </p>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='password'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='password'
+                      placeholder='Enter your password'
+                      {...field}
+                      className='rounded-lg border-gray-300 focus:ring-primary focus:border-primary'
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type='submit'
+              className='w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-lg focus:ring-4 focus:ring-primary-light'
+              disabled={isLoading}
+            >
+              {isLoading ? 'Signing In...' : 'Sign In'}
+            </Button>
+          </form>
+        </Form>
+        <div className='text-center mt-4'>
+          <p className='text-sm text-gray-600 dark:text-gray-400'>
+            Don&apos;t have an account?{' '}
+            <Link href='/sign-up' className='text-primary font-semibold hover:underline'>
+              Sign Up
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

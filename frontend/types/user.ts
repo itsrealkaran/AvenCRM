@@ -27,7 +27,6 @@ export interface AuthResponse {
 export interface LoginCredentials {
   email: string;
   password: string;
-  role: UserRole;
 }
 
 export interface RegisterCredentials extends LoginCredentials {

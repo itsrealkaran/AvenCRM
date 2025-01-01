@@ -13,6 +13,7 @@ import {
 } from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface AnalyticsOverview {
@@ -39,29 +40,15 @@ export default function EmailAnalyticsSection() {
   const fetchAnalytics = useCallback(async () => {
     try {
       // Fetch overview data
-      const overviewResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/analytics/overview`,
-        {
-          credentials: 'include',
-        }
-      );
-      if (!overviewResponse.ok) throw new Error('Failed to fetch overview');
-      const overviewData = await overviewResponse.json();
+      const overviewResponse = await api.get('/email/analytics/overview');
+      if (!overviewResponse) throw new Error('Failed to fetch overview');
+      const overviewData = overviewResponse.data;
       setOverview(overviewData);
 
       // Fetch campaign analytics
-      const campaignResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/analytics/campaigns`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            credentials: 'include',
-          },
-          credentials: 'include',
-        }
-      );
-      if (!campaignResponse.ok) throw new Error('Failed to fetch campaign data');
-      const campaignData = await campaignResponse.json();
+      const campaignResponse = await api.get(`/email/analytics/campaigns`);
+      if (!campaignResponse) throw new Error('Failed to fetch campaign data');
+      const campaignData = campaignResponse.data;
       setCampaignData(campaignData);
     } catch (error) {
       toast({

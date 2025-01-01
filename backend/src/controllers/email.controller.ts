@@ -193,9 +193,9 @@ export class EmailController {
       const companyId = req.user?.companyId;
       const { category, search, page = 1, limit = 10 } = req.query;
 
-      if (!companyId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
+      // if (!companyId) {
+      //   return res.status(401).json({ error: 'Unauthorized' });
+      // }
 
       const where = {
         OR: [
