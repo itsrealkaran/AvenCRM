@@ -2,26 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { authApi } from '@/services/api';
-import { User, UserRole } from '@/types';
-import {
-  Building2,
-  Calendar,
-  CreditCard,
-  DollarSign,
-  Home,
-  Mail,
-  ShieldCheck,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
+import { User } from '@/types';
+import { Calendar, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { AdminDashboard } from './components/admin-dashboard';
-import { AgentDashboard } from './components/agent-dashboard';
 import { SuperAdminDashboard } from './components/superadmin-dashboard';
 
 export default function DashboardPage() {
@@ -91,10 +77,7 @@ export default function DashboardPage() {
         <h1 className='text-3xl font-bold tracking-tight'>Welcome back, {user.name}!</h1>
       </div>
 
-      {/* Role-specific dashboards */}
-      {user.role === UserRole.SUPERADMIN && <SuperAdminDashboard user={user} />}
-      {user.role === UserRole.ADMIN && <AdminDashboard user={user} />}
-      {user.role === UserRole.AGENT && <AgentDashboard user={user} />}
+      <SuperAdminDashboard user={user} />
 
       {/* Common components shown to all roles */}
       <CommonStats />
