@@ -10,17 +10,15 @@ import {
   EmailStatus,
   EmailAccount,
   Prisma,
-  EmailAccountStatus
+  EmailAccountStatus,
+  EmailRecipient,
+  EmailTemplate
 } from '@prisma/client';
 import { emailQueue } from './email.queue.js';
 
 interface EmailJobData {
   emailAccountId: string;
-  recipients: Array<{
-    email: string;
-    name?: string;
-    variables?: Record<string, any>;
-  }>;
+  recipientIds: string[];
   subject: string;
   content: string;
   scheduledFor?: Date;
@@ -98,7 +96,7 @@ class EmailService {
   async scheduleEmail(data: EmailJobData): Promise<string> {
     try {
       let jobId: any;
-      if(data.recipients.length > 1) {
+      if(data.recipientIds.length > 1) {
         jobId = await emailQueue.add('send-bulk-email', data, {
           delay: data.scheduledFor ? new Date(data.scheduledFor).getTime() - Date.now() : 0,
           attempts: 1,
@@ -134,7 +132,7 @@ class EmailService {
     title: string,
     subject: string,
     content: string,
-    recipients: Array<{ email: string; name?: string; variables?: Record<string, any> }>,
+    recipientIds: string[],
     scheduledFor?: Date
   ): Promise<string> {
     try {
@@ -147,12 +145,22 @@ class EmailService {
         throw new Error('Agent not found');
       }
 
+      const recipients = await prisma.emailRecipient.findMany({
+        where: {
+          id: {
+            in: recipientIds
+          }
+        }
+      });
+
       const campaign = await prisma.emailCampaign.create({
         data: {
           title,
           subject,
           content,
-          recipients: recipients as unknown as Prisma.JsonArray,
+          recipients: {
+            connect: recipients.map(recipient => ({ id: recipient.id }))
+          },
           status: EmailCampaignStatus.SCHEDULED,
           scheduledAt: scheduledFor,
           createdById: userId,
@@ -177,7 +185,7 @@ class EmailService {
 
       await this.scheduleEmail({
         emailAccountId: emailAccounts[0].id,
-        recipients,
+        recipientIds,
         subject,
         content,
         scheduledFor,
@@ -281,26 +289,26 @@ class EmailService {
     }
   }
 
-  private async sendEmail(data: EmailJobData): Promise<boolean> {
-    try {
-      const transporter = await this.createTransporter(data.emailAccountId);
+  // private async sendEmail(data: EmailJobData): Promise<boolean> {
+  //   try {
+  //     const transporter = await this.createTransporter(data.emailAccountId);
 
-      for (const recipient of data.recipients) {
-        const content = this.processTemplate(data.content, recipient.variables || {});
-        await transporter.sendMail({
-          from: (await prisma.emailAccount.findUnique({ where: { id: data.emailAccountId } }))?.email || '',
-          to: recipient.email,
-          subject: data.subject,
-          html: content
-        });
-      }
+  //     for (const recipient of data.recipients) {
+  //       const content = this.processTemplate(data.content, {});
+  //       await transporter.sendMail({
+  //         from: (await prisma.emailAccount.findUnique({ where: { id: data.emailAccountId } }))?.email || '',
+  //         to: recipient.email,
+  //         subject: data.subject,
+  //         html: content
+  //       });
+  //     }
 
-      return true;
-    } catch (error) {
-      logger.error('Send email error:', error);
-      throw new Error(error instanceof Error ? error.message : 'Failed to send email');
-    }
-  }
+  //     return true;
+  //   } catch (error) {
+  //     logger.error('Send email error:', error);
+  //     throw new Error(error instanceof Error ? error.message : 'Failed to send email');
+  //   }
+  // }
 
   processTemplate(template: string, variables: Record<string, any>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, variable) => 

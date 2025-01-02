@@ -137,7 +137,7 @@ queueEvents.on('delayed', ({ jobId, delay }) => {
 
 // Job processors
 async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
-  const { emailAccountId, recipients, subject, content, scheduledFor, campaignId } = job.data;
+  const { emailAccountId, recipientIds, subject, content, scheduledFor, campaignId } = job.data;
   
   try {
     if (scheduledFor && Date.now() > scheduledFor.getTime()) {
@@ -151,7 +151,21 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     
     await job.extendLock(job.id ?? '', 30000);
     
-    const processedContent = emailService.processTemplate(content, recipients[0].variables || {});
+    const processedContent = emailService.processTemplate(content, {});
+
+    const recipients = await prisma.emailRecipient.findMany({
+      where: {
+        id: {
+          in: recipientIds
+        }
+      }
+    });
+    
+    if (recipients.length === 0) {
+      throw new Error('No recipients found');
+    }
+    
+    await job.updateProgress(50);
     
     const sendMailPromise = transporter.sendMail({
       from: (await prisma.emailAccount.findUnique({ where: { id: emailAccountId } }))?.email || '',
@@ -207,13 +221,13 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
 }
 
 async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
-  const { emailAccountId, recipients, subject, content, scheduledFor, campaignId } = job.data;
+  const { emailAccountId, recipientIds, subject, content, scheduledFor, campaignId } = job.data;
   
   try {
     await job.updateProgress(1);
     
     const transporter = await emailService.createTransporter(emailAccountId);
-    const totalRecipients = recipients.length;
+    const totalRecipients = recipientIds.length;
     let successCount = 0;
     let failedRecipients: string[] = [];
 
@@ -230,12 +244,17 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
 
     try {
       const BATCH_SIZE = 5; // Reduced batch size for better control
-      for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
-        const batch = recipients.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < recipientIds.length; i += BATCH_SIZE) {
+        const batch = recipientIds.slice(i, i + BATCH_SIZE);
         
-        await Promise.all(batch.map(async (recipient) => {
+        await Promise.all(batch.map(async (recipientId) => {
           try {
-            const processedContent = emailService.processTemplate(content, recipient.variables || {});
+            const recipient = await prisma.emailRecipient.findUnique({ where: { id: recipientId } });
+            if (!recipient) {
+              throw new Error('Recipient not found');
+            }
+
+            const processedContent = emailService.processTemplate(content, {});
             
             const emailAccount = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } });
             if (!emailAccount) {
@@ -257,8 +276,9 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
             await Promise.race([sendMailPromise, timeoutPromise]);
             successCount++;
           } catch (error) {
-            failedRecipients.push(recipient.email);
-            logger.error(`Failed to send email to ${recipient.email}:`, error);
+            // failedRecipients.push(recipient.email);
+            // logger.error(`Failed to send email to ${recipient.email}:`, error);
+            console.error(`Failed to send email to :`, error);
           }
         }));
 

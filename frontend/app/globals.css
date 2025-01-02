@@ -81,6 +81,29 @@ body {
   }
 }
 
+/* ::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+} */
+
+
 @layer base {
   * {
     @apply border-border;

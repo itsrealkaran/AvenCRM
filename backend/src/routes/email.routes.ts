@@ -1,50 +1,46 @@
-import { Router, Request, Response } from 'express';
+import express, { Router } from 'express';
 import { emailController } from '../controllers/email.controller.js';
 import { protect } from '../middleware/auth.js';
 
-const router: Router = Router();
-
-// Apply authentication middleware
+const router: Router = express.Router();
 router.use(protect);
 
-// Email configuration
-router.get('/config', (req: Request, res: Response) => emailController.provideRedirectUrl(req, res));
-
 // Email account management
-router.post('/accounts/connect', (req: Request, res: Response) => emailController.connectEmailAccount(req, res));
-router.get('/accounts', (req: Request, res: Response) => emailController.getEmailAccounts(req, res));
-router.delete('/accounts/:accountId', (req: Request, res: Response) => emailController.disconnectEmailAccount(req, res));
+router.get('/redirect-url', emailController.provideRedirectUrl);
+router.post('/connect', emailController.connectEmailAccount);
+router.get('/accounts', emailController.getEmailAccounts);
+router.delete('/accounts/:accountId', emailController.disconnectEmailAccount);
 
-// Email template management
-router.post('/templates', (req: Request, res: Response) => emailController.createEmailTemplate(req, res));
-router.get('/templates', (req: Request, res: Response) => emailController.getEmailTemplates(req, res));
-router.get('/templates/:templateId', (req: Request, res: Response) => emailController.getTemplateById(req, res));
-router.put('/templates/:templateId', (req: Request, res: Response) => emailController.updateTemplate(req, res));
-router.delete('/templates/:templateId', (req: Request, res: Response) => emailController.deleteTemplate(req, res));
+// Email templates
+router.get('/templates', emailController.getEmailTemplates);
+router.post('/templates', emailController.createEmailTemplate);
+router.get('/templates/:templateId', emailController.getTemplateById);
+router.put('/templates/:templateId', emailController.updateTemplate);
+router.delete('/templates/:templateId', emailController.deleteTemplate);
 
-// Email recipients management
-router.get('/recipients', (req: Request, res: Response) => emailController.getRecipients(req, res));
-router.post('/recipients', (req: Request, res: Response) => emailController.createRecipient(req, res));
-router.put('/recipients/:id', (req: Request, res: Response) => emailController.updateRecipient(req, res));
-router.delete('/recipients/:id', (req: Request, res: Response) => emailController.deleteRecipient(req, res));
+// // Email recipients
+// router.get('/recipients', emailController.ge);
+// router.post('/recipients', emailController.createRecipient);
+// router.put('/recipients/:id', emailController.updateRecipient);
+// router.delete('/recipients/:id', emailController.deleteRecipient);
 
-// Email campaign management
-router.post('/campaigns', (req: Request, res: Response) => emailController.sendBulkEmail(req, res));
-router.get('/campaigns', (req: Request, res: Response) => emailController.getEmailCampaigns(req, res));
-router.get('/campaigns/:campaignId', (req: Request, res: Response) => emailController.getCampaignStats(req, res));
-router.delete('/campaigns/:campaignId', (req: Request, res: Response) => emailController.deleteCampaign(req, res));
-router.post('/campaigns/:campaignId/cancel', (req: Request, res: Response) => emailController.cancelCampaign(req, res));
-
-// Email tracking
-router.get('/track/open/:trackingId', (req: Request, res: Response) => emailController.trackEmailOpen(req, res));
-router.get('/track/click/:trackingId', (req: Request, res: Response) => emailController.trackEmailClick(req, res));
+// Email campaigns
+router.post('/campaigns', emailController.sendBulkEmail);
+router.get('/campaigns', emailController.getEmailCampaigns);
+router.get('/campaigns/:campaignId/stats', emailController.getCampaignStats);
+router.delete('/campaigns/:campaignId', emailController.deleteCampaign);
+router.post('/campaigns/:campaignId/cancel', emailController.cancelCampaign);
 
 // Email analytics
-router.get('/analytics/overview', (req: Request, res: Response) => emailController.getEmailAnalyticsOverview(req, res));
-router.get('/analytics/campaigns', (req: Request, res: Response) => emailController.getCampaignAnalytics(req, res));
+router.get('/analytics/overview', emailController.getEmailAnalyticsOverview);
+router.get('/analytics/campaigns', emailController.getCampaignAnalytics);
 
-// Email validation and testing
-router.post('/validate-email', (req: Request, res: Response) => emailController.validateEmail(req, res));
-router.post('/test-email', (req: Request, res: Response) => emailController.sendTestEmail(req, res));
+// Email tracking
+router.get('/track/open/:trackingId', emailController.trackEmailOpen);
+router.get('/track/click/:trackingId', emailController.trackEmailClick);
+
+// Email utilities
+router.post('/validate', emailController.validateEmail);
+// router.post('/test', emailController.sendTestEmail);
 
 export default router;
