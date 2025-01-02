@@ -6,23 +6,16 @@ import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/enums';
 import { User } from '@/types/user';
 import axios from 'axios';
+import { Building, Building2, Calendar, CheckSquare, FileText, HandshakeIcon, LayoutDashboard, LineChart, Mail, MenuIcon, MonitorIcon, Settings, Store, Users, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FaAngleRight } from 'react-icons/fa6';
+import { TbSettings2 } from 'react-icons/tb';
 import {
-  Building,
-  Building2,
-  Calendar,
-  CheckSquare,
-  FileText,
-  HandshakeIcon,
-  LayoutDashboard,
-  LineChart,
-  Mail,
-  MenuIcon,
-  MonitorIcon,
-  Settings,
-  Store,
-  Users,
-  Wallet,
-} from 'lucide-react';
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 
 interface MenuItem {
   heading: string;
@@ -35,6 +28,8 @@ interface MenuItem {
 const Sidebar = () => {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Extract role from pathname
   const role = pathname.split('/')[1]; // Assuming the role is in the second segment of the pathname
@@ -170,6 +165,21 @@ const Sidebar = () => {
     };
 
     fetchUser();
+
+    // Check if the screen is mobile-sized
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsCollapsed(window.innerWidth < 768);
+    };
+
+    // Initial check
+    checkMobile();
+
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   // Update dashboard path based on role
@@ -185,40 +195,78 @@ const Sidebar = () => {
     (item) => user && item.roles.includes(user.role)
   );
 
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+  };
+
   return (
-    <div className='sticky top-0 z-10 h-screen w-[18%] select-none bg-white px-8 pt-10 shadow-xl shadow-black/20'>
+    <div 
+      className={`h-screen z-50 sticky top-0 select-none bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
+        ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
+        ${isMobile ? 'absolute' : 'relative'}`}
+    >
       {/* Logo and Brand */}
-      <div className='flex w-full items-center gap-[5px]'>
-        <div className='text-[2rem] text-primary'>
-          <MenuIcon className='h-8 w-8' />
+      <div className={`w-full flex items-center gap-[5px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}>
+        <div className='text-[2rem]'>
+          <TbSettings2 color='#5932ea'/>
         </div>
-        <Link
-          href={`/dashboard/${role}`}
-          className='flex items-end gap-[2px] text-[1.24rem] font-bold text-primary hover:text-primary/90 transition-colors'
-        >
-          <h1>AvenCRM</h1>
-          <span className='pb-[3px] text-[10px] opacity-70'>v.01</span>
-        </Link>
+        {!isCollapsed && (
+          <Link href="/dashboard" className='text-[1.24rem] text-[#5932ea] flex gap-[2px] items-end font-bold'>
+            <h1>AvenCRM</h1>
+            <span className='text-[10px] opacity-70 pb-[3px]'>v.01</span>
+          </Link>
+        )}
       </div>
 
-      {/* Navigation Menu */}
-      <div className='mt-[35px] flex h-fit w-full flex-col gap-[2px]'>
+      <div className='w-full h-[calc(100%-120px)] flex flex-col gap-[2px] overflow-y-auto'>
         {filteredMenuItems.map((item, index) => (
-          <Link
-            key={index}
-            href={item.path}
-            className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors
-              ${
-                pathname === item.path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'
-              }`}
-          >
-            <item.icon className='h-5 w-5' />
-            <span>{item.heading}</span>
-          </Link>
+          <TooltipProvider key={index}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.path}
+                  className={`flex flex-row items-center gap-3 justify-between rounded-lg px-4 py-3 text-sm font-medium transition-colors
+                    ${pathname === item.path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}
+                    ${isCollapsed ? 'justify-center' : ''}`}
+                >
+                  <div className={`flex flex-row gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+                    <item.icon className='h-5 w-5' />
+                    {!isCollapsed && <span>{item.heading}</span>}
+                  </div>
+                  {!isCollapsed && <div><FaAngleRight/></div>}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side={isCollapsed ? 'right' : 'top'} className="bg-white text-gray-700 shadow-lg border border-gray-100 px-3 py-2">
+                <p>{item.heading}</p>
+                {isCollapsed && <p className="text-xs text-gray-500">{item.description}</p>}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         ))}
       </div>
+
+      {/* Collapse/Expand Button */}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className={`absolute bottom-4 transition-all duration-300 ease-in-out
+                ${isCollapsed ? 'right-1/2 transform translate-x-1/2' : 'right-2'}`}
+              onClick={toggleSidebar}
+            >
+              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="bg-white text-gray-700 shadow-lg border border-gray-100 px-3 py-2">
+            <p>{isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };
 
 export default Sidebar;
+

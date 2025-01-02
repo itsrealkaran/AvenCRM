@@ -77,7 +77,7 @@ export default function DashboardPage() {
         <h1 className='text-3xl font-bold tracking-tight'>Welcome back, {user.name}!</h1>
       </div>
 
-      <AdminDashboard user={user} />
+      <AdminDashboard />
       {/* Common components shown to all roles */}
       <CommonStats />
     </div>
