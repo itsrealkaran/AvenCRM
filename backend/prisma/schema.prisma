@@ -196,7 +196,7 @@ model Company {
   companyAuditLogs  CompanyAuditLog[]
   
   tasks        Task[]
-  
+  blocked      Boolean  @default(false) // Indicates if the company is blocked
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
 

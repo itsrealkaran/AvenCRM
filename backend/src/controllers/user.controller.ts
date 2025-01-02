@@ -278,6 +278,38 @@ export const userController = {
     }
   },
 
+  async getAllAdmins(req: AuthenticatedRequest, res: Response) {
+    const authUser = req.user;
+
+    try {
+      if (!authUser) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      // Permission check for SUPERADMIN
+      if (authUser.role !== UserRole.SUPERADMIN) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const admins = await db.user.findMany({
+        where: { role: UserRole.ADMIN },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      });
+
+      res.json(admins);
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching admins", error });
+    }
+  },
+
+
   // Team Management (Admin & Team Leader)
   async assignTeam(req: AuthenticatedRequest, res: Response) {
     const { userId, teamId } = req.body;
