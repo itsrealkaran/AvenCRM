@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 'use client';
 
 import { SiGmail } from 'react-icons/si';
@@ -9,17 +10,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 export function EmailProvider() {
   const handleGmailConnect = async () => {
     try {
-      // Redirect to Google OAuth consent screen
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/gmail`;
+      let redirectUrl = 'https://accounts.google.com/o/oauth2/v2/auth?';
+      redirectUrl += `scope=https://mail.google.com/`;
+      redirectUrl += `&response_type=code`;
+      redirectUrl += `&access_type=offline`;
+      redirectUrl += `&client_id=${process.env.GOOGLE_CLIENT_ID}`;
+      redirectUrl += `&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}`;
+      window.location.href = redirectUrl;
     } catch (error) {
       toast.info('Failed to connect Gmail account');
+      console.log(error);
     }
   };
 
   const handleOutlookConnect = async () => {
     try {
-      // Redirect to Outlook OAuth consent screen
-      window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/api/auth/outlook`;
+      let redirectUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
+      redirectUrl += `scope=https://outlook.office.com/mail.readwrite`;
+      redirectUrl += `&response_type=code`;
+      redirectUrl += `&access_type=offline`;
+      redirectUrl += `&client_id=${process.env.OUTLOOK_CLIENT_ID}`;
+      redirectUrl += `&redirect_uri=${process.env.OUTLOOK_REDIRECT_URI}`;
+      window.location.href = redirectUrl;
     } catch (error) {
       toast.error('Failed to connect Outlook account');
     }

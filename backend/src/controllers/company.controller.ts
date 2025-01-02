@@ -4,6 +4,7 @@ import { BaseController } from "./base.controllers.js";
 import db from "../db/index.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
 import { verifyAdmin } from "../lib/verifyUser.js";
+import { prisma } from '../lib/prisma.js';
 
 export class AdminAgentController extends BaseController {
   async createAgent(req: Request, res: Response) {
@@ -250,3 +251,61 @@ export class AdminAgentController extends BaseController {
     });
   }
 }
+
+// Reactivate a company (SuperAdmin only)
+export const reactivateCompany = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const company = await prisma.company.update({
+      where: { id },
+      data: { blocked: false },
+    });
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to reactivate company" });
+  }
+};
+
+// Block a company (SuperAdmin only)
+export const blockCompany = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    const company = await prisma.company.update({
+      where: { id },
+      data: { blocked: true },
+    });
+
+    // Update all users of the company to be blocked
+    await prisma.user.updateMany({
+      where: { companyId: id },
+      data: { isActive: false },
+    });
+
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to block company" });
+  }
+};
+
+// Delete a company (SuperAdmin only)
+export const deleteCompany = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    // Delete all related data in the correct order
+    await prisma.$transaction([
+      // Delete all related records first
+      prisma.lead.deleteMany({ where: { companyId: id } }),
+      prisma.deal.deleteMany({ where: { companyId: id } }),
+      prisma.user.deleteMany({ where: { companyId: id } }),
+      // Finally delete the company
+      prisma.company.delete({ where: { id } })
+    ]);
+    
+    res.status(204).send();
+  } catch (error) {
+    res.status(500).json({ message: "Failed to delete company" });
+  }
+};

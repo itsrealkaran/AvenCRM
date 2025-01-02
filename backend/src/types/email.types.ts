@@ -1,10 +1,6 @@
 export interface EmailJobData {
   emailAccountId: string;
-  recipients: Array<{
-    email: string;
-    name?: string;
-    variables?: Record<string, any>;
-  }>;
+  recipientIds: string[];
   subject: string;
   content: string;
   scheduledFor?: Date;

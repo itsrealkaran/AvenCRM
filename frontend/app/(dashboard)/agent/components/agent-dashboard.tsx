@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Briefcase, DollarSign, Target, CheckSquare } from 'lucide-react';
+import { Briefcase, CheckSquare, DollarSign, Target } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -156,12 +156,7 @@ export function AgentDashboard() {
                   contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
                   labelStyle={{ color: '#111827' }}
                 />
-                <Bar
-                  dataKey='deals'
-                  fill='#3b82f6'
-                  radius={[4, 4, 0, 0]}
-                  barSize={40}
-                />
+                <Bar dataKey='deals' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

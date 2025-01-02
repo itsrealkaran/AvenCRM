@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { emailService } from '../services/email.service.js';
 import logger from '../utils/logger.js';
-import { EmailCampaignStatus, EmailProvider, EmailStatus, UserRole, Prisma, EmailAccountStatus } from '@prisma/client';
+import { EmailCampaignStatus, EmailProvider, EmailStatus, UserRole, Prisma, EmailAccountStatus, EmailRecipient } from '@prisma/client';
 import { z } from 'zod';
 
 // Define custom types for request with user
@@ -22,13 +22,7 @@ const sendBulkEmailSchema = z.object({
   title: z.string().min(1),
   subject: z.string().min(1),
   content: z.string().min(1),
-  recipients: z.array(z.object({
-    email: z.string().email(),
-    name: z.string().optional(),
-    type: z.enum(['EXTERNAL', 'AGENT', 'ADMIN', 'CLIENT']),
-    recipientId: z.string().optional(),
-    variables: z.record(z.string()).optional()
-  })),
+  recipientIds: z.array(z.string()).min(1),
   templateId: z.string().optional(),
   scheduledAt: z.string().datetime().optional()
 });
@@ -191,35 +185,47 @@ export class EmailController {
   async getEmailTemplates(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
+      const userId = req.user?.id;
       const { category, search, page = 1, limit = 10 } = req.query;
 
-      // if (!companyId) {
-      //   return res.status(401).json({ error: 'Unauthorized' });
-      // }
-
-      const where = {
-        OR: [
-          { companyId }
-        ],
-        ...(category ? { category: category as string } : {}),
-        ...(search ? {
-          OR: [
-            { name: { contains: search as string, mode: Prisma.QueryMode.insensitive } },
-            { description: { contains: search as string, mode: Prisma.QueryMode.insensitive } }
-          ]
-        } : {})
-      };
-
-      const [templates, total] = await Promise.all([
-        prisma.emailTemplate.findMany({
-          where,
+      if (!companyId) {
+        // return the templates  having userId as userId
+        const templates = await prisma.emailTemplate.findMany({
+          where: { createdById: userId },
           orderBy: { createdAt: 'desc' },
           skip: (Number(page) - 1) * Number(limit),
           take: Number(limit)
-        }),
-        prisma.emailTemplate.count({ where })
-      ]);
+        });
+        const total = await prisma.emailTemplate.count({ where: { createdById: userId } });
+        return res.json({
+          templates,
+          pagination: {
+            total,
+            pages: Math.ceil(total / Number(limit)),
+            currentPage: Number(page),
+            perPage: Number(limit)
+          }
+        });
+      }
 
+      // if company ID is present then return all the tempates created  by user and the templates present in compnay which are not private
+      const templates = await prisma.emailTemplate.findMany({
+        where: { 
+          OR: [{ createdById: userId }, { companyId, isPrivate: false }],
+          category: category as string,
+          name: { contains: search as string, mode: Prisma.QueryMode.insensitive }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (Number(page) - 1) * Number(limit),
+        take: Number(limit)
+      });
+      const total = await prisma.emailTemplate.count({
+        where: { 
+          OR: [{ createdById: userId }, { companyId, isPrivate: false }],
+          category: category as string,
+          name: { contains: search as string, mode: Prisma.QueryMode.insensitive }
+        }
+      });
       res.json({
         templates,
         pagination: {
@@ -254,14 +260,14 @@ export class EmailController {
         });
       }
 
-      const { title, subject, content, recipients, scheduledAt } = validationResult.data;
+      const { title, subject, content, recipientIds, scheduledAt } = validationResult.data;
 
       const campaignId = await emailService.createCampaign(
         userId,
         title,
         subject,
         content,
-        recipients,
+        recipientIds,
         scheduledAt ? new Date(scheduledAt) : undefined
       );
 
@@ -280,10 +286,27 @@ export class EmailController {
   async getEmailCampaigns(req: Request, res: Response) {
     try {
       const companyId = req.user?.companyId;
+      const userId = req.user?.id;
       const { status, search, startDate, endDate, page = 1, limit = 10 } = req.query;
 
       if (!companyId) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        // return the templates  having userId as userId
+        const campaigns = await prisma.emailCampaign.findMany({
+          where: { createdById: userId },
+          orderBy: { createdAt: 'desc' },
+          skip: (Number(page) - 1) * Number(limit),
+          take: Number(limit)
+        });
+        const total = await prisma.emailCampaign.count({ where: { createdById: userId } });
+        return res.json({
+          campaigns,
+          pagination: {
+            total,
+            pages: Math.ceil(total / Number(limit)),
+            currentPage: Number(page),
+            perPage: Number(limit)
+          }
+        });
       }
 
       const where = {
@@ -314,7 +337,7 @@ export class EmailController {
                 email: true
               }
             },
-            emails: {
+            Email: {
               select: {
                 status: true,
                 sentAt: true,
@@ -332,7 +355,7 @@ export class EmailController {
 
       // Calculate campaign statistics
       const campaignsWithStats = campaigns.map(campaign => {
-        const emails = campaign.emails;
+        const emails = campaign.Email;
         const stats = {
           totalEmails: emails.length,
           sent: emails.filter((e: { status: string; }) => e.status === EmailStatus.SENT).length,
@@ -389,7 +412,7 @@ export class EmailController {
               email: true
             }
           },
-          emails: {
+          Email: {
             select: {
               id: true,
               status: true,
@@ -398,7 +421,8 @@ export class EmailController {
               recipients: true,
 
             }
-          }
+          },
+          recipients: true
         }
       });
 
@@ -432,7 +456,7 @@ export class EmailController {
           Email: undefined // Remove detailed email data
         },
         stats,
-        emailDetails: campaign.emails.map((email) => ({
+        emailDetails: campaign.Email.map((email) => ({
           status: email.status,
           recipient: Array.isArray(email.recipients) ? email.recipients[0] : email.recipients,
           sentAt: email.sentAt,
@@ -734,9 +758,12 @@ export class EmailController {
           ...dateFilter
         },
         include: {
-          emails: {
+          Email: {
             select: {
-              status: true
+              status: true,
+              recipients: true,
+              sentAt: true,
+              error: true
             }
           }
         }
@@ -785,38 +812,38 @@ export class EmailController {
     }
   }
 
-  async sendTestEmail(req: Request, res: Response) {
-    try {
-      const { email, subject, content } = req.body;
-      const userId = req.user?.id;
+  // async sendTestEmail(req: Request, res: Response) {
+  //   try {
+  //     const { recipientId, subject, content } = req.body;
+  //     const userId = req.user?.id;
 
-      if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
-      }
+  //     if (!userId) {
+  //       return res.status(401).json({ error: 'Unauthorized' });
+  //     }
 
-      if (!email || !subject || !content) {
-        return res.status(400).json({ error: 'Email, subject, and content are required' });
-      }
+  //     if (!recipientId || !subject || !content) {
+  //       return res.status(400).json({ error: 'Recipient, subject, and content are required' });
+  //     }
 
-      await this.scheduleEmail({
-        emailAccountId: userId,
-        recipients: [{ email }],
-        subject,
-        content
-      });
+  //     await this.scheduleEmail({
+  //       emailAccountId: userId,
+  //       recipients: [{ id: recipientId }],
+  //       subject,
+  //       content
+  //     });
 
-      res.json({ message: 'Test email sent successfully' });
-    } catch (error) {
-      logger.error('Send test email error:', error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'Failed to send test email' 
-      });
-    }
-  }
+  //     res.json({ message: 'Test email sent successfully' });
+  //   } catch (error) {
+  //     logger.error('Send test email error:', error);
+  //     res.status(500).json({ 
+  //       error: error instanceof Error ? error.message : 'Failed to send test email' 
+  //     });
+  //   }
+  // }
 
   async scheduleEmail(data: {
     emailAccountId: string;
-    recipients: Array<{ email: string; name?: string; variables?: Record<string, any> }>;
+    recipientIds: string[];
     subject: string;
     content: string;
     scheduledFor?: Date;
@@ -825,58 +852,37 @@ export class EmailController {
     return emailService.scheduleEmail(data);
   }
 
-  private async processRecipients(recipients: any[], companyId: string) {
+  private async processRecipients(recipients: EmailRecipient[], companyId: string) {
     const processedRecipients = [];
 
     for (const recipient of recipients) {
       let processedRecipient: any = {
         email: recipient.email,
         name: recipient.name,
-        type: recipient.type,
-        variables: recipient.variables
+        recipientId: recipient.id
       };
 
-      // If recipient is internal (agent/admin), validate and get details
-      if (recipient.type === 'AGENT' || recipient.type === 'ADMIN') {
-        const user = await prisma.user.findFirst({
-          where: {
-            id: recipient.recipientId,
-            companyId
-          }
-        });
 
-        if (!user) {
-          throw new Error(`Invalid recipient ID: ${recipient.recipientId}`);
-        }
+      // // If recipient is a client, validate from leads
+      // if (recipient.type === 'CLIENT') {
+      //   const client = await prisma.lead.findFirst({
+      //     where: {
+      //       id: recipient.recipientId,
+      //       companyId
+      //     }
+      //   });
 
-        processedRecipient = {
-          ...processedRecipient,
-          recipientId: user.id,
-          email: user.email,
-          name: user.name
-        };
-      }
+      //   if (!client) {
+      //     throw new Error(`Invalid client ID: ${recipient.recipientId}`);
+      //   }
 
-      // If recipient is a client, validate from leads
-      if (recipient.type === 'CLIENT') {
-        const client = await prisma.lead.findFirst({
-          where: {
-            id: recipient.recipientId,
-            companyId
-          }
-        });
-
-        if (!client) {
-          throw new Error(`Invalid client ID: ${recipient.recipientId}`);
-        }
-
-        processedRecipient = {
-          ...processedRecipient,
-          recipientId: client.id,
-          email: client.email,
-          name: client.name
-        };
-      }
+      //   processedRecipient = {
+      //     ...processedRecipient,
+      //     recipientId: client.id,
+      //     email: client.email,
+      //     name: client.name
+      //   };
+      // }
 
       processedRecipients.push(processedRecipient);
     }

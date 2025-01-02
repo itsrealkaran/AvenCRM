@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // import { AdminDashboard } from './components/admin-dashboard';
 import { AgentDashboard } from './components/agent-dashboard';
+
 // import { SuperAdminDashboard } from './components/superadmin-dashboard';
 
 export default function DashboardPage() {
@@ -90,8 +91,8 @@ export default function DashboardPage() {
       <div className='flex items-center justify-between space-y-2'>
         <h1 className='text-3xl font-bold tracking-tight'>Welcome back, {user.name}!</h1>
       </div>
-      
-      <AgentDashboard/>
+
+      <AgentDashboard />
 
       {/* Common components shown to all roles */}
       <CommonStats />

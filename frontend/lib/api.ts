@@ -1,3 +1,4 @@
+import { Company } from '@/types';
 import axios from 'axios';
 
 export const api = axios.create({
@@ -60,3 +61,14 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Company related API calls
+export const companyAPI = {
+  getAll: () => api.get('/company'),
+  getById: (id: string) => api.get(`/company/${id}`),
+  create: (data: any) => api.post('/company', data),
+  update: (id: string, data: any) => api.put(`/company/${id}`, data),
+  delete: (id: string) => api.delete(`/company/${id}`),
+  getAdmins: () => api.get('/user/admins'),
+  // getPlans: () => api.get('/plans'),
+};

@@ -65,20 +65,15 @@ export default function EmailAccountsSection() {
 
   const connectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-      const response = await connectEmailAccount(provider);
-      if (!response.data) throw new Error('Failed to get redirect URL');
-      const { url } = response.data;
-      window.location.href = url;
+      let urlResponse = await connectEmailAccount(provider);
+      window.location.href = urlResponse;
     } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to connect email account',
         variant: 'destructive',
       });
+      console.error(error);
     }
   };
 

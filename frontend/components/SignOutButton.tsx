@@ -1,8 +1,9 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -12,7 +13,11 @@ interface SignOutButtonProps {
   className?: string;
 }
 
-export function SignOutButton({ variant = 'ghost', showIcon = true, className }: SignOutButtonProps) {
+export function SignOutButton({
+  variant = 'ghost',
+  showIcon = true,
+  className,
+}: SignOutButtonProps) {
   const router = useRouter();
   const { logout } = useAuth();
 
@@ -20,7 +25,7 @@ export function SignOutButton({ variant = 'ghost', showIcon = true, className }:
     try {
       await logout();
       // Clear all cookies
-      document.cookie.split(';').forEach(cookie => {
+      document.cookie.split(';').forEach((cookie) => {
         document.cookie = cookie
           .replace(/^ +/, '')
           .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
@@ -34,12 +39,8 @@ export function SignOutButton({ variant = 'ghost', showIcon = true, className }:
   };
 
   return (
-    <Button 
-      variant={variant} 
-      onClick={handleSignOut}
-      className={className}
-    >
-      {showIcon && <LogOut className="mr-2 h-4 w-4" />}
+    <Button variant={variant} onClick={handleSignOut} className={className}>
+      {showIcon && <LogOut className='mr-2 h-4 w-4' />}
       Sign out
     </Button>
   );

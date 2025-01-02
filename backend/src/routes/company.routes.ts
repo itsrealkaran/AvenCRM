@@ -2,29 +2,59 @@ import { Router } from "express";
 import { protect } from "../middleware/auth.js";
 import { verifyRoleAndCompany } from "../middleware/roleAuth.js";
 import { prisma } from "../lib/prisma.js";
+import { blockCompany, deleteCompany, reactivateCompany } from '../controllers/company.controller.js';
 
 const router: Router = Router();
 router.use(protect);
 
+// Get all companies (SuperAdmin only)
 router.get("/", 
   verifyRoleAndCompany(["SUPERADMIN"]),
   async (req, res) => {
     try {
-      const company = await prisma.company.findMany();
-      res.json(company);
+      const companies = await prisma.company.findMany({
+        include: {
+          
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          plan: true,
+        },
+      });
+      res.json(companies);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch company" });
+      res.status(500).json({ message: "Failed to fetch companies" });
     }
   }
 );
 
+// Get company by ID (SuperAdmin and Admin)
 router.get("/:id", 
   verifyRoleAndCompany(["SUPERADMIN", "ADMIN"]),
   async (req, res) => {
     try {
       const company = await prisma.company.findUnique({
         where: { id: req.params.id },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          plan: true,
+        },
       });
+      
+      if (!company) {
+        return res.status(404).json({ message: "Company not found" });
+      }
+      
       res.json(company);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch company" });
@@ -32,39 +62,75 @@ router.get("/:id",
   }
 );
 
+// Create new company (SuperAdmin only)
 router.post("/", 
-  verifyRoleAndCompany(["SUPERADMIN", "ADMIN"]),
+  verifyRoleAndCompany(["SUPERADMIN"]),
   async (req, res) => {
-    const data: {
-      name: string;
-      adminId: string;
-      email: string;
-      planId: string;
-      planEnd: Date;
-      address?: string;
-      phone?: string;
-      website?: string;
-    } = req.body;
+    const data = req.body;
 
     try {
       const company = await prisma.company.create({
-        data: data,
+        data: {
+          name: data.name,
+          email: data.email,
+          adminId: data.adminId,
+          planId: data.planId,
+          planEnd: new Date(data.planEnd),
+          address: data.address,
+          phone: data.phone,
+          website: data.website,
+        },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          plan: true,
+        },
       });
-      res.json(company);
+      
+      res.status(201).json(company);
     } catch (error) {
-      res.status(500).json({ message: error });
+      res.status(500).json({ message: "Failed to create company" });
     }
   }
 );
 
-router.put("/:id", 
-  verifyRoleAndCompany(["SUPERADMIN", "ADMIN"]),
+// Update company (SuperAdmin only)
+router.put("/:id",
+  verifyRoleAndCompany(["SUPERADMIN"]),
   async (req, res) => {
+    const { id } = req.params;
+    const data = req.body;
+
     try {
       const company = await prisma.company.update({
-        where: { id: req.params.id },
-        data: req.body,
+        where: { id },
+        data: {
+          name: data.name,
+          email: data.email,
+          adminId: data.adminId,
+          planId: data.planId,
+          planEnd: new Date(data.planEnd),
+          address: data.address,
+          phone: data.phone,
+          website: data.website,
+        },
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+          plan: true,
+        },
       });
+      
       res.json(company);
     } catch (error) {
       res.status(500).json({ message: "Failed to update company" });
@@ -72,18 +138,9 @@ router.put("/:id",
   }
 );
 
-router.delete("/:id", 
-  verifyRoleAndCompany(["SUPERADMIN"]),
-  async (req, res) => {
-    try {
-      const company = await prisma.company.delete({
-        where: { id: req.params.id },
-      });
-      res.json(company);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete company" });
-    }
-  }
-);
+// Block/Reactivate/Delete company routes (SuperAdmin only)
+router.post("/block/:id", verifyRoleAndCompany(["SUPERADMIN"]), blockCompany);
+router.post("/reactivate/:id", verifyRoleAndCompany(["SUPERADMIN"]), reactivateCompany);
+router.delete("/:id", verifyRoleAndCompany(["SUPERADMIN"]), deleteCompany);
 
 export default router;

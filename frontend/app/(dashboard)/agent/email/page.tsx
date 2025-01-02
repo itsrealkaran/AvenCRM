@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { connectEmailAccount, disconnectEmailAccount } from './api';
 import EmailAccountsSection from './components/EmailAccountsSection';
 import EmailCampaignSection from './components/EmailCampaignSection';
+import EmailRecipientsSection from './components/EmailRecipientsSection';
 import EmailTemplatesSection from './components/EmailTemplatesSection';
 
 function EmailPage() {
@@ -66,9 +67,10 @@ function EmailPage() {
         <h1 className='text-2xl font-bold mb-6'>Email Management</h1>
 
         <Tabs defaultValue='accounts' className='w-full' onValueChange={setActiveTab}>
-          <TabsList className='grid w-full grid-cols-3'>
+          <TabsList className='grid w-full grid-cols-4'>
             <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
             <TabsTrigger value='templates'>Templates</TabsTrigger>
+            <TabsTrigger value='recipients'>Recipients</TabsTrigger>
             <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
           </TabsList>
 
@@ -90,6 +92,17 @@ function EmailPage() {
               </CardHeader>
               <CardContent>
                 <EmailTemplatesSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='recipients'>
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Recipients</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EmailRecipientsSection />
               </CardContent>
             </Card>
           </TabsContent>

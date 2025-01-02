@@ -73,14 +73,17 @@ export default function ManageAgentsPage() {
 
   const bulkDeleteAgents = useMutation({
     mutationFn: async (agentIds: string[]) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/users?ids=${agentIds.join(',')}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users?ids=${agentIds.join(',')}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.text();
@@ -174,10 +177,7 @@ export default function ManageAgentsPage() {
           />
         </div>
 
-        <CreateAgentDialog 
-          open={isCreateDialogOpen} 
-          onOpenChange={setIsCreateDialogOpen} 
-        />
+        <CreateAgentDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
         <EditAgentDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}

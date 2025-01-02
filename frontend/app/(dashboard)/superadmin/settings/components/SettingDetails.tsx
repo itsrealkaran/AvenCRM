@@ -1,3 +1,5 @@
+import { userService } from '@/services/user.service';
+import { Gender } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -21,8 +23,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
-import { userService } from '@/services/user.service';
-import { Gender } from '@/types';
 
 const formSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -63,16 +63,16 @@ export default function SettingDetails() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
           <FormField
             control={form.control}
-            name="name"
+            name='name'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Full Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="John Doe" {...field} />
+                  <Input placeholder='John Doe' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -81,12 +81,12 @@ export default function SettingDetails() {
 
           <FormField
             control={form.control}
-            name="email"
+            name='email'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <Input type="email" placeholder="john@example.com" {...field} />
+                  <Input type='email' placeholder='john@example.com' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -95,12 +95,12 @@ export default function SettingDetails() {
 
           <FormField
             control={form.control}
-            name="phone"
+            name='phone'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Phone Number</FormLabel>
                 <FormControl>
-                  <Input type="tel" placeholder="+1234567890" {...field} />
+                  <Input type='tel' placeholder='+1234567890' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -109,14 +109,14 @@ export default function SettingDetails() {
 
           <FormField
             control={form.control}
-            name="gender"
+            name='gender'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select gender" />
+                      <SelectValue placeholder='Select gender' />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
@@ -132,12 +132,12 @@ export default function SettingDetails() {
 
           <FormField
             control={form.control}
-            name="designation"
+            name='designation'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Designation</FormLabel>
                 <FormControl>
-                  <Input placeholder="Sales Manager" {...field} />
+                  <Input placeholder='Sales Manager' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -146,12 +146,12 @@ export default function SettingDetails() {
 
           <FormField
             control={form.control}
-            name="dob"
+            name='dob'
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Date of Birth</FormLabel>
                 <FormControl>
-                  <Input type="date" {...field} />
+                  <Input type='date' {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -159,8 +159,8 @@ export default function SettingDetails() {
           />
         </div>
 
-        <div className="flex justify-end">
-          <Button type="submit">Save Changes</Button>
+        <div className='flex justify-end'>
+          <Button type='submit'>Save Changes</Button>
         </div>
       </form>
     </Form>

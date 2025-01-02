@@ -6,10 +6,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTableFilters } from '@/components/filters/data-table-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DataTableFilters } from '@/components/filters/data-table-filters';
 
 import { columns } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
@@ -41,7 +41,7 @@ interface TransactionFilters {
 
 async function getTransactions(filters: TransactionFilters = {}): Promise<TransactionsResponse> {
   const queryParams = new URLSearchParams();
-  
+
   if (filters.page) queryParams.append('page', filters.page.toString());
   if (filters.limit) queryParams.append('limit', filters.limit.toString());
   if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
@@ -90,7 +90,7 @@ export default function TransactionsPage() {
   const transactions = transactionsData?.data || [];
   const totalPages = transactionsData?.meta?.totalPages || 1;
 
-  const typeOptions = Object.values(TransactionType).map(type => ({
+  const typeOptions = Object.values(TransactionType).map((type) => ({
     label: type.charAt(0) + type.slice(1).toLowerCase(),
     value: type,
   }));
@@ -107,14 +107,17 @@ export default function TransactionsPage() {
   const deleteTransaction = useMutation({
     mutationFn: async (transactionId: string) => {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/${transactionId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/${transactionId}`,
+        {
+          method: 'DELETE',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
         const error = await response.text();
@@ -208,10 +211,7 @@ export default function TransactionsPage() {
         />
       </Card>
 
-      <CreateTransactionDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+      <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
       {selectedTransaction && (
         <EditTransactionDialog

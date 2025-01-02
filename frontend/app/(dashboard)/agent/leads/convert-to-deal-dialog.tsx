@@ -44,7 +44,9 @@ export function ConvertToDealDialog({ open, onOpenChange, lead }: ConvertToDealD
         body: JSON.stringify({
           leadId: lead.id,
           dealAmount: parseFloat(dealAmount),
-          expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate).toISOString() : undefined,
+          expectedCloseDate: expectedCloseDate
+            ? new Date(expectedCloseDate).toISOString()
+            : undefined,
         }),
       });
 
@@ -65,7 +67,7 @@ export function ConvertToDealDialog({ open, onOpenChange, lead }: ConvertToDealD
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Convert Lead to Deal</DialogTitle>
           <DialogDescription>
@@ -73,36 +75,36 @@ export function ConvertToDealDialog({ open, onOpenChange, lead }: ConvertToDealD
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="dealAmount" className="text-right">
+          <div className='grid gap-4 py-4'>
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='dealAmount' className='text-right'>
                 Deal Amount
               </Label>
               <Input
-                id="dealAmount"
-                type="number"
-                step="0.01"
+                id='dealAmount'
+                type='number'
+                step='0.01'
                 value={dealAmount}
                 onChange={(e) => setDealAmount(e.target.value)}
-                className="col-span-3"
+                className='col-span-3'
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="expectedCloseDate" className="text-right">
+            <div className='grid grid-cols-4 items-center gap-4'>
+              <Label htmlFor='expectedCloseDate' className='text-right'>
                 Expected Close Date
               </Label>
               <Input
-                id="expectedCloseDate"
-                type="date"
+                id='expectedCloseDate'
+                type='date'
                 value={expectedCloseDate}
                 onChange={(e) => setExpectedCloseDate(e.target.value)}
-                className="col-span-3"
+                className='col-span-3'
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type='submit' disabled={loading}>
               {loading ? 'Converting...' : 'Convert to Deal'}
             </Button>
           </DialogFooter>

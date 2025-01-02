@@ -82,11 +82,7 @@ export const columns: ColumnDef<User>[] = [
     header: 'Role',
     cell: ({ row }) => {
       const role: UserRole = row.getValue('role');
-      return (
-        <Badge className={`${getRoleBadgeColor(role)}`}>
-          {role.replace('_', ' ')}
-        </Badge>
-      );
+      return <Badge className={`${getRoleBadgeColor(role)}`}>{role.replace('_', ' ')}</Badge>;
     },
   },
   {

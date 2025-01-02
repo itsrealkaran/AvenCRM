@@ -13,10 +13,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { toast } from 'sonner';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import toast from 'react-hot-toast';
 import { api } from '@/lib/api';
 
 interface SuperAdminDashboardProps {
@@ -201,12 +200,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
                   contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
                   labelStyle={{ color: '#111827' }}
                 />
-                <Bar
-                  dataKey='revenue'
-                  fill='#3b82f6'
-                  radius={[4, 4, 0, 0]}
-                  barSize={40}
-                />
+                <Bar dataKey='revenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

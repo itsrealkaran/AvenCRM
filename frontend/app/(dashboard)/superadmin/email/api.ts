@@ -7,7 +7,7 @@ export const fetchEmails = async () => {
 };
 
 export const connectEmailAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
-  const response = await api.get(`/email/config?provider=${provider}`);
+  const response = await api.get(`/email/redirect-url?provider=${provider}`);
   if (!response.data) throw new Error('Failed to get redirect URL');
   const { url } = response.data;
   return url;

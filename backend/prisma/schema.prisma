@@ -153,6 +153,7 @@ model User {
   adminLoginLogs    AdminLoginLog[]
   
   tasks         Task[]
+  emailRecipients EmailRecipient[]
   
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -195,9 +196,11 @@ model Company {
   companyAuditLogs  CompanyAuditLog[]
   
   tasks        Task[]
-  
+  blocked      Boolean  @default(false) // Indicates if the company is blocked
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
+
+  EmailRecipient EmailRecipient[]
 }
 
 // Updated Team Model
@@ -484,40 +487,86 @@ model Property {
   creatorId       String?
 }
 
+// Email Template
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  subject     String
+  content     String
+  variables   String[]  @default([])
+  description String?
+  category    String?
+  isPrivate   Boolean   @default(false)
+  
+  // Relations
+  createdBy   User      @relation(fields: [createdById], references: [id])
+  createdById String
+  
+  company     Company?  @relation(fields: [companyId], references: [id])
+  companyId   String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([companyId])
+}
+
 // Email Campaign
 model EmailCampaign {
-  id                 String               @id @default(cuid())
+  id              String               @id @default(cuid())
+  title           String
+  subject         String
+  content         String
+  totalRecipients Int                  @default(0)
+  successfulSends Int                  @default(0)
+  failedSends     Int                  @default(0)
+  status          EmailCampaignStatus  @default(DRAFT)
   
-  // Campaign Details
-  title              String
-  subject            String
-  content            String @db.Text
+  // Relations
+  createdBy       User                 @relation(fields: [createdById], references: [id])
+  createdById     String
   
-  // Relationships
-  company            Company              @relation(fields: [companyId], references: [id])
-  companyId          String
-  createdBy          User                @relation(fields: [createdById], references: [id])
-  createdById        String
+  company         Company              @relation(fields: [companyId], references: [id])
+  companyId       String
   
-  // Campaign Tracking
-  status             EmailCampaignStatus  @default(DRAFT)
-  scheduledAt        DateTime?
-  sentAt             DateTime?
-  completedAt        DateTime?
+  recipients      EmailRecipient[]
   
-  // Analytics
-  totalRecipients    Int                  @default(0)
-  successfulSends    Int                    @default(0)
-  failedSends        Int                  @default(0)
+  // Scheduling
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  completedAt     DateTime?
   
-  // Recipient Management
-  recipients         Json
-  templateId         String?              // Reference to template if used
-  
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 
-  emails             Email[]
+  @@index([companyId])
+  @@index([createdById])
+  Email Email[]
+}
+
+// Email Recipient
+model EmailRecipient {
+  id          String   @id @default(cuid())
+  name        String
+  email       String
+  tags        String[]
+  notes       String?
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id])
+  campaigns   EmailCampaign[]
+  emails      Email[]
+
+  @@index([userId])
+  @@index([companyId])
+  @@unique([email, companyId])
+  
 }
 
 // Email Model
@@ -538,7 +587,7 @@ model Email {
   campaignId      String?
   
   // Recipients
-  recipients      Json
+  recipients      EmailRecipient[]
 
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
@@ -546,21 +595,6 @@ model Email {
   @@index([campaignId])
   @@index([emailAccountId])
   @@index([status])
-}
-
-model EmailTemplate {
-  id          String   @id @default(cuid())
-  name        String
-  subject     String
-  content     String   @db.Text
-  variables   String[] // Array of variable names used in template
-  company     Company  @relation(fields: [companyId], references: [id])
-  companyId   String
-  createdBy   User     @relation(fields: [createdById], references: [id])
-  description String
-  createdById String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }
 
 model PageBuilder {

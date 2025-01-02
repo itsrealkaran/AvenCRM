@@ -3,7 +3,14 @@
 import { Lead, LeadStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2, ArrowRightLeft } from 'lucide-react';
+import {
+  ArrowRightLeft,
+  ArrowUpDown,
+  CopyIcon,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';

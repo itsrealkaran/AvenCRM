@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import apiClient from '@/lib/axios';
 import { ConciergeBell } from 'lucide-react';
 import { BsGenderNeuter } from 'react-icons/bs';
 import { FaUser } from 'react-icons/fa6';
@@ -10,6 +9,8 @@ import { IoClose, IoDownloadOutline } from 'react-icons/io5';
 import { LuFilter } from 'react-icons/lu';
 import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from 'react-icons/md';
 import { VscRefresh } from 'react-icons/vsc';
+
+import apiClient from '@/lib/axios';
 
 import ManageUserList from '../company/components/ManageUserList';
 
@@ -115,7 +116,7 @@ const Page = () => {
       setUpdateOrCreate('UPDATE');
       setadd((prev) => !prev);
     }
-    setadd(!adduser)
+    setadd(!adduser);
   };
 
   return (
@@ -356,7 +357,7 @@ const Page = () => {
                       onChange={(e) => {
                         console.log('New agent role:');
                         handleInputChange(e);
-                        setAgentRole(e.target.value === "AGENT" ? "AGENT" : "TEAM_LEADER");
+                        setAgentRole(e.target.value === 'AGENT' ? 'AGENT' : 'TEAM_LEADER');
                       }}
                     >
                       <option value='AGENT'>Agent</option>
@@ -366,25 +367,23 @@ const Page = () => {
 
                   {/* Team Lead Field - Conditional */}
                   <div>
-                  {agentRole === 'AGENT' && (
-                    
-                    <div className='group relative'>
-                      <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
-                        <FaUser className='h-4 w-4' />
-                        Team Lead
-                      </label>
-                      <select
-                        className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
-                        name='teamLead'
-                        value={formData.teamLead}
-                        onChange={handleInputChange}
+                    {agentRole === 'AGENT' && (
+                      <div className='group relative'>
+                        <label className='mb-1 flex items-center gap-2 text-sm font-medium text-gray-700'>
+                          <FaUser className='h-4 w-4' />
+                          Team Lead
+                        </label>
+                        <select
+                          className='w-full rounded-lg border border-gray-300 px-4 py-2.5 outline-none transition-all focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20'
+                          name='teamLead'
+                          value={formData.teamLead}
+                          onChange={handleInputChange}
                         >
-                        <option value='Lead 1'>Lead 1</option>
-                        <option value='Lead 2'>Lead 2</option>
-                      </select>
-                    </div>
-                  )}
-                  
+                          <option value='Lead 1'>Lead 1</option>
+                          <option value='Lead 2'>Lead 2</option>
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
 
