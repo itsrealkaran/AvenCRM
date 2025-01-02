@@ -6,16 +6,30 @@ import { usePathname } from 'next/navigation';
 import { UserRole } from '@/types/enums';
 import { User } from '@/types/user';
 import axios from 'axios';
-import { Building, Building2, Calendar, CheckSquare, FileText, HandshakeIcon, LayoutDashboard, LineChart, Mail, MenuIcon, MonitorIcon, Settings, Store, Users, Wallet, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Building,
+  Building2,
+  Calendar,
+  CheckSquare,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  HandshakeIcon,
+  LayoutDashboard,
+  LineChart,
+  Mail,
+  MenuIcon,
+  MonitorIcon,
+  Settings,
+  Store,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
 import { TbSettings2 } from 'react-icons/tb';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
+
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface MenuItem {
   heading: string;
@@ -200,18 +214,23 @@ const Sidebar = () => {
   };
 
   return (
-    <div 
+    <div
       className={`h-screen z-50 sticky top-0 select-none bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
         ${isMobile ? 'absolute' : 'relative'}`}
     >
       {/* Logo and Brand */}
-      <div className={`w-full flex items-center gap-[5px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}>
+      <div
+        className={`w-full flex items-center gap-[5px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}
+      >
         <div className='text-[2rem]'>
-          <TbSettings2 color='#5932ea'/>
+          <TbSettings2 color='#5932ea' />
         </div>
         {!isCollapsed && (
-          <Link href="/dashboard" className='text-[1.24rem] text-[#5932ea] flex gap-[2px] items-end font-bold'>
+          <Link
+            href='/dashboard'
+            className='text-[1.24rem] text-[#5932ea] flex gap-[2px] items-end font-bold'
+          >
             <h1>AvenCRM</h1>
             <span className='text-[10px] opacity-70 pb-[3px]'>v.01</span>
           </Link>
@@ -233,12 +252,19 @@ const Sidebar = () => {
                     <item.icon className='h-5 w-5' />
                     {!isCollapsed && <span>{item.heading}</span>}
                   </div>
-                  {!isCollapsed && <div><FaAngleRight/></div>}
+                  {!isCollapsed && (
+                    <div>
+                      <FaAngleRight />
+                    </div>
+                  )}
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side={isCollapsed ? 'right' : 'top'} className="bg-white text-gray-700 shadow-lg border border-gray-100 px-3 py-2">
+              <TooltipContent
+                side={isCollapsed ? 'right' : 'top'}
+                className='bg-white text-gray-700 shadow-lg border border-gray-100 px-3 py-2'
+              >
                 <p>{item.heading}</p>
-                {isCollapsed && <p className="text-xs text-gray-500">{item.description}</p>}
+                {isCollapsed && <p className='text-xs text-gray-500'>{item.description}</p>}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -250,16 +276,23 @@ const Sidebar = () => {
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
-              variant="outline"
-              size="sm"
+              variant='outline'
+              size='sm'
               className={`absolute bottom-4 transition-all duration-300 ease-in-out
                 ${isCollapsed ? 'right-1/2 transform translate-x-1/2' : 'right-2'}`}
               onClick={toggleSidebar}
             >
-              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {isCollapsed ? (
+                <ChevronRight className='h-4 w-4' />
+              ) : (
+                <ChevronLeft className='h-4 w-4' />
+              )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent side="right" className="bg-white text-gray-700 shadow-lg border border-gray-100 px-3 py-2">
+          <TooltipContent
+            side='right'
+            className='bg-white text-gray-700 shadow-lg border border-gray-100 px-3 py-2'
+          >
             <p>{isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}</p>
           </TooltipContent>
         </Tooltip>
@@ -269,4 +302,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-

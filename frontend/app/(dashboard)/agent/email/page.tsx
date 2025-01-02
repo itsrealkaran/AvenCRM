@@ -9,8 +9,8 @@ import { useToast } from '@/hooks/use-toast';
 import { connectEmailAccount, disconnectEmailAccount } from './api';
 import EmailAccountsSection from './components/EmailAccountsSection';
 import EmailCampaignSection from './components/EmailCampaignSection';
-import EmailTemplatesSection from './components/EmailTemplatesSection';
 import EmailRecipientsSection from './components/EmailRecipientsSection';
+import EmailTemplatesSection from './components/EmailTemplatesSection';
 
 function EmailPage() {
   const { toast } = useToast();

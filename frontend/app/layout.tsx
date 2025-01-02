@@ -4,9 +4,10 @@ import localFont from 'next/font/local';
 import 'react-datetime/css/react-datetime.css';
 import './globals.css';
 
+import { AuthProvider } from '@/contexts/AuthContext';
+
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
-import { AuthProvider } from '@/contexts/AuthContext';
 
 import { Providers } from './providers';
 
@@ -34,9 +35,9 @@ export default function RootLayout({
   return (
     <html lang='en'>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
-            {children}
-            <Sonner />
-            <Toaster />
+        {children}
+        <Sonner />
+        <Toaster />
       </body>
     </html>
   );

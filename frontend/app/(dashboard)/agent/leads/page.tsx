@@ -11,8 +11,8 @@ import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 import { columns } from './columns';
-import { CreateLeadDialog } from './create-lead-dialog';
 import { ConvertToDealDialog } from './convert-to-deal-dialog';
+import { CreateLeadDialog } from './create-lead-dialog';
 import { DataTable } from './data-table';
 import { EditLeadDialog } from './edit-lead-dialog';
 

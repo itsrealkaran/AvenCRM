@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { loadStripe } from '@stripe/stripe-js';
-import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useToast } from '@/hooks/use-toast';
 
 interface StripeModalProps {
   isOpen: boolean;
@@ -25,20 +26,23 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
   const handlePayment = async () => {
     try {
       setLoading(true);
-      
+
       // Call our backend API to create a checkout session
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/stripe/create-checkout-session`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include', // Important for sending cookies
-        body: JSON.stringify({
-          planId,
-          planName,
-          price,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/stripe/create-checkout-session`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include', // Important for sending cookies
+          body: JSON.stringify({
+            planId,
+            planName,
+            price,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -75,28 +79,26 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
           <DialogTitle>Subscribe to {planName}</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <h3 className="font-medium">Plan Details</h3>
-            <p className="text-sm text-gray-500">
-              You have selected the {planName} plan
-            </p>
-            <p className="text-2xl font-bold">
-              ${price.toFixed(2)} <span className="text-sm font-normal">/month</span>
+        <div className='grid gap-4 py-4'>
+          <div className='space-y-2'>
+            <h3 className='font-medium'>Plan Details</h3>
+            <p className='text-sm text-gray-500'>You have selected the {planName} plan</p>
+            <p className='text-2xl font-bold'>
+              ${price.toFixed(2)} <span className='text-sm font-normal'>/month</span>
             </p>
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose}>
+          <div className='flex justify-end space-x-2'>
+            <Button variant='outline' onClick={onClose}>
               Cancel
             </Button>
             <Button onClick={handlePayment} disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Processing...
                 </>
               ) : (

@@ -10,8 +10,9 @@ import { LuFilter } from 'react-icons/lu';
 import { MdEmail, MdOutlineDriveFileRenameOutline, MdOutlineLocalPhone } from 'react-icons/md';
 import { VscRefresh } from 'react-icons/vsc';
 
-import ManageUserList from '../company/components/ManageUserList';
 import { api } from '@/lib/api';
+
+import ManageUserList from '../company/components/ManageUserList';
 
 interface FormData {
   name: string;
@@ -30,7 +31,6 @@ const Page = () => {
   const [openDeletePopup, setOpenDeletePopup] = useState(false);
   const [agentRole, setAgentRole] = useState<'AGENT' | 'TEAM_LEADER'>('AGENT');
 
-
   const [agent, setagent] = useState('false');
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -47,7 +47,7 @@ const Page = () => {
       ...prev,
       [name]: value,
     }));
-    if(name === 'role'){
+    if (name === 'role') {
       setAgentRole(value as 'AGENT' | 'TEAM_LEADER');
     }
   };

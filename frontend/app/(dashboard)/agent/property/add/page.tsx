@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Property } from '@/types';
 import axios from 'axios';
 import { Maximize2, Plus, Printer, Share2 } from 'lucide-react';
+
 import { api } from '@/lib/api';
 
 const Page = () => {
@@ -148,7 +149,7 @@ const Page = () => {
       // );
 
       const response = await api.post('/property/upload-image', uploadFormData, {
-        headers: {  
+        headers: {
           'Content-Type': 'multipart/form-data',
         },
       });

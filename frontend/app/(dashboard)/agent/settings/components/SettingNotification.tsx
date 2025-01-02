@@ -1,12 +1,12 @@
 'use client';
 
+import { userService } from '@/services/user.service';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Switch } from '@/components/ui/switch';
-import { userService } from '@/services/user.service';
 
 interface NotificationPreferences {
   emailNotifications: boolean;
@@ -38,12 +38,12 @@ export default function SettingNotification() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="text-base font-medium">Email Notifications</h3>
-              <p className="text-sm text-muted-foreground">
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+        <div className='space-y-4'>
+          <div className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <h3 className='text-base font-medium'>Email Notifications</h3>
+              <p className='text-sm text-muted-foreground'>
                 Receive email notifications for important updates
               </p>
             </div>
@@ -53,10 +53,10 @@ export default function SettingNotification() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="text-base font-medium">Lead Updates</h3>
-              <p className="text-sm text-muted-foreground">
+          <div className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <h3 className='text-base font-medium'>Lead Updates</h3>
+              <p className='text-sm text-muted-foreground'>
                 Get notified about new leads and lead status changes
               </p>
             </div>
@@ -66,10 +66,10 @@ export default function SettingNotification() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="text-base font-medium">Deal Updates</h3>
-              <p className="text-sm text-muted-foreground">
+          <div className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <h3 className='text-base font-medium'>Deal Updates</h3>
+              <p className='text-sm text-muted-foreground'>
                 Receive notifications about deal progress and closures
               </p>
             </div>
@@ -79,10 +79,10 @@ export default function SettingNotification() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="text-base font-medium">Team Updates</h3>
-              <p className="text-sm text-muted-foreground">
+          <div className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <h3 className='text-base font-medium'>Team Updates</h3>
+              <p className='text-sm text-muted-foreground'>
                 Stay informed about team activities and changes
               </p>
             </div>
@@ -92,10 +92,10 @@ export default function SettingNotification() {
             />
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <h3 className="text-base font-medium">System Updates</h3>
-              <p className="text-sm text-muted-foreground">
+          <div className='flex items-center justify-between'>
+            <div className='space-y-0.5'>
+              <h3 className='text-base font-medium'>System Updates</h3>
+              <p className='text-sm text-muted-foreground'>
                 Get notified about system maintenance and updates
               </p>
             </div>
@@ -106,8 +106,8 @@ export default function SettingNotification() {
           </div>
         </div>
 
-        <div className="flex justify-end">
-          <Button type="submit">Save Preferences</Button>
+        <div className='flex justify-end'>
+          <Button type='submit'>Save Preferences</Button>
         </div>
       </form>
     </Form>

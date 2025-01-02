@@ -1,38 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { EmailRecipient } from '@/types/email';
 import {
   ColumnDef,
   ColumnFiltersState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  SortingState,
   useReactTable,
+  VisibilityState,
 } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -42,9 +27,24 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { api } from '@/lib/api';
-import { EmailRecipient } from '@/types/email';
 import { useToast } from '@/hooks/use-toast';
 
 export function EmailRecipientsSection() {
@@ -71,14 +71,14 @@ export function EmailRecipientsSection() {
         <Checkbox
           checked={table.getIsAllPageRowsSelected()}
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
+          aria-label='Select all'
         />
       ),
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
           onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
+          aria-label='Select row'
         />
       ),
       enableSorting: false,
@@ -89,11 +89,11 @@ export function EmailRecipientsSection() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant='ghost'
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className='ml-2 h-4 w-4' />
           </Button>
         );
       },
@@ -104,11 +104,11 @@ export function EmailRecipientsSection() {
       header: ({ column }) => {
         return (
           <Button
-            variant="ghost"
+            variant='ghost'
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
           >
             Email
-            <ArrowUpDown className="ml-2 h-4 w-4" />
+            <ArrowUpDown className='ml-2 h-4 w-4' />
           </Button>
         );
       },
@@ -118,11 +118,11 @@ export function EmailRecipientsSection() {
       accessorKey: 'tags',
       header: 'Tags',
       cell: ({ row }) => (
-        <div className="flex gap-1">
+        <div className='flex gap-1'>
           {(row.getValue('tags') as string[]).map((tag, index) => (
             <span
               key={index}
-              className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded"
+              className='bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded'
             >
               {tag}
             </span>
@@ -133,9 +133,7 @@ export function EmailRecipientsSection() {
     {
       accessorKey: 'isPrivate',
       header: 'Private',
-      cell: ({ row }) => (
-        <div>{row.getValue('isPrivate') ? 'Private' : 'Public'}</div>
-      ),
+      cell: ({ row }) => <div>{row.getValue('isPrivate') ? 'Private' : 'Public'}</div>,
     },
     {
       id: 'actions',
@@ -145,21 +143,17 @@ export function EmailRecipientsSection() {
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal className="h-4 w-4" />
+              <Button variant='ghost' className='h-8 w-8 p-0'>
+                <span className='sr-only'>Open menu</span>
+                <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align='end'>
               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => navigator.clipboard.writeText(recipient.email)}
-              >
+              <DropdownMenuItem onClick={() => navigator.clipboard.writeText(recipient.email)}>
                 Copy email
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDelete(recipient.id)}>
-                Delete
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDelete(recipient.id)}>Delete</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         );
@@ -255,90 +249,78 @@ export function EmailRecipientsSection() {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className='space-y-4'>
+      <div className='flex items-center justify-between'>
         <Input
-          placeholder="Filter emails..."
+          placeholder='Filter emails...'
           value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('email')?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm"
+          onChange={(event) => table.getColumn('email')?.setFilterValue(event.target.value)}
+          className='max-w-sm'
         />
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
-              <Plus className="mr-2 h-4 w-4" /> Add Recipient
+              <Plus className='mr-2 h-4 w-4' /> Add Recipient
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Add New Recipient</DialogTitle>
-              <DialogDescription>
-                Add a new recipient to your email list.
-              </DialogDescription>
+              <DialogDescription>Add a new recipient to your email list.</DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
+            <div className='grid gap-4 py-4'>
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='name' className='text-right'>
                   Name
                 </Label>
                 <Input
-                  id="name"
+                  id='name'
                   value={newRecipient.name}
-                  onChange={(e) =>
-                    setNewRecipient({ ...newRecipient, name: e.target.value })
-                  }
-                  className="col-span-3"
+                  onChange={(e) => setNewRecipient({ ...newRecipient, name: e.target.value })}
+                  className='col-span-3'
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="email" className="text-right">
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='email' className='text-right'>
                   Email
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
+                  id='email'
+                  type='email'
                   value={newRecipient.email}
-                  onChange={(e) =>
-                    setNewRecipient({ ...newRecipient, email: e.target.value })
-                  }
-                  className="col-span-3"
+                  onChange={(e) => setNewRecipient({ ...newRecipient, email: e.target.value })}
+                  className='col-span-3'
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="tags" className="text-right">
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='tags' className='text-right'>
                   Tags
                 </Label>
                 <Input
-                  id="tags"
-                  placeholder="tag1, tag2, tag3"
+                  id='tags'
+                  placeholder='tag1, tag2, tag3'
                   value={newRecipient.tags}
-                  onChange={(e) =>
-                    setNewRecipient({ ...newRecipient, tags: e.target.value })
-                  }
-                  className="col-span-3"
+                  onChange={(e) => setNewRecipient({ ...newRecipient, tags: e.target.value })}
+                  className='col-span-3'
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="notes" className="text-right">
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='notes' className='text-right'>
                   Notes
                 </Label>
                 <Input
-                  id="notes"
+                  id='notes'
                   value={newRecipient.notes}
-                  onChange={(e) =>
-                    setNewRecipient({ ...newRecipient, notes: e.target.value })
-                  }
-                  className="col-span-3"
+                  onChange={(e) => setNewRecipient({ ...newRecipient, notes: e.target.value })}
+                  className='col-span-3'
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="isPrivate" className="text-right">
+              <div className='grid grid-cols-4 items-center gap-4'>
+                <Label htmlFor='isPrivate' className='text-right'>
                   Private
                 </Label>
                 <Checkbox
-                  id="isPrivate"
+                  id='isPrivate'
                   checked={newRecipient.isPrivate}
                   onCheckedChange={(checked) =>
                     setNewRecipient({ ...newRecipient, isPrivate: !!checked })
@@ -352,7 +334,7 @@ export function EmailRecipientsSection() {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="rounded-md border">
+      <div className='rounded-md border'>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -362,10 +344,7 @@ export function EmailRecipientsSection() {
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                        : flexRender(header.column.columnDef.header, header.getContext())}
                     </TableHead>
                   );
                 })}
@@ -375,35 +354,23 @@ export function EmailRecipientsSection() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
                   Loading...
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
                   No recipients found.
                 </TableCell>
               </TableRow>
@@ -411,18 +378,18 @@ export function EmailRecipientsSection() {
           </TableBody>
         </Table>
       </div>
-      <div className="flex items-center justify-end space-x-2">
+      <div className='flex items-center justify-end space-x-2'>
         <Button
-          variant="outline"
-          size="sm"
+          variant='outline'
+          size='sm'
           onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
         >
           Previous
         </Button>
         <Button
-          variant="outline"
-          size="sm"
+          variant='outline'
+          size='sm'
           onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
         >

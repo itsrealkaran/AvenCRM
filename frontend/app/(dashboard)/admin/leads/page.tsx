@@ -6,10 +6,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTableFilters } from '@/components/filters/data-table-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DataTableFilters } from '@/components/filters/data-table-filters';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -40,7 +40,7 @@ interface LeadFilters {
 
 async function getLeads(filters: LeadFilters = {}): Promise<LeadsResponse> {
   const queryParams = new URLSearchParams();
-  
+
   if (filters.page) queryParams.append('page', filters.page.toString());
   if (filters.limit) queryParams.append('limit', filters.limit.toString());
   if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
@@ -88,7 +88,7 @@ export default function LeadsPage() {
   const leads = leadsData?.data || [];
   const totalPages = leadsData?.meta?.totalPages || 1;
 
-  const statusOptions = Object.values(LeadStatus).map(status => ({
+  const statusOptions = Object.values(LeadStatus).map((status) => ({
     label: status.charAt(0) + status.slice(1).toLowerCase(),
     value: status,
   }));
@@ -205,10 +205,7 @@ export default function LeadsPage() {
         />
       </Card>
 
-      <CreateLeadDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+      <CreateLeadDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
       {selectedLead && (
         <EditLeadDialog

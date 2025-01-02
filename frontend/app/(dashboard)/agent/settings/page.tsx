@@ -1,19 +1,20 @@
 'use client';
 
 import React from 'react';
-import { Bell, Camera, Lock, LogOut, UserCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Bell, Camera, Lock, LogOut, UserCircle } from 'lucide-react';
 
-import SettingNotification from './components/SettingNotification';
-import SettingPassword from './components/SettingPassword';
-import SettingDetails from './components/SettingDetails';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+
+import SettingDetails from './components/SettingDetails';
+import SettingNotification from './components/SettingNotification';
+import SettingPassword from './components/SettingPassword';
 
 const Page = () => {
   const { user, logout } = useAuth();
@@ -36,11 +37,7 @@ const Page = () => {
       {/* Header Section */}
       <div className='relative h-[200px] bg-gradient-to-r from-blue-600 to-blue-800'>
         <div className='absolute top-4 right-4'>
-          <Button 
-            variant='secondary' 
-            className='flex items-center gap-2'
-            onClick={handleSignOut}
-          >
+          <Button variant='secondary' className='flex items-center gap-2' onClick={handleSignOut}>
             <LogOut className='w-4 h-4' />
             Sign Out
           </Button>

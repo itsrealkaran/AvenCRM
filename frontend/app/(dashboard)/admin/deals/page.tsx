@@ -6,10 +6,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTableFilters } from '@/components/filters/data-table-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DataTableFilters } from '@/components/filters/data-table-filters';
 
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
@@ -41,7 +41,7 @@ interface DealFilters {
 
 async function getDeals(filters: DealFilters = {}): Promise<DealsResponse> {
   const queryParams = new URLSearchParams();
-  
+
   if (filters.page) queryParams.append('page', filters.page.toString());
   if (filters.limit) queryParams.append('limit', filters.limit.toString());
   if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
@@ -90,7 +90,7 @@ export default function DealsPage() {
   const deals = dealsData?.data || [];
   const totalPages = dealsData?.meta?.totalPages || 1;
 
-  const statusOptions = Object.values(DealStatus).map(status => ({
+  const statusOptions = Object.values(DealStatus).map((status) => ({
     label: status.charAt(0) + status.slice(1).toLowerCase(),
     value: status,
   }));
@@ -208,10 +208,7 @@ export default function DealsPage() {
         />
       </Card>
 
-      <CreateDealDialog
-        open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
-      />
+      <CreateDealDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
       {selectedDeal && (
         <EditDealDialog
