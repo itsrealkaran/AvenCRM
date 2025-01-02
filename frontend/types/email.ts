@@ -1,24 +1,50 @@
 import { EmailAccountStatus, EmailCampaignStatus, EmailProvider, EmailStatus } from './enums';
 
+export interface EmailTemplate {
+  id: string;
+  name: string;
+  subject: string;
+  content: string;
+  isPrivate: boolean;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  companyId: string;
+}
+
+export interface EmailRecipient {
+  id: string;
+  name: string;
+  email: string;
+  tags: string[];
+  notes?: string;
+  isPrivate: boolean;
+  createdAt: string;
+  updatedAt: string;
+  userId: string;
+  companyId: string;
+}
+
 export interface EmailAccount {
   id: string;
   email: string;
+  provider: EmailProvider;
   accessToken: string;
   refreshToken: string;
   expiresAt: Date;
   idToken?: string;
   isActive: boolean;
-  provider: EmailProvider;
   status: EmailAccountStatus;
   lastError: string;
   userId: string;
+  companyId: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
 export interface EmailCampaign {
   id: string;
-  title: string;
+  name: string;
   subject: string;
   content: string;
   companyId: string;
@@ -32,6 +58,8 @@ export interface EmailCampaign {
   failedSends: number;
   recipients: Record<string, any>;
   templateId?: string;
+  userId: string;
+  companyId: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -47,19 +75,6 @@ export interface Email {
   emailAccountId: string;
   campaignId?: string;
   recipients: Record<string, any>;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-export interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  content: string;
-  variables: string[];
-  companyId: string;
-  createdById: string;
-  description: string;
   createdAt: Date;
   updatedAt: Date;
 }

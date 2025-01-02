@@ -35,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Textarea } from '@/components/ui/textarea';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -94,11 +95,8 @@ export default function EmailCampaignSection() {
 
   const fetchCampaigns = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch campaigns');
-      const data = await response.json();
+      const response = await api.get('/email/campaigns');
+      const data = await response.data;
       console.log(data);
       setCampaigns(data.campaigns);
       console.log(data.campaigns);

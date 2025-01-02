@@ -6,6 +6,7 @@ import { Check, Loader2, Mail, XCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import api from '@/lib/axios';
 import { useToast } from '@/hooks/use-toast';
 
 function GoogleAuthCallbackContent() {
@@ -23,28 +24,8 @@ function GoogleAuthCallbackContent() {
           throw new Error('Authorization code not found');
         }
 
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          throw new Error('Access token not found');
-        }
-
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/accounts/connect`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ code, provider: 'GMAIL' }),
-          }
-        );
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || 'Failed to connect account');
-        }
-
+        const response = await api.post('/email/connect', { code, provider: 'GMAIL' }); // Use api for POST request
+        if (!response.data) throw new Error('Failed to connect account');
         setStatus('success');
         toast({
           title: 'Success',

@@ -22,6 +22,12 @@ router.get('/templates/:templateId', (req: Request, res: Response) => emailContr
 router.put('/templates/:templateId', (req: Request, res: Response) => emailController.updateTemplate(req, res));
 router.delete('/templates/:templateId', (req: Request, res: Response) => emailController.deleteTemplate(req, res));
 
+// Email recipients management
+router.get('/recipients', (req: Request, res: Response) => emailController.getRecipients(req, res));
+router.post('/recipients', (req: Request, res: Response) => emailController.createRecipient(req, res));
+router.put('/recipients/:id', (req: Request, res: Response) => emailController.updateRecipient(req, res));
+router.delete('/recipients/:id', (req: Request, res: Response) => emailController.deleteRecipient(req, res));
+
 // Email campaign management
 router.post('/campaigns', (req: Request, res: Response) => emailController.sendBulkEmail(req, res));
 router.get('/campaigns', (req: Request, res: Response) => emailController.getEmailCampaigns(req, res));

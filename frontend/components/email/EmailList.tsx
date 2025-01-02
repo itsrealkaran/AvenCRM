@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { api } from '@/lib/api';
 
 interface Email {
   id: string;
@@ -33,21 +34,21 @@ export function EmailList({ type }: EmailListProps) {
   const [emails, setEmails] = React.useState<Email[]>([]);
   const [loading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    fetchEmails();
-  }, [type]);
-
-  const fetchEmails = async () => {
+  const fetchEmails = useCallback(async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/${type}`);
-      const data = await response.json();
+      const response = await api.get(`/email/${type}`);
+      const data = await response.data;
       setEmails(data);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching emails:', error);
-    } finally {
       setLoading(false);
     }
-  };
+  }, [type]);
+
+  React.useEffect(() => {
+    fetchEmails();
+  }, [fetchEmails, type]);
 
   if (loading) {
     return <div>Loading...</div>;
