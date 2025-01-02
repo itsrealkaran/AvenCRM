@@ -1,11 +1,12 @@
 'use client';
 
+import React, { useState } from 'react';
+import { CiBellOn } from "react-icons/ci";
+import { FaQuestion} from "react-icons/fa6";
+import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { authApi } from '@/services/api';
-import { LogOut, Search, Settings, User } from 'lucide-react';
-import { toast } from 'sonner';
-
-import { Button } from '@/components/ui/button';
+import { Search, Settings, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,14 +14,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/hooks/useAuth';
 import { SignOutButton } from '@/components/SignOutButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { IoCaretDown, IoCaretUp } from 'react-icons/io5';
+import { QuestionMarkIcon } from '@radix-ui/react-icons';
 
 export default function Topbar() {
   const router = useRouter();
   const { user } = useAuth();
-
+  const [isDropdownActive, setIsDropdownActive] = useState(false);
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -30,39 +32,49 @@ export default function Topbar() {
   };
 
   return (
-    <div className='h-16 border-b bg-white/70 z-40'>
-      <div className='flex h-full items-center px-6 gap-4'>
-        <div className='flex flex-1 items-center gap-4 md:gap-6'>
-          <div className='relative flex-1 max-w-md'>
-            <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input type='search' placeholder='Search dashboard...' className='pl-8 bg-background' />
-          </div>
+    <div className='w-full px-4 py-4 shadow-lg shadow-black/10 z-40 flex justify-between bg-white  items-center'>
+      <div className='relative w-[20%]'>
+        <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+        <Input type='search' placeholder='Search dashboard...' className='pl-8 bg-background' />
+      </div>
+
+      <div className='flex items-center gap-4 cursor-pointer'>
+        <div className='w-7 h-7 flex opacity-50 items-center justify-center text-[1.2rem] rounded-[8px] border-black/70 border-[1px]'>
+          <CiBellOn/>
         </div>
-        <DropdownMenu>
+        <div className='w-7 h-7 flex items-center opacity-50 justify-center text-[1.1rem] rounded-[8px] border-black/70 border-[1px]'>
+          <QuestionMarkIcon/>
+        </div>
+
+        <div className='flex items-center gap-[6px] mr-4'>
+          <DropdownMenu onOpenChange={(open) => setIsDropdownActive(open)}>
           <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-9 px-2 gap-2 rounded-full'>
-              <Avatar className='h-8 w-8'>
-                <AvatarImage src={user?.image} />
-                <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
-              </Avatar>
-              <div className='flex flex-col items-start'>
-                <span className='text-sm font-medium'>{user?.name}</span>
-                <span className='text-xs text-muted-foreground capitalize'>{user?.role?.toLowerCase()}</span>
+            <div className='flex items-center gap-2 cursor-pointer'>
+              <div className='w-[37px] h-[37px] rounded-full overflow-hidden ml-4 cursor-pointer'>
+                <Avatar>
+                  <AvatarImage src={user?.image} />
+                  <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
+                </Avatar>
               </div>
-            </Button>
+              <div className='leading-[0.9rem] cursor-pointer'>
+                <h1 className='font-[600] text-[0.8rem] opacity-90 cursor-pointer'>{user?.name}</h1>
+                <p className='text-[0.65rem] opacity-70 cursor-pointer'>{user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase() : ''}</p>
+              </div>
+              <div className='pr-2 cursor-pointer'>
+                {isDropdownActive ? <IoCaretUp color='#888'/> : <IoCaretDown color='#888'/>}
+              </div>
+            </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-56'>
-            <DropdownMenuItem onClick={() => router.push('/profile')}>
-              <User className='mr-2 h-4 w-4' />
-              Profile
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => router.push('/settings')}>
-              <Settings className='mr-2 h-4 w-4' />
+
+          <DropdownMenuContent align='end' className='w-40'>
+            <DropdownMenuItem onClick={() => router.push(`/${user?.role.toLowerCase()}/settings`)}>
+              <Settings className='m-2 h-4 w-4' />
               Settings
             </DropdownMenuItem>
             <SignOutButton variant="ghost" className="w-full justify-start" />
           </DropdownMenuContent>
         </DropdownMenu>
+        </div>
       </div>
     </div>
   );

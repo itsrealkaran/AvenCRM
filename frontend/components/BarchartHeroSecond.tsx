@@ -22,14 +22,6 @@ const chartdata = [
     'Conversion to Won ': 281,
   },
   {
-    name: 'Negotiation',
-    'Conversion to Won ': 251,
-  },
-  {
-    name: 'Proposal',
-    'Conversion to Won ': 232,
-  },
-  {
     name: 'Won',
     'Conversion to Won ': 98,
   },
