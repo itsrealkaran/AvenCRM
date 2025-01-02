@@ -7,11 +7,14 @@ export interface Company {
   email: string;
   size?: number;
   planId: string;
+  plan: Plan;
+  admin: User;
   planStart: Date;
   planEnd: Date;
   address?: string;
   phone?: string;
   website?: string;
+  blocked?: boolean;
   adminId: string;
   createdAt: Date;
   updatedAt?: Date;
