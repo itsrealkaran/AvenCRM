@@ -58,14 +58,15 @@ export const usersApi = {
       if (!file.type.startsWith('image/')) {
         throw new Error('Only image files are allowed');
       }
-      
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+
+      if (file.size > 5 * 1024 * 1024) {
+        // 5MB limit
         throw new Error('File size must be less than 5MB');
       }
 
       const formData = new FormData();
       formData.append('avatar', file);
-      
+
       const response = await api.put('/user/avatar', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',

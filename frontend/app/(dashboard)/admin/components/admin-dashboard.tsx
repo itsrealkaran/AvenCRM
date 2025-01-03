@@ -122,7 +122,7 @@ export function AdminDashboard() {
       {/* Header Section */}
       <div className='flex flex-col space-y-2'>
         <h1 className='text-3xl font-bold text-gray-900'>Dashboard Overview</h1>
-        <p className='text-gray-500'>Monitor your company's performance and metrics</p>
+        <p className='text-gray-500'>Monitor your company&apos;s performance and metrics</p>
       </div>
 
       {/* Key Metrics Cards */}

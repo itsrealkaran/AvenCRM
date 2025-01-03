@@ -11,8 +11,7 @@ const badgeVariants = cva(
         default: 'bg-primary/10 text-primary shadow rounded-full',
         secondary:
           'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        destructive:
-          'bg-destructive/20 text-destructive shadow rounded-full',
+        destructive: 'bg-destructive/20 text-destructive shadow rounded-full',
         outline: 'text-foreground',
         warning: 'bg-yellow-300 text-yellow-900 shadow rounded-full',
         success: 'bg-success/20 text-success shadow rounded-full',

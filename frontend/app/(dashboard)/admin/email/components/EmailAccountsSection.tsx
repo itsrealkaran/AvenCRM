@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { EmailAccountStatus } from '@/types';
 import { EmailAccount } from '@/types/email';
 import { Loader2, Mail, Trash2 } from 'lucide-react';
 
@@ -25,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { EmailAccountStatus } from '@/types';
 
 interface EmailAccountsSectionProps {
   accounts: EmailAccount[];
@@ -84,13 +84,15 @@ export default function EmailAccountsSection({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={
-                    account.status === EmailAccountStatus.ACTIVE
-                      ? 'default'
-                      : account.status === EmailAccountStatus.NEEDS_REAUTH
-                      ? 'warning'
-                      : 'destructive'
-                  }>
+                  <Badge
+                    variant={
+                      account.status === EmailAccountStatus.ACTIVE
+                        ? 'default'
+                        : account.status === EmailAccountStatus.NEEDS_REAUTH
+                          ? 'warning'
+                          : 'destructive'
+                    }
+                  >
                     {account.status ?? EmailAccountStatus.NEEDS_REAUTH}
                   </Badge>
                 </TableCell>

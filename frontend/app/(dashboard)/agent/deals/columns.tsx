@@ -25,7 +25,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-type Status = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'PROPOSAL' | 'NEGOTIATION' | 'WON' | 'LOST' | 'ACTIVE';
+type Status =
+  | 'NEW'
+  | 'CONTACTED'
+  | 'QUALIFIED'
+  | 'PROPOSAL'
+  | 'NEGOTIATION'
+  | 'WON'
+  | 'LOST'
+  | 'ACTIVE';
 
 const colors: Record<Status, string> = {
   NEW: 'bg-blue-100 text-blue-800',

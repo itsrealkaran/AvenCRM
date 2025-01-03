@@ -52,7 +52,7 @@ export function ProfileForm() {
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      gender: user?.gender as Gender || undefined,
+      gender: (user?.gender as Gender) || undefined,
       dob: user?.dob ? new Date(user.dob) : undefined,
       designation: user?.designation || '',
     },
@@ -225,7 +225,11 @@ export function ProfileForm() {
           />
         </div>
 
-        <Button type='submit' className='w-full md:w-auto' disabled={updateProfileMutation.isPending}>
+        <Button
+          type='submit'
+          className='w-full md:w-auto'
+          disabled={updateProfileMutation.isPending}
+        >
           {updateProfileMutation.isPending ? 'Updating...' : 'Update Profile'}
         </Button>
       </form>
