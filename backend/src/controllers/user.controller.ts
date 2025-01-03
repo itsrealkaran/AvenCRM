@@ -183,6 +183,7 @@ export const userController = {
           role: true,
           designation: true,
           isActive: true,
+          dob: true,
           company: {
             select: {
               id: true,

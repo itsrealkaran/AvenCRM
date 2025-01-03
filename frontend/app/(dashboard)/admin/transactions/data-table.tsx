@@ -81,7 +81,7 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div>
+    <div className='w-full overflow-x-scroll'>
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input

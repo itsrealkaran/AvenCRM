@@ -100,12 +100,12 @@ export const columns: ColumnDef<Transaction>[] = [
     accessorKey: 'isVerified',
     header: 'Status',
     cell: ({ row, table }) => {
-      const isVerified = row.getValue('isVerified');
+      const isVerified: boolean = row.getValue('isVerified') as boolean; // Explicitly type as boolean
       const transaction = row.original;
       const meta = table.options.meta as {
         onVerify?: (transactionId: string, isVerified: boolean) => void;
       };
-
+  
       return (
         <div className='flex items-center gap-2'>
           <div className='flex gap-1'>
@@ -116,7 +116,7 @@ export const columns: ColumnDef<Transaction>[] = [
               onClick={() => meta.onVerify?.(transaction.id, true)}
               className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
             >
-              { isVerified ? 'Verified' : 'Verify' }
+              {isVerified ? 'Verified' : 'Verify'}
             </Button>
             <Button
               variant='ghost'
@@ -125,7 +125,7 @@ export const columns: ColumnDef<Transaction>[] = [
               onClick={() => meta.onVerify?.(transaction.id, false)}
               className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
             >
-              { !isVerified ? 'Unverified' : 'Unverify' }
+              {!isVerified ? 'Unverified' : 'Unverify'}
             </Button>
           </div>
         </div>
