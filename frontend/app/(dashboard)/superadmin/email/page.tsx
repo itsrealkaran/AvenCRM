@@ -1,24 +1,46 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EmailAccount } from '@/types/email';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
-import { connectEmailAccount, disconnectEmailAccount } from './api';
+import { connectEmailAccount, disconnectEmailAccount, fetchEmailAccounts } from './api';
 import EmailAccountsSection from './components/EmailAccountsSection';
 import EmailCampaignSection from './components/EmailCampaignSection';
+import EmailRecipientsSection from './components/EmailRecipientsSection';
 import EmailTemplatesSection from './components/EmailTemplatesSection';
+
+const VALID_TABS = ['accounts', 'templates', 'recipients', 'campaigns'];
 
 function EmailPage() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('accounts');
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchEmailAccounts = async () => {
+  const tab = searchParams.get('tab');
+  const activeTab = VALID_TABS.includes(tab ?? '') ? tab : 'accounts';
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', value);
+    router.push(`?${params.toString()}`);
+  };
+
+  useEffect(() => {
+    loadEmailAccounts();
+  }, []);
+
+  const loadEmailAccounts = async () => {
     try {
+      setLoading(true);
       const data = await fetchEmailAccounts();
-      // setAccounts(data); // Note: setAccounts is not defined in the provided code
+      setAccounts(data);
     } catch (error) {
       toast({
         title: 'Error',
@@ -26,13 +48,14 @@ function EmailPage() {
         variant: 'destructive',
       });
     } finally {
-      // setLoading(false); // Note: setLoading is not defined in the provided code
+      setLoading(false);
     }
   };
 
-  const connectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
+  const handleConnectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
     try {
       const url = await connectEmailAccount(provider);
+      localStorage.setItem('emailRedirectUrl', window.location.href);
       window.location.href = url;
     } catch (error) {
       toast({
@@ -43,10 +66,10 @@ function EmailPage() {
     }
   };
 
-  const disconnectAccount = async (accountId: string) => {
+  const handleDisconnectAccount = async (accountId: string) => {
     try {
       await disconnectEmailAccount(accountId);
-      await fetchEmailAccounts();
+      await loadEmailAccounts();
       toast({
         title: 'Success',
         description: 'Email account disconnected successfully',
@@ -65,10 +88,11 @@ function EmailPage() {
       <Card className='container mx-auto p-6'>
         <h1 className='text-2xl font-bold mb-6'>Email Management</h1>
 
-        <Tabs defaultValue='accounts' className='w-full' onValueChange={setActiveTab}>
-          <TabsList className='grid w-full grid-cols-3'>
+        <Tabs value={activeTab ?? 'accounts'} className='w-full' onValueChange={handleTabChange}>
+          <TabsList className='grid w-full grid-cols-4'>
             <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
             <TabsTrigger value='templates'>Templates</TabsTrigger>
+            <TabsTrigger value='recipients'>Recipients</TabsTrigger>
             <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
           </TabsList>
 
@@ -78,7 +102,12 @@ function EmailPage() {
                 <CardTitle>Connected Email Accounts</CardTitle>
               </CardHeader>
               <CardContent>
-                <EmailAccountsSection />
+                <EmailAccountsSection
+                  accounts={accounts}
+                  loading={loading}
+                  onConnect={handleConnectAccount}
+                  onDisconnect={handleDisconnectAccount}
+                />
               </CardContent>
             </Card>
           </TabsContent>
@@ -90,6 +119,17 @@ function EmailPage() {
               </CardHeader>
               <CardContent>
                 <EmailTemplatesSection />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value='recipients'>
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Recipients</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <EmailRecipientsSection />
               </CardContent>
             </Card>
           </TabsContent>

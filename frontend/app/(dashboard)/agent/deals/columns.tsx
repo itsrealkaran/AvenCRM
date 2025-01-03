@@ -25,16 +25,20 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const getStatusColor = (status: string) => {
-  const colors = {
-    NEW: 'bg-blue-100 text-blue-800',
-    CONTACTED: 'bg-purple-100 text-purple-800',
-    QUALIFIED: 'bg-yellow-100 text-yellow-800',
-    PROPOSAL: 'bg-indigo-100 text-indigo-800',
-    NEGOTIATION: 'bg-orange-100 text-orange-800',
-    WON: 'bg-green-100 text-green-800',
-    LOST: 'bg-red-100 text-red-800',
-  };
+type Status = 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'PROPOSAL' | 'NEGOTIATION' | 'WON' | 'LOST' | 'ACTIVE';
+
+const colors: Record<Status, string> = {
+  NEW: 'bg-blue-100 text-blue-800',
+  CONTACTED: 'bg-purple-100 text-purple-800',
+  QUALIFIED: 'bg-yellow-100 text-yellow-800',
+  PROPOSAL: 'bg-indigo-100 text-indigo-800',
+  NEGOTIATION: 'bg-orange-100 text-orange-800',
+  WON: 'bg-green-100 text-green-800',
+  LOST: 'bg-red-100 text-red-800',
+  ACTIVE: 'bg-emerald-100 text-emerald-800',
+};
+
+const getStatusColor = (status: Status): string => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
@@ -91,7 +95,7 @@ export const columns: ColumnDef<Deal>[] = [
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status: string = row.getValue('status');
+      const status: Status = row.getValue('status');
       return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
     },
   },

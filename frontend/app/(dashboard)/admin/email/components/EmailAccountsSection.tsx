@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
-import { EmailAccount } from '@/types';
+import React from 'react';
+import { EmailAccount } from '@/types/email';
 import { Loader2, Mail, Trash2 } from 'lucide-react';
 
 import {
@@ -25,101 +25,21 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useToast } from '@/hooks/use-toast';
+import { EmailAccountStatus } from '@/types';
 
-export default function EmailAccountsSection() {
-  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+interface EmailAccountsSectionProps {
+  accounts: EmailAccount[];
+  loading: boolean;
+  onConnect: (provider: 'GMAIL' | 'OUTLOOK') => Promise<void>;
+  onDisconnect: (accountId: string) => Promise<void>;
+}
 
-  const fetchEmailAccounts = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/accounts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch accounts');
-      const data = await response.json();
-      setAccounts(data);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch email accounts',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchEmailAccounts();
-  }, [fetchEmailAccounts]);
-
-  const connectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/config?provider=${provider}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to get redirect URL');
-      const { url } = await response.json();
-      window.location.href = url;
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to connect email account',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  const disconnectAccount = async (accountId: string) => {
-    try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/accounts/${accountId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: 'include',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to disconnect account');
-      await fetchEmailAccounts();
-      toast({
-        title: 'Success',
-        description: 'Email account disisActive successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to disconnect email account',
-        variant: 'destructive',
-      });
-    }
-  };
-
+export default function EmailAccountsSection({
+  accounts,
+  loading,
+  onConnect,
+  onDisconnect,
+}: EmailAccountsSectionProps) {
   if (loading) {
     return (
       <div className='flex items-center justify-center p-8'>
@@ -131,11 +51,11 @@ export default function EmailAccountsSection() {
   return (
     <div className='space-y-6'>
       <div className='flex gap-4'>
-        <Button onClick={() => connectAccount('GMAIL')}>
+        <Button onClick={() => onConnect('GMAIL')}>
           <Mail className='mr-2 h-4 w-4' />
           Connect Gmail
         </Button>
-        <Button onClick={() => connectAccount('OUTLOOK')} variant={'outline'}>
+        <Button onClick={() => onConnect('OUTLOOK')} variant={'outline'}>
           <Mail className='mr-2 h-4 w-4' />
           Connect Outlook
         </Button>
@@ -147,6 +67,7 @@ export default function EmailAccountsSection() {
             <TableRow>
               <TableHead>Email</TableHead>
               <TableHead>Provider</TableHead>
+              <TableHead>isActive</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Last Synced</TableHead>
               <TableHead>Actions</TableHead>
@@ -159,7 +80,18 @@ export default function EmailAccountsSection() {
                 <TableCell>{account.provider}</TableCell>
                 <TableCell>
                   <Badge variant={account.isActive ? 'default' : 'destructive'}>
-                    {account.isActive ? 'Connected' : 'Disconnected'}
+                    {account.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={
+                    account.status === EmailAccountStatus.ACTIVE
+                      ? 'default'
+                      : account.status === EmailAccountStatus.NEEDS_REAUTH
+                      ? 'warning'
+                      : 'destructive'
+                  }>
+                    {account.status ?? EmailAccountStatus.NEEDS_REAUTH}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -182,7 +114,7 @@ export default function EmailAccountsSection() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => disconnectAccount(account.id)}>
+                        <AlertDialogAction onClick={() => onDisconnect(account.id)}>
                           Disconnect
                         </AlertDialogAction>
                       </AlertDialogFooter>
@@ -196,7 +128,7 @@ export default function EmailAccountsSection() {
       ) : (
         <div className='text-center p-8 border rounded-lg bg-muted'>
           <Mail className='mx-auto h-12 w-12 opacity-50 mb-4' />
-          <h3 className='text-lg font-medium'>No email accounts is Active</h3>
+          <h3 className='text-lg font-medium'>No Email Accounts Connected</h3>
           <p className='text-sm text-muted-foreground mt-2'>
             Connect your email account to start sending emails
           </p>

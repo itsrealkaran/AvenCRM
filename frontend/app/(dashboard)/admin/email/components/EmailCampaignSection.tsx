@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { EmailCampaign, EmailRecipient, EmailTemplate } from '@/types/email';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from 'lucide-react';
 
@@ -37,137 +38,57 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 
-interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  content: string;
-}
-
-interface EmailCampaign {
-  id: string;
-  title: string;
-  status: 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'COMPLETED' | 'FAILED';
-  scheduledAt: string;
-  recipients: Recipient[];
-  successfulSends: number;
-  failedSends: number;
-  totalRecipients: number;
-  createdAt: string;
-}
-
-interface Recipient {
-  type: 'EXTERNAL' | 'AGENT' | 'ADMIN' | 'CLIENT';
-  email: string;
-  name?: string;
-  variables?: Record<string, string>;
-  recipientId?: string;
-}
-
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-}
+import {
+  cancelEmailCampaign,
+  createEmailCampaign,
+  fetchEmailCampaigns,
+  fetchEmailRecipients,
+  fetchEmailTemplates,
+} from '../api';
 
 export default function EmailCampaignSection() {
-  debugger;
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedRecipientType, setSelectedRecipientType] = useState<
-    'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL'
-  >('AGENT');
-  const [customRecipient, setCustomRecipient] = useState({ email: '', name: '' });
   const { toast } = useToast();
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTab, setSelectedTab] = useState('template');
   const [formData, setFormData] = useState({
     title: '',
     templateId: '',
     subject: '',
     content: '',
     scheduledAt: new Date(),
-    recipients: [] as Recipient[],
+    recipientIds: [] as string[],
   });
 
-  const fetchCampaigns = useCallback(async () => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch campaigns');
-      const data = await response.json();
-      console.log(data);
-      setCampaigns(data.campaigns);
-      console.log(data.campaigns);
+      setLoading(true);
+      const [campaignsData, templatesData, recipientsData] = await Promise.all([
+        fetchEmailCampaigns(),
+        fetchEmailTemplates(),
+        fetchEmailRecipients(),
+      ]);
+      setCampaigns(campaignsData);
+      setTemplates(templatesData);
+      setRecipients(recipientsData);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to fetch email campaigns',
+        description: 'Failed to load data',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  const fetchTemplates = useCallback(async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch templates');
-      const data = await response.json();
-      console.log(data);
-      setTemplates(data.templates);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch email templates',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  const fetchAgents = useCallback(async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch agents');
-      const data = await response.json();
-      console.log('agnets', data);
-      setAgents(data);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch agents',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchCampaigns();
-    fetchTemplates();
-    fetchAgents();
-  }, [fetchCampaigns, fetchTemplates, fetchAgents]);
-
-  // Filter agents based on search query
-  const filteredAgents = useMemo(() => {
-    if (!searchQuery) return agents;
-    return agents.filter(agent => 
-      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      agent.email.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [agents, searchQuery]);
+  };
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
@@ -184,19 +105,16 @@ export default function EmailCampaignSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...formData,
-          scheduledAt: formData.scheduledAt.toISOString(),
-        }),
+      await createEmailCampaign({
+        title: formData.title,
+        subject: formData.subject,
+        content: formData.content,
+        recipientIds: formData.recipientIds,
+        templateId: formData.templateId || undefined,
+        scheduledAt: formData.scheduledAt.toISOString(),
       });
 
-      if (!response.ok) throw new Error('Failed to create campaign');
-
-      await fetchCampaigns();
+      await loadData();
       setIsDialogOpen(false);
       resetForm();
 
@@ -213,17 +131,10 @@ export default function EmailCampaignSection() {
     }
   };
 
-  const cancelCampaign = async (campaignId: string) => {
+  const handleCancelCampaign = async (campaignId: string) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns/${campaignId}/cancel`,
-        {
-          method: 'POST',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to cancel campaign');
-
-      await fetchCampaigns();
+      await cancelEmailCampaign(campaignId);
+      await loadData();
       toast({
         title: 'Success',
         description: 'Campaign cancelled successfully',
@@ -244,7 +155,7 @@ export default function EmailCampaignSection() {
       subject: '',
       content: '',
       scheduledAt: new Date(),
-      recipients: [],
+      recipientIds: [],
     });
   };
 
@@ -263,36 +174,20 @@ export default function EmailCampaignSection() {
     }
   };
 
-  const handleRecipientTypeChange = (type: 'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL') => {
-    setSelectedRecipientType(type);
-    setCustomRecipient({ email: '', name: '' });
-  };
-
-  const addRecipient = (recipient: Recipient) => {
-    if (!formData.recipients.some((r) => r.email === recipient.email)) {
+  const addRecipient = (recipientId: string) => {
+    if (!formData.recipientIds.includes(recipientId)) {
       setFormData((prev) => ({
         ...prev,
-        recipients: [...prev.recipients, recipient],
+        recipientIds: [...prev.recipientIds, recipientId],
       }));
     }
   };
 
-  const removeRecipient = (email: string) => {
+  const removeRecipient = (recipientId: string) => {
     setFormData((prev) => ({
       ...prev,
-      recipients: prev.recipients.filter((r) => r.email !== email),
+      recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
     }));
-  };
-
-  const addCustomRecipient = () => {
-    if (customRecipient.email && customRecipient.name) {
-      addRecipient({
-        type: 'EXTERNAL',
-        email: customRecipient.email,
-        name: customRecipient.name,
-      });
-      setCustomRecipient({ email: '', name: '' });
-    }
   };
 
   if (loading) {
@@ -304,163 +199,85 @@ export default function EmailCampaignSection() {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create Campaign
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle>Create Email Campaign</DialogTitle>
-          <DialogDescription>
-            Create a new email campaign to send to your recipients
-          </DialogDescription>
-        </DialogHeader>
-
-        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="template">Template & Content</TabsTrigger>
-            <TabsTrigger value="recipients">Recipients</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-          </TabsList>
-
-          <form onSubmit={handleSubmit}>
-            <TabsContent value="template" className="space-y-4 mt-4">
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="title">Campaign Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Monthly Newsletter"
-                    required
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="template">Email Template</Label>
-                  <Select value={formData.templateId} onValueChange={handleTemplateChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="subject">Email Subject</Label>
-                  <Input
-                    id="subject"
-                    value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    placeholder="Your Monthly Newsletter"
-                    required
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="content">Email Content</Label>
-                  <Textarea
-                    id="content"
-                    value={formData.content}
-                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    className="min-h-[200px]"
-                    required
-                  />
-                </div>
+    <div className='space-y-6'>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className='mr-2 h-4 w-4' />
+            Create Campaign
+          </Button>
+        </DialogTrigger>
+        <DialogContent className='max-w-4xl'>
+          <DialogHeader>
+            <DialogTitle>Create Email Campaign</DialogTitle>
+            <DialogDescription>
+              Create a new email campaign to send to your recipients
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className='space-y-4'>
+            <div className='grid gap-4'>
+              <div className='grid gap-2'>
+                <Label htmlFor='title'>Campaign Title</Label>
+                <Input
+                  id='title'
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder='Monthly Newsletter'
+                  required
+                />
               </div>
-            </TabsContent>
 
-            <TabsContent value="recipients" className="space-y-4 mt-4">
-              <div className="grid gap-4">
-                <div className="flex items-center justify-between">
-                  <Label>Recipients ({formData.recipients.length})</Label>
-                  <span className="text-sm text-muted-foreground">
-                    Selected {formData.recipients.length} recipients
-                  </span>
-                </div>
-
-                <Command className="border rounded-lg">
-                  <CommandInput
-                    placeholder="Search recipients..."
-                    value={searchQuery}
-                    onValueChange={setSearchQuery}
-                  />
-                  <CommandEmpty>No recipients found.</CommandEmpty>
-                  <CommandGroup className="max-h-64 overflow-auto">
-                    {filteredAgents.map((agent) => (
-                      <CommandItem
-                        key={agent.id}
-                        onSelect={() => {
-                          addRecipient({
-                            type: 'AGENT',
-                            email: agent.email,
-                            name: agent.name,
-                            recipientId: agent.id,
-                          });
-                        }}
-                      >
-                        <Users className="mr-2 h-4 w-4" />
-                        <span>{agent.name}</span>
-                        <span className="ml-2 text-sm text-muted-foreground">
-                          ({agent.email})
-                        </span>
-                      </CommandItem>
+              <div className='grid gap-2'>
+                <Label htmlFor='template'>Email Template</Label>
+                <Select value={formData.templateId} onValueChange={handleTemplateChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select a template' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.name}
+                      </SelectItem>
                     ))}
-                  </CommandGroup>
-                </Command>
-
-                {formData.recipients.length > 0 && (
-                  <div className="border rounded-lg p-4">
-                    <div className="flex flex-wrap gap-2">
-                      {formData.recipients.map((recipient) => (
-                        <Badge
-                          key={recipient.email}
-                          className="flex items-center gap-2"
-                        >
-                          <span>
-                            {recipient.name} ({recipient.email})
-                          </span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0"
-                            onClick={() => removeRecipient(recipient.email)}
-                          >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  </SelectContent>
+                </Select>
               </div>
-            </TabsContent>
 
-            <TabsContent value="schedule" className="space-y-4 mt-4">
-              <div className="grid gap-4">
+              <div className='grid gap-2'>
+                <Label htmlFor='subject'>Email Subject</Label>
+                <Input
+                  id='subject'
+                  value={formData.subject}
+                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  placeholder='Your Monthly Newsletter'
+                  required
+                />
+              </div>
+
+              <div className='grid gap-2'>
+                <Label htmlFor='content'>Email Content</Label>
+                <Textarea
+                  id='content'
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className='min-h-[200px]'
+                  required
+                />
+              </div>
+
+              <div className='grid gap-2'>
                 <Label>Schedule Date and Time</Label>
-                <div className="flex gap-4">
+                <div className='flex gap-2'>
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant='outline'
                         className={cn(
                           'w-[240px] justify-start text-left font-normal',
                           !formData.scheduledAt && 'text-muted-foreground'
                         )}
                       >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        <CalendarIcon className='mr-2 h-4 w-4' />
                         {formData.scheduledAt ? (
                           format(formData.scheduledAt, 'PPP')
                         ) : (
@@ -468,72 +285,221 @@ export default function EmailCampaignSection() {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
+                    <PopoverContent className='w-auto p-0'>
                       <Calendar
-                        mode="single"
+                        mode='single'
                         selected={formData.scheduledAt}
-                        onSelect={(date) =>
-                          date && setFormData({ ...formData, scheduledAt: date })
-                        }
+                        onSelect={(date) => {
+                          if (date) {
+                            const currentTime = formData.scheduledAt;
+                            const newDate = new Date(date);
+                            newDate.setHours(currentTime.getHours());
+                            newDate.setMinutes(currentTime.getMinutes());
+                            setFormData({ ...formData, scheduledAt: newDate });
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
                   </Popover>
-
-                  <div className="flex gap-2 items-center">
-                    <Select
-                      value={formData.scheduledAt.getHours().toString().padStart(2, '0')}
-                      onValueChange={(value) => {
-                        const newDate = new Date(formData.scheduledAt);
-                        newDate.setHours(parseInt(value));
-                        setFormData({ ...formData, scheduledAt: newDate });
-                      }}
-                    >
-                      <SelectTrigger className="w-[70px]">
-                        <SelectValue placeholder="HH" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 24 }, (_, i) => (
-                          <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                            {i.toString().padStart(2, '0')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <span className="text-2xl">:</span>
-                    <Select
-                      value={formData.scheduledAt.getMinutes().toString().padStart(2, '0')}
-                      onValueChange={(value) => {
-                        const newDate = new Date(formData.scheduledAt);
-                        newDate.setMinutes(parseInt(value));
-                        setFormData({ ...formData, scheduledAt: newDate });
-                      }}
-                    >
-                      <SelectTrigger className="w-[70px]">
-                        <SelectValue placeholder="MM" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.from({ length: 60 }, (_, i) => (
-                          <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                            {i.toString().padStart(2, '0')}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant='outline'
+                        className={cn(
+                          'w-[140px] justify-start text-left font-normal',
+                          !formData.scheduledAt && 'text-muted-foreground'
+                        )}
+                      >
+                        <Clock className='mr-2 h-4 w-4' />
+                        {formData.scheduledAt ? (
+                          format(formData.scheduledAt, 'HH:mm')
+                        ) : (
+                          <span>Pick time</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className='w-auto p-0'>
+                      <div className='p-4 space-y-2'>
+                        <div className='flex gap-2'>
+                          <Select
+                            value={formData.scheduledAt.getHours().toString().padStart(2, '0')}
+                            onValueChange={(value) => {
+                              const newDate = new Date(formData.scheduledAt);
+                              newDate.setHours(parseInt(value));
+                              setFormData({ ...formData, scheduledAt: newDate });
+                            }}
+                          >
+                            <SelectTrigger className='w-[70px]'>
+                              <SelectValue placeholder='HH' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 24 }, (_, i) => (
+                                <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                  {i.toString().padStart(2, '0')}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <span className='text-2xl'>:</span>
+                          <Select
+                            value={formData.scheduledAt.getMinutes().toString().padStart(2, '0')}
+                            onValueChange={(value) => {
+                              const newDate = new Date(formData.scheduledAt);
+                              newDate.setMinutes(parseInt(value));
+                              setFormData({ ...formData, scheduledAt: newDate });
+                            }}
+                          >
+                            <SelectTrigger className='w-[70px]'>
+                              <SelectValue placeholder='MM' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Array.from({ length: 60 }, (_, i) => (
+                                <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                                  {i.toString().padStart(2, '0')}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
-            </TabsContent>
 
-            <div className="flex justify-end gap-4 mt-6">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+              <div className='grid gap-2'>
+                <Label>Recipients</Label>
+                <Select onValueChange={(value) => addRecipient(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select recipients' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {recipients.map((recipient) => (
+                      <SelectItem key={recipient.id} value={recipient.id}>
+                        {recipient.name} ({recipient.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {formData.recipientIds.length > 0 && (
+                  <div className='border rounded-lg p-4 space-y-2'>
+                    <Label>Selected Recipients</Label>
+                    <div className='flex flex-wrap gap-2'>
+                      {formData.recipientIds.map((id) => {
+                        const recipient = recipients.find((r) => r.id === id);
+                        return (
+                          recipient && (
+                            <Badge key={id} className='flex items-center gap-2'>
+                              <span>
+                                {recipient.name} ({recipient.email})
+                              </span>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='sm'
+                                className='h-4 w-4 p-0'
+                                onClick={() => removeRecipient(id)}
+                              >
+                                <X className='h-3 w-3' />
+                              </Button>
+                            </Badge>
+                          )
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className='flex justify-end gap-4'>
+              <Button type='button' variant='outline' onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Campaign</Button>
+              <Button type='submit' disabled={formData.recipientIds.length === 0}>
+                Create Campaign
+              </Button>
             </div>
           </form>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+
+      <div className='rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Campaign</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Scheduled</TableHead>
+              <TableHead>Recipients</TableHead>
+              <TableHead>Progress</TableHead>
+              <TableHead>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {campaigns.map((campaign) => (
+              <TableRow key={campaign.id}>
+                <TableCell>
+                  <div className='font-medium'>{campaign.title}</div>
+                  <div className='text-sm text-muted-foreground'>
+                    Created {new Date(campaign.createdAt).toLocaleDateString()}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getStatusBadgeVariant(campaign.status)}>{campaign.status}</Badge>
+                </TableCell>
+                <TableCell>
+                  {campaign.scheduledAt ? new Date(campaign.scheduledAt).toLocaleString() : 'N/A'}
+                </TableCell>
+                <TableCell>
+                  <div className='flex items-center'>
+                    <Users className='h-4 w-4 mr-2' />
+                    {campaign.recipientCount}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div className='space-y-2'>
+                    <Progress
+                      value={
+                        campaign.recipientCount > 0
+                          ? (campaign.sentCount / campaign.recipientCount) * 100
+                          : 0
+                      }
+                    />
+                    <div className='text-xs text-muted-foreground'>
+                      {campaign.sentCount} of {campaign.recipientCount} sent
+                      {campaign.failedCount > 0 && ` (${campaign.failedCount} failed)`}
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  {campaign.status === 'SCHEDULED' && (
+                    <Button
+                      variant='destructive'
+                      size='sm'
+                      onClick={() => handleCancelCampaign(campaign.id)}
+                    >
+                      Cancel
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {campaigns.length === 0 && (
+        <div className='text-center p-8 border rounded-lg bg-muted'>
+          <Mail className='mx-auto h-12 w-12 opacity-50 mb-4' />
+          <h3 className='text-lg font-medium'>No email campaigns</h3>
+          <p className='text-sm text-muted-foreground mt-2'>
+            Create your first email campaign to get started
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
