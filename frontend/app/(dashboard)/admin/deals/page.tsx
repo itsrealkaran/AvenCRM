@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Deal, DealStatus } from '@/types';
+import { Deal, DealStatus, DealFilters } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { DealFilters } from '@/components/filters/deal-filters';
+import { DealFilters as DealFilterComponent } from '@/components/filters/deal-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { dealsApi } from '@/services/deals';
 
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
@@ -26,52 +27,6 @@ interface DealsResponse {
   };
 }
 
-interface DealFilters {
-  page?: number;
-  limit?: number;
-  startDate?: Date;
-  endDate?: Date;
-  createdById?: string;
-  status?: DealStatus;
-  minAmount?: number;
-  maxAmount?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-async function getDeals(filters: DealFilters = {}): Promise<DealsResponse> {
-  const queryParams = new URLSearchParams();
-
-  if (filters.page) queryParams.append('page', filters.page.toString());
-  if (filters.limit) queryParams.append('limit', filters.limit.toString());
-  if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
-  if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
-  if (filters.createdById) queryParams.append('createdById', filters.createdById);
-  if (filters.status) queryParams.append('status', filters.status);
-  if (filters.minAmount) queryParams.append('minAmount', filters.minAmount.toString());
-  if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString());
-  if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-  if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/deals?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to fetch deals');
-  }
-  return response.json();
-}
-
 export default function DealsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -84,7 +39,7 @@ export default function DealsPage() {
 
   const { data: dealsData, isLoading } = useQuery({
     queryKey: ['deals', filters, page],
-    queryFn: () => getDeals({ ...filters, page, limit: 10 }),
+    queryFn: () => dealsApi.getDeals({ ...filters, page, limit: 10 }),
   });
 
   const deals = dealsData?.data || [];
@@ -96,8 +51,8 @@ export default function DealsPage() {
   }));
 
   const handleFilterChange = (newFilters: Partial<DealFilters>) => {
-    setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -105,22 +60,7 @@ export default function DealsPage() {
   };
 
   const deleteDeal = useMutation({
-    mutationFn: async (dealId: string) => {
-      setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals/${dealId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete deal');
-      }
-    },
+    mutationFn: dealsApi.deleteDeal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal deleted successfully');
@@ -133,23 +73,7 @@ export default function DealsPage() {
   });
 
   const bulkDeleteDeals = useMutation({
-    mutationFn: async (dealIds: string[]) => {
-      setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ dealIds }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete deals');
-      }
-    },
+    mutationFn: dealsApi.bulkDeleteDeals,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deals deleted successfully');
@@ -180,7 +104,7 @@ export default function DealsPage() {
         </Button>
       </div>
 
-      <DealFilters onFilterChange={handleFilterChange} statusOptions={statusOptions} />
+      <DealFilterComponent onFilterChange={handleFilterChange} statusOptions={statusOptions} />
 
       <DataTable
         columns={columns}

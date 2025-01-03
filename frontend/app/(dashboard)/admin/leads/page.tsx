@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Lead, LeadStatus } from '@/types';
+import { Lead, LeadStatus, LeadFilters } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { LeadFilters } from '@/components/filters/lead-filters';
+import { LeadFilters as LeadFilterComponent } from '@/components/filters/lead-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { leadsApi } from '@/services/leads';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -26,52 +27,6 @@ interface LeadsResponse {
   };
 }
 
-interface LeadFilters {
-  page?: number;
-  limit?: number;
-  startDate?: Date;
-  endDate?: Date;
-  createdById?: string;
-  status?: LeadStatus;
-  minAmount?: number;
-  maxAmount?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-async function getLeads(filters: LeadFilters = {}): Promise<LeadsResponse> {
-  const queryParams = new URLSearchParams();
-
-  if (filters.page) queryParams.append('page', filters.page.toString());
-  if (filters.limit) queryParams.append('limit', filters.limit.toString());
-  if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
-  if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
-  if (filters.createdById) queryParams.append('createdById', filters.createdById);
-  if (filters.status) queryParams.append('status', filters.status);
-  if (filters.minAmount) queryParams.append('minAmount', filters.minAmount.toString());
-  if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString());
-  if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-  if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/leads?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to fetch leads');
-  }
-  return response.json();
-}
-
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -84,7 +39,7 @@ export default function LeadsPage() {
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ['leads', filters, page],
-    queryFn: () => getLeads({ ...filters, page, limit: 10 }),
+    queryFn: () => leadsApi.getLeads({ ...filters, page, limit: 10 }),
   });
 
   const leads = leadsData?.data || [];
@@ -96,8 +51,8 @@ export default function LeadsPage() {
   }));
 
   const handleFilterChange = (newFilters: Partial<LeadFilters>) => {
-    setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -105,22 +60,7 @@ export default function LeadsPage() {
   };
 
   const deleteLead = useMutation({
-    mutationFn: async (lead: Lead) => {
-      setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${lead.id}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete lead');
-      }
-    },
+    mutationFn: leadsApi.deleteLead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead deleted successfully');
@@ -133,23 +73,7 @@ export default function LeadsPage() {
   });
 
   const bulkDeleteLeads = useMutation({
-    mutationFn: async (leadIds: string[]) => {
-      setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ leadIds }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete leads');
-      }
-    },
+    mutationFn: leadsApi.bulkDeleteLeads,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Leads deleted successfully');
@@ -180,7 +104,7 @@ export default function LeadsPage() {
         </Button>
       </div>
 
-      <LeadFilters onFilterChange={handleFilterChange} statusOptions={statusOptions} />
+      <LeadFilterComponent onFilterChange={handleFilterChange} statusOptions={statusOptions} />
 
       <DataTable
         columns={columns}
@@ -189,8 +113,8 @@ export default function LeadsPage() {
           setSelectedLead(lead);
           setIsEditDialogOpen(true);
         }}
-        onDelete={(leadId) => {
-          deleteLead.mutate(leadId);
+        onDelete={(lead) => {
+          deleteLead.mutate(lead.id);
         }}
         selectedRows={selectedRows}
         onSelectedRowsChange={setSelectedRows}
@@ -209,7 +133,7 @@ export default function LeadsPage() {
           onOpenChange={setIsEditDialogOpen}
           lead={selectedLead}
           onDelete={async (lead) => {
-            await deleteLead.mutateAsync(lead);
+            await deleteLead.mutateAsync(lead.id);
             setSelectedLead(null);
           }}
           onEdit={(lead) => {
