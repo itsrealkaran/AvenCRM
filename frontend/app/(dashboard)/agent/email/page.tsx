@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { EmailAccount } from '@/types/email';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,11 +14,23 @@ import EmailCampaignSection from './components/EmailCampaignSection';
 import EmailRecipientsSection from './components/EmailRecipientsSection';
 import EmailTemplatesSection from './components/EmailTemplatesSection';
 
+const VALID_TABS = ['accounts', 'templates', 'recipients', 'campaigns'];
+
 function EmailPage() {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('accounts');
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [accounts, setAccounts] = useState<EmailAccount[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const tab = searchParams.get('tab');
+  const activeTab = VALID_TABS.includes(tab ?? '') ? tab : 'accounts';
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', value);
+    router.push(`?${params.toString()}`);
+  };
 
   useEffect(() => {
     loadEmailAccounts();
@@ -42,7 +55,6 @@ function EmailPage() {
   const handleConnectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
     try {
       const url = await connectEmailAccount(provider);
-      // Store current URL in localStorage to redirect back after OAuth
       localStorage.setItem('emailRedirectUrl', window.location.href);
       window.location.href = url;
     } catch (error) {
@@ -76,7 +88,7 @@ function EmailPage() {
       <Card className='container mx-auto p-6'>
         <h1 className='text-2xl font-bold mb-6'>Email Management</h1>
 
-        <Tabs defaultValue='accounts' className='w-full' onValueChange={setActiveTab}>
+        <Tabs value={activeTab ?? 'accounts'} className='w-full' onValueChange={handleTabChange}>
           <TabsList className='grid w-full grid-cols-4'>
             <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
             <TabsTrigger value='templates'>Templates</TabsTrigger>

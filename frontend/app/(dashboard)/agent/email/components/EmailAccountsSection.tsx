@@ -77,12 +77,12 @@ export default function EmailAccountsSection({
                 <TableCell>{account.email}</TableCell>
                 <TableCell>{account.provider}</TableCell>
                 <TableCell>
-                  <Badge variant={account.status === 'ACTIVE' ? 'default' : 'destructive'}>
-                    {account.status}
+                  <Badge variant={account.isActive ? 'default' : 'destructive'}>
+                    {account.isActive ? 'Active' : 'Inactive'}
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {account.lastSyncAt ? new Date(account.lastSyncAt).toLocaleString() : 'Never'}
+                  {account.updatedAt ? new Date(account.updatedAt).toLocaleString() : 'Never'}
                 </TableCell>
                 <TableCell>
                   <AlertDialog>

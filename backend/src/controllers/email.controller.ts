@@ -106,7 +106,8 @@ export class EmailController {
           email: true,
           provider: true,
           isActive: true,
-          createdAt: true
+          createdAt: true,
+          updatedAt: true
         }
       });
 

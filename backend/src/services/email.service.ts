@@ -258,11 +258,19 @@ class EmailService {
         throw new Error('Email account not found');
       }
 
+      // Check if token needs refresh (5 minutes buffer)
+      const needsRefresh = emailAccount.expiresAt.getTime() - Date.now() < 5 * 60 * 1000;
+
+      if (needsRefresh) {
+        await this.refreshAccessToken(emailAccount);
+      }
+
       switch (emailAccount.provider) {
         case EmailProviderEnum.GMAIL:
           this.oauth2Client.setCredentials({
             access_token: emailAccount.accessToken,
-            refresh_token: emailAccount.refreshToken
+            refresh_token: emailAccount.refreshToken,
+            expiry_date: emailAccount.expiresAt.getTime()
           });
 
           return nodemailer.createTransport({
@@ -289,26 +297,39 @@ class EmailService {
     }
   }
 
-  // private async sendEmail(data: EmailJobData): Promise<boolean> {
-  //   try {
-  //     const transporter = await this.createTransporter(data.emailAccountId);
+  private async refreshAccessToken(emailAccount: EmailAccount): Promise<void> {
+    try {
+      this.oauth2Client.setCredentials({
+        refresh_token: emailAccount.refreshToken
+      });
 
-  //     for (const recipient of data.recipients) {
-  //       const content = this.processTemplate(data.content, {});
-  //       await transporter.sendMail({
-  //         from: (await prisma.emailAccount.findUnique({ where: { id: data.emailAccountId } }))?.email || '',
-  //         to: recipient.email,
-  //         subject: data.subject,
-  //         html: content
-  //       });
-  //     }
+      const { credentials } = await this.oauth2Client.refreshAccessToken();
+      
+      if (!credentials.access_token) {
+        throw new Error('Failed to refresh access token');
+      }
 
-  //     return true;
-  //   } catch (error) {
-  //     logger.error('Send email error:', error);
-  //     throw new Error(error instanceof Error ? error.message : 'Failed to send email');
-  //   }
-  // }
+      await prisma.emailAccount.update({
+        where: { id: emailAccount.id },
+        data: {
+          accessToken: credentials.access_token,
+          expiresAt: new Date(credentials.expiry_date || Date.now() + 3600 * 1000),
+          status: EmailAccountStatus.ACTIVE,
+          lastError: ''
+        }
+      });
+    } catch (error) {
+      logger.error('Refresh token error:', error);
+      await prisma.emailAccount.update({
+        where: { id: emailAccount.id },
+        data: {
+          status: EmailAccountStatus.NEEDS_REAUTH,
+          lastError: error instanceof Error ? error.message : 'Failed to refresh token'
+        }
+      });
+      throw new Error('Failed to refresh access token');
+    }
+  }
 
   processTemplate(template: string, variables: Record<string, any>): string {
     return template.replace(/\{\{(\w+)\}\}/g, (match, variable) => 
