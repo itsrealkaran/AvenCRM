@@ -5,35 +5,10 @@ import { emailService } from './email.service.js';
 import prisma from '../db/index.js';
 import { EmailCampaignStatus } from '@prisma/client';
 import logger from '../utils/logger.js';
+import RedisConnection from '../config/redis.config.js';
 
-// Initialize Redis connection
-const redisConnection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  maxRetriesPerRequest: null,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  }
-});
-
-let isConnected = false;
-
-redisConnection.on('error', (error: Error) => {
-  console.error('Redis connection error:', error);
-});
-
-redisConnection.on('connect', () => {
-  if (!isConnected) {
-    console.log('Connected to Redis');
-    isConnected = true;
-  }
-});
-
-redisConnection.on('disconnect', () => {
-  console.log('Disconnected from Redis');
-  isConnected = false;
-});
+// Use the singleton Redis connection
+const redisConnection = RedisConnection.getInstance();
 
 // Create email queue
 export const emailQueue = new Queue<EmailJobData, EmailJobResult>('email-queue', {
@@ -55,11 +30,11 @@ export const emailQueue = new Queue<EmailJobData, EmailJobResult>('email-queue',
   },
 });
 
-// Create worker
+// Create worker with optimized settings
 const worker = new Worker<EmailJobData, EmailJobResult>(
   'email-queue',
   async (job: Job<EmailJobData, EmailJobResult>) => {
-    console.log(`Processing email job ${job.id}`);
+    logger.info(`Processing email job ${job.id}`);
     
     try {
       await job.extendLock(job.id ?? '', 30000);
@@ -79,7 +54,7 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
       await job.extendLock(job.id ?? '', 30000);
       return result;
     } catch (error) {
-      console.error(`Error processing job ${job.id}:`, error);
+      logger.error(`Error processing job ${job.id}:`, error);
       throw error;
     }
   },
@@ -90,11 +65,11 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
       max: 100,
       duration: 1000,
     },
-    lockDuration: 120000, // Increased to 2 minutes
-    lockRenewTime: 30000, // Renew lock more frequently
+    lockDuration: 120000,
+    lockRenewTime: 30000,
     settings: {
-     backoffStrategy: (attempt) => {
-        return attempt * 1000;
+      backoffStrategy: (attempt) => {
+        return Math.min(attempt * 1000, 30000); // Cap at 30 seconds
       },
     },
     maxStalledCount: 5,
@@ -102,37 +77,38 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
   }
 );
 
+// Optimized event handlers
 worker.on('completed', (job: Job<EmailJobData, EmailJobResult>) => {
-  console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+  logger.info(`Job ${job.id} completed with result:`, job.returnvalue);
 });
 
 worker.on('failed', (job: Job<EmailJobData, EmailJobResult> | undefined, error: Error) => {
-  console.error(`Job ${job?.id} failed with reason:`, error);
+  logger.error(`Job ${job?.id} failed with reason:`, error);
 });
 
 worker.on('error', (error: Error) => {
-  console.error('Worker error:', error);
+  logger.error('Worker error:', error);
 });
 
 worker.on('progress', (job: Job<EmailJobData, EmailJobResult>) => {
-  console.log(`Job ${job.id} progress: ${job.progress}%`);
+  logger.debug(`Job ${job.id} progress: ${job.progress}%`);
 });
 
-// Event handlers
+// Queue events with optimized settings
 const queueEvents = new QueueEvents('email-queue', {
   connection: redisConnection,
 });
 
 queueEvents.on('completed', ({ jobId, returnvalue }) => {
-  console.log(`Job ${jobId} completed with result:`, returnvalue);
+  logger.info(`Job ${jobId} completed with result:`, returnvalue);
 });
 
 queueEvents.on('failed', ({ jobId, failedReason }) => {
-  console.error(`Job ${jobId} failed with reason:`, failedReason);
+  logger.error(`Job ${jobId} failed with reason:`, failedReason);
 });
 
 queueEvents.on('delayed', ({ jobId, delay }) => {
-  console.log(`Job ${jobId} has been delayed by ${delay}ms`);
+  logger.debug(`Job ${jobId} has been delayed by ${delay}ms`);
 });
 
 // Job processors
