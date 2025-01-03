@@ -137,17 +137,6 @@ const Page = () => {
       const uploadFormData = new FormData(); // Renamed to `uploadFormData`
       uploadFormData.append('image', file);
 
-      // const response = await axios.post(
-      //   `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-image`,
-      //   uploadFormData,
-      //   {
-      //     headers: {
-      //       Authorization: `Bearer ${token}`,
-      //       'Content-Type': 'multipart/form-data',
-      //     },
-      //   }
-      // );
-
       const response = await api.post('/property/upload-image', uploadFormData, {
         headers: {
           'Content-Type': 'multipart/form-data',

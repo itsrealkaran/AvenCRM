@@ -1,4 +1,5 @@
 import { User } from '@/types';
+
 import { api } from '@/lib/api';
 
 export interface UpdateProfileDTO {

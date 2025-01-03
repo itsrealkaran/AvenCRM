@@ -118,6 +118,8 @@ model User {
   role         UserRole
   designation  String?
   lastLogin    DateTime?
+  avatar       String?
+  banner       String?
   isActive     Boolean    @default(true)
   
   // Company Relations

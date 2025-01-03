@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { usersApi } from '@/services/users';
 import { useMutation } from '@tanstack/react-query';
 import { Bell, Camera, Lock, LogOut, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,7 +14,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
-import { usersApi } from '@/services/users';
 
 import { NotificationForm } from './components/notification-form';
 import { PasswordForm } from './components/password-form';
@@ -78,7 +78,7 @@ const Page = () => {
               className='w-32 h-32 border-4 border-white shadow-lg cursor-pointer transition-transform hover:scale-105'
               onClick={handleAvatarClick}
             >
-              <AvatarImage src={user.image || '/placeholder-avatar.jpg'} alt='Profile' />
+              <AvatarImage src={user.image || '/placeholder.png'} alt='Profile' />
               <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className='absolute bottom-0 right-0'>

@@ -65,7 +65,7 @@ export default function EmailAccountsSection() {
 
   const connectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
     try {
-      let urlResponse = await connectEmailAccount(provider);
+      const urlResponse = await connectEmailAccount(provider);
       window.location.href = urlResponse;
     } catch (error) {
       toast({

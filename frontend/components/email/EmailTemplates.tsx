@@ -125,7 +125,7 @@ export function EmailTemplates() {
       </div>
 
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent>
+        <DialogContent className='w-[1200px] bg-emerald-400'>
           <DialogHeader>
             <DialogTitle>Create Email Template</DialogTitle>
             <DialogDescription>
