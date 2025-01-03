@@ -63,6 +63,10 @@ export function DataTable<TData, TValue>({
       sorting,
       columnFilters,
     },
+    meta: {
+      onEdit,
+      onDelete,
+    }
   });
 
   const handlePageChange = (newPage: number) => {

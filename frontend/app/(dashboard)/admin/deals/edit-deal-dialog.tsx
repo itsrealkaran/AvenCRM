@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { dealsApi } from '@/services/deals';
 import { Deal, DealStatus } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -33,21 +34,14 @@ const dealFormSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   dealAmount: z.string().optional(),
-  status: z.enum([
-    'NEW_DISCOVERY',
-    'PROSPECT',
-    'ACTIVE',
-    'UNDER_CONTRACT',
-    'CLOSED_WON',
-    'CLOSED_LOST',
-  ]),
+  status: z.nativeEnum(DealStatus),
   propertyType: z.string().optional(),
   propertyAddress: z.string().optional(),
-  propertyValue: z.number().optional(),
+  propertyValue: z.string().optional(),
   expectedCloseDate: z.date().optional(),
   actualCloseDate: z.date().optional(),
-  commissionRate: z.number().optional(),
-  estimatedCommission: z.number().optional(),
+  commissionRate: z.string().optional(),
+  estimatedCommission: z.string().optional(),
   notes: z.array(noteEntrySchema),
 });
 
@@ -74,7 +68,6 @@ export function EditDealDialog({
     defaultValues: {
       status: DealStatus.NEW_DISCOVERY,
       notes: [],
-      expectedCloseDate: new Date(),
     },
   });
 
@@ -99,11 +92,11 @@ export function EditDealDialog({
         status: deal.status,
         propertyType: deal.propertyType || '',
         propertyAddress: deal.propertyAddress || '',
-        propertyValue: deal.propertyValue,
+        propertyValue: deal.propertyValue?.toString() || '',
         expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate) : undefined,
         actualCloseDate: deal.actualCloseDate ? new Date(deal.actualCloseDate) : undefined,
-        commissionRate: deal.commissionRate,
-        estimatedCommission: deal.estimatedCommission,
+        commissionRate: deal.commissionRate?.toString() || '',
+        estimatedCommission: deal.estimatedCommission?.toString() || '',
         notes: notesArray,
       });
     }
@@ -111,44 +104,35 @@ export function EditDealDialog({
 
   const editDeal = useMutation({
     mutationFn: async (values: DealFormValues) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals/${deal?.id}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          ...values,
-          id: deal?.id,
-          notes: values.notes.reduce(
-            (acc, { time, note }) => {
-              if (note.trim()) {
-                if (acc[time]) {
-                  acc[time] += `\n\n${note}`; // Merge notes with a gap
-                } else {
-                  acc[time] = note;
-                }
-              }
-              return acc;
-            },
-            {} as Record<string, string>
-          ),
-        }),
-      });
+      if (!deal?.id) throw new Error('Deal ID is required');
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to update deal');
-      }
+      const formattedValues = {
+        ...values,
+        dealAmount: values.dealAmount ? parseFloat(values.dealAmount) : undefined,
+        propertyValue: values.propertyValue ? parseFloat(values.propertyValue) : undefined,
+        commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : undefined,
+        estimatedCommission: values.estimatedCommission
+          ? parseFloat(values.estimatedCommission)
+          : undefined,
+        notes: values.notes.reduce(
+          (acc, { time, note }) => {
+            if (note.trim()) {
+              acc[time] = note;
+            }
+            return acc;
+          },
+          {} as Record<string, string>
+        ),
+      };
 
-      return response.json();
+      return dealsApi.updateDeal(deal.id, formattedValues);
     },
-    onSuccess: () => {
+    onSuccess: (updatedDeal) => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       onOpenChange(false);
       form.reset();
       toast.success('Deal updated successfully');
+      onEdit(updatedDeal);
     },
     onError: () => {
       toast.error('Failed to update deal');
@@ -214,7 +198,16 @@ export function EditDealDialog({
                   <FormItem>
                     <FormLabel>Status</FormLabel>
                     <FormControl>
-                      <Input placeholder='Status' {...field} />
+                      <select
+                        className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                        {...field}
+                      >
+                        {Object.values(DealStatus).map((status) => (
+                          <option key={status} value={status}>
+                            {status}
+                          </option>
+                        ))}
+                      </select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
