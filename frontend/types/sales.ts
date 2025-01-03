@@ -12,7 +12,6 @@ export interface Lead {
     name: string;
     email: string;
   };
-  leadAmount?: number;
   source?: string;
   status: LeadStatus;
   propertyType?: string;

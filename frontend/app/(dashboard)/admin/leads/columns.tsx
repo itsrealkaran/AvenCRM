@@ -169,7 +169,7 @@ export const columns: ColumnDef<Lead>[] = [
       const lead = row.original as Lead;
       const meta = table.options.meta as {
         onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
+        onDelete?: (lead: Lead) => void;
       };
 
       return (
@@ -186,7 +186,7 @@ export const columns: ColumnDef<Lead>[] = [
             <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
               <Pencil className='mr-2 h-4 w-4' /> Edit lead
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
+            <DropdownMenuItem onClick={() => meta.onDelete?.(lead)} className='text-red-600'>
               <Trash2 className='mr-2 h-4 w-4' /> Delete lead
             </DropdownMenuItem>
             <DropdownMenuItem

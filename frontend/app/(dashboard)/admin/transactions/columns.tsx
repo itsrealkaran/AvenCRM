@@ -97,16 +97,38 @@ export const columns: ColumnDef<Transaction>[] = [
     header: 'Plan',
   },
   {
-    accessorKey: 'isVerfied',
+    accessorKey: 'isVerified',
     header: 'Status',
-    cell: ({ row }) => {
-      const isVerified = row.getValue('isVerfied');
+    cell: ({ row, table }) => {
+      const isVerified = row.getValue('isVerified');
+      const transaction = row.original;
+      const meta = table.options.meta as {
+        onVerify?: (transactionId: string, isVerified: boolean) => void;
+      };
+
       return (
-        <Badge
-          className={isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
-        >
-          {isVerified ? 'Verified' : 'Pending'}
-        </Badge>
+        <div className='flex items-center gap-2'>
+          <div className='flex gap-1'>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={isVerified}
+              onClick={() => meta.onVerify?.(transaction.id, true)}
+              className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
+            >
+              { isVerified ? 'Verified' : 'Verify' }
+            </Button>
+            <Button
+              variant='ghost'
+              size='sm'
+              disabled={!isVerified}
+              onClick={() => meta.onVerify?.(transaction.id, false)}
+              className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
+            >
+              { !isVerified ? 'Unverified' : 'Unverify' }
+            </Button>
+          </div>
+        </div>
       );
     },
   },

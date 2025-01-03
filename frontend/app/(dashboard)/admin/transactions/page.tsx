@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { transactionApi } from '@/services/api';
 import { Transaction, TransactionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { DataTableFilters } from '@/components/filters/data-table-filters';
+import { TransactionFilters } from '@/components/filters/transaction-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -39,39 +40,6 @@ interface TransactionFilters {
   sortOrder?: 'asc' | 'desc';
 }
 
-async function getTransactions(filters: TransactionFilters = {}): Promise<TransactionsResponse> {
-  const queryParams = new URLSearchParams();
-
-  if (filters.page) queryParams.append('page', filters.page.toString());
-  if (filters.limit) queryParams.append('limit', filters.limit.toString());
-  if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
-  if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
-  if (filters.createdById) queryParams.append('createdById', filters.createdById);
-  if (filters.type) queryParams.append('type', filters.type);
-  if (filters.minAmount) queryParams.append('minAmount', filters.minAmount.toString());
-  if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString());
-  if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-  if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to fetch transactions');
-  }
-  return response.json();
-}
-
 export default function TransactionsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -84,7 +52,7 @@ export default function TransactionsPage() {
 
   const { data: transactionsData, isLoading } = useQuery({
     queryKey: ['transactions', filters, page],
-    queryFn: () => getTransactions({ ...filters, page, limit: 10 }),
+    queryFn: () => transactionApi.getAll({ ...filters, page, limit: 10 }).then((res) => res.data),
   });
 
   const transactions = transactionsData?.data || [];
@@ -105,53 +73,25 @@ export default function TransactionsPage() {
   };
 
   const deleteTransaction = useMutation({
-    mutationFn: async (transactionId: string) => {
+    mutationFn: (transactionId: string) => {
       setLoading(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/${transactionId}`,
-        {
-          method: 'DELETE',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete transaction');
-      }
+      return transactionApi.delete(transactionId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transaction deleted successfully');
       setLoading(false);
     },
-    onError: () => {
-      toast.error('Failed to delete transaction');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete transaction');
       setLoading(false);
     },
   });
 
   const bulkDeleteTransactions = useMutation({
-    mutationFn: async (transactionIds: string[]) => {
+    mutationFn: (transactionIds: string[]) => {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ transactionIds }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete transactions');
-      }
+      return transactionApi.bulkDelete(transactionIds);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -159,8 +99,24 @@ export default function TransactionsPage() {
       setSelectedRows([]);
       setLoading(false);
     },
-    onError: () => {
-      toast.error('Failed to delete transactions');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to delete transactions');
+      setLoading(false);
+    },
+  });
+
+  const verifyTransaction = useMutation({
+    mutationFn: ({ transactionId, isVerified }: { transactionId: string; isVerified: boolean }) => {
+      setLoading(true);
+      return transactionApi.verify(transactionId, isVerified);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction status updated successfully');
+      setLoading(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update transaction status');
       setLoading(false);
     },
   });
@@ -174,7 +130,7 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className='flex flex-col gap-4'>
+    <Card className='flex flex-col gap-4 p-7 max-h-[calc(100vh-150px)] overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Transactions</h1>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -183,12 +139,7 @@ export default function TransactionsPage() {
         </Button>
       </div>
 
-      <DataTableFilters
-        onFilterChange={handleFilterChange}
-        typeOptions={typeOptions}
-        showAmountFilter
-        showTypeFilter
-      />
+      <TransactionFilters onFilterChange={handleFilterChange} typeOptions={typeOptions} />
 
       <Card>
         <DataTable
@@ -198,16 +149,15 @@ export default function TransactionsPage() {
             setSelectedTransaction(transaction);
             setIsEditDialogOpen(true);
           }}
-          onDelete={(transaction) => {
-            deleteTransaction.mutate(transaction.id);
+          onDelete={async (transactionId) => {
+            await deleteTransaction.mutateAsync(transactionId);
           }}
-          selectedRows={selectedRows}
-          onSelectedRowsChange={setSelectedRows}
-          onBulkDelete={(rows) => {
-            bulkDeleteTransactions.mutate(rows.map((row) => row.id));
+          onVerify={async (transactionId, isVerified) => {
+            await verifyTransaction.mutateAsync({ transactionId, isVerified });
           }}
-          pageCount={totalPages}
-          onPageChange={handlePageChange}
+          onBulkDelete={async (rows: any[]) => {
+            await bulkDeleteTransactions.mutateAsync(rows.map((row: { id: any }) => row.id));
+          }}
         />
       </Card>
 
@@ -220,6 +170,6 @@ export default function TransactionsPage() {
           transaction={selectedTransaction}
         />
       )}
-    </div>
+    </Card>
   );
 }

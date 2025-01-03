@@ -257,10 +257,17 @@ export const reactivateCompany = async (req: Request, res: Response) => {
   const { id } = req.params;
 
   try {
+    // update the company, its admin, and its users
     const company = await prisma.company.update({
       where: { id },
       data: { blocked: false },
     });
+
+    await prisma.user.updateMany({
+      where: { companyId: id },
+      data: { isActive: true },
+    });
+
     res.json(company);
   } catch (error) {
     res.status(500).json({ message: "Failed to reactivate company" });

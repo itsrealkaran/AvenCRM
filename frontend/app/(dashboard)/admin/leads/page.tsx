@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { DataTableFilters } from '@/components/filters/data-table-filters';
+import { LeadFilters } from '@/components/filters/lead-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -33,7 +33,8 @@ interface LeadFilters {
   endDate?: Date;
   createdById?: string;
   status?: LeadStatus;
-  source?: string;
+  minAmount?: number;
+  maxAmount?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 }
@@ -47,7 +48,8 @@ async function getLeads(filters: LeadFilters = {}): Promise<LeadsResponse> {
   if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
   if (filters.createdById) queryParams.append('createdById', filters.createdById);
   if (filters.status) queryParams.append('status', filters.status);
-  if (filters.source) queryParams.append('source', filters.source);
+  if (filters.minAmount) queryParams.append('minAmount', filters.minAmount.toString());
+  if (filters.maxAmount) queryParams.append('maxAmount', filters.maxAmount.toString());
   if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
   if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
@@ -103,9 +105,9 @@ export default function LeadsPage() {
   };
 
   const deleteLead = useMutation({
-    mutationFn: async (leadId: string) => {
+    mutationFn: async (lead: Lead) => {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${leadId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${lead.id}`, {
         method: 'DELETE',
         credentials: 'include',
         headers: {
@@ -169,7 +171,7 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className='flex flex-col gap-4'>
+    <Card className='flex flex-col gap-4 p-7 max-h-[calc(100vh-150px)] overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Leads</h1>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -178,32 +180,26 @@ export default function LeadsPage() {
         </Button>
       </div>
 
-      <DataTableFilters
-        onFilterChange={handleFilterChange}
-        statusOptions={statusOptions}
-        showSourceFilter
-      />
+      <LeadFilters onFilterChange={handleFilterChange} statusOptions={statusOptions} />
 
-      <Card>
-        <DataTable
-          columns={columns}
-          data={leads}
-          onEdit={(lead) => {
-            setSelectedLead(lead);
-            setIsEditDialogOpen(true);
-          }}
-          onDelete={(lead) => {
-            deleteLead.mutate(lead.id);
-          }}
-          selectedRows={selectedRows}
-          onSelectedRowsChange={setSelectedRows}
-          onBulkDelete={(rows) => {
-            bulkDeleteLeads.mutate(rows.map((row) => row.id));
-          }}
-          pageCount={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        data={leads}
+        onEdit={(lead) => {
+          setSelectedLead(lead);
+          setIsEditDialogOpen(true);
+        }}
+        onDelete={(leadId) => {
+          deleteLead.mutate(leadId);
+        }}
+        selectedRows={selectedRows}
+        onSelectedRowsChange={setSelectedRows}
+        onBulkDelete={(rows) => {
+          bulkDeleteLeads.mutate(rows.map((row) => row.id));
+        }}
+        pageCount={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <CreateLeadDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
@@ -212,16 +208,15 @@ export default function LeadsPage() {
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           lead={selectedLead}
+          onDelete={async (lead) => {
+            await deleteLead.mutateAsync(lead);
+            setSelectedLead(null);
+          }}
           onEdit={(lead) => {
             setSelectedLead(lead);
-            setIsEditDialogOpen(true);
-          }}
-          onDelete={async (leadId) => {
-            await deleteLead.mutateAsync(leadId);
-            setSelectedLead(null);
           }}
         />
       )}
-    </div>
+    </Card>
   );
 }

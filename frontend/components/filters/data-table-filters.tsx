@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { DatePicker } from '@/components/ui/date-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
   Select,
@@ -13,178 +15,219 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+
+interface FilterState {
+  startDate?: Date | null;
+  endDate?: Date | null;
+  status?: string;
+  source?: string;
+  type?: string;
+  minAmount?: string;
+  maxAmount?: string;
+  showTime?: boolean;
+}
 
 interface DataTableFiltersProps {
   onFilterChange: (filters: any) => void;
   statusOptions?: { label: string; value: string }[];
+  typeOptions?: { label: string; value: string }[];
   showAmountFilter?: boolean;
   showSourceFilter?: boolean;
   showTypeFilter?: boolean;
-  typeOptions?: { label: string; value: string }[];
+  showDateFilter?: boolean;
+  showTimeFilter?: boolean;
 }
 
 export function DataTableFilters({
   onFilterChange,
-  statusOptions,
-  showAmountFilter,
-  showSourceFilter,
-  showTypeFilter,
-  typeOptions,
+  statusOptions = [],
+  typeOptions = [],
+  showAmountFilter = false,
+  showSourceFilter = false,
+  showTypeFilter = false,
+  showDateFilter = true,
+  showTimeFilter = false,
 }: DataTableFiltersProps) {
-  const [startDate, setStartDate] = React.useState<Date>();
-  const [endDate, setEndDate] = React.useState<Date>();
-  const [status, setStatus] = React.useState<string>();
-  const [minAmount, setMinAmount] = React.useState<string>();
-  const [maxAmount, setMaxAmount] = React.useState<string>();
-  const [source, setSource] = React.useState<string>();
-  const [type, setType] = React.useState<string>();
+  const [open, setOpen] = useState(false);
+  const [localFilters, setLocalFilters] = useState({
+    startDate: undefined,
+    endDate: undefined,
+    status: undefined,
+    source: undefined,
+    type: undefined,
+    minAmount: undefined,
+    maxAmount: undefined,
+  });
 
-  const handleApplyFilters = () => {
-    onFilterChange({
-      startDate,
-      endDate,
-      status,
-      minAmount: minAmount ? Number(minAmount) : undefined,
-      maxAmount: maxAmount ? Number(maxAmount) : undefined,
-      source,
-      type,
-    });
+  const handleFilterChange = (key: string, value: any) => {
+    setLocalFilters((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
-  const handleReset = () => {
-    setStartDate(undefined);
-    setEndDate(undefined);
-    setStatus(undefined);
-    setMinAmount(undefined);
-    setMaxAmount(undefined);
-    setSource(undefined);
-    setType(undefined);
+  const applyFilters = () => {
+    onFilterChange(localFilters);
+    setOpen(false);
+  };
+
+  const resetFilters = () => {
+    setLocalFilters({
+      startDate: undefined,
+      endDate: undefined,
+      status: undefined,
+      source: undefined,
+      type: undefined,
+      minAmount: undefined,
+      maxAmount: undefined,
+    });
     onFilterChange({});
+    setOpen(false);
   };
 
   return (
-    <div className='flex flex-col gap-4 p-4 border rounded-lg bg-background'>
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        <div className='flex flex-col gap-2'>
-          <label>Start Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={'outline'}
-                className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !startDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className='mr-2 h-4 w-4' />
-                {startDate ? format(startDate, 'PPP') : 'Pick a date'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-0'>
-              <Calendar mode='single' selected={startDate} onSelect={setStartDate} initialFocus />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        <div className='flex flex-col gap-2'>
-          <label>End Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={'outline'}
-                className={cn(
-                  'w-full justify-start text-left font-normal',
-                  !endDate && 'text-muted-foreground'
-                )}
-              >
-                <CalendarIcon className='mr-2 h-4 w-4' />
-                {endDate ? format(endDate, 'PPP') : 'Pick a date'}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className='w-auto p-0'>
-              <Calendar mode='single' selected={endDate} onSelect={setEndDate} initialFocus />
-            </PopoverContent>
-          </Popover>
-        </div>
-
-        {statusOptions && (
-          <div className='flex flex-col gap-2'>
-            <label>Status</label>
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder='Select status' />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {showAmountFilter && (
-          <>
-            <div className='flex flex-col gap-2'>
-              <label>Min Amount</label>
-              <Input
-                type='number'
-                value={minAmount}
-                onChange={(e) => setMinAmount(e.target.value)}
-                placeholder='Min amount'
-              />
-            </div>
-            <div className='flex flex-col gap-2'>
-              <label>Max Amount</label>
-              <Input
-                type='number'
-                value={maxAmount}
-                onChange={(e) => setMaxAmount(e.target.value)}
-                placeholder='Max amount'
-              />
-            </div>
-          </>
-        )}
-
-        {showSourceFilter && (
-          <div className='flex flex-col gap-2'>
-            <label>Source</label>
-            <Input
-              value={source}
-              onChange={(e) => setSource(e.target.value)}
-              placeholder='Enter source'
-            />
-          </div>
-        )}
-
-        {showTypeFilter && typeOptions && (
-          <div className='flex flex-col gap-2'>
-            <label>Type</label>
-            <Select value={type} onValueChange={setType}>
-              <SelectTrigger>
-                <SelectValue placeholder='Select type' />
-              </SelectTrigger>
-              <SelectContent>
-                {typeOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-      </div>
-
-      <div className='flex justify-end gap-2'>
-        <Button variant='outline' onClick={handleReset}>
-          Reset
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant='outline' size='sm' className='h-8 border-dashed'>
+          <PlusCircle className='mr-2 h-4 w-4' />
+          Add filters
         </Button>
-        <Button onClick={handleApplyFilters}>Apply Filters</Button>
-      </div>
-    </div>
+      </SheetTrigger>
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>Filters</SheetTitle>
+          <SheetDescription>Add filters to narrow down your results</SheetDescription>
+        </SheetHeader>
+        <div className='grid gap-4 py-4'>
+          {showDateFilter && (
+            <div className='grid gap-2'>
+              <Label>Date Range</Label>
+              <div className='grid grid-cols-2 gap-2'>
+                {showTimeFilter ? (
+                  <>
+                    <DateTimePicker
+                      value={localFilters.startDate}
+                      onChange={(date) => handleFilterChange('startDate', date)}
+                      className='w-full'
+                      placeholder='Start date & time'
+                    />
+                    <DateTimePicker
+                      value={localFilters.endDate}
+                      onChange={(date) => handleFilterChange('endDate', date)}
+                      className='w-full'
+                      placeholder='End date & time'
+                    />
+                  </>
+                ) : (
+                  <>
+                    <DatePicker
+                      value={localFilters.startDate}
+                      onChange={(date) => handleFilterChange('startDate', date)}
+                      placeholder='Start date'
+                      className='w-full'
+                    />
+                    <DatePicker
+                      value={localFilters.endDate}
+                      onChange={(date) => handleFilterChange('endDate', date)}
+                      placeholder='End date'
+                      className='w-full'
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {statusOptions.length > 0 && (
+            <div className='grid gap-2'>
+              <Label>Status</Label>
+              <Select
+                value={localFilters.status}
+                onValueChange={(value) => handleFilterChange('status', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Select status' />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {showSourceFilter && (
+            <div className='grid gap-2'>
+              <Label>Source</Label>
+              <Input
+                value={localFilters.source || ''}
+                onChange={(e) => handleFilterChange('source', e.target.value)}
+                placeholder='Enter source'
+              />
+            </div>
+          )}
+
+          {showTypeFilter && typeOptions.length > 0 && (
+            <div className='grid gap-2'>
+              <Label>Type</Label>
+              <Select
+                value={localFilters.type}
+                onValueChange={(value) => handleFilterChange('type', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Select type' />
+                </SelectTrigger>
+                <SelectContent>
+                  {typeOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {showAmountFilter && (
+            <div className='grid gap-2'>
+              <Label>Amount Range</Label>
+              <div className='grid grid-cols-2 gap-2'>
+                <Input
+                  type='number'
+                  value={localFilters.minAmount || ''}
+                  onChange={(e) => handleFilterChange('minAmount', e.target.value)}
+                  placeholder='Min amount'
+                />
+                <Input
+                  type='number'
+                  value={localFilters.maxAmount || ''}
+                  onChange={(e) => handleFilterChange('maxAmount', e.target.value)}
+                  placeholder='Max amount'
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        <SheetFooter>
+          <Button variant='outline' onClick={resetFilters}>
+            Reset
+          </Button>
+          <Button onClick={applyFilters}>Apply Filters</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }

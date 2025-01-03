@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { DataTableFilters } from '@/components/filters/data-table-filters';
+import { DealFilters } from '@/components/filters/deal-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -171,7 +171,7 @@ export default function DealsPage() {
   }
 
   return (
-    <div className='flex flex-col gap-4'>
+    <Card className='flex flex-col gap-4 p-7 max-h-[calc(100vh-150px)] overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Deals</h1>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -180,33 +180,26 @@ export default function DealsPage() {
         </Button>
       </div>
 
-      <DataTableFilters
-        onFilterChange={handleFilterChange}
-        statusOptions={statusOptions}
-        showAmountFilter
-      />
+      <DealFilters onFilterChange={handleFilterChange} statusOptions={statusOptions} />
 
-      <Card>
-        <DataTable
-          columns={columns}
-          data={deals}
-          onEdit={(deal) => {
-            setSelectedDeal(deal);
-            setIsEditDialogOpen(true);
-          }}
-          onDelete={async (dealId) => {
-            await deleteDeal.mutateAsync(dealId);
-            setSelectedDeal(null);
-          }}
-          selectedRows={selectedRows}
-          onSelectedRowsChange={setSelectedRows}
-          onBulkDelete={(rows) => {
-            bulkDeleteDeals.mutate(rows.map((row) => row.id));
-          }}
-          pageCount={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        data={deals}
+        onEdit={(deal) => {
+          setSelectedDeal(deal);
+          setIsEditDialogOpen(true);
+        }}
+        onDelete={(dealId) => {
+          deleteDeal.mutate(dealId);
+        }}
+        selectedRows={selectedRows}
+        onSelectedRowsChange={setSelectedRows}
+        onBulkDelete={(rows) => {
+          bulkDeleteDeals.mutate(rows.map((row) => row.id));
+        }}
+        pageCount={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <CreateDealDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
@@ -224,6 +217,6 @@ export default function DealsPage() {
           }}
         />
       )}
-    </div>
+    </Card>
   );
 }

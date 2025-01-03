@@ -8,9 +8,8 @@ export const createTask = async (req: Request, res: Response) => {
   try {
     const { title, description, priority, dueDate, colorTag } = req.body;
     const userId = req.user?.id;
-    const companyId = req.user?.companyId;
 
-    if (!userId || !companyId) {
+    if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -23,7 +22,6 @@ export const createTask = async (req: Request, res: Response) => {
         dueDate: dueDate ? new Date(dueDate) : null,
         colorTag,
         userId,
-        companyId,
       },
     });
 
@@ -37,16 +35,14 @@ export const createTask = async (req: Request, res: Response) => {
 export const getTasks = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
-    const companyId = req.user?.companyId;
 
-    if (!userId || !companyId) {
+    if (!userId) {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
     const tasks = await prisma.task.findMany({
       where: {
         userId,
-        companyId,
       },
       orderBy: {
         createdAt: 'desc',
