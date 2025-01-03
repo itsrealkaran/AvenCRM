@@ -399,7 +399,7 @@ export const userController = {
   },
 
   async updateProfile(req: AuthenticatedRequest, res: Response) {
-    const { name, email, gender, phone, dob } = req.body;
+    const { name, email, gender, phone, dob, avatar, designation } = req.body;
     const authUser = req.user;
 
     try {
@@ -415,6 +415,8 @@ export const userController = {
           gender,
           phone,
           dob: dob ? new Date(dob) : undefined,
+          avatar,
+          designation,
         },
       });
 

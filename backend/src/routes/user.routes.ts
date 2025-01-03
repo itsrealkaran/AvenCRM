@@ -26,22 +26,27 @@ const upload = multer({
 // User Management Routes (Protected)
 router.use(protect);
 
+// Profile Management Routes (Available to all authenticated users)
+router.get('/profile', userController.getProfile);
+router.put('/profile', userController.updateProfile);
+router.put('/password', userController.changePassword);
+router.put('/avatar', upload.single('avatar'), userController.uploadAvatar);
+router.get('/avatar/:userId', userController.getAvatar);
+
 // SuperAdmin & Admin Routes
 router.post('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.createUser);
-router.get('/', userController.getUsers);
-router.get('/:id', userController.getUserById);
+router.get('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.getUsers);
+router.get('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.getUserById);
 router.put('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.updateUser);
-router.delete('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.deleteUser);
+router.delete('/:id', validateRole([UserRole.SUPERADMIN]), userController.deleteUser);
+
+// SuperAdmin Only Routes
 router.get('/admins', validateRole([UserRole.SUPERADMIN]), userController.getAllAdmins);
 
-// Team Management Routes
+// Admin & Team Leader Routes
 router.post('/assign-team', validateRole([UserRole.ADMIN, UserRole.TEAM_LEADER]), userController.assignTeam);
 
 // Metrics and Performance Routes
 router.get('/:id/metrics', userController.getUserMetrics);
-
-// Avatar Routes
-router.put('/avatar', protect, upload.single('avatar'), userController.uploadAvatar);
-router.get('/avatar/:userId', protect, userController.getAvatar);
 
 export default router;

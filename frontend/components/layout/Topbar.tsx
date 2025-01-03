@@ -53,7 +53,7 @@ export default function Topbar() {
               <div className='flex items-center gap-2 cursor-pointer'>
                 <div className='w-[37px] h-[37px] rounded-full overflow-hidden ml-4 cursor-pointer'>
                   <Avatar>
-                    <AvatarImage src={user?.image} />
+                    <AvatarImage src={user?.avatar} />
                     <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
                   </Avatar>
                 </div>

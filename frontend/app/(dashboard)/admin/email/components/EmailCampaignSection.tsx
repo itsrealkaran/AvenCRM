@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from 'lucide-react';
 
@@ -37,6 +37,8 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 
 interface EmailTemplate {
   id: string;
@@ -84,6 +86,8 @@ export default function EmailCampaignSection() {
   const [customRecipient, setCustomRecipient] = useState({ email: '', name: '' });
   const { toast } = useToast();
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedTab, setSelectedTab] = useState('template');
   const [formData, setFormData] = useState({
     title: '',
     templateId: '',
@@ -156,9 +160,14 @@ export default function EmailCampaignSection() {
     fetchAgents();
   }, [fetchCampaigns, fetchTemplates, fetchAgents]);
 
-  console.log('compaigns', campaigns);
-  console.log('templates', templates);
-  console.log('agents', agents);
+  // Filter agents based on search query
+  const filteredAgents = useMemo(() => {
+    if (!searchQuery) return agents;
+    return agents.filter(agent => 
+      agent.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      agent.email.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [agents, searchQuery]);
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
@@ -295,91 +304,163 @@ export default function EmailCampaignSection() {
   }
 
   return (
-    <div className='space-y-6'>
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}
-      >
-        <DialogTrigger asChild>
-          <Button>
-            <Plus className='mr-2 h-4 w-4' />
-            Create Campaign
-          </Button>
-        </DialogTrigger>
-        <DialogContent className='overflow-y-auto max-h-[90vh] md:max-h-[90vh] p-4 lg:min-w-[725px]'>
-          <DialogHeader>
-            <DialogTitle>Create Email Campaign</DialogTitle>
-            <DialogDescription>
-              Create a new email campaign to send to your recipients
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className='space-y-4'>
-            <div className='grid w-full gap-4'>
-              <div className='grid w-full gap-2'>
-                <Label htmlFor='title'>Campaign Title</Label>
-                <Input
-                  id='title'
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder='Monthly Newsletter'
-                  required
-                />
-              </div>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Campaign
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>Create Email Campaign</DialogTitle>
+          <DialogDescription>
+            Create a new email campaign to send to your recipients
+          </DialogDescription>
+        </DialogHeader>
 
-              <div className='grid w-full gap-2'>
-                <Label htmlFor='template'>Email Template</Label>
-                <Select value={formData.templateId} onValueChange={handleTemplateChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select a template' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {templates.map((template) => (
-                      <SelectItem key={template.id} value={template.id}>
-                        {template.name}
-                      </SelectItem>
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="template">Template & Content</TabsTrigger>
+            <TabsTrigger value="recipients">Recipients</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
+          </TabsList>
+
+          <form onSubmit={handleSubmit}>
+            <TabsContent value="template" className="space-y-4 mt-4">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="title">Campaign Title</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    placeholder="Monthly Newsletter"
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="template">Email Template</Label>
+                  <Select value={formData.templateId} onValueChange={handleTemplateChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a template" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {templates.map((template) => (
+                        <SelectItem key={template.id} value={template.id}>
+                          {template.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="subject">Email Subject</Label>
+                  <Input
+                    id="subject"
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    placeholder="Your Monthly Newsletter"
+                    required
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="content">Email Content</Label>
+                  <Textarea
+                    id="content"
+                    value={formData.content}
+                    onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                    className="min-h-[200px]"
+                    required
+                  />
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="recipients" className="space-y-4 mt-4">
+              <div className="grid gap-4">
+                <div className="flex items-center justify-between">
+                  <Label>Recipients ({formData.recipients.length})</Label>
+                  <span className="text-sm text-muted-foreground">
+                    Selected {formData.recipients.length} recipients
+                  </span>
+                </div>
+
+                <Command className="border rounded-lg">
+                  <CommandInput
+                    placeholder="Search recipients..."
+                    value={searchQuery}
+                    onValueChange={setSearchQuery}
+                  />
+                  <CommandEmpty>No recipients found.</CommandEmpty>
+                  <CommandGroup className="max-h-64 overflow-auto">
+                    {filteredAgents.map((agent) => (
+                      <CommandItem
+                        key={agent.id}
+                        onSelect={() => {
+                          addRecipient({
+                            type: 'AGENT',
+                            email: agent.email,
+                            name: agent.name,
+                            recipientId: agent.id,
+                          });
+                        }}
+                      >
+                        <Users className="mr-2 h-4 w-4" />
+                        <span>{agent.name}</span>
+                        <span className="ml-2 text-sm text-muted-foreground">
+                          ({agent.email})
+                        </span>
+                      </CommandItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                  </CommandGroup>
+                </Command>
 
-              <div className='grid w-full gap-2'>
-                <Label htmlFor='subject'>Email Subject</Label>
-                <Input
-                  id='subject'
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                  placeholder='Your Monthly Newsletter'
-                  required
-                />
+                {formData.recipients.length > 0 && (
+                  <div className="border rounded-lg p-4">
+                    <div className="flex flex-wrap gap-2">
+                      {formData.recipients.map((recipient) => (
+                        <Badge
+                          key={recipient.email}
+                          className="flex items-center gap-2"
+                        >
+                          <span>
+                            {recipient.name} ({recipient.email})
+                          </span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-4 w-4 p-0"
+                            onClick={() => removeRecipient(recipient.email)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            </TabsContent>
 
-              <div className='grid w-full gap-2'>
-                <Label htmlFor='content'>Email Content</Label>
-                <Textarea
-                  id='content'
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  className='min-h-[200px]'
-                  required
-                />
-              </div>
-
-              <div className='grid w-full gap-2'>
+            <TabsContent value="schedule" className="space-y-4 mt-4">
+              <div className="grid gap-4">
                 <Label>Schedule Date and Time</Label>
-                <div className='flex gap-2'>
+                <div className="flex gap-4">
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
-                        variant='outline'
+                        variant="outline"
                         className={cn(
                           'w-[240px] justify-start text-left font-normal',
                           !formData.scheduledAt && 'text-muted-foreground'
                         )}
                       >
-                        <CalendarIcon className='mr-2 h-4 w-4' />
+                        <CalendarIcon className="mr-2 h-4 w-4" />
                         {formData.scheduledAt ? (
                           format(formData.scheduledAt, 'PPP')
                         ) : (
@@ -387,269 +468,72 @@ export default function EmailCampaignSection() {
                         )}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className='w-auto p-0'>
+                    <PopoverContent className="w-auto p-0">
                       <Calendar
-                        mode='single'
+                        mode="single"
                         selected={formData.scheduledAt}
-                        onSelect={(date) => {
-                          if (date) {
-                            const currentTime = formData.scheduledAt;
-                            const newDate = new Date(date);
-                            newDate.setHours(currentTime.getHours());
-                            newDate.setMinutes(currentTime.getMinutes());
-                            setFormData({ ...formData, scheduledAt: newDate });
-                          }
-                        }}
+                        onSelect={(date) =>
+                          date && setFormData({ ...formData, scheduledAt: date })
+                        }
                         initialFocus
                       />
                     </PopoverContent>
                   </Popover>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant='outline'
-                        className={cn(
-                          'w-[140px] justify-start text-left font-normal',
-                          !formData.scheduledAt && 'text-muted-foreground'
-                        )}
-                      >
-                        <Clock className='mr-2 h-4 w-4' />
-                        {formData.scheduledAt ? (
-                          format(formData.scheduledAt, 'HH:mm')
-                        ) : (
-                          <span>Pick time</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className='w-auto p-0'>
-                      <div className='p-4 space-y-2'>
-                        <div className='flex gap-2'>
-                          <Select
-                            value={formData.scheduledAt.getHours().toString().padStart(2, '0')}
-                            onValueChange={(value) => {
-                              const newDate = new Date(formData.scheduledAt);
-                              newDate.setHours(parseInt(value));
-                              setFormData({ ...formData, scheduledAt: newDate });
-                            }}
-                          >
-                            <SelectTrigger className='w-[70px]'>
-                              <SelectValue placeholder='HH' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 24 }, (_, i) => (
-                                <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                                  {i.toString().padStart(2, '0')}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <span className='text-2xl'>:</span>
-                          <Select
-                            value={formData.scheduledAt.getMinutes().toString().padStart(2, '0')}
-                            onValueChange={(value) => {
-                              const newDate = new Date(formData.scheduledAt);
-                              newDate.setMinutes(parseInt(value));
-                              setFormData({ ...formData, scheduledAt: newDate });
-                            }}
-                          >
-                            <SelectTrigger className='w-[70px]'>
-                              <SelectValue placeholder='MM' />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {Array.from({ length: 60 }, (_, i) => (
-                                <SelectItem key={i} value={i.toString().padStart(2, '0')}>
-                                  {i.toString().padStart(2, '0')}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
 
-              <div className='grid w-full gap-2'>
-                <Label>Recipients</Label>
-                <div className='space-y-4'>
-                  <Select value={selectedRecipientType} onValueChange={handleRecipientTypeChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select recipient type' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='AGENT'>Agents</SelectItem>
-                      <SelectItem value='EXTERNAL'>External Recipients</SelectItem>
-                    </SelectContent>
-                  </Select>
-
-                  {selectedRecipientType === 'EXTERNAL' ? (
-                    <div className='grid grid-cols-2 gap-2'>
-                      <div>
-                        <Label>Name</Label>
-                        <Input
-                          value={customRecipient.name}
-                          onChange={(e) =>
-                            setCustomRecipient((prev) => ({ ...prev, name: e.target.value }))
-                          }
-                          placeholder='John Doe'
-                        />
-                      </div>
-                      <div>
-                        <Label>Email</Label>
-                        <Input
-                          value={customRecipient.email}
-                          onChange={(e) =>
-                            setCustomRecipient((prev) => ({ ...prev, email: e.target.value }))
-                          }
-                          placeholder='john@example.com'
-                          type='email'
-                        />
-                      </div>
-                      <Button
-                        type='button'
-                        onClick={addCustomRecipient}
-                        className='col-span-2'
-                        variant='default'
-                      >
-                        Add Recipient
-                      </Button>
-                    </div>
-                  ) : (
+                  <div className="flex gap-2 items-center">
                     <Select
+                      value={formData.scheduledAt.getHours().toString().padStart(2, '0')}
                       onValueChange={(value) => {
-                        const selectedAgent = agents.find((agent) => agent.id === value);
-                        if (selectedAgent) {
-                          addRecipient({
-                            type: 'AGENT',
-                            email: selectedAgent.email,
-                            name: selectedAgent.name,
-                            recipientId: selectedAgent.id,
-                          });
-                        }
+                        const newDate = new Date(formData.scheduledAt);
+                        newDate.setHours(parseInt(value));
+                        setFormData({ ...formData, scheduledAt: newDate });
                       }}
                     >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={`Select ${selectedRecipientType.toLowerCase()}...`}
-                        />
+                      <SelectTrigger className="w-[70px]">
+                        <SelectValue placeholder="HH" />
                       </SelectTrigger>
                       <SelectContent>
-                        {agents &&
-                          agents.map((agent) => (
-                            <SelectItem key={agent.id} value={agent.id}>
-                              <div className='flex items-center'>
-                                <Users className='mr-2 h-4 w-4' />
-                                <span>{agent.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                            {i.toString().padStart(2, '0')}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                  )}
-
-                  {formData.recipients.length > 0 && (
-                    <div className='border rounded-lg p-4 space-y-2'>
-                      <Label>Selected Recipients</Label>
-                      <div className='flex flex-wrap gap-2'>
-                        {formData.recipients.map((recipient) => (
-                          <Badge key={recipient.email} className='flex items-center gap-2'>
-                            <span>
-                              {recipient.name} ({recipient.email})
-                            </span>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              className='h-4 w-4 p-0'
-                              onClick={() => removeRecipient(recipient.email)}
-                            >
-                              <X className='h-3 w-3' />
-                            </Button>
-                          </Badge>
+                    <span className="text-2xl">:</span>
+                    <Select
+                      value={formData.scheduledAt.getMinutes().toString().padStart(2, '0')}
+                      onValueChange={(value) => {
+                        const newDate = new Date(formData.scheduledAt);
+                        newDate.setMinutes(parseInt(value));
+                        setFormData({ ...formData, scheduledAt: newDate });
+                      }}
+                    >
+                      <SelectTrigger className="w-[70px]">
+                        <SelectValue placeholder="MM" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 60 }, (_, i) => (
+                          <SelectItem key={i} value={i.toString().padStart(2, '0')}>
+                            {i.toString().padStart(2, '0')}
+                          </SelectItem>
                         ))}
-                      </div>
-                    </div>
-                  )}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
-            </div>
+            </TabsContent>
 
-            <div className='flex justify-end gap-4'>
-              <Button type='button' variant='outline' onClick={() => setIsDialogOpen(false)}>
+            <div className="flex justify-end gap-4 mt-6">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type='submit'>Create Campaign</Button>
+              <Button type="submit">Create Campaign</Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      <div className='rounded-md border'>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Campaign</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Scheduled</TableHead>
-              <TableHead>Recipients</TableHead>
-              <TableHead>Progress</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {campaigns.map((campaign) => (
-              <TableRow key={campaign.id}>
-                <TableCell>
-                  <div className='font-medium'>{campaign.title}</div>
-                  <div className='text-sm text-muted-foreground'>
-                    Created {new Date(campaign.createdAt).toLocaleDateString()}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(campaign.status)}>{campaign.status}</Badge>
-                </TableCell>
-                <TableCell>{new Date(campaign.scheduledAt).toLocaleString()}</TableCell>
-                <TableCell>
-                  <div className='flex items-center'>
-                    <Users className='h-4 w-4 mr-2' />
-                    {campaign.totalRecipients}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className='space-y-2'>
-                    <Progress value={(campaign.successfulSends / campaign.totalRecipients) * 100} />
-                    <div className='text-xs text-muted-foreground'>
-                      {campaign.successfulSends} of {campaign.totalRecipients} sent
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {campaign.status === 'SCHEDULED' && (
-                    <Button
-                      variant='destructive'
-                      size='sm'
-                      onClick={() => cancelCampaign(campaign.id)}
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {campaigns.length === 0 && (
-        <div className='text-center p-8 border rounded-lg bg-muted'>
-          <Mail className='mx-auto h-12 w-12 opacity-50 mb-4' />
-          <h3 className='text-lg font-medium'>No email campaigns</h3>
-          <p className='text-sm text-muted-foreground mt-2'>
-            Create your first email campaign to get started
-          </p>
-        </div>
-      )}
-    </div>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }

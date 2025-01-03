@@ -78,7 +78,7 @@ const Page = () => {
               className='w-32 h-32 border-4 border-white shadow-lg cursor-pointer transition-transform hover:scale-105'
               onClick={handleAvatarClick}
             >
-              <AvatarImage src={user.image || '/placeholder.png'} alt='Profile' />
+              <AvatarImage src={user.avatar || '/placeholder.png'} alt='Profile' />
               <AvatarFallback>{user.name?.slice(0, 2).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className='absolute bottom-0 right-0'>

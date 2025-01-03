@@ -17,7 +17,7 @@ export interface User {
   team?: Team;
   createdAt: Date;
   updatedAt: Date;
-  image?: string;
+  avatar?: string;
 }
 
 export interface AuthResponse {

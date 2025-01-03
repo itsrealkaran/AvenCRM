@@ -33,6 +33,7 @@ const statusTypes = [
   'NEGOTIATION',
   'WON',
   'LOST',
+  'ACTIVE',
 ] as const;
 type StatusType = (typeof statusTypes)[number];
 
@@ -45,8 +46,9 @@ const getStatusColor = (status: StatusType) => {
     NEGOTIATION: 'bg-orange-100 text-orange-800',
     WON: 'bg-green-100 text-green-800',
     LOST: 'bg-red-100 text-red-800',
+    ACTIVE: 'bg-emerald-100 text-emerald-800',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return colors[status] || 'bg-primary/10 text-primary';
 };
 export const columns: ColumnDef<Deal>[] = [
   {
