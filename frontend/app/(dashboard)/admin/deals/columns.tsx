@@ -25,8 +25,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const statusTypes = ['NEW', 'CONTACTED', 'QUALIFIED', 'PROPOSAL', 'NEGOTIATION', 'WON', 'LOST'] as const;
-type StatusType = typeof statusTypes[number];
+const statusTypes = [
+  'NEW',
+  'CONTACTED',
+  'QUALIFIED',
+  'PROPOSAL',
+  'NEGOTIATION',
+  'WON',
+  'LOST',
+] as const;
+type StatusType = (typeof statusTypes)[number];
 
 const getStatusColor = (status: StatusType) => {
   const colors = {

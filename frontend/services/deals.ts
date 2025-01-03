@@ -1,4 +1,5 @@
 import { Deal, DealFilters } from '@/types';
+
 import { api } from '@/lib/api';
 
 export const dealsApi = {

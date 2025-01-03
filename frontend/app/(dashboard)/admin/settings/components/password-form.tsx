@@ -1,9 +1,10 @@
 'use client';
 
+import { useState } from 'react';
+import { usersApi } from '@/services/users';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -18,7 +19,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { usersApi } from '@/services/users';
 
 const passwordFormSchema = z
   .object({
@@ -74,10 +74,7 @@ export function PasswordForm() {
                 <FormLabel>Current Password</FormLabel>
                 <FormControl>
                   <div className='relative'>
-                    <Input
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      {...field}
-                    />
+                    <Input type={showCurrentPassword ? 'text' : 'password'} {...field} />
                     <Button
                       type='button'
                       variant='ghost'
@@ -106,10 +103,7 @@ export function PasswordForm() {
                 <FormLabel>New Password</FormLabel>
                 <FormControl>
                   <div className='relative'>
-                    <Input
-                      type={showNewPassword ? 'text' : 'password'}
-                      {...field}
-                    />
+                    <Input type={showNewPassword ? 'text' : 'password'} {...field} />
                     <Button
                       type='button'
                       variant='ghost'
@@ -138,18 +132,13 @@ export function PasswordForm() {
                 <FormLabel>Confirm New Password</FormLabel>
                 <FormControl>
                   <div className='relative'>
-                    <Input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      {...field}
-                    />
+                    <Input type={showConfirmPassword ? 'text' : 'password'} {...field} />
                     <Button
                       type='button'
                       variant='ghost'
                       size='icon'
                       className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
                       {showConfirmPassword ? (
                         <EyeOff className='h-4 w-4' />

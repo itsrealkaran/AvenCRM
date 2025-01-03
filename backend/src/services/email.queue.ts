@@ -140,17 +140,29 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
   const { emailAccountId, recipientIds, subject, content, scheduledFor, campaignId } = job.data;
   
   try {
-    if (scheduledFor && Date.now() > scheduledFor.getTime()) {
-      throw new Error('Email is scheduled for the future');
+    const scheduledTime = scheduledFor ? new Date(scheduledFor) : null;
+    
+    // Check if the job is scheduled for the future
+    if (scheduledTime && scheduledTime.getTime() > Date.now()) {
+      logger.info(`Job ${job.id} is scheduled for future: ${scheduledTime}`);
+      const delay = Math.max(0, scheduledTime.getTime() - Date.now());
+      await emailQueue.add('send-email', job.data, { 
+        delay,
+        jobId: job.id 
+      });
+      return {
+        success: true,
+        delayed: true,
+        scheduledFor: scheduledTime,
+        emailsSent: 0,
+        timestamp: new Date()  // Ensure timestamp is always set
+      };
     }
+
     await job.updateProgress(10);
-    
     await job.extendLock(job.id ?? '', 30000);
-    
     const transporter = await emailService.createTransporter(emailAccountId);
-    
     await job.extendLock(job.id ?? '', 30000);
-    
     const processedContent = emailService.processTemplate(content, {});
 
     const recipients = await prisma.emailRecipient.findMany({
@@ -166,7 +178,6 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     }
     
     await job.updateProgress(50);
-    
     const sendMailPromise = transporter.sendMail({
       from: (await prisma.emailAccount.findUnique({ where: { id: emailAccountId } }))?.email || '',
       to: recipients[0].email,
@@ -184,9 +195,7 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
       });
 
     logger.info(`Email sent successfully to ${recipients[0].email}`);
-    
     await job.updateProgress(100);
-
     await job.extendLock(job.id ?? '', 30000);
 
     if (campaignId) {
@@ -203,7 +212,6 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     };
   } catch (error) {
     logger.error('Error processing email job:', error);
-    
     try {
       await job.extendLock(job.id ?? '', 30000);
       if (campaignId) {
@@ -215,7 +223,6 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     } catch (lockError) {
       logger.error('Failed to update campaign status due to lock error:', lockError);
     }
-
     throw error;
   }
 }
@@ -255,7 +262,7 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
             }
 
             const processedContent = emailService.processTemplate(content, {});
-            
+
             const emailAccount = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } });
             if (!emailAccount) {
               throw new Error('No email account associated with this email');
@@ -335,20 +342,38 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
 
 export const emailQueueHelper = {
   async addEmailJob(data: EmailJobData, scheduledFor?: Date) {
-    const jobOptions: any = {};
+    const jobOptions: any = {
+      removeOnComplete: {
+        age: 24 * 3600,
+        count: 1000
+      },
+      removeOnFail: {
+        age: 7 * 24 * 3600
+      }
+    };
     
     if (scheduledFor) {
-      jobOptions.delay = Math.max(0, scheduledFor.getTime() - Date.now());
+      const scheduledTime = new Date(scheduledFor);
+      jobOptions.delay = Math.max(0, scheduledTime.getTime() - Date.now());
     }
 
     return await emailQueue.add('send-email', data, jobOptions);
   },
 
   async addBulkEmailJob(data: EmailJobData, scheduledFor?: Date) {
-    const jobOptions: any = {};
+    const jobOptions: any = {
+      removeOnComplete: {
+        age: 24 * 3600,
+        count: 1000
+      },
+      removeOnFail: {
+        age: 7 * 24 * 3600
+      }
+    };
     
     if (scheduledFor) {
-      jobOptions.delay = Math.max(0, scheduledFor.getTime() - Date.now());
+      const scheduledTime = new Date(scheduledFor);
+      jobOptions.delay = Math.max(0, scheduledTime.getTime() - Date.now());
     }
 
     return await emailQueue.add('send-bulk-email', data, jobOptions);

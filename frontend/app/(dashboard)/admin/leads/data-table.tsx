@@ -66,7 +66,7 @@ export function DataTable<TData, TValue>({
     meta: {
       onEdit,
       onDelete,
-    }
+    },
   });
 
   const handlePageChange = (newPage: number) => {

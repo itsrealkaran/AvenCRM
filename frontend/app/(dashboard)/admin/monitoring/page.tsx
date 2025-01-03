@@ -28,8 +28,8 @@ import {
 import { toast } from 'sonner';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/lib/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 interface MonitoringData {
@@ -64,7 +64,13 @@ export default function MonitoringPage() {
     fetchData();
   }, []);
 
-  const MetricCard = ({ title, value, growth, icon: Icon, prefix = '' }: { 
+  const MetricCard = ({
+    title,
+    value,
+    growth,
+    icon: Icon,
+    prefix = '',
+  }: {
     title: string;
     value: number | string;
     growth: number;

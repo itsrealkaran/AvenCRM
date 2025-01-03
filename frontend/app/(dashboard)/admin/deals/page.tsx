@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Deal, DealStatus, DealFilters } from '@/types';
+import { dealsApi } from '@/services/deals';
+import { Deal, DealFilters, DealStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,7 +11,6 @@ import { DealFilters as DealFilterComponent } from '@/components/filters/deal-fi
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { dealsApi } from '@/services/deals';
 
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';

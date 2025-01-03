@@ -1,5 +1,6 @@
 'use client';
 
+import { usersApi } from '@/services/users';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -17,7 +18,6 @@ import {
   FormItem,
   FormLabel,
 } from '@/components/ui/form';
-import { usersApi } from '@/services/users';
 
 const notificationFormSchema = z.object({
   emailNotifications: z.boolean(),
@@ -41,15 +41,14 @@ export function NotificationForm() {
     defaultValues,
   });
 
-  const { mutate: updateNotifications, isPending: isUpdatingNotifications } =
-    useMutation({
-      mutationFn: usersApi.updateNotificationSettings,
-      onSuccess: () => {
-        toast.success('Notification preferences updated');
-      },
-      onError: () => {
-        toast.error('Failed to update notification preferences');
-      },
+  const { mutate: updateNotifications, isPending: isUpdatingNotifications } = useMutation({
+    mutationFn: usersApi.updateNotificationSettings,
+    onSuccess: () => {
+      toast.success('Notification preferences updated');
+    },
+    onError: () => {
+      toast.error('Failed to update notification preferences');
+    },
   });
 
   function onSubmit(data: NotificationFormValues) {
@@ -69,10 +68,7 @@ export function NotificationForm() {
                 render={({ field }) => (
                   <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className='space-y-1 leading-none'>
                       <FormLabel>Email Notifications</FormLabel>
@@ -89,10 +85,7 @@ export function NotificationForm() {
                 render={({ field }) => (
                   <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className='space-y-1 leading-none'>
                       <FormLabel>Marketing Emails</FormLabel>
@@ -115,10 +108,7 @@ export function NotificationForm() {
                 render={({ field }) => (
                   <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className='space-y-1 leading-none'>
                       <FormLabel>Push Notifications</FormLabel>
@@ -135,10 +125,7 @@ export function NotificationForm() {
                 render={({ field }) => (
                   <FormItem className='flex flex-row items-start space-x-3 space-y-0'>
                     <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                     </FormControl>
                     <div className='space-y-1 leading-none'>
                       <FormLabel>Security Alerts</FormLabel>

@@ -5,9 +5,12 @@ export interface EmailTemplate {
   name: string;
   subject: string;
   content: string;
+  variables?: string[];
+  description?: string;
+  category?: string;
   isPrivate: boolean;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   userId: string;
   companyId: string;
 }
@@ -19,6 +22,8 @@ export interface EmailRecipient {
   tags: string[];
   notes?: string;
   isPrivate: boolean;
+  status: EmailStatus;
+  lastEmailSentAt?: Date;
   createdAt: string;
   updatedAt: string;
   userId: string;
@@ -35,7 +40,8 @@ export interface EmailAccount {
   idToken?: string;
   isActive: boolean;
   status: EmailAccountStatus;
-  lastError: string;
+  lastError?: string;
+  lastSyncAt?: Date;
   userId: string;
   companyId: string;
   createdAt: Date;
@@ -44,22 +50,22 @@ export interface EmailAccount {
 
 export interface EmailCampaign {
   id: string;
-  name: string;
+  title: string;
   subject: string;
   content: string;
-  companyId: string;
-  createdById: string;
+  templateId?: string;
   status: EmailCampaignStatus;
   scheduledAt?: Date;
-  sentAt?: Date;
+  startedAt?: Date;
   completedAt?: Date;
-  totalRecipients: number;
-  successfulSends: number;
-  failedSends: number;
-  recipients: Record<string, any>;
-  templateId?: string;
-  userId: string;
+  recipientCount: number;
+  sentCount: number;
+  failedCount: number;
+  openCount: number;
+  clickCount: number;
+  error?: string;
   companyId: string;
+  createdById: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -67,14 +73,17 @@ export interface EmailCampaign {
 export interface Email {
   id: string;
   subject: string;
-  body: string;
+  content: string;
   scheduledFor?: Date;
   sentAt?: Date;
   status: EmailStatus;
   error?: string;
   emailAccountId: string;
   campaignId?: string;
-  recipients: Record<string, any>;
+  recipientId: string;
+  trackingId?: string;
+  openedAt?: Date;
+  clickedAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }

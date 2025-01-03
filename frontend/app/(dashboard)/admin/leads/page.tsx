@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Lead, LeadStatus, LeadFilters } from '@/types';
+import { leadsApi } from '@/services/leads';
+import { Lead, LeadFilters, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,7 +11,6 @@ import { LeadFilters as LeadFilterComponent } from '@/components/filters/lead-fi
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { leadsApi } from '@/services/leads';
 
 import { columns } from './columns';
 import { CreateLeadDialog } from './create-lead-dialog';

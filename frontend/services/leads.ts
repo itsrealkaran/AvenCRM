@@ -1,4 +1,5 @@
 import { Lead, LeadFilters } from '@/types';
+
 import { api } from '@/lib/api';
 
 export const leadsApi = {

@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { EmailAccount } from '@/types/email';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 
-import { connectEmailAccount, disconnectEmailAccount } from './api';
+import { connectEmailAccount, disconnectEmailAccount, fetchEmailAccounts } from './api';
 import EmailAccountsSection from './components/EmailAccountsSection';
 import EmailCampaignSection from './components/EmailCampaignSection';
 import EmailRecipientsSection from './components/EmailRecipientsSection';
@@ -15,11 +16,18 @@ import EmailTemplatesSection from './components/EmailTemplatesSection';
 function EmailPage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('accounts');
+  const [accounts, setAccounts] = useState<EmailAccount[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const fetchEmailAccounts = async () => {
+  useEffect(() => {
+    loadEmailAccounts();
+  }, []);
+
+  const loadEmailAccounts = async () => {
     try {
+      setLoading(true);
       const data = await fetchEmailAccounts();
-      // setAccounts(data); // Note: setAccounts is not defined in the provided code
+      setAccounts(data);
     } catch (error) {
       toast({
         title: 'Error',
@@ -27,13 +35,15 @@ function EmailPage() {
         variant: 'destructive',
       });
     } finally {
-      // setLoading(false); // Note: setLoading is not defined in the provided code
+      setLoading(false);
     }
   };
 
-  const connectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
+  const handleConnectAccount = async (provider: 'GMAIL' | 'OUTLOOK') => {
     try {
       const url = await connectEmailAccount(provider);
+      // Store current URL in localStorage to redirect back after OAuth
+      localStorage.setItem('emailRedirectUrl', window.location.href);
       window.location.href = url;
     } catch (error) {
       toast({
@@ -44,10 +54,10 @@ function EmailPage() {
     }
   };
 
-  const disconnectAccount = async (accountId: string) => {
+  const handleDisconnectAccount = async (accountId: string) => {
     try {
       await disconnectEmailAccount(accountId);
-      await fetchEmailAccounts();
+      await loadEmailAccounts();
       toast({
         title: 'Success',
         description: 'Email account disconnected successfully',
@@ -80,7 +90,12 @@ function EmailPage() {
                 <CardTitle>Connected Email Accounts</CardTitle>
               </CardHeader>
               <CardContent>
-                <EmailAccountsSection />
+                <EmailAccountsSection
+                  accounts={accounts}
+                  loading={loading}
+                  onConnect={handleConnectAccount}
+                  onDisconnect={handleDisconnectAccount}
+                />
               </CardContent>
             </Card>
           </TabsContent>

@@ -73,14 +73,16 @@ export default function Topbar() {
               </div>
             </DropdownMenuTrigger>
 
-          <DropdownMenuContent align='end' className='w-44'>
-            <DropdownMenuItem onClick={() => router.push(`/${user?.role.toLowerCase()}/settings`)}>
-              <Settings className='m-2 h-4 w-4' />
-              Settings
-            </DropdownMenuItem>
-            <SignOutButton variant="ghost" className="w-full justify-start" />
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <DropdownMenuContent align='end' className='w-44'>
+              <DropdownMenuItem
+                onClick={() => router.push(`/${user?.role.toLowerCase()}/settings`)}
+              >
+                <Settings className='m-2 h-4 w-4' />
+                Settings
+              </DropdownMenuItem>
+              <SignOutButton variant='ghost' className='w-full justify-start' />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

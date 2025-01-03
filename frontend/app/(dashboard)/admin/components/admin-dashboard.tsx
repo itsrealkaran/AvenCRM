@@ -27,10 +27,10 @@ import {
 } from 'recharts';
 import { toast } from 'sonner';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/lib/api';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { api } from '@/lib/api';
 
 interface TopPerformer {
   name: string;
@@ -288,7 +288,10 @@ export function AdminDashboard() {
                   <p className='text-sm font-medium text-gray-900'>
                     ${performer.revenue.toLocaleString()}
                   </p>
-                  <Progress value={(performer.deals / dashboardData.totalDeals) * 100} className='w-32' />
+                  <Progress
+                    value={(performer.deals / dashboardData.totalDeals) * 100}
+                    className='w-32'
+                  />
                 </div>
               </div>
             ))}

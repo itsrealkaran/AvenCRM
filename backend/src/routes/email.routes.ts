@@ -18,11 +18,11 @@ router.get('/templates/:templateId', emailController.getTemplateById);
 router.put('/templates/:templateId', emailController.updateTemplate);
 router.delete('/templates/:templateId', emailController.deleteTemplate);
 
-// // Email recipients
-// router.get('/recipients', emailController.ge);
-// router.post('/recipients', emailController.createRecipient);
-// router.put('/recipients/:id', emailController.updateRecipient);
-// router.delete('/recipients/:id', emailController.deleteRecipient);
+// Email recipients
+router.get('/recipients', emailController.getRecipients);
+router.post('/recipients', emailController.createRecipient);
+router.put('/recipients/:id', emailController.updateRecipient);
+router.delete('/recipients/:id', emailController.deleteRecipient);
 
 // Email campaigns
 router.post('/campaigns', emailController.sendBulkEmail);

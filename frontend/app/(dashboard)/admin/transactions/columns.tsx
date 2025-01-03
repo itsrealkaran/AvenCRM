@@ -105,7 +105,7 @@ export const columns: ColumnDef<Transaction>[] = [
       const meta = table.options.meta as {
         onVerify?: (transactionId: string, isVerified: boolean) => void;
       };
-  
+
       return (
         <div className='flex items-center gap-2'>
           <div className='flex gap-1'>

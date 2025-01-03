@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { EmailStatus } from '@/types';
 import { EmailRecipient } from '@/types/email';
 import {
   ColumnDef,
@@ -14,8 +15,9 @@ import {
   useReactTable,
   VisibilityState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Plus } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Plus, Users, X } from 'lucide-react';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -36,6 +38,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Table,
   TableBody,
@@ -44,8 +47,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { api } from '@/lib/api';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
+
+import { createEmailRecipient, deleteEmailRecipient, fetchEmailRecipients } from '../api';
+
+interface NewRecipient {
+  name: string;
+  email: string;
+  tags: string[];
+  notes?: string;
+  isPrivate: boolean;
+}
 
 export default function EmailRecipientsSection() {
   const { toast } = useToast();
@@ -56,13 +69,34 @@ export default function EmailRecipientsSection() {
   const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newRecipient, setNewRecipient] = useState({
+  const [tagInput, setTagInput] = useState('');
+  const [newRecipient, setNewRecipient] = useState<NewRecipient>({
     name: '',
     email: '',
-    tags: '',
+    tags: [],
     notes: '',
     isPrivate: false,
   });
+
+  useEffect(() => {
+    loadRecipients();
+  }, []);
+
+  const loadRecipients = async () => {
+    try {
+      setIsLoading(true);
+      const data = await fetchEmailRecipients();
+      setRecipients(data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch recipients',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const columns: ColumnDef<EmailRecipient>[] = [
     {
@@ -86,60 +120,64 @@ export default function EmailRecipientsSection() {
     },
     {
       accessorKey: 'name',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Name
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
-      cell: ({ row }) => <div>{row.getValue('name')}</div>,
+      header: ({ column }) => (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Name
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      ),
+      cell: ({ row }) => <div className='font-medium'>{row.getValue('name')}</div>,
     },
     {
       accessorKey: 'email',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Email
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Email
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      ),
       cell: ({ row }) => <div>{row.getValue('email')}</div>,
     },
     {
       accessorKey: 'tags',
       header: 'Tags',
       cell: ({ row }) => (
-        <div className='flex gap-1'>
-          {(row.getValue('tags') as string[]).map((tag, index) => (
-            <span
-              key={index}
-              className='bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded'
-            >
+        <div className='flex gap-1 flex-wrap'>
+          {/* {row.getValue<string[]>('tags').map((tag, index) => (
+            <Badge key={index} variant='secondary'>
               {tag}
-            </span>
-          ))}
+            </Badge>
+          ))} */}
         </div>
       ),
     },
     {
-      accessorKey: 'isPrivate',
-      header: 'Private',
-      cell: ({ row }) => <div>{row.getValue('isPrivate') ? 'Private' : 'Public'}</div>,
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <Badge variant={row.getValue('status') === EmailStatus.SENT ? 'default' : 'secondary'}>
+          {row.getValue('status')}
+        </Badge>
+      ),
+    },
+    {
+      accessorKey: 'lastEmailSentAt',
+      header: 'Last Email Sent',
+      cell: ({ row }) => {
+        const date = row.getValue<Date>('lastEmailSentAt');
+        return date ? new Date(date).toLocaleDateString() : 'Never';
+      },
     },
     {
       id: 'actions',
       cell: ({ row }) => {
         const recipient = row.original;
-
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -180,43 +218,42 @@ export default function EmailRecipientsSection() {
     },
   });
 
-  const fetchRecipients = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get('/email/recipients');
-      setRecipients(response.data.recipients);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch recipients',
-        variant: 'destructive',
+  const handleAddTag = (e: { key: string }) => {
+    if (e.key === 'Enter' && tagInput.trim()) {
+      setNewRecipient({
+        ...newRecipient,
+        tags: [...newRecipient.tags, tagInput.trim()],
       });
-    } finally {
-      setIsLoading(false);
+      setTagInput('');
     }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setNewRecipient({
+      ...newRecipient,
+      tags: newRecipient.tags.filter((tag) => tag !== tagToRemove),
+    });
   };
 
   const handleAddRecipient = async () => {
     try {
-      const tagsArray = newRecipient.tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean);
+      const tagsArray = newRecipient.tags.map((tag) => tag.toLowerCase());
 
-      await api.post('/email/recipients', {
+      await createEmailRecipient({
         ...newRecipient,
         tags: tagsArray,
+        status: EmailStatus.PENDING,
       });
 
       setIsAddDialogOpen(false);
       setNewRecipient({
         name: '',
         email: '',
-        tags: '',
+        tags: [],
         notes: '',
         isPrivate: false,
       });
-      fetchRecipients();
+      await loadRecipients();
 
       toast({
         title: 'Success',
@@ -233,8 +270,8 @@ export default function EmailRecipientsSection() {
 
   const handleDelete = async (id: string) => {
     try {
-      await api.delete(`/email/recipients/${id}`);
-      fetchRecipients();
+      await deleteEmailRecipient(id);
+      await loadRecipients();
       toast({
         title: 'Success',
         description: 'Recipient deleted successfully',
@@ -263,73 +300,87 @@ export default function EmailRecipientsSection() {
               <Plus className='mr-2 h-4 w-4' /> Add Recipient
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className='sm:max-w-[600px]'>
             <DialogHeader>
-              <DialogTitle>Add New Recipient</DialogTitle>
-              <DialogDescription>Add a new recipient to your email list.</DialogDescription>
+              <DialogTitle className='text-xl font-semibold'>Add New Recipient</DialogTitle>
+              <DialogDescription className='text-gray-500'>
+                Add a new recipient to your email list and manage their details.
+              </DialogDescription>
             </DialogHeader>
-            <div className='grid gap-4 py-4'>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='name' className='text-right'>
-                  Name
-                </Label>
-                <Input
-                  id='name'
+
+            <div className='grid gap-6 py-4'>
+              <div className='grid gap-2'>
+                <label className='text-sm font-medium'>Name</label>
+                <input
+                  type='text'
+                  className='flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm'
                   value={newRecipient.name}
                   onChange={(e) => setNewRecipient({ ...newRecipient, name: e.target.value })}
-                  className='col-span-3'
                 />
               </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='email' className='text-right'>
-                  Email
-                </Label>
-                <Input
-                  id='email'
+
+              <div className='grid gap-2'>
+                <label className='text-sm font-medium'>Email</label>
+                <input
                   type='email'
+                  className='flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm'
                   value={newRecipient.email}
                   onChange={(e) => setNewRecipient({ ...newRecipient, email: e.target.value })}
-                  className='col-span-3'
                 />
               </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='tags' className='text-right'>
-                  Tags
-                </Label>
-                <Input
-                  id='tags'
-                  placeholder='tag1, tag2, tag3'
-                  value={newRecipient.tags}
-                  onChange={(e) => setNewRecipient({ ...newRecipient, tags: e.target.value })}
-                  className='col-span-3'
+
+              <div className='grid gap-2'>
+                <label className='text-sm font-medium'>Tags</label>
+                <div className='flex flex-wrap gap-2 mb-2'>
+                  {newRecipient.tags.map((tag) => (
+                    <Badge
+                      key={tag}
+                      variant='secondary'
+                      className='px-2 py-1 flex items-center gap-1'
+                    >
+                      {tag}
+                      <X
+                        className='h-3 w-3 cursor-pointer hover:text-red-500'
+                        onClick={() => removeTag(tag)}
+                      />
+                    </Badge>
+                  ))}
+                </div>
+                <input
+                  type='text'
+                  className='flex h-10 w-full rounded-md border border-gray-200 bg-white px-3 py-2 text-sm'
+                  placeholder='Type a tag and press Enter'
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={handleAddTag}
                 />
               </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='notes' className='text-right'>
-                  Notes
-                </Label>
-                <Input
-                  id='notes'
+
+              <div className='grid gap-2'>
+                <label className='text-sm font-medium'>Notes</label>
+                <Textarea
+                  className='min-h-[100px]'
                   value={newRecipient.notes}
                   onChange={(e) => setNewRecipient({ ...newRecipient, notes: e.target.value })}
-                  className='col-span-3'
+                  placeholder='Add any additional notes...'
                 />
               </div>
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='isPrivate' className='text-right'>
-                  Private
-                </Label>
-                <Checkbox
-                  id='isPrivate'
+
+              <div className='flex items-center justify-between'>
+                <label className='text-sm font-medium'>Private Recipient</label>
+                <Switch
                   checked={newRecipient.isPrivate}
                   onCheckedChange={(checked) =>
-                    setNewRecipient({ ...newRecipient, isPrivate: !!checked })
+                    setNewRecipient({ ...newRecipient, isPrivate: checked })
                   }
                 />
               </div>
             </div>
+
             <DialogFooter>
-              <Button onClick={handleAddRecipient}>Add Recipient</Button>
+              <Button onClick={handleAddRecipient} className='w-full sm:w-auto'>
+                Add Recipient
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -339,15 +390,13 @@ export default function EmailRecipientsSection() {
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  );
-                })}
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
               </TableRow>
             ))}
           </TableHeader>
