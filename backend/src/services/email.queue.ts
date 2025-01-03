@@ -284,7 +284,7 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
             successCount++;
           } catch (error) {
             // failedRecipients.push(recipient.email);
-            // logger.error(`Failed to send email to ${recipient.email}:`, error);
+            logger.error(`Failed to send email to ${recipientId}:`, error);
             console.error(`Failed to send email to :`, error);
           }
         }));

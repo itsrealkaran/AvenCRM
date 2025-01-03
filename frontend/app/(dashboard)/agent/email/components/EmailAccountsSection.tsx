@@ -25,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { EmailAccountStatus } from '@/types';
 
 interface EmailAccountsSectionProps {
   accounts: EmailAccount[];
@@ -66,6 +67,7 @@ export default function EmailAccountsSection({
             <TableRow>
               <TableHead>Email</TableHead>
               <TableHead>Provider</TableHead>
+              <TableHead>isActive</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Last Synced</TableHead>
               <TableHead>Actions</TableHead>
@@ -79,6 +81,17 @@ export default function EmailAccountsSection({
                 <TableCell>
                   <Badge variant={account.isActive ? 'default' : 'destructive'}>
                     {account.isActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={
+                    account.status === EmailAccountStatus.ACTIVE
+                      ? 'default'
+                      : account.status === EmailAccountStatus.NEEDS_REAUTH
+                      ? 'warning'
+                      : 'destructive'
+                  }>
+                    {account.status ?? EmailAccountStatus.NEEDS_REAUTH}
                   </Badge>
                 </TableCell>
                 <TableCell>

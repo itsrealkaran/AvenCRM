@@ -149,29 +149,33 @@ export default function EmailRecipientsSection() {
       header: 'Tags',
       cell: ({ row }) => (
         <div className='flex gap-1 flex-wrap'>
-          {/* {row.getValue<string[]>('tags').map((tag, index) => (
-            <Badge key={index} variant='secondary'>
+          {row.getValue<string[]>('tags').map((tag, index) => (
+            <Badge key={index} className='capitalize'>
               {tag}
             </Badge>
-          ))} */}
+          ))}
         </div>
       ),
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
+      accessorKey: 'isPrivate',
+      header: 'Private',
       cell: ({ row }) => (
-        <Badge variant={row.getValue('status') === EmailStatus.SENT ? 'default' : 'secondary'}>
-          {row.getValue('status')}
-        </Badge>
+        <div>
+          {row.getValue<boolean>('isPrivate') ? (
+            <Badge className='bg-green-100 text-green-800'>Private</Badge>
+          ) : (
+            <Badge className='bg-red-100 text-red-800'>Public</Badge>
+          )}
+        </div>
       ),
     },
     {
-      accessorKey: 'lastEmailSentAt',
-      header: 'Last Email Sent',
+      accessorKey: 'notes',
+      header: 'Notes',
       cell: ({ row }) => {
-        const date = row.getValue<Date>('lastEmailSentAt');
-        return date ? new Date(date).toLocaleDateString() : 'Never';
+        const notes = row.getValue<string>('notes');
+        return notes ? notes : 'No notes';
       },
     },
     {

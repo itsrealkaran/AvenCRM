@@ -36,9 +36,15 @@ export class EmailController {
           }
           if (provider === EmailProvider.GMAIL) {
               let redirectUrl = 'https://accounts.google.com/o/oauth2/v2/auth?';
-              redirectUrl += `scope=https://mail.google.com/`;
+              redirectUrl += `scope=${encodeURIComponent(
+                'https://mail.google.com/ ' +
+                'https://www.googleapis.com/auth/gmail.send ' +
+                'https://www.googleapis.com/auth/gmail.compose ' +
+                'https://www.googleapis.com/auth/gmail.modify'
+              )}`;
               redirectUrl += `&response_type=code`;
               redirectUrl += `&access_type=offline`;
+              redirectUrl += `&prompt=consent`;
               redirectUrl += `&client_id=${process.env.GOOGLE_CLIENT_ID}`;
               redirectUrl += `&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}`;
               return res.json({ url: redirectUrl });
@@ -107,7 +113,8 @@ export class EmailController {
           provider: true,
           isActive: true,
           createdAt: true,
-          updatedAt: true
+          updatedAt: true,
+          status: true
         }
       });
 
@@ -822,7 +829,7 @@ export class EmailController {
       const companyId = req.user?.companyId ?? '';
       const recipients = await prisma.emailRecipient.findMany({
         where: { userId, companyId },
-        select: { id: true, email: true, name: true }
+        select: { id: true, email: true, name: true, tags: true, notes: true, isPrivate: true }
       });
       res.json(recipients);
     } catch (error) {
@@ -833,7 +840,7 @@ export class EmailController {
 
   async createRecipient(req: Request, res: Response) {
     try {
-      const { email, name } = req.body;
+      const { email, name, tags, notes, isPrivate } = req.body;
       if (!email || !name) {
         return res.status(400).json({ error: 'Email and name are required' });
       }
@@ -843,7 +850,7 @@ export class EmailController {
         return res.status(401).json({ error: 'Unauthorized' });
       }
       const recipient = await prisma.emailRecipient.create({
-        data: { email, name, userId, companyId }
+        data: { email, name, userId, companyId, tags, notes, isPrivate }
       });
       res.json(recipient);
     } catch (error) {

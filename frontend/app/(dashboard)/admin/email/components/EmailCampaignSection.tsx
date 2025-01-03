@@ -156,6 +156,10 @@ export default function EmailCampaignSection() {
     fetchAgents();
   }, [fetchCampaigns, fetchTemplates, fetchAgents]);
 
+  console.log('compaigns', campaigns);
+  console.log('templates', templates);
+  console.log('agents', agents);
+
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
     if (template) {
@@ -609,7 +613,7 @@ export default function EmailCampaignSection() {
                 <TableCell>
                   <div className='flex items-center'>
                     <Users className='h-4 w-4 mr-2' />
-                    {campaign.recipients.length}
+                    {campaign.totalRecipients}
                   </div>
                 </TableCell>
                 <TableCell>
