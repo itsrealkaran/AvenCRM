@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../lib/prisma.js';
 import { UserRole } from '@prisma/client';
 import logger from '../utils/logger.js';
-import { AppError } from '../utils/appError.js';
 import { getCachedUser, cacheUser } from '../services/redis.js';
 
 export interface JWTPayload {

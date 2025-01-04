@@ -1,7 +1,6 @@
 import { google } from 'googleapis';
 import { prisma } from '../lib/prisma.js';
 import nodemailer from 'nodemailer';
-import { Client } from '@microsoft/microsoft-graph-client';
 import logger from '../utils/logger.js';
 import { 
   EmailCampaign,
