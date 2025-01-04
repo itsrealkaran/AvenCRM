@@ -49,130 +49,178 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 
 router.post("/", async (req: Request, res: Response) => {
-
-    const agentId = req.user?.id;
-    if (!agentId) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-    const company = await prisma.user.findUnique({
-        where: { id: agentId },
-        select: { companyId: true }
-    });
-    if (!company) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const companyId = company.companyId;
-    const { amount, type, transactionMethod, invoiceNumber , date, planType } = req.body;
-
     try {
+        const { amount, type, planType, invoiceNumber, taxRate, transactionMethod, date } = req.body;
+        
         const transaction = await prisma.transaction.create({
-            data: {  
-                amount: amount,
-                type: type,
-                transactionMethod: transactionMethod, 
-                companyId: companyId || '', 
-                agentId: agentId,
-                planType: PlanTier.BASIC,
-                invoiceNumber: invoiceNumber,
-                date: date,
+            data: {
+                amount: parseFloat(amount),
+                type,
+                planType,
+                invoiceNumber,
+                taxRate: taxRate ? parseFloat(taxRate) : null,
+                transactionMethod,
+                date: new Date(date),
+                agentId: req.user?.id!,
+                companyId: req.user?.companyId!,
+                isVerified: false
             },
+            include: {
+                agent: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
         });
-        res.json(transaction);
+        
+        res.status(201).json(transaction);
     } catch (error) {
+        console.error("Create transaction error:", error);
         res.status(500).json({ message: "Failed to create transaction" });
     }
 });
 
-
 router.put("/:id", async (req: Request, res: Response) => {
-
-    const userId = req.user?.id;
-    if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const company = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { companyId: true }
-    });
-
-    if (!company) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-
-    const companyId = company.companyId;
-
-    const { amount, type, transactionMethod, invoiceNumber, date, planType, receiptUrl } = req.body;
-
     try {
+        const { amount, type, planType, invoiceNumber, taxRate, transactionMethod, date } = req.body;
+        
+        // Check if transaction exists and belongs to the user's company
+        const existingTransaction = await prisma.transaction.findFirst({
+            where: {
+                id: req.params.id,
+                companyId: req.user?.companyId
+            }
+        });
+
+        if (!existingTransaction) {
+            return res.status(404).json({ message: "Transaction not found" });
+        }
+
         const transaction = await prisma.transaction.update({
             where: { id: req.params.id },
             data: {
-                amount: amount,
-                type: type,
-                transactionMethod: transactionMethod, 
-                companyId: companyId || '', 
-                agentId: userId,
-                planType: PlanTier.BASIC,
-                invoiceNumber: invoiceNumber,
-                date: date,
-                receiptUrl: receiptUrl
+                amount: parseFloat(amount),
+                type,
+                planType,
+                invoiceNumber,
+                taxRate: taxRate ? parseFloat(taxRate) : null,
+                transactionMethod,
+                date: new Date(date)
             },
+            include: {
+                agent: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
+                }
+            }
         });
+        
         res.json(transaction);
     } catch (error) {
+        console.error("Update transaction error:", error);
         res.status(500).json({ message: "Failed to update transaction" });
     }
 });
 
-
 router.delete("/:id", async (req: Request, res: Response) => {
     try {
-        const transaction = await prisma.transaction.delete({
-            where: { id: req.params.id },
+        // Check if transaction exists and belongs to the user's company
+        const existingTransaction = await prisma.transaction.findFirst({
+            where: {
+                id: req.params.id,
+                companyId: req.user?.companyId
+            }
         });
-        res.json(transaction);
+
+        if (!existingTransaction) {
+            return res.status(404).json({ message: "Transaction not found" });
+        }
+
+        await prisma.transaction.delete({
+            where: { id: req.params.id }
+        });
+        
+        res.status(204).send();
     } catch (error) {
+        console.error("Delete transaction error:", error);
         res.status(500).json({ message: "Failed to delete transaction" });
     }
 });
 
 router.delete("/", async (req: Request, res: Response) => {
-    const { transactionIds } = req.body;
-
     try {
-        const transaction = await prisma.transaction.deleteMany({
+        const { transactionIds } = req.body;
+        
+        if (!Array.isArray(transactionIds)) {
+            return res.status(400).json({ message: "Invalid transaction IDs" });
+        }
+
+        // Check if all transactions belong to the user's company
+        const transactions = await prisma.transaction.findMany({
             where: {
-                id: {
-                    in: transactionIds
+                id: { in: transactionIds },
+                companyId: req.user?.companyId
+            }
+        });
+
+        if (transactions.length !== transactionIds.length) {
+            return res.status(403).json({ message: "Some transactions are not accessible" });
+        }
+
+        await prisma.transaction.deleteMany({
+            where: {
+                id: { in: transactionIds }
+            }
+        });
+        
+        res.status(204).send();
+    } catch (error) {
+        console.error("Bulk delete transactions error:", error);
+        res.status(500).json({ message: "Failed to delete transactions" });
+    }
+});
+
+router.put("/:id/verify", async (req: Request, res: Response) => {
+    try {
+        const { isVerified } = req.body;
+        
+        // Check if transaction exists and belongs to the user's company
+        const existingTransaction = await prisma.transaction.findFirst({
+            where: {
+                id: req.params.id,
+                companyId: req.user?.companyId
+            }
+        });
+
+        if (!existingTransaction) {
+            return res.status(404).json({ message: "Transaction not found" });
+        }
+
+        const transaction = await prisma.transaction.update({
+            where: { id: req.params.id },
+            data: { isVerified: isVerified },
+            include: {
+                agent: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true
+                    }
                 }
             }
         });
+        
         res.json(transaction);
     } catch (error) {
-        res.status(500).json({ message: "Failed to delete transaction" });
-    }
-});
-
-
-router.post("/verify", async (req: Request, res: Response) => {
-    const { isVerfied } = req.body;
-    try {
-        const transaction = await prisma.transaction.update({
-            where: {
-                id: req.body.id
-            },
-            data: {
-                isVerified: isVerfied
-            }
-        });
-        res.json(transaction);
-    } catch (error) {
+        console.error("Verify transaction error:", error);
         res.status(500).json({ message: "Failed to verify transaction" });
     }
 });
-
-
 
 export default router;

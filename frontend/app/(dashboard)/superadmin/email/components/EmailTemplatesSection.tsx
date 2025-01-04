@@ -34,7 +34,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface EmailTemplate {
@@ -64,8 +63,11 @@ export default function EmailTemplatesSection() {
 
   const fetchTemplates = useCallback(async () => {
     try {
-      const response = await api.get(`/email/templates`);
-      const data = await response.data;
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to fetch templates');
+      const data = await response.json();
       console.log(data);
       setTemplates(data.templates);
     } catch (error) {

@@ -53,7 +53,7 @@ export default function Topbar() {
               <div className='flex items-center gap-2 cursor-pointer'>
                 <div className='w-[37px] h-[37px] rounded-full overflow-hidden ml-4 cursor-pointer'>
                   <Avatar>
-                    <AvatarImage src={user?.image} />
+                    <AvatarImage src={user?.avatar} />
                     <AvatarFallback>{user?.name ? getInitials(user.name) : 'U'}</AvatarFallback>
                   </Avatar>
                 </div>
@@ -73,14 +73,16 @@ export default function Topbar() {
               </div>
             </DropdownMenuTrigger>
 
-          <DropdownMenuContent align='end' className='w-44'>
-            <DropdownMenuItem onClick={() => router.push(`/${user?.role.toLowerCase()}/settings`)}>
-              <Settings className='m-2 h-4 w-4' />
-              Settings
-            </DropdownMenuItem>
-            <SignOutButton variant="ghost" className="w-full justify-start" />
-          </DropdownMenuContent>
-        </DropdownMenu>
+            <DropdownMenuContent align='end' className='w-44'>
+              <DropdownMenuItem
+                onClick={() => router.push(`/${user?.role.toLowerCase()}/settings`)}
+              >
+                <Settings className='m-2 h-4 w-4' />
+                Settings
+              </DropdownMenuItem>
+              <SignOutButton variant='ghost' className='w-full justify-start' />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </div>

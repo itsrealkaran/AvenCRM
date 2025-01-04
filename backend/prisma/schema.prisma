@@ -118,6 +118,8 @@ model User {
   role         UserRole
   designation  String?
   lastLogin    DateTime?
+  avatar       String?
+  banner       String?
   isActive     Boolean    @default(true)
   
   // Company Relations
@@ -195,7 +197,6 @@ model Company {
   emailTemplates    EmailTemplate[]
   companyAuditLogs  CompanyAuditLog[]
   
-  tasks        Task[]
   blocked      Boolean  @default(false) // Indicates if the company is blocked
   createdAt    DateTime  @default(now())
   updatedAt    DateTime? @updatedAt
@@ -625,8 +626,6 @@ model Task {
   // Relations
   assignedTo  User        @relation(fields: [userId], references: [id])
   userId      String
-  company     Company     @relation(fields: [companyId], references: [id])
-  companyId   String
   
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt

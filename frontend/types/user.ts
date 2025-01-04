@@ -1,3 +1,4 @@
+import { Team } from './company';
 import { Gender, UserRole } from './enums';
 
 export interface User {
@@ -13,9 +14,10 @@ export interface User {
   isActive: boolean;
   companyId?: string;
   teamId?: string;
+  team?: Team;
   createdAt: Date;
   updatedAt: Date;
-  image?: string;
+  avatar?: string;
 }
 
 export interface AuthResponse {

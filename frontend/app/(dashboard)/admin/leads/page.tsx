@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { Lead, LeadStatus } from '@/types';
+import { leadsApi } from '@/services/leads';
+import { Lead, LeadFilters, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { DataTableFilters } from '@/components/filters/data-table-filters';
+import { LeadFilters as LeadFilterComponent } from '@/components/filters/lead-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -26,50 +27,6 @@ interface LeadsResponse {
   };
 }
 
-interface LeadFilters {
-  page?: number;
-  limit?: number;
-  startDate?: Date;
-  endDate?: Date;
-  createdById?: string;
-  status?: LeadStatus;
-  source?: string;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
-
-async function getLeads(filters: LeadFilters = {}): Promise<LeadsResponse> {
-  const queryParams = new URLSearchParams();
-
-  if (filters.page) queryParams.append('page', filters.page.toString());
-  if (filters.limit) queryParams.append('limit', filters.limit.toString());
-  if (filters.startDate) queryParams.append('startDate', filters.startDate.toISOString());
-  if (filters.endDate) queryParams.append('endDate', filters.endDate.toISOString());
-  if (filters.createdById) queryParams.append('createdById', filters.createdById);
-  if (filters.status) queryParams.append('status', filters.status);
-  if (filters.source) queryParams.append('source', filters.source);
-  if (filters.sortBy) queryParams.append('sortBy', filters.sortBy);
-  if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
-
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_BACKEND_URL}/leads?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to fetch leads');
-  }
-  return response.json();
-}
-
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -82,7 +39,7 @@ export default function LeadsPage() {
 
   const { data: leadsData, isLoading } = useQuery({
     queryKey: ['leads', filters, page],
-    queryFn: () => getLeads({ ...filters, page, limit: 10 }),
+    queryFn: () => leadsApi.getLeads({ ...filters, page, limit: 10 }),
   });
 
   const leads = leadsData?.data || [];
@@ -94,8 +51,8 @@ export default function LeadsPage() {
   }));
 
   const handleFilterChange = (newFilters: Partial<LeadFilters>) => {
-    setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+    setPage(1);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -103,22 +60,7 @@ export default function LeadsPage() {
   };
 
   const deleteLead = useMutation({
-    mutationFn: async (leadId: string) => {
-      setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${leadId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete lead');
-      }
-    },
+    mutationFn: leadsApi.deleteLead,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead deleted successfully');
@@ -131,23 +73,7 @@ export default function LeadsPage() {
   });
 
   const bulkDeleteLeads = useMutation({
-    mutationFn: async (leadIds: string[]) => {
-      setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({ leadIds }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete leads');
-      }
-    },
+    mutationFn: leadsApi.bulkDeleteLeads,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Leads deleted successfully');
@@ -169,7 +95,7 @@ export default function LeadsPage() {
   }
 
   return (
-    <div className='flex flex-col gap-4'>
+    <Card className='flex flex-col gap-4 p-7 max-h-[calc(100vh-150px)] overflow-y-auto'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Leads</h1>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -178,32 +104,26 @@ export default function LeadsPage() {
         </Button>
       </div>
 
-      <DataTableFilters
-        onFilterChange={handleFilterChange}
-        statusOptions={statusOptions}
-        showSourceFilter
-      />
+      <LeadFilterComponent onFilterChange={handleFilterChange} statusOptions={statusOptions} />
 
-      <Card>
-        <DataTable
-          columns={columns}
-          data={leads}
-          onEdit={(lead) => {
-            setSelectedLead(lead);
-            setIsEditDialogOpen(true);
-          }}
-          onDelete={(lead) => {
-            deleteLead.mutate(lead.id);
-          }}
-          selectedRows={selectedRows}
-          onSelectedRowsChange={setSelectedRows}
-          onBulkDelete={(rows) => {
-            bulkDeleteLeads.mutate(rows.map((row) => row.id));
-          }}
-          pageCount={totalPages}
-          onPageChange={handlePageChange}
-        />
-      </Card>
+      <DataTable
+        columns={columns}
+        data={leads}
+        onEdit={(lead) => {
+          setSelectedLead(lead);
+          setIsEditDialogOpen(true);
+        }}
+        onDelete={(lead) => {
+          deleteLead.mutate(lead.id);
+        }}
+        selectedRows={selectedRows}
+        onSelectedRowsChange={setSelectedRows}
+        onBulkDelete={(rows) => {
+          bulkDeleteLeads.mutate(rows.map((row) => row.id));
+        }}
+        pageCount={totalPages}
+        onPageChange={handlePageChange}
+      />
 
       <CreateLeadDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
@@ -212,16 +132,15 @@ export default function LeadsPage() {
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           lead={selectedLead}
+          onDelete={async (lead) => {
+            await deleteLead.mutateAsync(lead.id);
+            setSelectedLead(null);
+          }}
           onEdit={(lead) => {
             setSelectedLead(lead);
-            setIsEditDialogOpen(true);
-          }}
-          onDelete={async (leadId) => {
-            await deleteLead.mutateAsync(leadId);
-            setSelectedLead(null);
           }}
         />
       )}
-    </div>
+    </Card>
   );
 }

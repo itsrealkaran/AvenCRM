@@ -3,6 +3,7 @@ import { UserRole } from "@prisma/client";
 import db from "../db/index.js";
 import bcrypt from "bcrypt";
 import { AuthenticatedRequest } from '../middleware/auth.js';
+import { uploadFile } from "../utils/s3.js";
 
 export const userController = {
   // User Management (SuperAdmin & Admin)
@@ -183,6 +184,7 @@ export const userController = {
           role: true,
           designation: true,
           isActive: true,
+          dob: true,
           company: {
             select: {
               id: true,
@@ -397,7 +399,7 @@ export const userController = {
   },
 
   async updateProfile(req: AuthenticatedRequest, res: Response) {
-    const { name, email, gender, phone, dob } = req.body;
+    const { name, email, gender, phone, dob, avatar, designation } = req.body;
     const authUser = req.user;
 
     try {
@@ -413,6 +415,8 @@ export const userController = {
           gender,
           phone,
           dob: dob ? new Date(dob) : undefined,
+          avatar,
+          designation,
         },
       });
 
@@ -489,6 +493,73 @@ export const userController = {
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Error fetching profile" });
+    }
+  },
+
+  async uploadAvatar(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      // Validate bucket name
+      const bucketName = process.env.AWS_S3_BUCKET_NAME;
+      if (!bucketName) {
+        return res.status(500).json({ error: 'S3 bucket name is not configured' });
+      }
+
+      const imageName = `avatars/${userId}-${Date.now()}`;
+      const file = await uploadFile(req.file.buffer, imageName, req.file.mimetype);
+      
+      // Update user's avatar URL in database
+      const imageUrl = `https://${bucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${imageName}`;
+      
+      const updatedUser = await db.user.update({
+        where: { id: userId },
+        data: { avatar: imageUrl },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          avatar: true,
+          role: true,
+          companyId: true,
+        },
+      });
+
+      res.status(200).json(updatedUser);
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      res.status(500).json({ error: 'Avatar upload failed' });
+    }
+  },
+
+  async getAvatar(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.params.userId;
+      
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { avatar: true },
+      });
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (!user.avatar) {
+        return res.status(404).json({ error: 'Avatar not found' });
+      }
+
+      res.status(200).json({ imageUrl: user.avatar });
+    } catch (error) {
+      console.error('Error fetching avatar:', error);
+      res.status(500).json({ error: 'Failed to fetch avatar' });
     }
   },
 };

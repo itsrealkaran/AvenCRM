@@ -47,7 +47,7 @@ interface EditLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onEdit: (lead: Lead) => void;
-  onDelete: (leadId: string) => Promise<void>;
+  onDelete: (lead: Lead) => Promise<void>;
   lead: Lead | null;
 }
 
@@ -85,7 +85,6 @@ export function EditLeadDialog({
         name: lead.name,
         email: lead.email || '',
         phone: lead.phone || '',
-        leadAmount: lead.leadAmount?.toString() || '',
         status: lead.status || '',
         source: lead.source || '',
         propertyType: lead.propertyType || '',

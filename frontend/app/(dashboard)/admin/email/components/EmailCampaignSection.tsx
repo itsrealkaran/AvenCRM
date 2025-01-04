@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { EmailCampaign, EmailRecipient, EmailTemplate } from '@/types/email';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from 'lucide-react';
 
@@ -38,50 +39,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  content: string;
-}
-
-interface EmailCampaign {
-  id: string;
-  title: string;
-  status: 'DRAFT' | 'SCHEDULED' | 'SENDING' | 'COMPLETED' | 'FAILED';
-  scheduledAt: string;
-  recipients: Recipient[];
-  successfulSends: number;
-  failedSends: number;
-  totalRecipients: number;
-  createdAt: string;
-}
-
-interface Recipient {
-  type: 'EXTERNAL' | 'AGENT' | 'ADMIN' | 'CLIENT';
-  email: string;
-  name?: string;
-  variables?: Record<string, string>;
-  recipientId?: string;
-}
-
-interface Agent {
-  id: string;
-  name: string;
-  email: string;
-}
+import {
+  cancelEmailCampaign,
+  createEmailCampaign,
+  fetchEmailCampaigns,
+  fetchEmailRecipients,
+  fetchEmailTemplates,
+} from '../api';
 
 export default function EmailCampaignSection() {
-  debugger;
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
+  const [recipients, setRecipients] = useState<EmailRecipient[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedRecipientType, setSelectedRecipientType] = useState<
-    'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL'
-  >('AGENT');
-  const [customRecipient, setCustomRecipient] = useState({ email: '', name: '' });
   const { toast } = useToast();
 
   const [formData, setFormData] = useState({
@@ -90,71 +61,34 @@ export default function EmailCampaignSection() {
     subject: '',
     content: '',
     scheduledAt: new Date(),
-    recipients: [] as Recipient[],
+    recipientIds: [] as string[],
   });
 
-  const fetchCampaigns = useCallback(async () => {
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch campaigns');
-      const data = await response.json();
-      console.log(data);
-      setCampaigns(data.campaigns);
-      console.log(data.campaigns);
+      setLoading(true);
+      const [campaignsData, templatesData, recipientsData] = await Promise.all([
+        fetchEmailCampaigns(),
+        fetchEmailTemplates(),
+        fetchEmailRecipients(),
+      ]);
+      setCampaigns(campaignsData);
+      setTemplates(templatesData);
+      setRecipients(recipientsData);
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to fetch email campaigns',
+        description: 'Failed to load data',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [toast]);
-
-  const fetchTemplates = useCallback(async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/templates`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch templates');
-      const data = await response.json();
-      console.log(data);
-      setTemplates(data.templates);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch email templates',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  const fetchAgents = useCallback(async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/agent`, {
-        credentials: 'include',
-      });
-      if (!response.ok) throw new Error('Failed to fetch agents');
-      const data = await response.json();
-      console.log('agnets', data);
-      setAgents(data);
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch agents',
-        variant: 'destructive',
-      });
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchCampaigns();
-    fetchTemplates();
-    fetchAgents();
-  }, [fetchCampaigns, fetchTemplates, fetchAgents]);
+  };
 
   const handleTemplateChange = (templateId: string) => {
     const template = templates.find((t) => t.id === templateId);
@@ -171,19 +105,16 @@ export default function EmailCampaignSection() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...formData,
-          scheduledAt: formData.scheduledAt.toISOString(),
-        }),
+      await createEmailCampaign({
+        title: formData.title,
+        subject: formData.subject,
+        content: formData.content,
+        recipientIds: formData.recipientIds,
+        templateId: formData.templateId || undefined,
+        scheduledAt: formData.scheduledAt.toISOString(),
       });
 
-      if (!response.ok) throw new Error('Failed to create campaign');
-
-      await fetchCampaigns();
+      await loadData();
       setIsDialogOpen(false);
       resetForm();
 
@@ -200,17 +131,10 @@ export default function EmailCampaignSection() {
     }
   };
 
-  const cancelCampaign = async (campaignId: string) => {
+  const handleCancelCampaign = async (campaignId: string) => {
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/email/campaigns/${campaignId}/cancel`,
-        {
-          method: 'POST',
-        }
-      );
-      if (!response.ok) throw new Error('Failed to cancel campaign');
-
-      await fetchCampaigns();
+      await cancelEmailCampaign(campaignId);
+      await loadData();
       toast({
         title: 'Success',
         description: 'Campaign cancelled successfully',
@@ -231,7 +155,7 @@ export default function EmailCampaignSection() {
       subject: '',
       content: '',
       scheduledAt: new Date(),
-      recipients: [],
+      recipientIds: [],
     });
   };
 
@@ -250,36 +174,20 @@ export default function EmailCampaignSection() {
     }
   };
 
-  const handleRecipientTypeChange = (type: 'AGENT' | 'ADMIN' | 'CLIENT' | 'EXTERNAL') => {
-    setSelectedRecipientType(type);
-    setCustomRecipient({ email: '', name: '' });
-  };
-
-  const addRecipient = (recipient: Recipient) => {
-    if (!formData.recipients.some((r) => r.email === recipient.email)) {
+  const addRecipient = (recipientId: string) => {
+    if (!formData.recipientIds.includes(recipientId)) {
       setFormData((prev) => ({
         ...prev,
-        recipients: [...prev.recipients, recipient],
+        recipientIds: [...prev.recipientIds, recipientId],
       }));
     }
   };
 
-  const removeRecipient = (email: string) => {
+  const removeRecipient = (recipientId: string) => {
     setFormData((prev) => ({
       ...prev,
-      recipients: prev.recipients.filter((r) => r.email !== email),
+      recipientIds: prev.recipientIds.filter((id) => id !== recipientId),
     }));
-  };
-
-  const addCustomRecipient = () => {
-    if (customRecipient.email && customRecipient.name) {
-      addRecipient({
-        type: 'EXTERNAL',
-        email: customRecipient.email,
-        name: customRecipient.name,
-      });
-      setCustomRecipient({ email: '', name: '' });
-    }
   };
 
   if (loading) {
@@ -292,20 +200,14 @@ export default function EmailCampaignSection() {
 
   return (
     <div className='space-y-6'>
-      <Dialog
-        open={isDialogOpen}
-        onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) resetForm();
-        }}
-      >
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogTrigger asChild>
           <Button>
             <Plus className='mr-2 h-4 w-4' />
             Create Campaign
           </Button>
         </DialogTrigger>
-        <DialogContent className='overflow-y-auto max-h-[90vh] md:max-h-[90vh] p-4 lg:min-w-[725px]'>
+        <DialogContent className='max-w-4xl'>
           <DialogHeader>
             <DialogTitle>Create Email Campaign</DialogTitle>
             <DialogDescription>
@@ -313,8 +215,8 @@ export default function EmailCampaignSection() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className='space-y-4'>
-            <div className='grid w-full gap-4'>
-              <div className='grid w-full gap-2'>
+            <div className='grid gap-4'>
+              <div className='grid gap-2'>
                 <Label htmlFor='title'>Campaign Title</Label>
                 <Input
                   id='title'
@@ -325,7 +227,7 @@ export default function EmailCampaignSection() {
                 />
               </div>
 
-              <div className='grid w-full gap-2'>
+              <div className='grid gap-2'>
                 <Label htmlFor='template'>Email Template</Label>
                 <Select value={formData.templateId} onValueChange={handleTemplateChange}>
                   <SelectTrigger>
@@ -341,7 +243,7 @@ export default function EmailCampaignSection() {
                 </Select>
               </div>
 
-              <div className='grid w-full gap-2'>
+              <div className='grid gap-2'>
                 <Label htmlFor='subject'>Email Subject</Label>
                 <Input
                   id='subject'
@@ -352,7 +254,7 @@ export default function EmailCampaignSection() {
                 />
               </div>
 
-              <div className='grid w-full gap-2'>
+              <div className='grid gap-2'>
                 <Label htmlFor='content'>Email Content</Label>
                 <Textarea
                   id='content'
@@ -363,7 +265,7 @@ export default function EmailCampaignSection() {
                 />
               </div>
 
-              <div className='grid w-full gap-2'>
+              <div className='grid gap-2'>
                 <Label>Schedule Date and Time</Label>
                 <div className='flex gap-2'>
                   <Popover>
@@ -466,108 +368,49 @@ export default function EmailCampaignSection() {
                 </div>
               </div>
 
-              <div className='grid w-full gap-2'>
+              <div className='grid gap-2'>
                 <Label>Recipients</Label>
-                <div className='space-y-4'>
-                  <Select value={selectedRecipientType} onValueChange={handleRecipientTypeChange}>
-                    <SelectTrigger>
-                      <SelectValue placeholder='Select recipient type' />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value='AGENT'>Agents</SelectItem>
-                      <SelectItem value='EXTERNAL'>External Recipients</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <Select onValueChange={(value) => addRecipient(value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select recipients' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {recipients.map((recipient) => (
+                      <SelectItem key={recipient.id} value={recipient.id}>
+                        {recipient.name} ({recipient.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-                  {selectedRecipientType === 'EXTERNAL' ? (
-                    <div className='grid grid-cols-2 gap-2'>
-                      <div>
-                        <Label>Name</Label>
-                        <Input
-                          value={customRecipient.name}
-                          onChange={(e) =>
-                            setCustomRecipient((prev) => ({ ...prev, name: e.target.value }))
-                          }
-                          placeholder='John Doe'
-                        />
-                      </div>
-                      <div>
-                        <Label>Email</Label>
-                        <Input
-                          value={customRecipient.email}
-                          onChange={(e) =>
-                            setCustomRecipient((prev) => ({ ...prev, email: e.target.value }))
-                          }
-                          placeholder='john@example.com'
-                          type='email'
-                        />
-                      </div>
-                      <Button
-                        type='button'
-                        onClick={addCustomRecipient}
-                        className='col-span-2'
-                        variant='default'
-                      >
-                        Add Recipient
-                      </Button>
+                {formData.recipientIds.length > 0 && (
+                  <div className='border rounded-lg p-4 space-y-2'>
+                    <Label>Selected Recipients</Label>
+                    <div className='flex flex-wrap gap-2'>
+                      {formData.recipientIds.map((id) => {
+                        const recipient = recipients.find((r) => r.id === id);
+                        return (
+                          recipient && (
+                            <Badge key={id} className='flex items-center gap-2'>
+                              <span>
+                                {recipient.name} ({recipient.email})
+                              </span>
+                              <Button
+                                type='button'
+                                variant='ghost'
+                                size='sm'
+                                className='h-4 w-4 p-0'
+                                onClick={() => removeRecipient(id)}
+                              >
+                                <X className='h-3 w-3' />
+                              </Button>
+                            </Badge>
+                          )
+                        );
+                      })}
                     </div>
-                  ) : (
-                    <Select
-                      onValueChange={(value) => {
-                        const selectedAgent = agents.find((agent) => agent.id === value);
-                        if (selectedAgent) {
-                          addRecipient({
-                            type: 'AGENT',
-                            email: selectedAgent.email,
-                            name: selectedAgent.name,
-                            recipientId: selectedAgent.id,
-                          });
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={`Select ${selectedRecipientType.toLowerCase()}...`}
-                        />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {agents &&
-                          agents.map((agent) => (
-                            <SelectItem key={agent.id} value={agent.id}>
-                              <div className='flex items-center'>
-                                <Users className='mr-2 h-4 w-4' />
-                                <span>{agent.name}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-
-                  {formData.recipients.length > 0 && (
-                    <div className='border rounded-lg p-4 space-y-2'>
-                      <Label>Selected Recipients</Label>
-                      <div className='flex flex-wrap gap-2'>
-                        {formData.recipients.map((recipient) => (
-                          <Badge key={recipient.email} className='flex items-center gap-2'>
-                            <span>
-                              {recipient.name} ({recipient.email})
-                            </span>
-                            <Button
-                              type='button'
-                              variant='ghost'
-                              size='sm'
-                              className='h-4 w-4 p-0'
-                              onClick={() => removeRecipient(recipient.email)}
-                            >
-                              <X className='h-3 w-3' />
-                            </Button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -575,7 +418,9 @@ export default function EmailCampaignSection() {
               <Button type='button' variant='outline' onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button type='submit'>Create Campaign</Button>
+              <Button type='submit' disabled={formData.recipientIds.length === 0}>
+                Create Campaign
+              </Button>
             </div>
           </form>
         </DialogContent>
@@ -605,18 +450,27 @@ export default function EmailCampaignSection() {
                 <TableCell>
                   <Badge variant={getStatusBadgeVariant(campaign.status)}>{campaign.status}</Badge>
                 </TableCell>
-                <TableCell>{new Date(campaign.scheduledAt).toLocaleString()}</TableCell>
+                <TableCell>
+                  {campaign.scheduledAt ? new Date(campaign.scheduledAt).toLocaleString() : 'N/A'}
+                </TableCell>
                 <TableCell>
                   <div className='flex items-center'>
                     <Users className='h-4 w-4 mr-2' />
-                    {campaign.recipients.length}
+                    {campaign.recipientCount}
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className='space-y-2'>
-                    <Progress value={(campaign.successfulSends / campaign.totalRecipients) * 100} />
+                    <Progress
+                      value={
+                        campaign.recipientCount > 0
+                          ? (campaign.sentCount / campaign.recipientCount) * 100
+                          : 0
+                      }
+                    />
                     <div className='text-xs text-muted-foreground'>
-                      {campaign.successfulSends} of {campaign.totalRecipients} sent
+                      {campaign.sentCount} of {campaign.recipientCount} sent
+                      {campaign.failedCount > 0 && ` (${campaign.failedCount} failed)`}
                     </div>
                   </div>
                 </TableCell>
@@ -625,7 +479,7 @@ export default function EmailCampaignSection() {
                     <Button
                       variant='destructive'
                       size='sm'
-                      onClick={() => cancelCampaign(campaign.id)}
+                      onClick={() => handleCancelCampaign(campaign.id)}
                     >
                       Cancel
                     </Button>

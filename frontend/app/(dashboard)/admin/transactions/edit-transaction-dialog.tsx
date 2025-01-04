@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { transactionApi } from '@/services/api';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -44,16 +45,12 @@ interface EditTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transactionId: string) => Promise<void>;
 }
 
 export function EditTransactionDialog({
   open,
   onOpenChange,
   transaction,
-  onEdit,
-  onDelete,
 }: EditTransactionDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<TransactionFormValues>({
@@ -87,35 +84,18 @@ export function EditTransactionDialog({
 
   const editTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
+      if (!transaction?.id) {
+        throw new Error('Transaction ID is required');
       }
 
       const payload = {
         ...values,
         amount: parseFloat(values.amount),
-        taxRate: values.taxRate ? parseFloat(values.taxRate) : null,
+        taxRate: values.taxRate ? parseFloat(values.taxRate) : 0,
         date: new Date(values.date).toISOString(),
       };
 
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions/${transaction?.id}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to update transaction');
-      }
-
-      return response.json();
+      return transactionApi.update(transaction.id, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -123,8 +103,8 @@ export function EditTransactionDialog({
       form.reset();
       toast.success('Transaction updated successfully');
     },
-    onError: () => {
-      toast.error('Failed to update transaction');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update transaction');
     },
   });
 

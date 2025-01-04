@@ -15,6 +15,25 @@ const getLastSixMonthsData = async () => {
   return sixMonthsAgo;
 };
 
+// Helper function to get monthly data
+const getMonthlyData = async (startDate: Date, companyId: string) => {
+  const monthlyRevenue = await prisma.transaction.groupBy({
+    by: ['createdAt'],
+    where: {
+      companyId,
+      type: 'INCOME',
+      createdAt: {
+        gte: startDate,
+      },
+    },
+    _sum: {
+      amount: true,
+    },
+  });
+
+  return monthlyRevenue;
+};
+
 export const getSuperAdminDashboard = async (req: Request, res: Response) => {
   try {
     const sixMonthsAgo = await getLastSixMonthsData();
@@ -128,9 +147,59 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       },
     });
 
-    // Get monthly performance data
+    // Get monthly performance data with more details
     const monthlyPerformance = await prisma.deal.groupBy({
-      by: ['createdAt'],
+      by: ['createdAt', 'status'],
+      where: {
+        companyId,
+        createdAt: {
+          gte: sixMonthsAgo,
+        },
+      },
+      _count: true,
+      _sum: {
+        dealAmount: true,
+      },
+    });
+
+    // Get top performing agents
+    const topAgents = await prisma.deal.groupBy({
+      by: ['agentId'],
+      where: {
+        companyId,
+        status: 'CLOSED_WON',
+      },
+      _count: true,
+      _sum: {
+        dealAmount: true,
+      },
+      orderBy: {
+        _sum: {
+          dealAmount: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    // Get agent details for top performers
+    const agentDetails = await Promise.all(
+      topAgents.map(async (agent) => {
+        const user = await prisma.user.findUnique({
+          where: { id: agent.agentId },
+          select: { name: true, email: true },
+        });
+        return {
+          name: user?.name,
+          email: user?.email,
+          deals: agent._count,
+          revenue: agent._sum.dealAmount,
+        };
+      })
+    );
+
+    // Get lead conversion metrics
+    const leadMetrics = await prisma.lead.groupBy({
+      by: ['status'],
       where: {
         companyId,
         createdAt: {
@@ -148,6 +217,13 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       performanceData: monthlyPerformance.map((item) => ({
         month: new Date(item.createdAt).toLocaleString('default', { month: 'short' }),
         deals: item._count,
+        status: item.status,
+        revenue: item._sum?.dealAmount || 0,
+      })),
+      topPerformers: agentDetails,
+      leadMetrics: leadMetrics.map((metric) => ({
+        status: metric.status,
+        count: metric._count,
       })),
     });
   } catch (error) {
@@ -212,6 +288,145 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('Error in getAgentDashboard:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getMonitoringData = async (req: Request, res: Response) => {
+  try {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      return res.status(400).json({ error: 'Company ID not found' });
+    }
+
+    const sixMonthsAgo = await getLastSixMonthsData();
+
+    // Get total agents
+    const totalAgents = await prisma.user.count({
+      where: { 
+        companyId,
+        role: 'AGENT',
+      },
+    });
+
+    const previousMonthAgents = await prisma.user.count({
+      where: {
+        companyId,
+        role: 'AGENT',
+        createdAt: {
+          lt: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+        },
+      },
+    });
+
+    // Get revenue metrics
+    const totalRevenue = await prisma.transaction.aggregate({
+      where: {
+        companyId,
+        type: 'INCOME',
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    const previousMonthRevenue = await prisma.transaction.aggregate({
+      where: {
+        companyId,
+        type: 'INCOME',
+        createdAt: {
+          lt: new Date(new Date().setMonth(new Date().getMonth() - 1)),
+        },
+      },
+      _sum: {
+        amount: true,
+      },
+    });
+
+    // Get average deal size
+    const dealsWithAmount = await prisma.deal.aggregate({
+      where: {
+        companyId,
+        status: 'CLOSED_WON',
+      },
+      _avg: {
+        dealAmount: true,
+      },
+      _count: true,
+    });
+
+    // Get pipeline conversion data
+    const pipelineData = await prisma.deal.groupBy({
+      by: ['status'],
+      where: {
+        companyId,
+      },
+      _count: true,
+    });
+
+    // Get monthly revenue trend
+    const monthlyRevenue = await getMonthlyData(sixMonthsAgo, companyId);
+
+    // Get top performing agents
+    const topAgents = await prisma.deal.groupBy({
+      by: ['agentId'],
+      where: {
+        companyId,
+        status: 'CLOSED_WON',
+      },
+      _count: true,
+      _sum: {
+        dealAmount: true,
+      },
+      orderBy: {
+        _sum: {
+          dealAmount: 'desc',
+        },
+      },
+      take: 5,
+    });
+
+    // Get agent details
+    const agentDetails = await Promise.all(
+      topAgents.map(async (agent) => {
+        const user = await prisma.user.findUnique({
+          where: { id: agent.agentId },
+          select: { name: true },
+        });
+        return {
+          name: user?.name,
+          deals: agent._count,
+          revenue: agent._sum.dealAmount,
+        };
+      })
+    );
+
+    // Calculate growth rates
+    const agentGrowth = calculateGrowthRate(totalAgents, previousMonthAgents);
+    const revenueGrowth = calculateGrowthRate(
+      totalRevenue._sum.amount || 0,
+      previousMonthRevenue._sum.amount || 0
+    );
+
+    res.json({
+      totalAgents,
+      agentGrowth,
+      totalRevenue: totalRevenue._sum.amount || 0,
+      revenueGrowth,
+      avgDealSize: dealsWithAmount._avg.dealAmount || 0,
+      conversionRate: (dealsWithAmount._count / (await prisma.lead.count({ where: { companyId } }))) * 100,
+      pipelineData: pipelineData.map((item) => ({
+        name: item.status,
+        value: item._count,
+      })),
+      revenueTrend: monthlyRevenue.map((item) => ({
+        month: new Date(item.createdAt).toLocaleString('default', { month: 'short' }),
+        revenue: item._sum.amount || 0,
+      })),
+      agentPerformance: agentDetails,
+    });
+  } catch (error) {
+    console.error('Error in getMonitoringData:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

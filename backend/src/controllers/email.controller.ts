@@ -36,9 +36,15 @@ export class EmailController {
           }
           if (provider === EmailProvider.GMAIL) {
               let redirectUrl = 'https://accounts.google.com/o/oauth2/v2/auth?';
-              redirectUrl += `scope=https://mail.google.com/`;
+              redirectUrl += `scope=${encodeURIComponent(
+                'https://mail.google.com/ ' +
+                'https://www.googleapis.com/auth/gmail.send ' +
+                'https://www.googleapis.com/auth/gmail.compose ' +
+                'https://www.googleapis.com/auth/gmail.modify'
+              )}`;
               redirectUrl += `&response_type=code`;
               redirectUrl += `&access_type=offline`;
+              redirectUrl += `&prompt=consent`;
               redirectUrl += `&client_id=${process.env.GOOGLE_CLIENT_ID}`;
               redirectUrl += `&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}`;
               return res.json({ url: redirectUrl });
@@ -106,7 +112,9 @@ export class EmailController {
           email: true,
           provider: true,
           isActive: true,
-          createdAt: true
+          createdAt: true,
+          updatedAt: true,
+          status: true
         }
       });
 
@@ -812,34 +820,90 @@ export class EmailController {
     }
   }
 
-  // async sendTestEmail(req: Request, res: Response) {
-  //   try {
-  //     const { recipientId, subject, content } = req.body;
-  //     const userId = req.user?.id;
+  async getRecipients(req: Request, res: Response) {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const companyId = req.user?.companyId ?? '';
+      const recipients = await prisma.emailRecipient.findMany({
+        where: { userId, companyId },
+        select: { id: true, email: true, name: true, tags: true, notes: true, isPrivate: true }
+      });
+      res.json(recipients);
+    } catch (error) {
+      logger.error('Get recipients error:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to fetch recipients' });
+    }
+  }
 
-  //     if (!userId) {
-  //       return res.status(401).json({ error: 'Unauthorized' });
-  //     }
+  async createRecipient(req: Request, res: Response) {
+    try {
+      const { email, name, tags, notes, isPrivate } = req.body;
+      if (!email || !name) {
+        return res.status(400).json({ error: 'Email and name are required' });
+      }
+      const userId = req.user?.id;
+      const companyId = req.user?.companyId ?? '';
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const recipient = await prisma.emailRecipient.create({
+        data: { email, name, userId, companyId, tags, notes, isPrivate }
+      });
+      res.json(recipient);
+    } catch (error) {
+      logger.error('Create recipient error:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to create recipient' });
+    }
+  }
 
-  //     if (!recipientId || !subject || !content) {
-  //       return res.status(400).json({ error: 'Recipient, subject, and content are required' });
-  //     }
+  async updateRecipient(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const { email, name } = req.body;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const recipient = await prisma.emailRecipient.findUnique({
+        where: { id, userId }
+      });
+      if (!recipient) {
+        return res.status(404).json({ error: 'Recipient not found' });
+      }
+      const updatedRecipient = await prisma.emailRecipient.update({
+        where: { id },
+        data: { email, name }
+      });
+      res.json(updatedRecipient);
+    } catch (error) {
+      logger.error('Update recipient error:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to update recipient' });
+    }
+  }
 
-  //     await this.scheduleEmail({
-  //       emailAccountId: userId,
-  //       recipients: [{ id: recipientId }],
-  //       subject,
-  //       content
-  //     });
-
-  //     res.json({ message: 'Test email sent successfully' });
-  //   } catch (error) {
-  //     logger.error('Send test email error:', error);
-  //     res.status(500).json({ 
-  //       error: error instanceof Error ? error.message : 'Failed to send test email' 
-  //     });
-  //   }
-  // }
+  async deleteRecipient(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+      const recipient = await prisma.emailRecipient.findUnique({
+        where: { id, userId }
+      });
+      if (!recipient) {
+        return res.status(404).json({ error: 'Recipient not found' });
+      }
+      await prisma.emailRecipient.delete({ where: { id } });
+      res.json({ message: 'Recipient deleted successfully' });
+    } catch (error) {
+      logger.error('Delete recipient error:', error);
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to delete recipient' });
+    }
+  }
 
   async scheduleEmail(data: {
     emailAccountId: string;

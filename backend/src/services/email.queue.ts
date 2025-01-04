@@ -1,39 +1,13 @@
 import { Queue, Worker, QueueEvents, Job } from 'bullmq';
-import { Redis } from 'ioredis';
 import { EmailJobData, EmailJobResult } from '../types/email.types.js';
 import { emailService } from './email.service.js';
 import prisma from '../db/index.js';
 import { EmailCampaignStatus } from '@prisma/client';
 import logger from '../utils/logger.js';
+import RedisConnection from '../config/redis.config.js';
 
-// Initialize Redis connection
-const redisConnection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  maxRetriesPerRequest: null,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  }
-});
-
-let isConnected = false;
-
-redisConnection.on('error', (error: Error) => {
-  console.error('Redis connection error:', error);
-});
-
-redisConnection.on('connect', () => {
-  if (!isConnected) {
-    console.log('Connected to Redis');
-    isConnected = true;
-  }
-});
-
-redisConnection.on('disconnect', () => {
-  console.log('Disconnected from Redis');
-  isConnected = false;
-});
+// Use the singleton Redis connection
+const redisConnection = RedisConnection.getInstance();
 
 // Create email queue
 export const emailQueue = new Queue<EmailJobData, EmailJobResult>('email-queue', {
@@ -55,11 +29,11 @@ export const emailQueue = new Queue<EmailJobData, EmailJobResult>('email-queue',
   },
 });
 
-// Create worker
+// Create worker with optimized settings
 const worker = new Worker<EmailJobData, EmailJobResult>(
   'email-queue',
   async (job: Job<EmailJobData, EmailJobResult>) => {
-    console.log(`Processing email job ${job.id}`);
+    logger.info(`Processing email job ${job.id}`);
     
     try {
       await job.extendLock(job.id ?? '', 30000);
@@ -79,7 +53,7 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
       await job.extendLock(job.id ?? '', 30000);
       return result;
     } catch (error) {
-      console.error(`Error processing job ${job.id}:`, error);
+      logger.error(`Error processing job ${job.id}:`, error);
       throw error;
     }
   },
@@ -90,11 +64,11 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
       max: 100,
       duration: 1000,
     },
-    lockDuration: 120000, // Increased to 2 minutes
-    lockRenewTime: 30000, // Renew lock more frequently
+    lockDuration: 120000,
+    lockRenewTime: 30000,
     settings: {
-     backoffStrategy: (attempt) => {
-        return attempt * 1000;
+      backoffStrategy: (attempt) => {
+        return Math.min(attempt * 1000, 30000); // Cap at 30 seconds
       },
     },
     maxStalledCount: 5,
@@ -102,37 +76,38 @@ const worker = new Worker<EmailJobData, EmailJobResult>(
   }
 );
 
+// Optimized event handlers
 worker.on('completed', (job: Job<EmailJobData, EmailJobResult>) => {
-  console.log(`Job ${job.id} completed with result:`, job.returnvalue);
+  logger.info(`Job ${job.id} completed with result:`, job.returnvalue);
 });
 
 worker.on('failed', (job: Job<EmailJobData, EmailJobResult> | undefined, error: Error) => {
-  console.error(`Job ${job?.id} failed with reason:`, error);
+  logger.error(`Job ${job?.id} failed with reason:`, error);
 });
 
 worker.on('error', (error: Error) => {
-  console.error('Worker error:', error);
+  logger.error('Worker error:', error);
 });
 
 worker.on('progress', (job: Job<EmailJobData, EmailJobResult>) => {
-  console.log(`Job ${job.id} progress: ${job.progress}%`);
+  logger.debug(`Job ${job.id} progress: ${job.progress}%`);
 });
 
-// Event handlers
+// Queue events with optimized settings
 const queueEvents = new QueueEvents('email-queue', {
   connection: redisConnection,
 });
 
 queueEvents.on('completed', ({ jobId, returnvalue }) => {
-  console.log(`Job ${jobId} completed with result:`, returnvalue);
+  logger.info(`Job ${jobId} completed with result:`, returnvalue);
 });
 
 queueEvents.on('failed', ({ jobId, failedReason }) => {
-  console.error(`Job ${jobId} failed with reason:`, failedReason);
+  logger.error(`Job ${jobId} failed with reason:`, failedReason);
 });
 
 queueEvents.on('delayed', ({ jobId, delay }) => {
-  console.log(`Job ${jobId} has been delayed by ${delay}ms`);
+  logger.debug(`Job ${jobId} has been delayed by ${delay}ms`);
 });
 
 // Job processors
@@ -140,17 +115,29 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
   const { emailAccountId, recipientIds, subject, content, scheduledFor, campaignId } = job.data;
   
   try {
-    if (scheduledFor && Date.now() > scheduledFor.getTime()) {
-      throw new Error('Email is scheduled for the future');
+    const scheduledTime = scheduledFor ? new Date(scheduledFor) : null;
+    
+    // Check if the job is scheduled for the future
+    if (scheduledTime && scheduledTime.getTime() > Date.now()) {
+      logger.info(`Job ${job.id} is scheduled for future: ${scheduledTime}`);
+      const delay = Math.max(0, scheduledTime.getTime() - Date.now());
+      await emailQueue.add('send-email', job.data, { 
+        delay,
+        jobId: job.id 
+      });
+      return {
+        success: true,
+        delayed: true,
+        scheduledFor: scheduledTime,
+        emailsSent: 0,
+        timestamp: new Date()  // Ensure timestamp is always set
+      };
     }
+
     await job.updateProgress(10);
-    
     await job.extendLock(job.id ?? '', 30000);
-    
     const transporter = await emailService.createTransporter(emailAccountId);
-    
     await job.extendLock(job.id ?? '', 30000);
-    
     const processedContent = emailService.processTemplate(content, {});
 
     const recipients = await prisma.emailRecipient.findMany({
@@ -166,7 +153,6 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     }
     
     await job.updateProgress(50);
-    
     const sendMailPromise = transporter.sendMail({
       from: (await prisma.emailAccount.findUnique({ where: { id: emailAccountId } }))?.email || '',
       to: recipients[0].email,
@@ -184,9 +170,7 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
       });
 
     logger.info(`Email sent successfully to ${recipients[0].email}`);
-    
     await job.updateProgress(100);
-
     await job.extendLock(job.id ?? '', 30000);
 
     if (campaignId) {
@@ -203,7 +187,6 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     };
   } catch (error) {
     logger.error('Error processing email job:', error);
-    
     try {
       await job.extendLock(job.id ?? '', 30000);
       if (campaignId) {
@@ -215,7 +198,6 @@ async function processEmailJob(job: Job<EmailJobData, EmailJobResult>) {
     } catch (lockError) {
       logger.error('Failed to update campaign status due to lock error:', lockError);
     }
-
     throw error;
   }
 }
@@ -255,7 +237,7 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
             }
 
             const processedContent = emailService.processTemplate(content, {});
-            
+
             const emailAccount = await prisma.emailAccount.findUnique({ where: { id: emailAccountId } });
             if (!emailAccount) {
               throw new Error('No email account associated with this email');
@@ -277,7 +259,7 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
             successCount++;
           } catch (error) {
             // failedRecipients.push(recipient.email);
-            // logger.error(`Failed to send email to ${recipient.email}:`, error);
+            logger.error(`Failed to send email to ${recipientId}:`, error);
             console.error(`Failed to send email to :`, error);
           }
         }));
@@ -335,20 +317,38 @@ async function processBulkEmailJob(job: Job<EmailJobData, EmailJobResult>) {
 
 export const emailQueueHelper = {
   async addEmailJob(data: EmailJobData, scheduledFor?: Date) {
-    const jobOptions: any = {};
+    const jobOptions: any = {
+      removeOnComplete: {
+        age: 24 * 3600,
+        count: 1000
+      },
+      removeOnFail: {
+        age: 7 * 24 * 3600
+      }
+    };
     
     if (scheduledFor) {
-      jobOptions.delay = Math.max(0, scheduledFor.getTime() - Date.now());
+      const scheduledTime = new Date(scheduledFor);
+      jobOptions.delay = Math.max(0, scheduledTime.getTime() - Date.now());
     }
 
     return await emailQueue.add('send-email', data, jobOptions);
   },
 
   async addBulkEmailJob(data: EmailJobData, scheduledFor?: Date) {
-    const jobOptions: any = {};
+    const jobOptions: any = {
+      removeOnComplete: {
+        age: 24 * 3600,
+        count: 1000
+      },
+      removeOnFail: {
+        age: 7 * 24 * 3600
+      }
+    };
     
     if (scheduledFor) {
-      jobOptions.delay = Math.max(0, scheduledFor.getTime() - Date.now());
+      const scheduledTime = new Date(scheduledFor);
+      jobOptions.delay = Math.max(0, scheduledTime.getTime() - Date.now());
     }
 
     return await emailQueue.add('send-bulk-email', data, jobOptions);

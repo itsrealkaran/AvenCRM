@@ -1,5 +1,6 @@
 'use client';
 
+import { transactionApi } from '@/services/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -61,32 +62,14 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
 
   const createTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        throw new Error('Access token not found');
-      }
-
       const payload = {
         ...values,
         amount: parseFloat(values.amount),
-        taxRate: values.taxRate ? parseFloat(values.taxRate) : null,
+        taxRate: values.taxRate ? parseFloat(values.taxRate) : 0,
         date: new Date(values.date).toISOString(),
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create transaction');
-      }
-
-      return response.json();
+      return transactionApi.create(payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -94,8 +77,8 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
       form.reset();
       toast.success('Transaction created successfully');
     },
-    onError: () => {
-      toast.error('Failed to create transaction');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to create transaction');
     },
   });
 

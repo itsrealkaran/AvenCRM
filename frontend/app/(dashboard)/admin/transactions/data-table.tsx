@@ -33,8 +33,9 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onEdit?: (transaction: Transaction) => void;
-  onDelete: (rows: Row<TData>[]) => void;
-  onSelectionChange?: (selectedItems: Transaction[]) => void;
+  onDelete?: (transactionId: string) => Promise<void>;
+  onBulkDelete: (rows: Row<TData>[]) => void;
+  onVerify?: (transactionId: string, isVerified: boolean) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -43,7 +44,8 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
-  onSelectionChange,
+  onBulkDelete,
+  onVerify,
   disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
@@ -73,11 +75,13 @@ export function DataTable<TData, TValue>({
     meta: {
       onEdit,
       onDelete,
+      onBulkDelete,
+      onVerify,
     },
   });
 
   return (
-    <div>
+    <div className='w-full overflow-x-scroll'>
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input
@@ -100,7 +104,7 @@ export function DataTable<TData, TValue>({
                   id: 'delete',
                 });
 
-                onDelete(table.getFilteredSelectedRowModel().rows);
+                onBulkDelete(table.getFilteredSelectedRowModel().rows);
                 table.resetRowSelection();
               }
             }}

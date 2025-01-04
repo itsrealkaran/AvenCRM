@@ -4,34 +4,65 @@ import jwt from 'jsonwebtoken';
 import { PlanTier, UserRole } from '@prisma/client';
 import db from '../db/index.js';
 import { protect, AuthenticatedRequest, JWTPayload } from '../middleware/auth.js';
+import { cacheUser, invalidateUserCache } from '../services/redis.js';
+import logger from '../utils/logger.js';
 
 const router: Router = Router();
+
+const generateTokens = (user: any) => {
+  const accessToken = jwt.sign(
+    {
+      id: user.id,
+      role: user.role,
+      email: user.email,
+      companyId: user.companyId,
+      teamId: user.teamId,
+    },
+    process.env.JWT_SECRET || 'your-secret-key',
+    { expiresIn: '15m' } // Shorter expiry for access token
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user.id },
+    process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key',
+    { expiresIn: '7d' }
+  );
+
+  return { accessToken, refreshToken };
+};
+
+const setTokenCookies = (res: Response, { accessToken, refreshToken }: { accessToken: string, refreshToken: string }) => {
+  res.cookie('Authorization', accessToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 15 * 60 * 1000, // 15 minutes
+  });
+
+  res.cookie('RefreshToken', refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+};
 
 // Sign Up (Only for Company Registration - Creates Admin)
 router.post('/sign-up', async (req: Request, res: Response) => {
   const { name, email, password, companyName, phone } = req.body;
 
   try {
-    // Check if user already exists
-    const existingUser = await db.user.findUnique({ where: { email } });
+    const existingUser = await db.user.findUnique({ 
+      where: { email },
+      select: { id: true }
+    });
+
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    // // Create company first
-    // const company = await db.company.create({
-    //   data: {
-    //     name: companyName,
-    //     email: email,
-    //     plan: PlanTier.BASIC,
-    //     planEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    //   }
-    // });
-
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    // Create admin user
     const user = await db.user.create({
       data: {
         name,
@@ -39,27 +70,27 @@ router.post('/sign-up', async (req: Request, res: Response) => {
         password: hashedPassword,
         phone,
         role: UserRole.ADMIN,
+      },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        companyId: true,
+        teamId: true,
       }
     });
 
-    const token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    const tokens = generateTokens(user);
+    setTokenCookies(res, tokens);
 
-    res.status(201).json({
-      message: 'Admin account created successfully',
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      }
-    });
+    // Cache user data
+    await cacheUser(user.id, user);
+
+    res.status(201).json({ user });
   } catch (error) {
-    res.status(500).json({ message: 'Error creating account', error });
+    logger.error('Signup Error:', error);
+    res.status(500).json({ message: 'Error creating user' });
   }
 });
 
@@ -70,92 +101,109 @@ router.post('/sign-in', async (req: Request, res: Response) => {
   try {
     const user = await db.user.findUnique({
       where: { email },
-      include: {
-        company: true
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        name: true,
+        companyId: true,
+        teamId: true,
+        isActive: true,
       }
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    if (!user.isActive) {
-      return res.status(403).json({ message: 'Account is deactivated' });
-    }
-
-    // const isValidPassword = await bcrypt.compare(password, user.password);
-    // if (!isValidPassword) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // if (!isPasswordValid) {
     //   return res.status(401).json({ message: 'Invalid credentials' });
     // }
 
-    // Update last login
-    await db.user.update({
-      where: { id: user.id },
-      data: { lastLogin: new Date() }
-    });
+    const { password: _, ...userWithoutPassword } = user;
+    const tokens = generateTokens(user);
+    setTokenCookies(res, tokens);
 
-    const access_token = jwt.sign(
-      { 
-        id: user.id, 
-        role: user.role, 
-        companyId: user.companyId
-      },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '24h' }
-    );
+    // Cache user data
+    await cacheUser(user.id, userWithoutPassword);
 
-    const refresh_token = jwt.sign(
-      { id: user.id, role: user.role },
-      process.env.REFRESH_TOKEN_SECRET || 'your-refresh-secret-key',
-      { expiresIn: '7d' }
-    );
+    res.json({ user: userWithoutPassword, access_token: tokens.accessToken, refresh_token: tokens.refreshToken });
+  } catch (error) {
+    logger.error('Sign In Error:', error);
+    res.status(500).json({ message: 'Error signing in' });
+  }
+});
 
-    const cookiesOptions: { expires: Date; httpOnly: boolean; secure: boolean; sameSite: 'none' | 'lax' | 'strict' } = {
-      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none'
-    };
+// Refresh Token
+router.post('/refresh-token', async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.RefreshToken;
 
-    // Set cookies
-    res.cookie('Authorization', access_token, cookiesOptions);
-    res.cookie('RefreshToken', refresh_token, cookiesOptions);
+  if (!refreshToken) {
+    return res.status(401).json({ message: 'Refresh token not found' });
+  }
 
-    res.json({
-      access_token,
-      refresh_token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        companyId: user.companyId,
-        company: user.company
+  try {
+    const decoded = jwt.verify(
+      refreshToken,
+      process.env.REFRESH_TOKEN_SECRET || 'refresh-secret-key'
+    ) as JWTPayload;
+
+    const user = await db.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        companyId: true,
+        teamId: true,
+        isActive: true,
       }
     });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: 'User not found or inactive' });
+    }
+
+    const tokens = generateTokens(user);
+    setTokenCookies(res, tokens);
+
+    res.json({ message: 'Token refreshed successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Error signing in', error });
+    logger.error('Token Refresh Error:', error);
+    res.status(401).json({ message: 'Invalid refresh token' });
   }
+});
+
+// Sign Out
+router.post('/sign-out', async (req: Request, res: Response) => {
+  res.cookie('Authorization', '', { maxAge: 0 });
+  res.cookie('RefreshToken', '', { maxAge: 0 });
+  res.json({ message: 'Signed out successfully' });
 });
 
 // Get Current User
 router.get('/me', protect, async (req: AuthenticatedRequest, res: Response) => {
-  const authUser = req.user;
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
 
   try {
-    if (!authUser?.id) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    if (!authUser.role) {
-      return res.status(403).json({ message: 'Insufficient permissions' });
-    }
-
     const user = await db.user.findUnique({
-      where: { id: authUser.id, role: authUser.role },
-      include: {
-        company: true,
-        team: true
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        name: true,
+        companyId: true,
+        teamId: true,
+        phone: true,
+        avatar: true,
+        designation: true,
       }
     });
 
@@ -165,84 +213,9 @@ router.get('/me', protect, async (req: AuthenticatedRequest, res: Response) => {
 
     res.json(user);
   } catch (error) {
-    res.status(500).json({ message: 'Error fetching user data', error });
+    logger.error('Get Current User Error:', error);
+    res.status(500).json({ message: 'Error fetching user data' });
   }
-});
-
-// Change Password
-router.post('/change-password', protect, async (req: AuthenticatedRequest, res: Response) => {
-  const { currentPassword, newPassword } = req.body;
-  const authUser = req.user;
-
-  try {
-    if (!authUser?.id) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    const user = await db.user.findUnique({ where: { id: authUser.id } });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
-    if (!isValidPassword) {
-      return res.status(401).json({ message: 'Current password is incorrect' });
-    }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 12);
-    await db.user.update({
-      where: { id: authUser.id },
-      data: { password: hashedPassword }
-    });
-
-    res.json({ message: 'Password updated successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error changing password', error });
-  }
-});
-
-// Forgot Password
-router.post('/forgot-password', async (req: Request, res: Response) => {
-  const { email } = req.body;
-
-  try {
-    const user = await db.user.findUnique({ where: { email } });
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Generate reset token
-    const resetToken = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '1h' }
-    );
-
-    // TODO: Send reset password email with token
-    // This should be implemented based on your email service provider
-
-    res.json({ message: 'Password reset instructions sent to email' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error processing forgot password request', error });
-  }
-});
-
-// Sign Out
-router.post('/sign-out', (req: Request, res: Response) => {
-  // Clear cookies
-  res.clearCookie('Authorization', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none'
-  });
-  
-  res.clearCookie('RefreshToken', {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'none'
-  });
-
-  res.json({ message: 'Signed out successfully' });
 });
 
 export default router;

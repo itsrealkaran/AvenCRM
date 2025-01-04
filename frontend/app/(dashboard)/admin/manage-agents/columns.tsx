@@ -78,6 +78,13 @@ export const columns: ColumnDef<User>[] = [
     header: 'Phone',
   },
   {
+    accessorKey: 'dob',
+    header: 'Date of Birth',
+    cell: ({ row }) => {
+      return format(new Date(row.getValue('dob')), 'MM dd, yyyy');
+    },
+  },
+  {
     accessorKey: 'role',
     header: 'Role',
     cell: ({ row }) => {
