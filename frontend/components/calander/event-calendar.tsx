@@ -9,10 +9,12 @@ import { Card, CardContent } from '@/components/ui/card';
 
 import { createEvent, deleteEvent, fetchEvents, updateEvent } from './api';
 import EventModal from './event-modal';
+import { getEventStyle } from './event-utils';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { toast } from 'react-hot-toast';
+import { useToast } from '@/hooks/use-toast';
+import { GoogleCalendarService } from '@/lib/google-calendar';
 
 const localizer = momentLocalizer(moment);
 
@@ -21,27 +23,82 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isGoogleConnected, setIsGoogleConnected] = useState(false);
+  const { toast } = useToast();
+
+  const googleCalendar = GoogleCalendarService.getInstance();
 
   const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchEvents();
-      const formattedEvents = data.map((event: any) => ({
+      // Load local events
+      const localData = await fetchEvents();
+      const formattedLocalEvents = localData.map((event: any) => ({
         ...event,
         start: new Date(event.start),
         end: new Date(event.end),
+        source: 'local'
       }));
-      setEvents(formattedEvents);
+
+      // Load Google Calendar events if connected
+      let allEvents = formattedLocalEvents;
+      if (isGoogleConnected) {
+        try {
+          const googleEvents = await googleCalendar.listEvents();
+          const formattedGoogleEvents = googleEvents.map(event => ({
+            ...event,
+            source: 'google'
+          }));
+          allEvents = [...formattedLocalEvents, ...formattedGoogleEvents];
+        } catch (error) {
+          console.error('Error loading Google events:', error);
+          toast({
+            title: 'Warning',
+            description: 'Failed to load Google Calendar events',
+            variant: 'destructive',
+          });
+        }
+      }
+
+      setEvents(allEvents);
     } catch (error) {
-      toast.error('Failed to load events. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch events',
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isGoogleConnected]);
 
   useEffect(() => {
     loadEvents();
   }, [loadEvents]);
+
+  const handleConnectGoogle = async () => {
+    try {
+      setLoading(true);
+      await googleCalendar.initialize();
+      await googleCalendar.signIn();
+      setIsGoogleConnected(true);
+      toast({
+        title: 'Success',
+        description: 'Connected to Google Calendar successfully!',
+        variant: 'success',
+      });
+      loadEvents(); // Reload events to include Google Calendar events
+    } catch (error) {
+      console.error('Error connecting to Google Calendar:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to connect to Google Calendar',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSelectEvent = useCallback((event: any) => {
     setSelectedEvent(event);
@@ -62,48 +119,161 @@ export default function Calendar() {
     async (eventData: any) => {
       try {
         setLoading(true);
+        let updatedEvent: any;
+
         if (eventData.id) {
-          await updateEvent(eventData.id, eventData);
-          toast.success('Event updated successfully!');
+          // Update existing event
+          if (eventData.source === 'google') {
+            // Update in Google Calendar
+            updatedEvent = await googleCalendar.updateEvent(eventData.id, {
+              title: eventData.title,
+              description: eventData.description,
+              start: eventData.start,
+              end: eventData.end,
+              location: eventData.location
+            });
+          } else {
+            
+            // If connected to Google, also update there
+            if (isGoogleConnected) {
+              try {
+                await googleCalendar.createEvent({
+                  title: eventData.title,
+                  description: eventData.description,
+                  start: eventData.start,
+                  end: eventData.end,
+                  location: eventData.location
+                });
+              } catch (error) {
+                console.error('Failed to sync with Google Calendar:', error);
+              }
+            } else {
+              // Update in local database
+              updatedEvent = await updateEvent(eventData.id, eventData);
+              toast({
+                title: 'Warning',
+                description: 'Event updated locally but failed to sync with Google Calendar',
+                variant: 'destructive',
+              });
+            }
+          }
+          
+          toast({
+            title: 'Success',
+            description: 'Event updated successfully!',
+            variant: 'success',
+          });
         } else {
-          const newEvent = await createEvent(eventData);
-          setEvents((prevEvents) => [...prevEvents, newEvent]);
-          toast.success('Event created successfully!');
+          // Create new event
+          // First create in local database
+          updatedEvent = await createEvent(eventData);
+          
+          // If connected to Google, also create there
+          if (isGoogleConnected) {
+            try {
+              const googleEvent = await googleCalendar.createEvent({
+                title: eventData.title,
+                description: eventData.description,
+                start: eventData.start,
+                end: eventData.end,
+                location: eventData.location
+              });
+              
+              // Add the Google Calendar event ID to our local event
+              updatedEvent = {
+                ...updatedEvent,
+                googleEventId: googleEvent.id
+              };
+            } catch (error) {
+              console.error('Failed to create event in Google Calendar:', error);
+              toast({
+                title: 'Warning',
+                description: 'Event created locally but failed to sync with Google Calendar',
+                variant: 'destructive',
+              });
+            }
+          }
+
+          setEvents((prevEvents) => [...prevEvents, updatedEvent]);
+          toast({
+            title: 'Success',
+            description: 'Event created successfully!',
+            variant: 'success',
+          });
         }
-        await loadEvents();
+
+        await loadEvents(); // Reload all events to ensure consistency
       } catch (error) {
-        toast.error('Failed to save event. Please try again.');
+        console.error('Error creating/updating event:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to create/update event. Please try again.',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
         closeModal();
       }
     },
-    [closeModal, loadEvents]
+    [closeModal, loadEvents, isGoogleConnected, googleCalendar, toast]
   );
 
   const handleDeleteEvent = useCallback(
-    async (eventId: number) => {
+    async (eventId: string | number) => {
       try {
         setLoading(true);
-        await deleteEvent(eventId);
+        const eventToDelete = events.find(event => event.id === eventId);
+        
+        if (eventToDelete?.source === 'google') {
+          // Delete from Google Calendar
+          await googleCalendar.deleteEvent(eventId as string);
+        } else {
+          // Delete from local database
+          await deleteEvent(eventId as number);
+          
+          // If event has a Google Calendar ID, delete from there too
+          if (isGoogleConnected && eventToDelete?.googleEventId) {
+            try {
+              await googleCalendar.deleteEvent(eventToDelete.googleEventId);
+            } catch (error) {
+              console.error('Failed to delete from Google Calendar:', error);
+              toast({
+                title: 'Warning',
+                description: 'Event deleted locally but failed to remove from Google Calendar',
+                variant: 'destructive',
+              });
+            }
+          }
+        }
+        
         setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventId));
-        toast.success('Event deleted successfully!');
+        toast({
+          title: 'Success',
+          description: 'Event deleted successfully!',
+          variant: 'success',
+        });
       } catch (error) {
-        toast.error('Failed to delete event. Please try again.');
+        console.error('Error deleting event:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete event. Please try again.',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
         closeModal();
       }
     },
-    [closeModal]
+    [closeModal, events, isGoogleConnected, googleCalendar, toast]
   );
 
   const eventStyleGetter = useCallback((event: any) => {
+    const { backgroundColor, textColor } = getEventStyle(event);
     const style = {
-      backgroundColor: '#3182ce',
+      backgroundColor,
+      color: textColor,
       borderRadius: '5px',
       opacity: 0.8,
-      color: 'white',
       border: '0px',
       display: 'block',
     };
@@ -111,16 +281,25 @@ export default function Calendar() {
   }, []);
 
   return (
-    <Card className='w-full h-full max-w-6xl mx-auto mt-8 shadow-lg'>
+    <Card className='w-full max-w-6xl mx-auto mt-8 shadow-lg'>
       <CardContent className='p-6'>
         <div className='mb-6 flex justify-between items-center'>
           <h1 className='text-3xl font-bold text-gray-800'>Event Calendar</h1>
-          <Button
-            onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })}
-            className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-          >
-            Create Event
-          </Button>
+          <div className='space-x-4'>
+            <Button
+              onClick={handleConnectGoogle}
+              disabled={loading || isGoogleConnected}
+              className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            >
+              {isGoogleConnected ? 'Connected to Google' : 'Connect Google Calendar'}
+            </Button>
+            <Button
+              onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })}
+              className='bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            >
+              Create Event
+            </Button>
+          </div>
         </div>
         <BigCalendar
           localizer={localizer}
@@ -142,7 +321,6 @@ export default function Calendar() {
           event={selectedEvent}
           onSave={handleCreateOrUpdateEvent}
           onDelete={handleDeleteEvent}
-          loading={loading}
         />
       </CardContent>
     </Card>
