@@ -73,17 +73,6 @@ app.use(
   })
 );
 
-// Debug session middleware
-// app.use((req: Request, res: Response, next: NextFunction) => {
-//   if (req.session) {
-//     // Breakpoint for session inspection
-//     logger.debug('Session data:', { 
-//       sessionID: req.sessionID,
-//       session: req.session 
-//     });
-//   }
-//   next();
-// });
 
 // Add a middleware to log requests with detailed debugging
 app.use((req: Request, res: Response, next: NextFunction) => {

@@ -1,5 +1,4 @@
 import { Queue, Worker, QueueEvents, Job } from 'bullmq';
-import { Redis } from 'ioredis';
 import { EmailJobData, EmailJobResult } from '../types/email.types.js';
 import { emailService } from './email.service.js';
 import prisma from '../db/index.js';
