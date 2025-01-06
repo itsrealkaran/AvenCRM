@@ -55,8 +55,8 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
         },
       ],
       mode: 'subscription',
-      success_url: `${process.env.FRONTEND_URL}/admin/company/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/admin/company/subscription?canceled=true`,
+      success_url: `${process.env.FRONTEND_URL}/admin/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.FRONTEND_URL}/admin/subscription?canceled=true`,
       metadata: {
         planType,
         userId,
