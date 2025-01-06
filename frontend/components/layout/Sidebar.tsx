@@ -83,7 +83,7 @@ const Sidebar = () => {
     {
       heading: 'Subscription',
       icon: MonitorIcon,
-      path: `/${role}/company/subscription`,
+      path: `/${role}/subscription`,
       description: 'Subscription management',
       roles: [UserRole.ADMIN],
     },
