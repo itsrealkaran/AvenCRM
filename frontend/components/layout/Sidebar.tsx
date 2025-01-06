@@ -18,7 +18,6 @@ import {
   LayoutDashboard,
   LineChart,
   Mail,
-  MenuIcon,
   MonitorIcon,
   Settings,
   Store,
@@ -26,10 +25,10 @@ import {
   Wallet,
 } from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
-import { TbSettings2 } from 'react-icons/tb';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import Logo from '../logo';
 
 interface MenuItem {
   heading: string;
@@ -224,7 +223,7 @@ const Sidebar = () => {
         className={`w-full flex items-center gap-[5px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}
       >
         <div className='text-[2rem]'>
-          <TbSettings2 color='#5932ea' />
+          <Logo/>
         </div>
         {!isCollapsed && (
           <Link

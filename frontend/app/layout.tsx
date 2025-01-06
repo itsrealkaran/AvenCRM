@@ -3,13 +3,8 @@ import localFont from 'next/font/local';
 
 import 'react-datetime/css/react-datetime.css';
 import './globals.css';
-
-import { AuthProvider } from '@/contexts/AuthContext';
-
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
-
-import { Providers } from './providers';
 
 const geistSans = localFont({
   src: './fonts/GeistVF.woff',
