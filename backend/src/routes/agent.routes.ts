@@ -34,7 +34,7 @@ router.get("/:id", async (req: Request, res: Response) => {
   }
   try {
     const agent = await prisma.user.findUnique({
-      where: { 
+      where: {
         id: req.params.id,
       },
     });
@@ -50,7 +50,7 @@ router.post("/", async (req: Request, res: Response) => {
   if (role !== "ADMIN" || !adminId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  
+
   try {
     const companyId = await verifyAdminCompany(adminId);
     if (!companyId) {
@@ -58,21 +58,62 @@ router.post("/", async (req: Request, res: Response) => {
     }
 
     const { name, email, dob, phone, gender, agentRole } = req.body;
-    
-    let password = bcrypt.hashSync("123456", 12);
 
-    const agent = await prisma.user.create({
-      data: {
-        name: name,
-        email: email,
-        password: password,
-        dob: new Date(dob),
-        companyId: companyId,
-        phone: phone,
-        gender: gender,
-        role: agentRole,
-      },
-    });
+    let password = bcrypt.hashSync("123456", 12);
+    
+    let agent;
+    // Create a team if role is team leader
+    if (agentRole === UserRole.TEAM_LEADER) {
+      agent = await prisma.$transaction(async (tx) => {
+        const teamLeader = await tx.user.create({
+          data: {
+            name: name,
+            email: email,
+            password: password,
+            dob: new Date(dob),
+            companyId: companyId,
+            phone: phone,
+            gender: gender,
+            role: agentRole,
+          },
+        });
+        await tx.team.create({
+          data: {
+            name: name + Math.floor(Math.random() * 1000),
+            teamLeaderId: teamLeader.id,
+            companyId
+          },
+        });
+        return teamLeader;
+      });
+    } else {
+      agent = await prisma.$transaction(async(dx) => {
+        const user = await prisma.user.create({
+          data: {
+            name: name,
+            email: email,
+            password: password,
+            dob: new Date(dob),
+            companyId: companyId,
+            phone: phone,
+            gender: gender,
+            role: agentRole,
+          },
+        });
+        return await prisma.team.update({
+          where: {
+            teamLeaderId: user.id
+          },
+          data: {
+            members: {
+              connect: {
+                id: user.id
+              }
+            } 
+          }
+        })
+      })
+    }
     res.json(agent);
   } catch (error) {
     res.status(500).json({ message: error });
@@ -86,9 +127,8 @@ router.put("/:id", async (req: Request, res: Response) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   const { name, email, dob, phone, gender } = req.body;
-  let dobDate
-  if(dob)
-      dobDate = new Date(dob);
+  let dobDate;
+  if (dob) dobDate = new Date(dob);
   try {
     const agent = await prisma.user.update({
       where: { id: req.params.id },
@@ -118,9 +158,9 @@ router.delete("/:id", async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Company not found" });
     }
     const agent = await prisma.user.delete({
-      where: { 
+      where: {
         id: req.params.id,
-        companyId: companyId
+        companyId: companyId,
       },
     });
     res.json(agent);
@@ -146,7 +186,7 @@ router.delete("/", async (req: Request, res: Response) => {
   }
 
   // Validate that all IDs are valid strings
-  if (!agentIds.every(id => typeof id === 'string' && id.length > 0)) {
+  if (!agentIds.every((id) => typeof id === "string" && id.length > 0)) {
     return res.status(400).json({ message: "Invalid agent IDs format" });
   }
 
@@ -160,10 +200,13 @@ router.delete("/", async (req: Request, res: Response) => {
         id: {
           in: agentIds,
         },
-        companyId: companyId
+        companyId: companyId,
       },
     });
-    res.json({ message: "Agents deleted successfully", count: agentIds.length });
+    res.json({
+      message: "Agents deleted successfully",
+      count: agentIds.length,
+    });
   } catch (error) {
     console.error("Failed to delete agents:", error);
     if (error instanceof Prisma.PrismaClientKnownRequestError) {

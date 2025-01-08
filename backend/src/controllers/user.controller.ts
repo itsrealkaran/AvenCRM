@@ -32,8 +32,6 @@ export const userController = {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
-      const teamId = authUser.teamId;
-
       if (agentRole === UserRole.TEAM_LEADER) {
         const teamName = name + Math.floor(Math.random() * 1000);
 
@@ -73,19 +71,34 @@ export const userController = {
       } else {
         const hashedPassword = await bcrypt.hash("123456", 12);
 
-        const user = await db.user.create({
-          data: {
-            name,
-            email,
-            password: hashedPassword,
-            gender,
-            phone,
-            dob: new Date(dob),
-            role: agentRole,
-            teamId: teamId || null,
-            companyId,
-          },
-        });
+        const user = await db.$transaction(async (tx) => {
+          const user = await tx.user.create({
+            data: {
+              name,
+              email,
+              password: hashedPassword,
+              gender,
+              phone,
+              dob: new Date(dob),
+              role: agentRole,
+              teamId: teamId || null,
+              companyId,
+            },
+          });
+          await tx.team.update({
+            where: {
+              id: teamId,
+            },
+            data: {
+              members: {
+                connect: {
+                  id: user.id,
+                },
+              },
+            },
+          });
+          return user;
+        })
 
         res.status(201).json({
           message: "User created successfully",
@@ -94,6 +107,7 @@ export const userController = {
             name: user.name,
             email: user.email,
             role: user.role,
+            teamId: user.teamId,
           },
         });
       }

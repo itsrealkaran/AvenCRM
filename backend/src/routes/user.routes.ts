@@ -38,7 +38,7 @@ router.post('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userContro
 router.get('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.getUsers);
 router.get('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.getUserById);
 router.put('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.updateUser);
-router.delete('/:id', validateRole([UserRole.SUPERADMIN]), userController.deleteUser);
+router.delete('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.deleteUser);
 
 // SuperAdmin Only Routes
 router.get('/admins', validateRole([UserRole.SUPERADMIN]), userController.getAllAdmins);
