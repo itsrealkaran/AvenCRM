@@ -19,6 +19,8 @@ import {
 } from 'recharts';
 import { AxisDomain } from 'recharts/types/util/types';
 
+import { cx } from '@/lib/cx';
+
 import {
   AvailableChartColors,
   AvailableChartColorsKeys,
@@ -26,9 +28,8 @@ import {
   getColorClassName,
   getYAxisDomain,
   hasOnlyOneValueForKey,
-} from '../../app/dashboard/superadmin/lib/chartUtils';
-import { useOnWindowResize } from '../../app/dashboard/superadmin/lib/useOnWindowResize';
-import { cx } from '../../app/dashboard/superadmin/lib/utils/cx';
+} from './chartUtils';
+import { useOnWindowResize } from './useOnWindowResize';
 
 //#region Legend
 

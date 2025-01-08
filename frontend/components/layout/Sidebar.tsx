@@ -71,7 +71,7 @@ const Sidebar = () => {
       icon: Users,
       path: `/${role}/manage-agents`,
       description: 'User management',
-      roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
+      roles: [UserRole.ADMIN],
     },
     {
       heading: 'Monitoring',
@@ -94,6 +94,13 @@ const Sidebar = () => {
       path: `/${role}/property`,
       description: 'Property management',
       roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Properties',
+      icon: Users,
+      path: `/${role}/manage-team`,
+      description: 'Property management',
+      roles: [UserRole.TEAM_LEADER],
     },
     {
       heading: 'Leads',
@@ -215,7 +222,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`h-screen z-50 sticky top-0 select-none bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
+      className={`h-screen z-50 sticky top-0 select-none overflow-x-hidden bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
         ${isMobile ? 'absolute' : 'relative'}`}
     >
@@ -250,7 +257,9 @@ const Sidebar = () => {
                 >
                   <div className={`flex flex-row gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
                     <item.icon className='h-5 w-5' />
-                    {!isCollapsed && <span>{item.heading}</span>}
+                    {!isCollapsed && (
+                      <span className='whitespace-nowrap truncate'>{item.heading}</span>
+                    )}
                   </div>
                   {!isCollapsed && (
                     <div>

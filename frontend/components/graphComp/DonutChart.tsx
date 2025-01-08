@@ -12,13 +12,14 @@ import {
   Tooltip,
 } from 'recharts';
 
+import { cx } from '@/lib/cx';
+
 import {
   AvailableChartColors,
   AvailableChartColorsKeys,
   constructCategoryColors,
   getColorClassName,
-} from '../../app/dashboard/superadmin/lib/chartUtils';
-import { cx } from '../../app/dashboard/superadmin/lib/utils/cx';
+} from './chartUtils';
 
 const sumNumericArray = (arr: number[]): number => arr.reduce((sum, num) => sum + num, 0);
 

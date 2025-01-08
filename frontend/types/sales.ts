@@ -7,6 +7,7 @@ export interface Lead {
   phone?: string;
   companyId: string;
   agentId: string;
+  leadAmount?: number;
   agent?: {
     id: string;
     name: string;

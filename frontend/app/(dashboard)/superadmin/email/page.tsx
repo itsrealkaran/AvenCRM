@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { EmailAccount } from '@/types/email';
 
@@ -16,7 +16,7 @@ import EmailTemplatesSection from './components/EmailTemplatesSection';
 
 const VALID_TABS = ['accounts', 'templates', 'recipients', 'campaigns'];
 
-function EmailPage() {
+function EmailPageContent() {
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -147,6 +147,14 @@ function EmailPage() {
         </Tabs>
       </Card>
     </section>
+  );
+}
+
+function EmailPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <EmailPageContent />
+    </Suspense>
   );
 }
 

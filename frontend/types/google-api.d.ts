@@ -26,10 +26,7 @@ interface GapiLoadConfig {
 }
 
 interface GapiClient {
-  init(config: {
-    apiKey: string;
-    discoveryDocs: string[];
-  }): Promise<void>;
+  init(config: { apiKey: string; discoveryDocs: string[] }): Promise<void>;
   getToken(): null | { access_token: string };
   calendar: {
     events: {

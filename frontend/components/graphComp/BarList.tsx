@@ -2,8 +2,7 @@
 
 import React from 'react';
 
-import { cx } from '../../app/dashboard/superadmin/lib/utils/cx';
-import { focusRing } from '../../app/dashboard/superadmin/lib/utils/focusRing';
+import { cx } from '@/lib/cx';
 
 type Bar<T> = T & {
   key?: string;
@@ -68,9 +67,8 @@ function BarListInner<T>(
             }}
             className={cx(
               // base
-              'group w-full rounded',
-              // focus
-              focusRing,
+              'group w-full rounded outline outline-offset-2 outline-0 focus-visible:outline-2 outline-blue-500 dark:outline-blue-500',
+              // focus,
               onValueChange
                 ? [
                     '!-m-0 cursor-pointer',
@@ -106,9 +104,8 @@ function BarListInner<T>(
                       // text color
                       'text-gray-900 dark:text-gray-50',
                       // hover
-                      'hover:underline hover:underline-offset-2',
+                      'hover:underline hover:underline-offset-2 outline outline-offset-2 outline-0 focus-visible:outline-2 outline-blue-500 dark:outline-blue-500'
                       // focus
-                      focusRing
                     )}
                     target='_blank'
                     rel='noreferrer'

@@ -26,14 +26,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const getStatusColor = (status: LeadStatus) => {
-  const colors = {
-    NEW: 'bg-blue-100 text-blue-800',
-    CONTACTED: 'bg-purple-100 text-purple-800',
-    QUALIFIED: 'bg-yellow-100 text-yellow-800',
-    PROPOSAL: 'bg-indigo-100 text-indigo-800',
-    NEGOTIATION: 'bg-orange-100 text-orange-800',
-    WON: 'bg-green-100 text-green-800',
-    LOST: 'bg-red-100 text-red-800',
+  const colors: Record<LeadStatus, string> = {
+    [LeadStatus.NEW]: 'bg-blue-100 text-blue-800',
+    [LeadStatus.CONTACTED]: 'bg-purple-100 text-purple-800',
+    [LeadStatus.QUALIFIED]: 'bg-yellow-100 text-yellow-800',
+    [LeadStatus.NEGOTIATION]: 'bg-orange-100 text-orange-800',
+    [LeadStatus.WON]: 'bg-green-100 text-green-800',
+    [LeadStatus.LOST]: 'bg-red-100 text-red-800',
+    [LeadStatus.FOLLOWUP]: 'bg-indigo-100 text-indigo-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 };

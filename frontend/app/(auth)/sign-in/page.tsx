@@ -4,6 +4,7 @@ import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { authApi } from '@/services/api';
+import { UserRole } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -52,10 +53,9 @@ function SignInContent() {
         toast.success('Sign-in successful!');
 
         // Redirect to the callback URL or default dashboard
-        const callbackUrl = `/${data.user.role.toLowerCase()}` || '/dashboard';
-        setTimeout(() => {
-          router.push(callbackUrl);
-        }, 1000);
+        let role = data.user.role as UserRole;
+        const callbackUrl = role === UserRole.TEAM_LEADER ? '/agent' : `/${role.toLowerCase()}`;
+        router.push(callbackUrl);
       } else {
         throw new Error('No access token received');
       }

@@ -48,7 +48,7 @@ export const getEventStyle = (event: any) => {
   }
 
   // For custom events, use the selected color or default to blue
-  const color = event.color ? eventColors.find(c => c.id === event.color) : eventColors[0];
+  const color = event.color ? eventColors.find((c) => c.id === event.color) : eventColors[0];
   //@ts-ignore
   return { backgroundColor: color.backgroundColor, textColor: color.textColor };
 };

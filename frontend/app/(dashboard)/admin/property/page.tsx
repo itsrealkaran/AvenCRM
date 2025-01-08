@@ -19,7 +19,7 @@ const Page = () => {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-          credentials: 'include',
+          withCredentials: true,
         });
         setResponse(res.data);
       } catch (error) {

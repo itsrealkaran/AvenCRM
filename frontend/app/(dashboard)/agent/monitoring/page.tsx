@@ -51,7 +51,7 @@ export default function MonitoringPage() {
         {/* Header Section */}
         <div className='flex justify-between items-center sticky top-0 bg-white z-10'>
           <div>
-            <h1 className='text-3xl font-bold text-gray-900'>Company Monitoring</h1>
+            <h1 className='text-3xl font-bold text-gray-900'>Team Monitoring</h1>
           </div>
           <div className='flex items-center gap-4'>
             <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>

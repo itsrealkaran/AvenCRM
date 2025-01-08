@@ -27,7 +27,12 @@ export async function middleware(request: NextRequest) {
       try {
         const decoded = jwtDecode<JWTPayload>(accessToken);
         if (decoded?.exp * 1000 > Date.now()) {
-          return NextResponse.redirect(new URL(`/${decoded.role.toLowerCase()}`, request.url));
+          const role = decoded.role.toLowerCase();
+          // Redirect team leaders to /agent route
+          if (role === 'team_leader') {
+            return NextResponse.redirect(new URL('/agent', request.url));
+          }
+          return NextResponse.redirect(new URL(`/${role}`, request.url));
         }
       } catch (error) {
         toast.error('Invalid token');
@@ -69,11 +74,23 @@ export async function middleware(request: NextRequest) {
 
     // Validate role-based access
     const role = decoded.role.toLowerCase();
+
+    // Handle team leader redirection
+    if (role === 'team_leader') {
+      // Allow access to /agent route for team leaders
+      if (pathname.startsWith('/agent') || pathname.startsWith('/dashboard')) {
+        return NextResponse.next();
+      }
+      // Redirect to /agent for any other routes
+      return NextResponse.redirect(new URL('/agent', request.url));
+    }
+
+    // For other roles, check if they're accessing their designated route
     if (pathname.startsWith(`/${role}`) || pathname.startsWith('/dashboard')) {
       return NextResponse.next();
     }
 
-    // Redirect to appropriate role-based route if accessing wrong role route
+    // Redirect to appropriate role-based route
     return NextResponse.redirect(new URL(`/${role}`, request.url));
   } catch (error) {
     // Invalid token - redirect to sign-in

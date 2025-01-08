@@ -132,7 +132,7 @@ export default function MonitoringPage() {
         <div className='flex justify-between items-center sticky top-0 bg-gray-50 z-10 pb-4'>
           <div>
             <h1 className='text-3xl font-bold text-gray-900'>Company Monitoring</h1>
-            <p className='text-gray-500 mt-1'>Track your company's performance metrics</p>
+            <p className='text-gray-500 mt-1'>Track your company&apos;s performance metrics</p>
           </div>
           <div className='flex items-center gap-4'>
             <button className='p-2 hover:bg-gray-100 rounded-lg transition-colors'>
@@ -275,7 +275,6 @@ export default function MonitoringPage() {
     </section>
   );
 }
-
 
 /*** 
  * 

@@ -53,7 +53,7 @@ export class GoogleCalendarService {
         script.onload = () => resolve();
         script.onerror = () => reject(new Error('Failed to load Google Identity Services'));
         document.body.appendChild(script);
-      })
+      }),
     ]).then(() => {});
   }
 
@@ -84,7 +84,7 @@ export class GoogleCalendarService {
 
   private initializeTokenClient(): void {
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    
+
     if (!clientId) {
       throw new Error('Google client ID not configured');
     }

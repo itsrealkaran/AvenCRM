@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { User } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -33,51 +34,48 @@ async function getAgents(): Promise<User[]> {
   return response.json();
 }
 
+async function getCurrentUser(): Promise<User> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || 'Failed to fetch current user');
+  }
+  return response.json();
+}
+
 export default function ManageAgentsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isMetricsDialogOpen, setIsMetricsDialogOpen] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<User | null>(null);
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: agents = [], isLoading } = useQuery({
+  const { data: agents = [], isLoading: isAgentsLoading } = useQuery({
     queryKey: ['users'],
     queryFn: getAgents,
   });
 
-  const deleteAgent = useMutation({
-    mutationFn: async (agentId: string) => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user?ids=${agentId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete agent');
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Agent deleted successfully');
-    },
-    onError: () => {
-      toast.error('Failed to delete agent');
-    },
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: getCurrentUser,
   });
 
-  const bulkDeleteAgents = useMutation({
-    mutationFn: async (agentIds: string[]) => {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/users?ids=${agentIds.join(',')}`,
+  const deleteAgent = useMutation({
+    mutationFn: async (agentId: string) => {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${agentId}`,
         {
-          method: 'DELETE',
-          credentials: 'include',
+          withCredentials: true,
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
@@ -85,17 +83,38 @@ export default function ManageAgentsPage() {
         }
       );
 
-      if (!response.ok) {
-        const error = await response.text();
-        throw new Error(error || 'Failed to delete agents');
-      }
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Agent deleted successfully');
+    },
+    onError: (error) => {
+      toast.error('Failed to delete agent');
+    },
+  });
+
+  const bulkDeleteAgents = useMutation({
+    mutationFn: async (agentIds: string[]) => {
+      const response = await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/user?ids=${agentIds.join(',')}`,
+        {
+          withCredentials: true,
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }
+      );
+
+      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       toast.success('Agents deleted successfully');
     },
-    onError: () => {
-      toast.error('Failed to delete some agents');
+    onError: (error) => {
+      toast.error('Failed to delete agents');
     },
   });
 
@@ -125,7 +144,36 @@ export default function ManageAgentsPage() {
     setIsMetricsDialogOpen(true);
   };
 
-  if (isLoading) {
+  const handleAddTeamMember = async (teamLeaderId: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/team/add-member/${teamLeaderId}`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to add team member');
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('Team member added successfully');
+    } catch (error) {
+      console.error('Error adding team member:', error);
+      toast.error('Failed to add team member');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isAgentsLoading) {
     return (
       <section className='flex-1 p-2 md:p-4'>
         <Card className='container mx-auto p-4 md:p-5'>
@@ -174,6 +222,9 @@ export default function ManageAgentsPage() {
               await handleBulkDelete(agentIds);
             }}
             onViewMetrics={handleViewMetrics}
+            onAddTeamMember={handleAddTeamMember}
+            showTeamActions={currentUser?.role === 'TEAM_LEADER'}
+            disabled={isLoading || isAgentsLoading}
           />
         </div>
 

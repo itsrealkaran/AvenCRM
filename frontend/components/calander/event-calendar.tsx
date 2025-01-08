@@ -13,8 +13,8 @@ import { getEventStyle } from './event-utils';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
-import { useToast } from '@/hooks/use-toast';
 import { GoogleCalendarService } from '@/lib/google-calendar';
+import { useToast } from '@/hooks/use-toast';
 
 const localizer = momentLocalizer(moment);
 
@@ -37,7 +37,7 @@ export default function Calendar() {
         ...event,
         start: new Date(event.start),
         end: new Date(event.end),
-        source: 'local'
+        source: 'local',
       }));
 
       // Load Google Calendar events if connected
@@ -45,9 +45,9 @@ export default function Calendar() {
       if (isGoogleConnected) {
         try {
           const googleEvents = await googleCalendar.listEvents();
-          const formattedGoogleEvents = googleEvents.map(event => ({
+          const formattedGoogleEvents = googleEvents.map((event) => ({
             ...event,
-            source: 'google'
+            source: 'google',
           }));
           allEvents = [...formattedLocalEvents, ...formattedGoogleEvents];
         } catch (error) {
@@ -130,10 +130,9 @@ export default function Calendar() {
               description: eventData.description,
               start: eventData.start,
               end: eventData.end,
-              location: eventData.location
+              location: eventData.location,
             });
           } else {
-            
             // If connected to Google, also update there
             if (isGoogleConnected) {
               try {
@@ -142,7 +141,7 @@ export default function Calendar() {
                   description: eventData.description,
                   start: eventData.start,
                   end: eventData.end,
-                  location: eventData.location
+                  location: eventData.location,
                 });
               } catch (error) {
                 console.error('Failed to sync with Google Calendar:', error);
@@ -157,7 +156,7 @@ export default function Calendar() {
               });
             }
           }
-          
+
           toast({
             title: 'Success',
             description: 'Event updated successfully!',
@@ -167,7 +166,7 @@ export default function Calendar() {
           // Create new event
           // First create in local database
           updatedEvent = await createEvent(eventData);
-          
+
           // If connected to Google, also create there
           if (isGoogleConnected) {
             try {
@@ -176,13 +175,13 @@ export default function Calendar() {
                 description: eventData.description,
                 start: eventData.start,
                 end: eventData.end,
-                location: eventData.location
+                location: eventData.location,
               });
-              
+
               // Add the Google Calendar event ID to our local event
               updatedEvent = {
                 ...updatedEvent,
-                googleEventId: googleEvent.id
+                googleEventId: googleEvent.id,
               };
             } catch (error) {
               console.error('Failed to create event in Google Calendar:', error);
@@ -222,15 +221,15 @@ export default function Calendar() {
     async (eventId: string | number) => {
       try {
         setLoading(true);
-        const eventToDelete = events.find(event => event.id === eventId);
-        
+        const eventToDelete = events.find((event) => event.id === eventId);
+
         if (eventToDelete?.source === 'google') {
           // Delete from Google Calendar
           await googleCalendar.deleteEvent(eventId as string);
         } else {
           // Delete from local database
           await deleteEvent(eventId as number);
-          
+
           // If event has a Google Calendar ID, delete from there too
           if (isGoogleConnected && eventToDelete?.googleEventId) {
             try {
@@ -245,7 +244,7 @@ export default function Calendar() {
             }
           }
         }
-        
+
         setEvents((prevEvents) => prevEvents.filter((event) => event.id !== eventId));
         toast({
           title: 'Success',

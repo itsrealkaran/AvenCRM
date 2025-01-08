@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { FaCheck } from 'react-icons/fa';
+
 import { StripeModal } from '@/components/stripe/stripe-modal';
 
 const plans = {
@@ -16,7 +17,7 @@ const plans = {
       'Up to 3 team members',
       'All analytics features',
       'Normal support',
-    ]
+    ],
   },
   popular: {
     id: 'PROFESSIONAL',
@@ -29,13 +30,15 @@ const plans = {
       'Up to 10 team members',
       'All analytics features',
       'Priority support',
-    ]
-  }
+    ],
+  },
 };
 
 const Page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<typeof plans.basic | typeof plans.popular | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<
+    typeof plans.basic | typeof plans.popular | null
+  >(null);
 
   const handlePayment = (plan: typeof plans.basic | typeof plans.popular) => {
     setSelectedPlan(plan);
@@ -85,7 +88,7 @@ const Page = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => handlePayment(plans.basic)}
                 className='mt-6 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700'
               >
@@ -144,7 +147,7 @@ const Page = () => {
                 Ideal for growing businesses that need more power and features.
               </p>
 
-              <button 
+              <button
                 onClick={() => handlePayment(plans.popular)}
                 className='mt-16 w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 transition hover:bg-gray-200'
               >
