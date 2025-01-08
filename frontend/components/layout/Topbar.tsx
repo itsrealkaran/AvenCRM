@@ -63,7 +63,10 @@ export default function Topbar() {
                   </h1>
                   <p className='text-[0.65rem] opacity-70 cursor-pointer'>
                     {user?.role
-                      ? user.role.charAt(0).toUpperCase() + user.role.slice(1).toLowerCase()
+                      ? user.role
+                        .split('_')
+                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                        .join(' ')
                       : ''}
                   </p>
                 </div>
