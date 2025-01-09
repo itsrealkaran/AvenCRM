@@ -10,10 +10,6 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-const protectedRoutes = {
-  '/dashboard': ['USER'], // Add dashboard route protection
-};
-
 const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);

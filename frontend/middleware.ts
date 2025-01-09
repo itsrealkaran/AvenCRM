@@ -14,7 +14,7 @@ interface JWTPayload {
 const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
 
 // List of protected routes that require authentication
-const protectedRoutes = ['/dashboard', '/agent', '/admin', '/superadmin'];
+const protectedRoutes = ['/dashboard', '/agent', '/admin', '/superadmin', '/calendar'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
