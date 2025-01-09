@@ -81,9 +81,9 @@ export function DataTable<TData, TValue>({
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input
-          placeholder='Filter transactions...'
-          value={(table.getColumn('invoiceNumber')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('invoiceNumber')?.setFilterValue(event.target.value)}
+          placeholder='Filter by company...'
+          value={(table.getColumn('companyId')?.getFilterValue() as string) ?? ''}
+          onChange={(event) => table.getColumn('companyId')?.setFilterValue(event.target.value)}
           className='max-w-sm'
         />
         {table.getFilteredSelectedRowModel().rows.length > 0 && (

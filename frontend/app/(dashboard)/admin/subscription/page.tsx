@@ -1,9 +1,20 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { format } from 'date-fns';
 import { FaCheck } from 'react-icons/fa';
 
 import { StripeModal } from '@/components/stripe/stripe-modal';
+
+interface Payment {
+  id: string;
+  amount: number;
+  date: string;
+  planType: string;
+  isSuccessfull: boolean;
+  createdAt: string;
+}
 
 const plans = {
   basic: {
@@ -39,6 +50,27 @@ const Page = () => {
   const [selectedPlan, setSelectedPlan] = useState<
     typeof plans.basic | typeof plans.popular | null
   >(null);
+
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/subscription/getsubscription`,
+          { withCredentials: true }
+        );
+        setPayments(response.data || []);
+      } catch (error) {
+        console.error('Error fetching payments:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPayments();
+  }, []);
 
   const handlePayment = (plan: typeof plans.basic | typeof plans.popular) => {
     setSelectedPlan(plan);
@@ -184,31 +216,51 @@ const Page = () => {
       <div className='rounded-2xl bg-white p-6 shadow-sm mb-6 '>
         <h3 className='mb-6 text-lg font-semibold text-gray-900'>Transaction History</h3>
 
-        <div className='mb-4 grid grid-cols-5 gap-4 px-4 text-sm font-medium text-gray-700'>
-          <div className='rounded-lg bg-gray-50 px-4 py-2'>Date</div>
-          <div className='rounded-lg bg-gray-50 px-4 py-2'>Description</div>
-          <div className='rounded-lg bg-gray-50 px-4 py-2 text-center'>Billing Amount</div>
-          <div className='rounded-lg bg-gray-50 px-4 py-2 text-center'>Due Date</div>
-          <div className='rounded-lg bg-gray-50 px-4 py-2 text-center'>Status</div>
-        </div>
-
-        <div className='max-h-[400px] space-y-2 overflow-y-auto'>
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div
-              key={index}
-              className='grid grid-cols-5 gap-4 rounded-lg px-4 py-3 transition hover:bg-gray-50'
-            >
-              <div className='text-sm text-gray-600'>Feb 2025</div>
-              <div className='text-sm'>
-                <p className='font-medium text-gray-900'>Quarterly true-up</p>
-                <p className='text-xs text-gray-600'>July 14, 2023 - July 5, 2025</p>
-              </div>
-              <div className='text-center text-sm font-medium text-gray-900'>₹5,000.00</div>
-              <div className='text-center text-sm text-gray-600'>Feb 14, 2025</div>
-              <div className='text-center text-sm font-medium text-emerald-600'>Paid</div>
+        {loading ? (
+          <div className='text-center py-4'>Loading...</div>
+        ) : payments.length === 0 ? (
+          <div className='text-center py-4'>No payment history found</div>
+        ) : (
+          <div>
+            <div className='mb-4 grid grid-cols-5 gap-4 px-4 text-sm font-medium text-gray-700'>
+              <div className='rounded-lg bg-gray-50 px-4 py-2'>Date</div>
+              <div className='rounded-lg bg-gray-50 px-4 py-2'>Description</div>
+              <div className='rounded-lg bg-gray-50 px-4 py-2 text-center'>Billing Amount</div>
+              <div className='rounded-lg bg-gray-50 px-4 py-2 text-center'>Due Date</div>
+              <div className='rounded-lg bg-gray-50 px-4 py-2 text-center'>Status</div>
             </div>
-          ))}
-        </div>
+
+            <div className='max-h-[400px] space-y-2 overflow-y-auto'>
+              {payments.map((payment) => (
+                <div
+                  key={payment.id}
+                  className='grid grid-cols-5 gap-4 rounded-lg px-4 py-3 transition hover:bg-gray-50'
+                >
+                  <div className='text-sm text-gray-600'>
+                    {format(new Date(payment.createdAt), 'MMM yyyy')}
+                  </div>
+                  <div className='text-sm'>
+                    <p className='font-medium text-gray-900'>{payment.planType} Plan</p>
+                    <p className='text-xs text-gray-600'>
+                      {format(new Date(payment.createdAt), 'MMMM dd, yyyy')}
+                    </p>
+                  </div>
+                  <div className='text-center text-sm font-medium text-gray-900'>
+                    ₹{payment.amount.toFixed(2)}
+                  </div>
+                  <div className='text-center text-sm text-gray-600'>
+                    {format(new Date(payment.date), 'MMM dd, yyyy')}
+                  </div>
+                  <div className={`text-center text-sm font-medium ${
+                    payment.isSuccessfull ? 'text-emerald-600' : 'text-red-600'
+                  }`}>
+                    {payment.isSuccessfull ? 'Paid' : 'Failed'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stripe Modal */}

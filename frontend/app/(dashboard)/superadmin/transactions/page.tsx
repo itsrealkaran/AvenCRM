@@ -13,23 +13,16 @@ import { Card } from '@/components/ui/card';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
+import axios from 'axios';
 
 async function getTransactions(): Promise<Transaction[]> {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    throw new Error('Access token not found');
-  }
-
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/transactions`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+  const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/subscription`, {
+    withCredentials: true,
   });
-  if (!response.ok) {
+  if (!response) {
     throw new Error('Failed to fetch transactions');
   }
-  return response.json();
+  return response.data;
 }
 
 export default function TransactionsPage() {
