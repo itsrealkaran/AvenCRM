@@ -192,6 +192,7 @@ model Company {
   deals        Deal[]
   transactions Transaction[]
   teams        Team[]
+  payments     Payments[]
   
   emailCampaigns    EmailCampaign[]
   emailTemplates    EmailTemplate[]
@@ -341,6 +342,33 @@ model Transaction {
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+}
+
+model Payments {
+  id             String      @id @default(cuid())
+  
+  // Relations
+  company        Company     @relation(fields: [companyId], references: [id])
+  companyId      String
+  
+  // Tranasctions Details
+  amount         Float
+  date           DateTime    @default(now())
+
+  planType       PlanTier
+  isSuccessfull  Boolean     @default(false)
+  
+  // Invoice and Billing
+  invoiceNumber  String?
+  taxRate        Float?
+  totalAmount    Float?
+  
+  // Additional Financial Info
+  transactionMethod  String?
+  receiptUrl     String?
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime?   @updatedAt
 }
 
 // Updated EmailAccount Model

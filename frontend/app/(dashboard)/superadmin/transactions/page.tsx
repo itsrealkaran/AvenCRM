@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
 import { columns } from './columns';
-import { CreateTransactionDialog } from './create-transaction-dialog';
 import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
 
@@ -144,11 +143,6 @@ export default function TransactionsPage() {
             </h1>
             <p className='text-muted-foreground'>Manage and track your transactions in one place</p>
           </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Transaction
-            </Button>
-          </div>
         </div>
 
         <div className='space-4 p-6'>
@@ -164,7 +158,6 @@ export default function TransactionsPage() {
           />
         </div>
 
-        <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
         <EditTransactionDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}

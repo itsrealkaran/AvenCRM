@@ -15,10 +15,54 @@ declare global {
 }
 
 const router: Router = express.Router();
-console.log(process.env.STRIPE_SECRET_KEY)
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
+  //@ts-ignore
+  apiVersion: '2024-11-20.acacia'
 });
+
+// Webhook handler for Stripe events
+router.post(
+  '/webhook',
+  express.raw({ type: 'application/json' }),
+  async (req: Request, res: Response) => {
+    const sig = req.headers['stripe-signature'];
+
+    if (!sig) {
+      return res.status(400).json({ error: 'No Stripe signature found' });
+    }
+
+    try {
+      console.log("Request body:", req.body);
+      console.log("Stripe signature:", sig);
+      console.log("Webhook secret:", process.env.STRIPE_WEBHOOK_SECRET);
+      
+      const event = stripe.webhooks.constructEvent(
+        req.body,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET!
+      );
+      console.log('Received Stripe event:', event);
+      console.log('Event type:', event.type);
+      // Handle the event
+      switch (event.type) {
+        case 'checkout.session.completed':
+          const session = event.data.object as Stripe.Checkout.Session;
+          await handleSuccessfulSubscription(session);
+          break;
+        case 'customer.subscription.deleted':
+          console.log(event.data)
+          const subscription = event.data.object as Stripe.Subscription;
+          await handleSubscriptionCancellation(subscription);
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(400).json({ error: 'Webhook error' });
+    }
+  }
+);
 
 // Protect all routes
 router.use(protect);
@@ -27,7 +71,9 @@ router.use(protect);
 // Create a checkout session
 router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { planType, planName, price } = req.body;
+    const { planId, planName, price } = req.body;
+    const planType = planId as PlanTier;
+
     const userId = req.user?.id;
     const companyId = req.user?.companyId;
 
@@ -84,45 +130,6 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
   }
 });
 
-// Webhook handler for Stripe events
-router.post(
-  '/webhook',
-  express.raw({ type: 'application/json' }),
-  async (req: Request, res: Response) => {
-    const sig = req.headers['stripe-signature'];
-
-    if (!sig) {
-      return res.status(400).json({ error: 'No Stripe signature found' });
-    }
-
-    try {
-      const event = stripe.webhooks.constructEvent(
-        req.body,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET!
-      );
-
-      // Handle the event
-      switch (event.type) {
-        case 'checkout.session.completed':
-          const session = event.data.object as Stripe.Checkout.Session;
-          await handleSuccessfulSubscription(session);
-          break;
-        case 'customer.subscription.deleted':
-          console.log(event.data)
-          const subscription = event.data.object as Stripe.Subscription;
-          await handleSubscriptionCancellation(subscription);
-          break;
-      }
-
-      res.json({ received: true });
-    } catch (error) {
-      console.error('Webhook error:', error);
-      res.status(400).json({ error: 'Webhook error' });
-    }
-  }
-);
-
 async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
   
@@ -150,18 +157,12 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
     }
 
     // Create a subscription transaction record
-     const transaction = await prisma.transaction.create({
+     const transaction = await prisma.payments.create({
       data: {
         amount: session.amount_total! / 100,
-        type: 'SUBSCRIPTION',
-        company: {
-          connect: { id: metadata.companyId }
-        },
-        agent: {
-          connect: { id: metadata.userId }
-        },
+        companyId: metadata.companyId,
         planType: metadata.planType as PlanTier,
-        isVerified: true,
+        isSuccessfull: true,
         transactionMethod: 'STRIPE',
         receiptUrl,
       },
