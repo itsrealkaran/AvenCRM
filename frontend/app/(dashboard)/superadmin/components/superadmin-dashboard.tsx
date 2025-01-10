@@ -96,7 +96,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
   }
 
   return (
-    <div className='space-y-4 p-3'>
+    <div className='space-y-4'>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
         <Card className='bg-white hover:shadow-lg transition-shadow duration-300 border border-gray-100'>
           <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
