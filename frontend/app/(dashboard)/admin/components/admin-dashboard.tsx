@@ -93,7 +93,7 @@ export function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className='space-y-4 p-3'>
+      <div className='space-y-4'>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
           {[...Array(4)].map((_, index) => (
             <Card key={index} className='bg-gray-50 animate-pulse'>
@@ -108,6 +108,51 @@ export function AdminDashboard() {
             </Card>
           ))}
         </div>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
+          <Card className='col-span-4 bg-gray-50 animate-pulse'>
+            <CardHeader>
+              <CardTitle className='text-sm font-medium'>Loading...</CardTitle>
+              <CardDescription className='text-xs text-gray-300'>Loading...</CardDescription>
+            </CardHeader>
+            <CardContent className='pl-2'>
+              <div className='h-64 bg-gray-200'></div>
+            </CardContent>
+          </Card>
+          <Card className='col-span-3 bg-gray-50 animate-pulse'>
+            <CardHeader>
+              <CardTitle className='text-sm font-medium'>Loading...</CardTitle>
+              <CardDescription className='text-xs text-gray-300'>Loading...</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='h-64 bg-gray-200'></div>
+            </CardContent>
+          </Card>
+        </div>
+        <Card className='bg-gray-50 animate-pulse'>
+          <CardHeader>
+            <CardTitle className='text-sm font-medium'>Loading...</CardTitle>
+            <CardDescription className='text-xs text-gray-300'>Loading...</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className='space-y-4'>
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className='flex items-center justify-between'>
+                  <div className='flex items-center space-x-4'>
+                    <div className='h-10 w-10 rounded-full bg-gray-200'></div>
+                    <div>
+                      <p className='text-sm font-medium text-gray-300'>Loading...</p>
+                      <p className='text-sm text-gray-300'>Loading...</p>
+                    </div>
+                  </div>
+                  <div className='text-right'>
+                    <p className='text-sm font-medium text-gray-300'>Loading...</p>
+                    <div className='w-32 h-2 bg-gray-200 rounded'></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -118,7 +163,7 @@ export function AdminDashboard() {
   };
 
   return (
-    <div className='space-y-6 p-6 bg-gray-50'>
+    <div className='space-y-6'>
       {/* Key Metrics Cards */}
       <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
         <Card className='bg-white shadow-sm hover:shadow-md transition-all duration-200'>
