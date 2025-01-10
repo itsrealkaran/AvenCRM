@@ -9,7 +9,7 @@ const calculateGrowthRate = (current: number, previous: number): number => {
 };
 
 // Get data for the last 6 months
-const getLastSixMonthsData = async () => {
+const getLastSixMonthsData = () => {
   const today = new Date();
   const sixMonthsAgo = new Date(today.getFullYear(), today.getMonth() - 5, 1);
   return sixMonthsAgo;
@@ -36,13 +36,12 @@ const getMonthlyData = async (startDate: Date, companyId: string) => {
 
 export const getSuperAdminDashboard = async (req: Request, res: Response) => {
   try {
-    const sixMonthsAgo = await getLastSixMonthsData();
+    const sixMonthsAgo = getLastSixMonthsData();
 
     // Get monthly revenue data
     const monthlyRevenue = await prisma.transaction.groupBy({
       by: ['createdAt'],
       where: {
-        type: 'INCOME',
         createdAt: {
           gte: sixMonthsAgo,
         },
@@ -74,9 +73,6 @@ export const getSuperAdminDashboard = async (req: Request, res: Response) => {
 
     // Calculate total revenue
     const totalRevenue = await prisma.transaction.aggregate({
-      where: {
-        type: 'INCOME',
-      },
       _sum: {
         amount: true,
       },

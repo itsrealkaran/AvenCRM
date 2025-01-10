@@ -161,7 +161,7 @@ export default function CompaniesPage() {
   };
 
   const getStatusText = (company: Company) => {
-    if (company?.blocked) return 'Inactive';
+    if (company?.blocked) return 'Blocked';
     return new Date(company?.planEnd) > new Date()
       ? 'Active'
       : new Date(company?.planEnd) > new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
