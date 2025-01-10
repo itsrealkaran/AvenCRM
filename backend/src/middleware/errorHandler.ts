@@ -10,7 +10,7 @@ export const errorHandler = (
   res: Response,
   _next: NextFunction
 ) => {
-  logger.error(err);
+  logger.error(err as any);
 
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({

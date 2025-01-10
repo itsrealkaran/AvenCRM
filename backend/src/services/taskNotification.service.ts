@@ -33,9 +33,6 @@ export class TaskNotificationService {
             not: 'COMPLETED',
           },
         },
-        include: {
-          assignedTo: true,
-        },
       });
 
       return dueTasks;
@@ -58,9 +55,6 @@ export class TaskNotificationService {
           status: {
             not: 'COMPLETED',
           },
-        },
-        include: {
-          assignedTo: true,
         },
       });
 
