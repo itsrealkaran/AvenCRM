@@ -12,10 +12,7 @@ import emailRoutes from './routes/email.routes.js';
 import taskRoutes from './routes/task.routes.js';
 
 import cors from "cors"
-import logger, { getRequestLogger } from './utils/logger.js';
-
-import { notFoundHandler } from './middleware/notFoundHandler.js';
-import { errorHandler } from './middleware/errorHandler.js';
+import logger from './utils/logger.js';
 
 import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
@@ -77,10 +74,6 @@ app.use(
 // Add a middleware to log requests with detailed debugging
 app.use((req: Request, res: Response, next: NextFunction) => {
   // Debugger breakpoint for request inspection
-
-  // Add request ID to headers if not present
- // eq.headers['x-request-id'] = req.headers['x-request-id'] || generateRequestId();
-  const reqLogger = getRequestLogger(req);
 
   // Log request details
   logger.info(`Incoming ${req.method} request to ${req.url}`, {
@@ -146,12 +139,18 @@ app.use('/api/dashboard', dashboardRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  const reqLogger = getRequestLogger(req);
-  reqLogger.error(err, {
-    context: 'ErrorHandler',
+
+  logger.info('Error middleware triggered', {
+    error: err,
+    timestamp: new Date().toISOString(),
+    requestId: req.headers['x-request-id'],
+    method: req.method,
     url: req.url,
-    userId: req.user?.id,
-    sessionId: req.sessionID
+    headers: req.headers,
+    query: req.query,
+    body: req.body,
+    session: req.session,
+    user: req.user,
   });
 
   res.status(err.status || 500).json({
