@@ -86,7 +86,7 @@ function EmailPageContent() {
   return (
     <section className='h-full'>
       <Card className='container mx-auto p-6 h-full'>
-        <h1 className='text-2xl font-bold mb-6'>Email Management</h1>
+        <h1 className='text-2xl font-bold mb-6 text-primary'>Email Management</h1>
 
         <Card>
         <Tabs value={activeTab ?? 'accounts'} className='w-full' onValueChange={handleTabChange}>

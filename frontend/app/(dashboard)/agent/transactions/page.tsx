@@ -104,10 +104,6 @@ export default function TransactionsPage() {
     setSelectedRows(transactions);
   };
 
-  if (isLoading) {
-    return <LoadingTableSkeleton />;
-  }
-
   return (
     <section className='flex-1 space-y-4 p-4 md:p-6'>
       <Card className='container mx-auto py-10'>

@@ -171,9 +171,9 @@ export default function CompaniesPage() {
   return (
     <section className='h-full'>
       <Card className='container space-y-4 p-4 md:p-6 h-full'>
-        <div className='flex justify-between items-center mb-8'>
+        <div className='flex justify-between items-center mb-6'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight'>Companies</h1>
+            <h1 className='text-3xl text-primary font-bold tracking-tight'>Companies</h1>
             <p className='text-muted-foreground mt-1'>Manage companies and their subscriptions</p>
           </div>
         </div>

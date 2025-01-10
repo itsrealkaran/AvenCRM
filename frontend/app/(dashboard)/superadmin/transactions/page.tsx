@@ -122,23 +122,15 @@ export default function TransactionsPage() {
     setSelectedRows(transactions);
   };
 
-  if (isLoading) {
-    return <LoadingTableSkeleton />;
-  }
-
   return (
     <section className='h-full'>
-      <Card className='container mx-auto py-10 h-full'>
-        <div className='flex justify-between items-center p-5'>
+      <Card className='container space-y-4 p-4 md:p-6 h-full'>
+        <div className='flex justify-between items-center mb-6'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight text-primary'>
-              Transactions Management
-            </h1>
+            <h1 className='text-3xl font-bold tracking-tight'>Transactions</h1>
             <p className='text-muted-foreground'>Manage and track your transactions in one place</p>
           </div>
         </div>
-
-        <div className='space-4 p-6'>
           <DataTable
             columns={columns}
             data={transactions}
@@ -149,7 +141,6 @@ export default function TransactionsPage() {
             }}
             onSelectionChange={handleSelectionChange}
           />
-        </div>
 
         <EditTransactionDialog
           open={isEditDialogOpen}
