@@ -22,6 +22,7 @@ export interface Task {
   companyId: string;
   createdAt: Date;
   updatedAt: Date;
+  tags?: string[];
 }
 
 export interface CreateTaskDTO {
@@ -31,6 +32,8 @@ export interface CreateTaskDTO {
   status?: TaskStatus;
   dueDate?: Date;
   colorTag?: string;
+  tags?: string[];
+  category?: string;
 }
 
 export interface UpdateTaskDTO extends Partial<CreateTaskDTO> {
