@@ -189,16 +189,8 @@ export default function TaskPage() {
       }
     });
 
-  if (loading) {
-    return (
-      <div className='flex items-center justify-center h-screen'>
-        <Loader2 className='w-8 h-8 animate-spin' />
-      </div>
-    );
-  }
-
   return (
-    <Card className='p-6'>
+    <Card className='p-6 h-full'>
       <div className='flex justify-between items-center mb-6'>
         <h1 className='text-2xl font-bold'>Tasks</h1>
         <div className='flex gap-2'>
@@ -289,7 +281,33 @@ export default function TaskPage() {
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        {filteredTasks.map((task) => (
+      {loading ? (
+        Array.from({ length: 6 }).map((_, index) => (
+          <div
+            key={index}
+            className="p-4 rounded-lg shadow-md relative animate-pulse bg-gray-200"
+            style={{ borderLeft: '4px solid #666666' }}
+          >
+            <div className="flex justify-between items-start mb-2">
+              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+              <div className="flex space-x-2">
+                <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
+                <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
+                <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
+              </div>
+            </div>
+            <div className="h-3 bg-gray-300 rounded w-full mb-3"></div>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <div className="h-3 w-12 bg-gray-300 rounded-full"></div>
+                <div className="h-3 w-12 bg-gray-300 rounded-full"></div>
+              </div>
+              <div className="h-3 w-20 bg-gray-300 rounded-full"></div>
+            </div>
+          </div>
+        ))
+      ) : (
+        filteredTasks.map((task: Task) => (
           <TaskCard
             key={task.id}
             task={task}
@@ -314,7 +332,8 @@ export default function TaskPage() {
             isSelected={selectedTasks.has(task.id)}
             onSelect={() => toggleTaskSelection(task.id)}
           />
-        ))}
+        ))
+      )}
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
