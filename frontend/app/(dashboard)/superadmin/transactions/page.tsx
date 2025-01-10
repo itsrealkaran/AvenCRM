@@ -127,8 +127,8 @@ export default function TransactionsPage() {
   }
 
   return (
-    <section className='flex-1 space-y-4 p-4 md:p-6'>
-      <Card className='container mx-auto py-10'>
+    <section className='h-full'>
+      <Card className='container mx-auto py-10 h-full'>
         <div className='flex justify-between items-center p-5'>
           <div>
             <h1 className='text-3xl font-bold tracking-tight text-primary'>

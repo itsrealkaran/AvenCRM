@@ -84,10 +84,11 @@ function EmailPageContent() {
   };
 
   return (
-    <section className='flex-1 space-y-4 p-4 md:p-6'>
-      <Card className='container mx-auto p-6'>
+    <section className='h-full'>
+      <Card className='container mx-auto p-6 h-full'>
         <h1 className='text-2xl font-bold mb-6'>Email Management</h1>
 
+        <Card>
         <Tabs value={activeTab ?? 'accounts'} className='w-full' onValueChange={handleTabChange}>
           <TabsList className='grid w-full grid-cols-4'>
             <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
@@ -97,7 +98,6 @@ function EmailPageContent() {
           </TabsList>
 
           <TabsContent value='accounts'>
-            <Card>
               <CardHeader>
                 <CardTitle>Connected Email Accounts</CardTitle>
               </CardHeader>
@@ -109,42 +109,36 @@ function EmailPageContent() {
                   onDisconnect={handleDisconnectAccount}
                 />
               </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value='templates'>
-            <Card>
               <CardHeader>
                 <CardTitle>Email Templates</CardTitle>
               </CardHeader>
               <CardContent>
                 <EmailTemplatesSection />
               </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value='recipients'>
-            <Card>
               <CardHeader>
                 <CardTitle>Email Recipients</CardTitle>
               </CardHeader>
               <CardContent>
                 <EmailRecipientsSection />
               </CardContent>
-            </Card>
           </TabsContent>
 
           <TabsContent value='campaigns'>
-            <Card>
               <CardHeader>
                 <CardTitle>Email Campaigns</CardTitle>
               </CardHeader>
               <CardContent>
                 <EmailCampaignSection />
               </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
+        </Card>
       </Card>
     </section>
   );
