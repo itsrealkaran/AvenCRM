@@ -47,7 +47,6 @@ import {
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
-import { CompanyForm } from './components/company-form';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
