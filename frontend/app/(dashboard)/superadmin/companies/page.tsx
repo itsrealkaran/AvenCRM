@@ -17,7 +17,7 @@ import {
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -164,8 +164,8 @@ export default function CompaniesPage() {
   };
 
   return (
-    <section className='p-1'>
-      <Card className='container py-8 px-4 space-y-6'>
+    <section className='h-full'>
+      <Card className='container space-y-4 p-4 md:p-6 h-full'>
         <div className='flex justify-between items-center mb-8'>
           <div>
             <h1 className='text-3xl font-bold tracking-tight'>Companies</h1>
@@ -205,107 +205,147 @@ export default function CompaniesPage() {
           </Dialog>
         </div>
 
-        <Card className='shadow-sm'>
-          <CardHeader className='pb-4'>
-            <div className='flex items-center space-x-4'>
-              <div className='relative flex-1 max-w-sm'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4' />
-                <Input
-                  placeholder='Search companies...'
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className='pl-10'
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className='rounded-md border'>
-              <Table>
-                <TableHeader>
-                  <TableRow className='bg-muted/50'>
-                    <TableHead className='font-semibold'>Company Info</TableHead>
-                    <TableHead className='font-semibold'>Admin</TableHead>
-                    <TableHead className='font-semibold'>Subscription</TableHead>
-                    <TableHead className='font-semibold'>Status</TableHead>
-                    <TableHead className='font-semibold'>Actions</TableHead>
+        <div className='flex items-center space-x-4'>
+          <div className='relative flex-1 max-w-sm'>
+            <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4' />
+            <Input
+              placeholder='Search companies...'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className='pl-10'
+            />
+          </div>
+        </div>
+        <div className='rounded-md border'>
+          {isLoading ? (
+            <Table>
+              <TableHeader>
+                <TableRow className='bg-white/50'>
+                  <TableHead className='font-semibold'>Company Info</TableHead>
+                  <TableHead className='font-semibold'>Admin</TableHead>
+                  <TableHead className='font-semibold'>Subscription</TableHead>
+                  <TableHead className='font-semibold'>Status</TableHead>
+                  <TableHead className='font-semibold'>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {[...Array(5)].map((_, index) => (
+                  <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
+                    <TableCell>
+                      <div className='flex flex-col space-y-1'>
+                        <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                        <div className='h-4 bg-gray-300 rounded w-1/2 mt-2'></div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex flex-col space-y-1'>
+                        <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                        <div className='h-4 bg-gray-300 rounded w-1/2 mt-2'></div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/4'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/4'></div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCompanies.map((company) => (
-                    <TableRow key={company.id} className='hover:bg-muted/50'>
-                      <TableCell>
-                        <div className='flex flex-col space-y-1'>
-                          <span className='font-medium'>{company.name}</span>
-                          <span className='text-sm text-muted-foreground'>{company.email}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex items-center space-x-2'>
-                          <UserIcon className='h-4 w-4 text-muted-foreground' />
-                          <span>
-                            {admins.find((admin) => admin.id === company.adminId)?.name || 'N/A'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex flex-col space-y-1'>
-                          <span className='font-medium'>
-                            {plans.find((plan) => plan.id === company.planId)?.name || 'N/A'}
-                          </span>
-                          <span className='text-sm text-muted-foreground'>
-                            Expires: {new Date(company.planEnd).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant='secondary' className={getStatusColor(company!)}>
-                          {getStatusText(company!)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className='flex items-center space-x-2'>
-                          <Button
-                            variant='outline'
-                            size='sm'
-                            onClick={() => handleDetailsOpen(company)}
-                          >
-                            View Details
-                          </Button>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant='ghost' size='sm'>
-                                <MoreHorizontal className='h-4 w-4' />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align='center' className='flex flex-col gap-1'>
-                              {company.blocked ? (
-                                <DropdownMenuItem onClick={() => handleReactivate(company.id)}>
-                                  Reactivate Company
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem onClick={() => handleBlock(company.id)}>
-                                  Block Company
-                                </DropdownMenuItem>
-                              )}
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleDelete(company.id)}
-                                className='text-red-600'
-                              >
-                                Delete Company
+                ))}
+                
+              </TableBody>
+            </Table>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className='bg-white/50'>
+                  <TableHead className='font-semibold'>Company Info</TableHead>
+                  <TableHead className='font-semibold'>Admin</TableHead>
+                  <TableHead className='font-semibold'>Subscription</TableHead>
+                  <TableHead className='font-semibold'>Status</TableHead>
+                  <TableHead className='font-semibold'>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredCompanies.map((company) => (
+                  <TableRow key={company.id} className='hover:bg-muted/50'>
+                    <TableCell>
+                      <div className='flex flex-col space-y-1'>
+                        <span className='font-medium'>{company.name}</span>
+                        <span className='text-sm text-muted-foreground'>{company.email}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex items-center space-x-2'>
+                        <UserIcon className='h-4 w-4 text-muted-foreground' />
+                        <span>
+                          {admins.find((admin) => admin.id === company.adminId)?.name || 'N/A'}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex flex-col space-y-1'>
+                        <span className='font-medium'>
+                          {plans.find((plan) => plan.id === company.planId)?.name || 'N/A'}
+                        </span>
+                        <span className='text-sm text-muted-foreground'>
+                          Expires: {new Date(company.planEnd).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant='secondary' className={getStatusColor(company!)}>
+                        {getStatusText(company!)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className='flex items-center space-x-2'>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant='ghost' size='sm'>
+                              <MoreHorizontal className='h-4 w-4' />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align='center' className='flex flex-col gap-1'>
+                            <DropdownMenuItem onClick={() => handleDetailsOpen(company)}>
+                                View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            {company.blocked ? (
+                              <DropdownMenuItem onClick={() => handleReactivate(company.id)}>
+                                Reactivate Company
                               </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleBlock(company.id)}>
+                                Block Company
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(company.id)}
+                              className='text-red-600'
+                            >
+                              Delete Company
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredCompanies.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className='h-24 text-center'>
+                      No results.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </div>
 
         <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
           <DialogContent className='sm:max-w-[600px]'>
