@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react';
 import { authApi } from '@/services/api';
 import { User } from '@/types';
-import { Calendar, Mail } from 'lucide-react';
 import { toast } from 'sonner';
-
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import { SuperAdminDashboard } from './components/superadmin-dashboard';
 
@@ -47,10 +44,9 @@ export default function DashboardPage() {
 
   return (
     <div className='flex-1 space-y-4 p-4 md:p-6 rounded-xl z-20 shadow-lg bg-white'>
-      <div className='flex items-center justify-between space-y-2'>
+      <div className='flex justify-between space-y-2'>
         <h1 className='text-3xl font-bold tracking-tight'>Welcome back, {user.name}!</h1>
       </div>
-
       <SuperAdminDashboard user={user} />
     </div>
   );

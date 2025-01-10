@@ -222,12 +222,12 @@ const Sidebar = () => {
   return (
     <div
       className={`h-screen z-50 sticky top-0 select-none overflow-x-hidden bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
-        ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
+        ${isCollapsed ? 'w-[60px] px-2' : 'w-[20%] px-8'}
         ${isMobile ? 'absolute' : 'relative'}`}
     >
       {/* Logo and Brand */}
       <div
-        className={`w-full flex items-center gap-[5px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}
+        className={`w-full flex items-center gap-[2px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}
       >
         <div className='text-[2rem]'>
           <Logo/>
