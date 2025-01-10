@@ -65,6 +65,21 @@ const Sidebar = () => {
       description: 'Manage companies',
       roles: [UserRole.SUPERADMIN],
     },
+    // Team Leader specific items
+    {
+      heading: 'Manage Team',
+      icon: Users,
+      path: `/${role}/manage-team`,
+      description: 'Team management',
+      roles: [UserRole.TEAM_LEADER],
+    },
+    {
+      heading: 'Team Monitoring',
+      icon: Users,
+      path: `/${role}/team-monitoring`,
+      description: 'Property management',
+      roles: [UserRole.TEAM_LEADER],
+    },
     // Admin specific items
     {
       heading: 'Manage Agents',
@@ -74,6 +89,20 @@ const Sidebar = () => {
       roles: [UserRole.ADMIN],
     },
     {
+      heading: 'Subscription',
+      icon: MonitorIcon,
+      path: `/${role}/subscription`,
+      description: 'Subscription management',
+      roles: [UserRole.ADMIN],
+    },
+    {
+      heading: 'Meta Ads',
+      icon: Building2,
+      path: `/${role}/meta-ads`,
+      description: 'Property management',
+      roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
+    },
+    {
       heading: 'Monitoring',
       icon: MonitorIcon,
       path: `/${role}/monitoring`,
@@ -81,26 +110,11 @@ const Sidebar = () => {
       roles: [UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
     },
     {
-      heading: 'Subscription',
-      icon: MonitorIcon,
-      path: `/${role}/subscription`,
-      description: 'Subscription management',
-      roles: [UserRole.ADMIN],
-    },
-    // Agent specific items
-    {
       heading: 'Properties',
       icon: Building2,
       path: `/${role}/property`,
       description: 'Property management',
-      roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
-    },
-    {
-      heading: 'Properties',
-      icon: Users,
-      path: `/${role}/manage-team`,
-      description: 'Property management',
-      roles: [UserRole.TEAM_LEADER],
+      roles: [UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
     },
     {
       heading: 'Leads',
@@ -130,6 +144,7 @@ const Sidebar = () => {
       description: 'Deal management',
       roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
     },
+     // Common items for all roles
     {
       heading: 'Tasks',
       icon: CheckSquare,
@@ -137,7 +152,6 @@ const Sidebar = () => {
       description: 'Task management',
       roles: [UserRole.SUPERADMIN, UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
     },
-    // Common items for all roles
     {
       heading: 'Calendar',
       icon: Calendar,
