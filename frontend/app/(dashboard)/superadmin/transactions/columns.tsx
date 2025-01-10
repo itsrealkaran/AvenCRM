@@ -94,9 +94,7 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const isSuccessful = row.getValue('isSuccessfull');
       return (
-        <Badge
-          className={isSuccessful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}
-        >
+        <Badge className={isSuccessful ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
           {isSuccessful ? 'Successful' : 'Failed'}
         </Badge>
       );

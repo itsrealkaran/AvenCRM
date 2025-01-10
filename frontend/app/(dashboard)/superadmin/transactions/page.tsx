@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Transaction } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -13,7 +14,6 @@ import { Card } from '@/components/ui/card';
 import { columns } from './columns';
 import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
-import axios from 'axios';
 
 async function getTransactions(): Promise<Transaction[]> {
   const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/subscription`, {

@@ -14,7 +14,7 @@ export const validate =
       });
       return next();
     } catch (error) {
-      logger.error(error);
+      logger.error(error as any);
       return next(new AppError('Validation error', 400));
     }
   };
