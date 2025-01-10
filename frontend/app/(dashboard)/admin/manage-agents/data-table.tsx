@@ -44,6 +44,7 @@ interface DataTableProps<TData extends BaseData, TValue> {
   onAddTeamMember?: (teamLeaderId: string) => void;
   disabled?: boolean;
   showTeamActions?: boolean;
+  isLoading?: boolean;
 }
 
 export function DataTable<TData extends BaseData, TValue>({
@@ -56,6 +57,7 @@ export function DataTable<TData extends BaseData, TValue>({
   onAddTeamMember,
   disabled,
   showTeamActions = false,
+  isLoading,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -160,7 +162,42 @@ export function DataTable<TData extends BaseData, TValue>({
               ))}
             </TableHeader>
             <TableBody>
-              {table.getRowModel().rows?.length ? (
+                {isLoading ? (
+                  [...Array(5)].map((_, index) => (
+                    <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                    </TableCell>
+                    <TableCell>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                    </TableCell>
+                    </TableRow>
+                  ))) : 
+                table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                     {row.getVisibleCells().map((cell) => (

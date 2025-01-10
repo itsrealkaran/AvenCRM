@@ -173,35 +173,12 @@ export default function ManageAgentsPage() {
     }
   };
 
-  if (isAgentsLoading) {
-    return (
-      <section className='flex-1 p-2 md:p-4'>
-        <Card className='container mx-auto p-4 md:p-5'>
-          <div className='flex justify-between items-center'>
-            <div>
-              <Skeleton className='h-10 w-60 mb-2' />
-              <Skeleton className='h-6 w-96 bg-black/20' />
-            </div>
-            <div className='flex gap-2'>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className='mr-2 h-4 w-4' /> Add New Agent
-              </Button>
-            </div>
-          </div>
-          <div className='w-full items-center justify-center p-3'>
-            <Skeleton className='w-[95%] h-[400px]' />
-          </div>
-        </Card>
-      </section>
-    );
-  }
-
   return (
-    <section className='flex-1 p-2 md:p-4 h-full'>
-      <Card className='container mx-auto p-4 md:p-5'>
-        <div className='flex justify-between items-center'>
+    <section className='h-full'>
+      <Card className='container space-y-4 p-4 md:p-6 h-full'>
+        <div className='flex justify-between items-center mb-6'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight text-primary'>Agent Management</h1>
+            <h1 className='text-3xl font-bold tracking-tight'>Agent Management</h1>
             <p className='text-muted-foreground'>Manage your team members and their roles</p>
           </div>
           <div className='flex gap-2'>
@@ -211,22 +188,21 @@ export default function ManageAgentsPage() {
           </div>
         </div>
 
-        <div className='space-4 p-6'>
-          <DataTable
-            columns={columns}
-            data={agents}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onBulkDelete={async (rows) => {
-              const agentIds = rows.map((row) => row.original.id);
-              await handleBulkDelete(agentIds);
-            }}
-            onViewMetrics={handleViewMetrics}
-            onAddTeamMember={handleAddTeamMember}
-            showTeamActions={currentUser?.role === 'TEAM_LEADER'}
-            disabled={isLoading || isAgentsLoading}
-          />
-        </div>
+        <DataTable
+          columns={columns}
+          data={agents}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onBulkDelete={async (rows) => {
+            const agentIds = rows.map((row) => row.original.id);
+            await handleBulkDelete(agentIds);
+          }}
+          onViewMetrics={handleViewMetrics}
+          onAddTeamMember={handleAddTeamMember}
+          showTeamActions={currentUser?.role === 'TEAM_LEADER'}
+          disabled={isLoading || isAgentsLoading}
+          isLoading={isAgentsLoading}
+        />
 
         <CreateAgentDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
         <EditAgentDialog
