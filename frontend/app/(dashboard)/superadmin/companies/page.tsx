@@ -126,25 +126,6 @@ export default function CompaniesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    const confirmed = window.confirm('Are you sure you want to delete this company?');
-    if (!confirmed) return;
-    try {
-      await api.delete(`/company/${id}`);
-      fetchData();
-      toast({
-        title: 'Success',
-        description: 'Company deleted successfully',
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to delete company',
-        variant: 'destructive',
-      });
-    }
-  };
-
   const handleDetailsOpen = (company: Company) => {
     setSelectedCompanyDetails(company);
     setIsDetailsDialogOpen(true);
@@ -173,7 +154,7 @@ export default function CompaniesPage() {
       <Card className='container space-y-4 p-4 md:p-6 h-full'>
         <div className='flex justify-between items-center mb-6'>
           <div>
-            <h1 className='text-3xl text-primary font-bold tracking-tight'>Companies</h1>
+            <h1 className='text-3xl font-bold tracking-tight'>Companies</h1>
             <p className='text-muted-foreground mt-1'>Manage companies and their subscriptions</p>
           </div>
         </div>
@@ -190,17 +171,17 @@ export default function CompaniesPage() {
           </div>
         </div>
         <div className='rounded-md border'>
+        <Table>
+          <TableHeader>
+            <TableRow className='bg-white/50'>
+              <TableHead className='font-semibold'>Company Info</TableHead>
+              <TableHead className='font-semibold'>Admin</TableHead>
+              <TableHead className='font-semibold'>Subscription</TableHead>
+              <TableHead className='font-semibold'>Status</TableHead>
+              <TableHead className='font-semibold'>Actions</TableHead>
+            </TableRow>
+          </TableHeader>
           {isLoading ? (
-            <Table>
-              <TableHeader>
-                <TableRow className='bg-white/50'>
-                  <TableHead className='font-semibold'>Company Info</TableHead>
-                  <TableHead className='font-semibold'>Admin</TableHead>
-                  <TableHead className='font-semibold'>Subscription</TableHead>
-                  <TableHead className='font-semibold'>Status</TableHead>
-                  <TableHead className='font-semibold'>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {[...Array(5)].map((_, index) => (
                   <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
@@ -211,36 +192,24 @@ export default function CompaniesPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
                     </TableCell>
                     <TableCell>
                       <div className='flex flex-col space-y-1'>
-                        <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                        <div className='h-4 bg-gray-300 rounded w-1/2 mt-2'></div>
+                        <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                        <div className='h-4 bg-gray-300 rounded w-3/4 mt-2'></div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/4'></div>
+                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
                     </TableCell>
                     <TableCell>
                       <div className='h-4 bg-gray-300 rounded w-1/4'></div>
                     </TableCell>
                   </TableRow>
                 ))}
-                
               </TableBody>
-            </Table>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className='bg-white/50'>
-                  <TableHead className='font-semibold'>Company Info</TableHead>
-                  <TableHead className='font-semibold'>Admin</TableHead>
-                  <TableHead className='font-semibold'>Subscription</TableHead>
-                  <TableHead className='font-semibold'>Status</TableHead>
-                  <TableHead className='font-semibold'>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {filteredCompanies.map((company) => (
                   <TableRow key={company.id} className='hover:bg-muted/50'>
@@ -286,6 +255,13 @@ export default function CompaniesPage() {
                                 View Details
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleReactivate(company.id)}
+                              className='text-blue-600'
+                            >
+                              Extend Plan
+                            </DropdownMenuItem> {/* Implement Extend in backend */}
+                            <DropdownMenuSeparator/>
                             {company.blocked ? (
                               <DropdownMenuItem onClick={() => handleReactivate(company.id)}>
                                 Reactivate Company
@@ -295,13 +271,12 @@ export default function CompaniesPage() {
                                 Block Company
                               </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
+                            {/* <DropdownMenuItem
                               onClick={() => handleDelete(company.id)}
                               className='text-red-600'
                             >
                               Delete Company
-                            </DropdownMenuItem>
+                            </DropdownMenuItem> */}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
@@ -316,8 +291,8 @@ export default function CompaniesPage() {
                   </TableRow>
                 )}
               </TableBody>
-            </Table>
           )}
+          </Table>
         </div>
 
         <Dialog open={isDetailsDialogOpen} onOpenChange={setIsDetailsDialogOpen}>
