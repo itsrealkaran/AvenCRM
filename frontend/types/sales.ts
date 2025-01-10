@@ -1,4 +1,4 @@
-import { DealStatus, LeadStatus } from './enums';
+import { DealStatus, LeadStatus, PropertyType } from './enums';
 
 export interface Lead {
   id: string;
@@ -40,7 +40,7 @@ export interface Deal {
   };
   dealAmount: number;
   status: DealStatus;
-  propertyType?: string;
+  propertyType?: PropertyType;
   propertyAddress?: string;
   propertyValue?: number;
   expectedCloseDate?: Date;

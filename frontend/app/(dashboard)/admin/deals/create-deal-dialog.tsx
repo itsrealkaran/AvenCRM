@@ -75,7 +75,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
       companyId: '',
       agentId: '',
       dealAmount: '',
-      status: DealStatus.NEW_DISCOVERY,
+      status: DealStatus.PROSPECT,
       propertyType: '',
       propertyAddress: '',
       propertyValue: undefined,

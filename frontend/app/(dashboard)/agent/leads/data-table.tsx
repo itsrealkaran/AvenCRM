@@ -48,7 +48,6 @@ export function DataTable<TData, TValue>({
   onDelete,
   onBulkDelete,
   onStatusChange,
-  onSelectionChange,
   onConvertToDeal,
   disabled,
 }: DataTableProps<TData, TValue>) {

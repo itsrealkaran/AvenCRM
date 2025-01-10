@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Deal } from '@/types';
+import { Deal, DealStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -123,6 +123,33 @@ export default function DealsPage() {
     }
   };
 
+  const handleStatusChange = async (dealId: string, newStatus: DealStatus) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/deals/${dealId}/status`,
+        {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
+      if (response.ok) {
+        // invalidate the deals query
+        queryClient.invalidateQueries({ queryKey: ['deals'] });
+        toast.success('Deal status updated successfully');
+      } else {
+        const error = await response.text();
+        throw new Error(error || 'Failed to update deal status');
+      }
+    } catch (error) {
+      toast.error('Failed to update deal status');
+    }
+  };
+
   const handleSelectionChange = (deals: Deal[]) => {
     setSelectedRows(deals);
   };
@@ -175,6 +202,7 @@ export default function DealsPage() {
               await handleBulkDelete(dealIds);
             }}
             onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
             onSelectionChange={handleSelectionChange}
           />
         </div>

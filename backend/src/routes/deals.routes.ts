@@ -64,7 +64,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
+    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType, phone } = req.body;
     let dealValue = Number(dealAmount);
 
     const companyId = req.user?.companyId || '';
@@ -81,7 +81,8 @@ router.post("/", async (req: Request, res: Response) => {
                 notes: notes,
                 companyId: companyId,
                 agentId: userId,
-                propertyType: propertyType
+                propertyType: propertyType,
+                phone: phone
             },
         });
         res.json(deal);
@@ -91,7 +92,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.put("/:id", async (req: Request, res: Response) => {
-    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
+    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType, phone } = req.body;
     let dealValue = Number(dealAmount);
     try {
         const deal = await db.deal.update({
@@ -103,7 +104,8 @@ router.put("/:id", async (req: Request, res: Response) => {
                 email: email,
                 expectedCloseDate: expectedCloseDate,
                 notes: notes,
-                propertyType: propertyType
+                propertyType: propertyType,
+                phone: phone
             },
         });
         res.json(deal);

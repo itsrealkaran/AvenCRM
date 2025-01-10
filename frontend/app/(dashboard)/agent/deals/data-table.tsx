@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Deal } from '@/types';
+import { Deal, DealStatus } from '@/types';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -36,6 +36,7 @@ interface DataTableProps<TData, TValue> {
   onDelete: (dealId: string) => void;
   onBulkDelete: (rows: Row<TData>[]) => void;
   onSelectionChange?: (selectedItems: Deal[]) => void;
+  onStatusChange?: (dealId: string, newStatus: DealStatus) => Promise<void>;
   disabled?: boolean;
 }
 
@@ -46,6 +47,7 @@ export function DataTable<TData, TValue>({
   onDelete,
   onBulkDelete,
   onSelectionChange,
+  onStatusChange,
   disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
@@ -75,6 +77,7 @@ export function DataTable<TData, TValue>({
     meta: {
       onEdit,
       onDelete,
+      onStatusChange,
     },
   });
 
@@ -98,12 +101,7 @@ export function DataTable<TData, TValue>({
               const ok = await confirm();
 
               if (ok) {
-                toast.loading('Deleting...', {
-                  id: 'delete',
-                });
-
                 onBulkDelete(table.getFilteredSelectedRowModel().rows);
-                toast.dismiss('delete');
                 table.resetRowSelection();
               }
             }}

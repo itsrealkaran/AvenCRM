@@ -178,6 +178,8 @@ router.post("/convert", async (req: Request, res: Response) => {
                     companyId: lead.companyId,
                     agentId: lead.agentId,
                     status: DealStatus.ACTIVE,
+                    phone: lead.phone,
+                    id: lead.id
                 },
             }),
             db.lead.update({

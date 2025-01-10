@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Deal, DealStatus } from '@/types';
+import { Deal, DealStatus, PropertyType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -21,6 +21,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 const noteEntrySchema = z.object({
@@ -33,15 +40,8 @@ const dealFormSchema = z.object({
   email: z.string().email().optional().or(z.literal('')),
   phone: z.string().optional(),
   dealAmount: z.string().optional(),
-  status: z.enum([
-    'NEW_DISCOVERY',
-    'PROSPECT',
-    'ACTIVE',
-    'UNDER_CONTRACT',
-    'CLOSED_WON',
-    'CLOSED_LOST',
-  ]),
-  propertyType: z.string().optional(),
+  status: z.enum(Object.values(DealStatus) as [DealStatus, ...DealStatus[]]),
+  propertyType: z.enum(Object.values(PropertyType) as [PropertyType, ...PropertyType[]]).optional(),
   propertyAddress: z.string().optional(),
   propertyValue: z.number().optional(),
   expectedCloseDate: z.date().optional(),
@@ -72,7 +72,7 @@ export function EditDealDialog({
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
-      status: DealStatus.NEW_DISCOVERY,
+      status: DealStatus.PROSPECT,
       notes: [],
       expectedCloseDate: new Date(),
     },
@@ -97,7 +97,7 @@ export function EditDealDialog({
         phone: deal.phone || '',
         dealAmount: deal.dealAmount?.toString() || '',
         status: deal.status,
-        propertyType: deal.propertyType || '',
+        propertyType: deal.propertyType || PropertyType.RESIDENTIAL,
         propertyAddress: deal.propertyAddress || '',
         propertyValue: deal.propertyValue,
         expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate) : undefined,
@@ -213,9 +213,20 @@ export function EditDealDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Status' {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Status' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(DealStatus).map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -229,6 +240,30 @@ export function EditDealDialog({
                     <FormControl>
                       <Input type='number' placeholder='10000' {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Property Type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(PropertyType).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
