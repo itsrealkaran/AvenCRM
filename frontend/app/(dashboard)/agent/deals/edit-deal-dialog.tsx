@@ -38,16 +38,16 @@ const noteEntrySchema = z.object({
 const dealFormSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email().optional().or(z.literal('')),
-  phone: z.string().optional(),
-  dealAmount: z.string().optional(),
-  status: z.enum(Object.values(DealStatus) as [DealStatus, ...DealStatus[]]),
-  propertyType: z.enum(Object.values(PropertyType) as [PropertyType, ...PropertyType[]]).optional(),
-  propertyAddress: z.string().optional(),
-  propertyValue: z.number().optional(),
-  expectedCloseDate: z.date().optional(),
-  actualCloseDate: z.date().optional(),
-  commissionRate: z.number().optional(),
-  estimatedCommission: z.number().optional(),
+  phone: z.string().optional().or(z.literal('')),
+  dealAmount: z.string().optional().or(z.literal('')),
+  status: z.nativeEnum(DealStatus),
+  propertyType: z.nativeEnum(PropertyType).optional(),
+  propertyAddress: z.string().optional().or(z.literal('')),
+  propertyValue: z.number().optional().nullable(),
+  expectedCloseDate: z.date().optional().nullable(),
+  actualCloseDate: z.date().optional().nullable(),
+  commissionRate: z.number().optional().nullable(),
+  estimatedCommission: z.number().optional().nullable(),
   notes: z.array(noteEntrySchema),
 });
 
@@ -72,9 +72,19 @@ export function EditDealDialog({
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
+      name: '',
+      email: '',
+      phone: '',
+      dealAmount: '',
       status: DealStatus.PROSPECT,
+      propertyType: PropertyType.RESIDENTIAL,
+      propertyAddress: '',
+      propertyValue: null,
+      expectedCloseDate: null,
+      actualCloseDate: null,
+      commissionRate: null,
+      estimatedCommission: null,
       notes: [],
-      expectedCloseDate: new Date(),
     },
   });
 
@@ -89,7 +99,7 @@ export function EditDealDialog({
         ? Object.entries(deal.notes)
             .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
             .map(([time, note]) => ({ time, note }))
-        : [{ time: format(new Date(), "yyyy-MM-dd'T'HH:mm"), note: '' }];
+        : [];
 
       form.reset({
         name: deal.name,
@@ -99,11 +109,11 @@ export function EditDealDialog({
         status: deal.status,
         propertyType: deal.propertyType || PropertyType.RESIDENTIAL,
         propertyAddress: deal.propertyAddress || '',
-        propertyValue: deal.propertyValue,
-        expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate) : undefined,
-        actualCloseDate: deal.actualCloseDate ? new Date(deal.actualCloseDate) : undefined,
-        commissionRate: deal.commissionRate,
-        estimatedCommission: deal.estimatedCommission,
+        propertyValue: deal.propertyValue || null,
+        expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate) : null,
+        actualCloseDate: deal.actualCloseDate ? new Date(deal.actualCloseDate) : null,
+        commissionRate: deal.commissionRate || null,
+        estimatedCommission: deal.estimatedCommission || null,
         notes: notesArray,
       });
     }
@@ -121,14 +131,11 @@ export function EditDealDialog({
         body: JSON.stringify({
           ...values,
           id: deal?.id,
+          dealAmount: values.dealAmount ? parseFloat(values.dealAmount) : null,
           notes: values.notes.reduce(
             (acc, { time, note }) => {
               if (note.trim()) {
-                if (acc[time]) {
-                  acc[time] += `\n\n${note}`; // Merge notes with a gap
-                } else {
-                  acc[time] = note;
-                }
+                acc[time] = note.trim();
               }
               return acc;
             },
@@ -147,10 +154,10 @@ export function EditDealDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['deals'] });
       onOpenChange(false);
-      form.reset();
       toast.success('Deal updated successfully');
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Failed to update deal:', error);
       toast.error('Failed to update deal');
     },
   });
