@@ -78,7 +78,7 @@ const Sidebar = () => {
       icon: MonitorIcon,
       path: `/${role}/monitoring`,
       description: 'System monitoring',
-      roles: [UserRole.ADMIN, UserRole.TEAM_LEADER],
+      roles: [UserRole.ADMIN, UserRole.AGENT, UserRole.TEAM_LEADER],
     },
     {
       heading: 'Subscription',

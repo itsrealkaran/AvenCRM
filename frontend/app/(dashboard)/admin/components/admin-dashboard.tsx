@@ -119,12 +119,6 @@ export function AdminDashboard() {
 
   return (
     <div className='space-y-6 p-6 bg-gray-50'>
-      {/* Header Section */}
-      <div className='flex flex-col space-y-2'>
-        <h1 className='text-3xl font-bold text-gray-900'>Dashboard Overview</h1>
-        <p className='text-gray-500'>Monitor your company&apos;s performance and metrics</p>
-      </div>
-
       {/* Key Metrics Cards */}
       <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
         <Card className='bg-white shadow-sm hover:shadow-md transition-all duration-200'>

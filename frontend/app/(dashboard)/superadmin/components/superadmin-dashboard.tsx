@@ -176,8 +176,8 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
         <Card className='col-span-4 bg-white border border-gray-100'>
           <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Monthly revenue analysis</CardDescription>
+            <CardTitle>Plan Distribution</CardTitle>
+            <CardDescription>Companies with specific plans</CardDescription>
           </CardHeader>
           <CardContent className='pl-2'>
             <ResponsiveContainer width='100%' height={350}>
@@ -209,7 +209,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
         <Card className='col-span-3 bg-white border border-gray-100'>
           <CardHeader>
             <CardTitle>Company Growth</CardTitle>
-            <CardDescription>Monthly company registration trend</CardDescription>
+            <CardDescription>Monthly registration analysis</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width='100%' height={350}>
