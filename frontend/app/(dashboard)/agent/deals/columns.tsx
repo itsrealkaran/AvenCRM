@@ -1,6 +1,6 @@
 'use client';
 
-import { Deal } from '@/types';
+import { Deal, DealStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
@@ -25,28 +25,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-type Status =
-  | 'NEW'
-  | 'CONTACTED'
-  | 'QUALIFIED'
-  | 'PROPOSAL'
-  | 'NEGOTIATION'
-  | 'WON'
-  | 'LOST'
-  | 'ACTIVE';
-
-const colors: Record<Status, string> = {
-  NEW: 'bg-blue-100 text-blue-800',
-  CONTACTED: 'bg-purple-100 text-purple-800',
-  QUALIFIED: 'bg-yellow-100 text-yellow-800',
-  PROPOSAL: 'bg-indigo-100 text-indigo-800',
-  NEGOTIATION: 'bg-orange-100 text-orange-800',
-  WON: 'bg-green-100 text-green-800',
-  LOST: 'bg-red-100 text-red-800',
+const colors: Record<DealStatus, string> = {
+  CLOSED_LOST: 'bg-purple-100 text-purple-800',
+  CLOSED_WON: 'bg-yellow-100 text-yellow-800',
+  UNDER_CONTRACT: 'bg-indigo-100 text-indigo-800',
+  PROSPECT: 'bg-orange-100 text-orange-800',
   ACTIVE: 'bg-emerald-100 text-emerald-800',
 };
 
-const getStatusColor = (status: Status): string => {
+const getStatusColor = (status: DealStatus): string => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
@@ -93,23 +80,95 @@ export const columns: ColumnDef<Deal>[] = [
   },
   {
     accessorKey: 'email',
-    header: 'Email',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Email
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'phone',
-    header: 'Phone',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Phone
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
-    cell: ({ row }) => {
-      const status: Status = row.getValue('status');
-      return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Status
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row, table }) => {
+      const status: DealStatus = row.getValue('status');
+      const deal = row.original as Deal;
+      const meta = table.options.meta as {
+        onStatusChange?: (dealId: string, newStatus: DealStatus) => Promise<void>;
+      };
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 p-0'>
+              <Badge className={`${getStatusColor(status)} cursor-pointer`}>{status}</Badge>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-[200px]'>
+            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {Object.keys(DealStatus).map((statusOption) => (
+              <DropdownMenuItem
+                key={statusOption}
+                className={status === statusOption ? 'bg-accent' : ''}
+                onClick={async () => {
+                  if (status !== statusOption && meta.onStatusChange) {
+                    await meta.onStatusChange(deal.id, statusOption as DealStatus);
+                  }
+                }}
+              >
+                <Badge className={`${getStatusColor(statusOption as DealStatus)} mr-2`}>
+                  {statusOption}
+                </Badge>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
     },
   },
   {
     accessorKey: 'dealAmount',
-    header: 'Amount',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Amount
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const amount = row.getValue('dealAmount');
       return amount ? `$${amount}` : '-';
@@ -169,7 +228,17 @@ export const columns: ColumnDef<Deal>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Created At
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },

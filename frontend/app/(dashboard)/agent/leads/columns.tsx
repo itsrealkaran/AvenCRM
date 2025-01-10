@@ -89,15 +89,45 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: 'email',
-    header: 'Email',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Email
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'phone',
-    header: 'Phone',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Phone
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Status
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row, table }) => {
       const status: LeadStatus = row.getValue('status');
       const lead = row.original as Lead;
@@ -142,14 +172,34 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created At',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Created At
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },
   },
   {
     accessorKey: 'notes',
-    header: 'Notes',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Notes
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const notes = row.original.notes || {};
       const noteCount = Object.keys(notes).length;

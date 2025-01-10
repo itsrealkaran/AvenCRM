@@ -36,7 +36,7 @@ const setTokenCookies = (res: Response, { accessToken, refreshToken }: { accessT
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 15 * 60 * 1000, // 15 minutes
+    maxAge: 30 * 60 * 1000, // 30 minutes
   });
 
   res.cookie('RefreshToken', refreshToken, {

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { dealsApi } from '@/services/deals';
-import { Deal, DealStatus } from '@/types';
+import { Deal, DealStatus, PropertyType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -35,7 +35,7 @@ const dealFormSchema = z.object({
   phone: z.string().optional(),
   dealAmount: z.string().optional(),
   status: z.nativeEnum(DealStatus),
-  propertyType: z.string().optional(),
+  propertyType: z.nativeEnum(PropertyType).optional(),
   propertyAddress: z.string().optional(),
   propertyValue: z.string().optional(),
   expectedCloseDate: z.date().optional(),
@@ -66,7 +66,7 @@ export function EditDealDialog({
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
-      status: DealStatus.NEW_DISCOVERY,
+      status: DealStatus.PROSPECT,
       notes: [],
     },
   });
@@ -90,7 +90,7 @@ export function EditDealDialog({
         phone: deal.phone || '',
         dealAmount: deal.dealAmount?.toString() || '',
         status: deal.status,
-        propertyType: deal.propertyType || '',
+        propertyType: deal.propertyType || PropertyType.COMMERCIAL,
         propertyAddress: deal.propertyAddress || '',
         propertyValue: deal.propertyValue?.toString() || '',
         expectedCloseDate: deal.expectedCloseDate ? new Date(deal.expectedCloseDate) : undefined,

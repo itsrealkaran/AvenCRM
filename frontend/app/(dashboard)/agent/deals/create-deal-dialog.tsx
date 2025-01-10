@@ -1,6 +1,6 @@
 'use client';
 
-import { Deal, DealStatus } from '@/types';
+import { Deal, DealStatus, PropertyType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -20,6 +20,13 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
 const noteEntrySchema = z.object({
@@ -35,15 +42,8 @@ const dealFormSchema = z.object({
   companyId: z.string(),
   agentId: z.string(),
   dealAmount: z.string(),
-  status: z.enum([
-    'NEW_DISCOVERY',
-    'PROSPECT',
-    'ACTIVE',
-    'UNDER_CONTRACT',
-    'CLOSED_WON',
-    'CLOSED_LOST',
-  ]),
-  propertyType: z.string().optional(),
+  status: z.enum(Object.values(DealStatus) as [DealStatus, ...DealStatus[]]),
+  propertyType: z.enum(Object.values(PropertyType) as [PropertyType, ...PropertyType[]]).optional(),
   propertyAddress: z.string().optional(),
   propertyValue: z.number().optional(),
   expectedCloseDate: z.date().optional(),
@@ -75,8 +75,8 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
       companyId: '',
       agentId: '',
       dealAmount: '',
-      status: DealStatus.NEW_DISCOVERY,
-      propertyType: '',
+      status: DealStatus.PROSPECT,
+      propertyType: PropertyType.RESIDENTIAL,
       propertyAddress: '',
       propertyValue: undefined,
       expectedCloseDate: undefined,
@@ -200,9 +200,20 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Status' {...field} />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Status' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(DealStatus).map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -216,6 +227,30 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
                     <FormControl>
                       <Input type='number' placeholder='10000' {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Property Type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(PropertyType).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

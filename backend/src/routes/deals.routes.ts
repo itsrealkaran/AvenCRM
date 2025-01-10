@@ -4,6 +4,7 @@ import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 import { DealStatus } from "@prisma/client";
 import { getAllDeals } from "../controllers/deals.controller.js";
+import logger from "../utils/logger.js";
 
 const router: Router = Router();
 router.use(protect);
@@ -63,7 +64,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 });
 
 router.post("/", async (req: Request, res: Response) => {
-    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
+    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType, phone } = req.body;
     let dealValue = Number(dealAmount);
 
     const companyId = req.user?.companyId || '';
@@ -80,7 +81,8 @@ router.post("/", async (req: Request, res: Response) => {
                 notes: notes,
                 companyId: companyId,
                 agentId: userId,
-                propertyType: propertyType
+                propertyType: propertyType,
+                phone: phone
             },
         });
         res.json(deal);
@@ -90,7 +92,7 @@ router.post("/", async (req: Request, res: Response) => {
 });
 
 router.put("/:id", async (req: Request, res: Response) => {
-    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType } = req.body;
+    const { name, status, dealAmount, email, expectedCloseDate, notes, propertyType, phone } = req.body;
     let dealValue = Number(dealAmount);
     try {
         const deal = await db.deal.update({
@@ -102,14 +104,39 @@ router.put("/:id", async (req: Request, res: Response) => {
                 email: email,
                 expectedCloseDate: expectedCloseDate,
                 notes: notes,
-                propertyType: propertyType
+                propertyType: propertyType,
+                phone: phone
             },
         });
         res.json(deal);
     } catch (error) {
         res.status(500).json({ message: "Failed to update deal" });
+        logger.error('Update deal error:', error);
+        console.error('Update deal error:', error);
     }
 }); 
+
+router.put("/:id/status", async (req: Request, res: Response) => {
+    const { status } = req.body;
+    const dealId = req.params.id;
+
+    // Validate status
+    if (!Object.values(DealStatus).includes(status)) {
+        return res.status(400).json({ message: "Invalid deal status" });
+    }
+
+    try {
+        const updatedDeal = await db.deal.update({
+            where: { id: dealId },
+            data: { status },
+        });
+
+        res.json(updatedDeal);
+    } catch (error) {
+        logger.error('Update deal status error:', error);
+        res.status(500).json({ message: "Failed to update deal status" });
+    }
+});
 
 router.delete("/:id", async (req: Request, res: Response) => {
     try {

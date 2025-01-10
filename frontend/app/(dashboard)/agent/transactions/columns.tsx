@@ -82,15 +82,45 @@ export const columns: ColumnDef<Transaction>[] = [
   },
   {
     accessorKey: 'type',
-    header: 'Type',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Type
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'planType',
-    header: 'Plan',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Plan Type
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'isVerfied',
-    header: 'Status',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Verified
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       const isVerified = row.getValue('isVerfied');
       return (
