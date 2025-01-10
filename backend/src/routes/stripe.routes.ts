@@ -32,17 +32,11 @@ router.post(
     }
 
     try {
-      console.log("Request body:", req.body);
-      console.log("Stripe signature:", sig);
-      console.log("Webhook secret:", process.env.STRIPE_WEBHOOK_SECRET);
-      
       const event = stripe.webhooks.constructEvent(
         req.body,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
-      console.log('Received Stripe event:', event);
-      console.log('Event type:', event.type);
       // Handle the event
       switch (event.type) {
         case 'checkout.session.completed':
@@ -50,7 +44,6 @@ router.post(
           await handleSuccessfulSubscription(session);
           break;
         case 'customer.subscription.deleted':
-          console.log(event.data)
           const subscription = event.data.object as Stripe.Subscription;
           await handleSubscriptionCancellation(subscription);
           break;
@@ -134,7 +127,7 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
   
   // Log the metadata for debugging
-  console.log('Session metadata:', metadata);
+
   
   if (!metadata.planType || !metadata.userId || !metadata.companyId) {
     console.error('Missing metadata:', {
@@ -172,16 +165,10 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
     await prisma.company.update({
       where: { id: metadata.companyId },
       data: {
-        plan: {
-          connect: { id: transaction.id }
-        },
         planStart: new Date(),
         planEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       },
     });
-
-    // Store Stripe-specific details in a separate table if needed
-    // You might want to create a new model for this in your schema
   } catch (error) {
     console.error('Error updating subscription status:', error);
     throw error;

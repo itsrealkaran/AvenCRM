@@ -1,5 +1,6 @@
-import EmailPageContent from "@/components/email/EmailPageContent";
-import { Suspense } from "react";
+import { Suspense } from 'react';
+
+import EmailPageContent from '@/components/email/EmailPageContent';
 
 function EmailPage() {
   return (

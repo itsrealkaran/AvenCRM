@@ -28,6 +28,7 @@ import { FaAngleRight } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+
 import Logo from '../logo';
 
 interface MenuItem {
@@ -230,7 +231,7 @@ const Sidebar = () => {
         className={`w-full flex items-center gap-[5px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}
       >
         <div className='text-[2rem]'>
-          <Logo/>
+          <Logo />
         </div>
         {!isCollapsed && (
           <Link

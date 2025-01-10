@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
 import { FaCheck } from 'react-icons/fa';
@@ -251,9 +251,11 @@ const Page = () => {
                   <div className='text-center text-sm text-gray-600'>
                     {format(new Date(payment.date), 'MMM dd, yyyy')}
                   </div>
-                  <div className={`text-center text-sm font-medium ${
-                    payment.isSuccessfull ? 'text-emerald-600' : 'text-red-600'
-                  }`}>
+                  <div
+                    className={`text-center text-sm font-medium ${
+                      payment.isSuccessfull ? 'text-emerald-600' : 'text-red-600'
+                    }`}
+                  >
                     {payment.isSuccessfull ? 'Paid' : 'Failed'}
                   </div>
                 </div>

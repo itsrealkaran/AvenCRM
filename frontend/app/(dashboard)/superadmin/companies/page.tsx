@@ -155,12 +155,18 @@ export default function CompaniesPage() {
     if (company?.blocked) return 'bg-red-100 text-red-800';
     return new Date(company?.planEnd) > new Date()
       ? 'bg-emerald-100 text-emerald-800'
-      : 'bg-yellow-100 text-yellow-800';
+      : new Date(company?.planEnd) > new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        ? 'bg-yellow-100 text-yellow-800'
+        : 'bg-red-100 text-red-800';
   };
 
   const getStatusText = (company: Company) => {
-    if (company?.blocked) return 'Blocked';
-    return new Date(company?.planEnd) > new Date() ? 'Active' : 'Expired';
+    if (company?.blocked) return 'Inactive';
+    return new Date(company?.planEnd) > new Date()
+      ? 'Active'
+      : new Date(company?.planEnd) > new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        ? 'Overdue'
+        : 'Inactive';
   };
 
   return (
@@ -171,38 +177,6 @@ export default function CompaniesPage() {
             <h1 className='text-3xl font-bold tracking-tight'>Companies</h1>
             <p className='text-muted-foreground mt-1'>Manage companies and their subscriptions</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size='lg' className='px-6'>
-                <Plus className='mr-2 h-5 w-5' />
-                Add Company
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='sm:max-w-[600px]'>
-              <DialogHeader>
-                <DialogTitle>{selectedCompany ? 'Edit Company' : 'Add New Company'}</DialogTitle>
-                <DialogDescription>
-                  {selectedCompany
-                    ? 'Update company details and subscription'
-                    : 'Add a new company to the platform'}
-                </DialogDescription>
-              </DialogHeader>
-              <CompanyForm
-                company={selectedCompany}
-                admins={admins}
-                plans={plans}
-                onClose={() => {
-                  setIsDialogOpen(false);
-                  setSelectedCompany(null);
-                }}
-                onSuccess={() => {
-                  fetchData();
-                  setIsDialogOpen(false);
-                  setSelectedCompany(null);
-                }}
-              />
-            </DialogContent>
-          </Dialog>
         </div>
 
         <Card className='shadow-sm'>
