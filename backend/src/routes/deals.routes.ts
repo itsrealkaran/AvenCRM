@@ -4,6 +4,7 @@ import { protect } from "../middleware/auth.js";
 import { Response, Request } from "express";
 import { DealStatus } from "@prisma/client";
 import { getAllDeals } from "../controllers/deals.controller.js";
+import logger from "../utils/logger.js";
 
 const router: Router = Router();
 router.use(protect);
@@ -108,8 +109,32 @@ router.put("/:id", async (req: Request, res: Response) => {
         res.json(deal);
     } catch (error) {
         res.status(500).json({ message: "Failed to update deal" });
+        logger.error('Update deal error:', error);
+        console.error('Update deal error:', error);
     }
 }); 
+
+router.put("/:id/status", async (req: Request, res: Response) => {
+    const { status } = req.body;
+    const dealId = req.params.id;
+
+    // Validate status
+    if (!Object.values(DealStatus).includes(status)) {
+        return res.status(400).json({ message: "Invalid deal status" });
+    }
+
+    try {
+        const updatedDeal = await db.deal.update({
+            where: { id: dealId },
+            data: { status },
+        });
+
+        res.json(updatedDeal);
+    } catch (error) {
+        logger.error('Update deal status error:', error);
+        res.status(500).json({ message: "Failed to update deal status" });
+    }
+});
 
 router.delete("/:id", async (req: Request, res: Response) => {
     try {
