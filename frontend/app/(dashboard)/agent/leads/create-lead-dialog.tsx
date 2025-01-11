@@ -20,6 +20,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import {
   Select,
   SelectContent,
@@ -174,7 +175,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder='+1 234 567 890' disabled={isLoading} {...field} />
+                      <PhoneInput disabled={isLoading} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

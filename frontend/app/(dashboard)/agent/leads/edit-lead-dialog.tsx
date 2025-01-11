@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { PhoneInput } from '@/components/ui/phone-input';
 import {
   Select,
   SelectContent,
@@ -194,7 +195,7 @@ export function EditLeadDialog({
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder='+1 234 567 890' {...field} />
+                      <PhoneInput placeholder='+1 234 567 890' {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
