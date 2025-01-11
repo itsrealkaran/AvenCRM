@@ -1,12 +1,58 @@
-import React from 'react';
+'use client'
 
-import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
+import Sidebar from '@/components/Sidebar';
+import { LayoutDashboard, Building, CheckSquare, Calendar, Mail, Wallet, Settings } from 'lucide-react';
+
+const menuItems = [
+  {
+    heading: 'Dashboard',
+    icon: LayoutDashboard,
+    path: '/superadmin',
+    description: 'Overview of your CRM',
+  },
+  {
+    heading: 'Companies',
+    icon: Building,
+    path: '/superadmin/companies',
+    description: 'Manage companies',
+  },
+  {
+    heading: 'Tasks',
+    icon: CheckSquare,
+    path: '/superadmin/tasks',
+    description: 'Task management',
+  },
+  {
+    heading: 'Calendar',
+    icon: Calendar,
+    path: '/superadmin/calendar',
+    description: 'Schedule and events',
+  },
+  {
+    heading: 'Email',
+    icon: Mail,
+    path: '/superadmin/email',
+    description: 'Communication hub',
+  },
+  {
+    heading: 'Transactions',
+    icon: Wallet,
+    path: '/superadmin/transactions',
+    description: 'Transaction history',
+  },
+  {
+    heading: 'Settings',
+    icon: Settings,
+    path: '/superadmin/settings',
+    description: 'System preferences',
+  },
+];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className='flex h-screen bg-slate-100 relative'>
-      <Sidebar />
+      <Sidebar menuItems={menuItems} />
       <div className='flex-1 flex flex-col'>
         <Topbar />
         <main className='flex-1 overflow-y-auto p-4'>{children}</main>

@@ -10,7 +10,6 @@ function PageBuilder() {
   return (
     <div className='flex'>
       this is page builder page
-      <Button onClick={() => router.push('/agent/page-builder/add')}>Add</Button>
     </div>
   );
 }
