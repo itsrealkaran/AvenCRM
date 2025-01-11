@@ -309,27 +309,21 @@ export default function CompaniesPage() {
                     <Building2 className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Company Name</p>
-                      <p className='text-sm text-muted-foreground'>
-                        {selectedCompanyDetails?.name}
-                      </p>
+                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.name}</p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Mail className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Email</p>
-                      <p className='text-sm text-muted-foreground'>
-                        {selectedCompanyDetails?.email}
-                      </p>
+                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.email}</p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Phone className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Phone</p>
-                      <p className='text-sm text-muted-foreground'>
-                        {selectedCompanyDetails?.phone || 'N/A'}
-                      </p>
+                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.phone || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
@@ -338,9 +332,7 @@ export default function CompaniesPage() {
                     <Globe className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Website</p>
-                      <p className='text-sm text-muted-foreground'>
-                        {selectedCompanyDetails?.website || 'N/A'}
-                      </p>
+                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.website || 'N/A'}</p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
@@ -351,6 +343,27 @@ export default function CompaniesPage() {
                         {new Date(selectedCompanyDetails?.planStart || '').toLocaleDateString()} -
                         {new Date(selectedCompanyDetails?.planEnd || '').toLocaleDateString()}
                       </p>
+                    </div>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <UserIcon className='h-4 w-4 text-muted-foreground' />
+                    <div>
+                      <p className='text-sm font-medium'>Admin Name</p>
+                      <p className='text-sm text-muted-foreground'>{admins.find(admin => admin.id === selectedCompanyDetails?.adminId)?.name || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <Mail className='h-4 w-4 text-muted-foreground' />
+                    <div>
+                      <p className='text-sm font-medium'>Admin Email</p>
+                      <p className='text-sm text-muted-foreground'>{admins.find(admin => admin.id === selectedCompanyDetails?.adminId)?.email || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <Phone className='h-4 w-4 text-muted-foreground' />
+                    <div>
+                      <p className='text-sm font-medium'>Admin Phone</p>
+                      <p className='text-sm text-muted-foreground'>{admins.find(admin => admin.id === selectedCompanyDetails?.adminId)?.phone || 'N/A'}</p>
                     </div>
                   </div>
                 </div>
