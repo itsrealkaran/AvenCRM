@@ -9,7 +9,7 @@ function MarketingPage() {
   return(
     <div className='flex'>
       this is page builder page
-      <Button onClick={() => router.push('/admin/marketing/add')}>Add</Button>
+      <Button onClick={() => router.push('/agent/marketing/add')}>Add</Button>
     </div>
   );
 }

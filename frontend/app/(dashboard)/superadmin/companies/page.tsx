@@ -183,8 +183,8 @@ export default function CompaniesPage() {
           </TableHeader>
           {isLoading ? (
               <TableBody>
-                {[...Array(5)].map((_, index) => (
-                  <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
+                {[...Array(10)].map((_, index) => (
+                  <TableRow key={index} className='hover:bg-muted/50 animate-pulse overflow-y-auto'>
                     <TableCell>
                       <div className='flex flex-col space-y-1'>
                         <div className='h-4 bg-gray-300 rounded w-3/4'></div>
