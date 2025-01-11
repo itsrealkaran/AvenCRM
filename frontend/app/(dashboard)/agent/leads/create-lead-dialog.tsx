@@ -1,6 +1,6 @@
 'use client';
 
-import { LeadStatus } from '@/types';
+import { LeadStatus, PropertyType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -41,7 +41,7 @@ const leadFormSchema = z.object({
   leadAmount: z.string().optional(),
   status: z.enum(Object.values(LeadStatus) as [LeadStatus, ...LeadStatus[]]),
   source: z.string().optional(),
-  propertyType: z.string().optional(),
+  propertyType: z.enum(Object.values(PropertyType) as [PropertyType, ...PropertyType[]]),
   budget: z.string().optional(),
   location: z.string().optional(),
   notes: z.array(noteEntrySchema),
@@ -65,7 +65,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       phone: '',
       status: LeadStatus.NEW,
       source: '',
-      propertyType: '',
+      propertyType: PropertyType.RESIDENTIAL,
       budget: '',
       location: '',
       leadAmount: '',
@@ -215,7 +215,22 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                   <FormItem>
                     <FormLabel>Property Type</FormLabel>
                     <FormControl>
-                      <Input placeholder='Residential' disabled={isLoading} {...field} />
+                      <Select
+                        onValueChange={(value) => field.onChange(value)}
+                        value={field.value}
+                        disabled={isLoading}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Property Type' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(PropertyType).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
