@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Lead, LeadStatus } from '@/types';
+import { Lead, LeadStatus, PropertyType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -42,7 +42,7 @@ const leadFormSchema = z.object({
   leadAmount: z.string().optional(),
   status: z.enum(Object.values(LeadStatus) as [LeadStatus, ...LeadStatus[]]),
   source: z.string().optional(),
-  propertyType: z.string().optional(),
+  propertyType: z.enum(Object.values(PropertyType) as [PropertyType, ...PropertyType[]]),
   budget: z.string().optional(),
   location: z.string().optional(),
   notes: z.array(noteEntrySchema),
@@ -95,7 +95,7 @@ export function EditLeadDialog({
         leadAmount: lead.leadAmount?.toString() || '',
         status: lead.status || LeadStatus.NEW,
         source: lead.source || '',
-        propertyType: lead.propertyType || '',
+        propertyType: lead.propertyType || PropertyType.RESIDENTIAL,
         budget: lead.budget?.toString() || '',
         location: lead.location || '',
         notes: notesArray,
@@ -231,7 +231,18 @@ export function EditLeadDialog({
                   <FormItem>
                     <FormLabel>Property Type</FormLabel>
                     <FormControl>
-                      <Input placeholder='Residential' {...field} />
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select Property Type' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(PropertyType).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
