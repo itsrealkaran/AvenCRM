@@ -75,7 +75,7 @@ const Sidebar = () => {
     },
     {
       heading: 'Team Monitoring',
-      icon: Users,
+      icon: MonitorIcon,
       path: `/${role}/team-monitoring`,
       description: 'Property management',
       roles: [UserRole.TEAM_LEADER],
@@ -90,14 +90,14 @@ const Sidebar = () => {
     },
     {
       heading: 'Subscription',
-      icon: MonitorIcon,
+      icon: Wallet,
       path: `/${role}/subscription`,
       description: 'Subscription management',
       roles: [UserRole.ADMIN],
     },
     {
       heading: 'Meta Ads',
-      icon: Building2,
+      icon: LineChart,
       path: `/${role}/meta-ads`,
       description: 'Property management',
       roles: [UserRole.AGENT, UserRole.TEAM_LEADER],
@@ -134,14 +134,14 @@ const Sidebar = () => {
       heading: 'Page Builder',
       icon: FileText,
       path: `/${role}/page-builder`,
-      description: 'Deal management',
+      description: 'Build and manage pages',
       roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
     },
     {
       heading: 'Marketing',
       icon: LineChart,
       path: `/${role}/marketing`,
-      description: 'Deal management',
+      description: 'Marketing management',
       roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
     },
      // Common items for all roles
