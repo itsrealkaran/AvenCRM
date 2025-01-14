@@ -2,7 +2,7 @@ import { Router } from "express";
 import { protect } from "../middleware/auth.js";
 import { verifyRoleAndCompany } from "../middleware/roleAuth.js";
 import { prisma } from "../lib/prisma.js";
-import { blockCompany, deleteCompany, reactivateCompany } from '../controllers/company.controller.js';
+import { blockCompany, deleteCompany, extendPlan, reactivateCompany } from '../controllers/company.controller.js';
 
 const router: Router = Router();
 router.use(protect);
@@ -142,6 +142,7 @@ router.put("/:id",
 // Block/Reactivate/Delete company routes (SuperAdmin only)
 router.post("/block/:id", verifyRoleAndCompany(["SUPERADMIN"]), blockCompany);
 router.post("/reactivate/:id", verifyRoleAndCompany(["SUPERADMIN"]), reactivateCompany);
+router.post("/extend-plan/:id", verifyRoleAndCompany(["SUPERADMIN"]), extendPlan);
 router.delete("/:id", verifyRoleAndCompany(["SUPERADMIN"]), deleteCompany);
 
 export default router;
