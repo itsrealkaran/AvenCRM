@@ -34,6 +34,68 @@ const getMonthlyData = async (startDate: Date, companyId: string) => {
   return monthlyRevenue;
 };
 
+// Helper function to get previous month's data
+const getPreviousMonthData = async (companyId: string) => {
+  const today = new Date();
+  const firstDayOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const firstDayOfLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+
+  const lastMonthDeals = await prisma.deal.count({
+    where: {
+      companyId,
+      createdAt: {
+        gte: firstDayOfLastMonth,
+        lt: firstDayOfCurrentMonth
+      }
+    }
+  });
+
+  const lastMonthActiveLeads = await prisma.lead.count({
+    where: {
+      companyId,
+      status: {
+        in: ['NEW', 'CONTACTED', 'QUALIFIED', 'NEGOTIATION']
+      },
+      createdAt: {
+        gte: firstDayOfLastMonth,
+        lt: firstDayOfCurrentMonth
+      }
+    }
+  });
+
+  const lastMonthWonDeals = await prisma.deal.count({
+    where: {
+      companyId,
+      status: 'CLOSED_WON',
+      createdAt: {
+        gte: firstDayOfLastMonth,
+        lt: firstDayOfCurrentMonth
+      }
+    }
+  });
+
+  const lastMonthRevenue = await prisma.transaction.aggregate({
+    where: {
+      companyId,
+      type: 'INCOME',
+      createdAt: {
+        gte: firstDayOfLastMonth,
+        lt: firstDayOfCurrentMonth
+      }
+    },
+    _sum: {
+      amount: true
+    }
+  });
+
+  return {
+    deals: lastMonthDeals,
+    activeLeads: lastMonthActiveLeads,
+    wonDeals: lastMonthWonDeals,
+    revenue: lastMonthRevenue._sum.amount || 0
+  };
+};
+
 export const getSuperAdminDashboard = async (req: Request, res: Response) => {
   try {
     const sixMonthsAgo = getLastSixMonthsData();
@@ -112,7 +174,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
 
     const sixMonthsAgo = await getLastSixMonthsData();
 
-    // Get company-specific data
+    // Get current month's data
     const deals = await prisma.deal.count({
       where: { companyId },
     });
@@ -142,6 +204,17 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
         amount: true,
       },
     });
+
+    // Get last month's data for growth calculation
+    const lastMonthData = await getPreviousMonthData(companyId);
+
+    // Calculate growth rates
+    const growthRates = {
+      deals: calculateGrowthRate(deals, lastMonthData.deals),
+      activeLeads: calculateGrowthRate(activeLeads, lastMonthData.activeLeads),
+      wonDeals: calculateGrowthRate(wonDeals, lastMonthData.wonDeals),
+      revenue: calculateGrowthRate(revenue._sum.amount || 0, lastMonthData.revenue)
+    };
 
     // Get monthly performance data with more details
     const monthlyPerformance = await prisma.deal.groupBy({
@@ -210,6 +283,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       activeLeads,
       wonDeals,
       revenue: revenue._sum.amount || 0,
+      growthRates,
       performanceData: monthlyPerformance.map((item) => ({
         month: new Date(item.createdAt).toLocaleString('default', { month: 'short' }),
         deals: item._count,
@@ -299,7 +373,7 @@ export const getMonitoringData = async (req: Request, res: Response) => {
 
     // Get total agents
     const totalAgents = await prisma.user.count({
-      where: { 
+      where: {
         companyId,
         role: 'AGENT',
       },

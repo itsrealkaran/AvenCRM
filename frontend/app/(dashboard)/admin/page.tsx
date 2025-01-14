@@ -1,35 +1,35 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { authApi } from '@/services/api';
-import { User } from '@/types';
+import { useQuery } from '@tanstack/react-query';
 import { Calendar, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { authApi } from '@/services/api';
+import { User } from '@/types';
 
 import { AdminDashboard } from './components/admin-dashboard';
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: user, isLoading, isError } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const { data } = await authApi.me();
+      return data as User;
+    },
+    retry: 2,
+  });
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const { data } = await authApi.me();
-        setUser(data);
-      } catch (error) {
-        toast.error('Failed to fetch user data');
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Handle error with useEffect
+  if (isError) {
+    toast.error('Failed to fetch user data');
+    return (
+      <div className='flex h-full items-center justify-center'>
+        <p className='text-red-500'>Error loading user data. Please refresh the page.</p>
+      </div>
+    );
+  }
 
-    fetchUser();
-  }, []);
-
-  if (!user) {
+  if (isLoading || !user) {
     return (
       <div className='flex h-full items-center justify-center'>
         <p>Loading user data...</p>
