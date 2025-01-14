@@ -18,6 +18,28 @@ const geistMono = localFont({
   weight: '100 900',
 });
 
+const foundersGrotesk = localFont({
+  src: [
+    { path: './fonts/TestFoundersGrotesk-Bold.otf', weight: '700' },
+    { path: './fonts/TestFoundersGrotesk-Light.otf', weight: '300' },
+    { path: './fonts/TestFoundersGrotesk-Medium.otf', weight: '500' },
+    { path: './fonts/TestFoundersGrotesk-Regular.otf', weight: '400' },
+    { path: './fonts/TestFoundersGrotesk-Semibold.otf', weight: '600' },
+  ],
+  variable: '--font-founders-grotesk',
+});
+
+const foundersGroteskMono = localFont({
+  src: [
+    { path: './fonts/TestFoundersGroteskMono-Bold.otf', weight: '700' },
+    { path: './fonts/TestFoundersGroteskMono-Light.otf', weight: '300' },
+    { path: './fonts/TestFoundersGroteskMono-Medium.otf', weight: '500' },
+    { path: './fonts/TestFoundersGroteskMono-Regular.otf', weight: '400' },
+    { path: './fonts/TestFoundersGroteskMono-Semibold.otf', weight: '600' },
+  ],
+  variable: '--font-founders-grotesk-mono',
+});
+
 export const metadata: Metadata = {
   title: 'AvenCRM',
   description: 'Manage your real estate business with ease and efficiency.',
@@ -30,7 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${foundersGrotesk.variable} ${foundersGroteskMono.variable} antialiased bg-background`}>
         {children}
         <Sonner />
         <Toaster />

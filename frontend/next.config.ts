@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
       'cdn.pixabay.com',
       'images.pexels.com',
       'avencrm-bucket.s3.ap-south-1.amazonaws.com',
+      'img.freepik.com',
     ],
   },
 };
