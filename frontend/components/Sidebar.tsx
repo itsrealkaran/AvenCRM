@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type LucideIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, type LucideIcon } from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
 
+import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import Logo from '@/components/logo';
 
 interface MenuItem {
   heading: string;
@@ -132,4 +132,3 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
 };
 
 export default Sidebar;
-

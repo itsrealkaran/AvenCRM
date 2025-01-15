@@ -89,15 +89,15 @@ function EmailPageContent() {
         <h1 className='text-2xl font-bold mb-6 text-primary'>Email Management</h1>
 
         <Card>
-        <Tabs value={activeTab ?? 'accounts'} className='w-full' onValueChange={handleTabChange}>
-          <TabsList className='grid w-full grid-cols-4'>
-            <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
-            <TabsTrigger value='templates'>Templates</TabsTrigger>
-            <TabsTrigger value='recipients'>Recipients</TabsTrigger>
-            <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
-          </TabsList>
+          <Tabs value={activeTab ?? 'accounts'} className='w-full' onValueChange={handleTabChange}>
+            <TabsList className='grid w-full grid-cols-4'>
+              <TabsTrigger value='accounts'>Email Accounts</TabsTrigger>
+              <TabsTrigger value='templates'>Templates</TabsTrigger>
+              <TabsTrigger value='recipients'>Recipients</TabsTrigger>
+              <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value='accounts'>
+            <TabsContent value='accounts'>
               <CardHeader>
                 <CardTitle>Connected Email Accounts</CardTitle>
               </CardHeader>
@@ -109,35 +109,35 @@ function EmailPageContent() {
                   onDisconnect={handleDisconnectAccount}
                 />
               </CardContent>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value='templates'>
+            <TabsContent value='templates'>
               <CardHeader>
                 <CardTitle>Email Templates</CardTitle>
               </CardHeader>
               <CardContent>
                 <EmailTemplatesSection />
               </CardContent>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value='recipients'>
+            <TabsContent value='recipients'>
               <CardHeader>
                 <CardTitle>Email Recipients</CardTitle>
               </CardHeader>
               <CardContent>
                 <EmailRecipientsSection />
               </CardContent>
-          </TabsContent>
+            </TabsContent>
 
-          <TabsContent value='campaigns'>
+            <TabsContent value='campaigns'>
               <CardHeader>
                 <CardTitle>Email Campaigns</CardTitle>
               </CardHeader>
               <CardContent>
                 <EmailCampaignSection />
               </CardContent>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+          </Tabs>
         </Card>
       </Card>
     </section>

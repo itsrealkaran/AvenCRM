@@ -144,7 +144,7 @@ const Sidebar = () => {
       description: 'Marketing management',
       roles: [UserRole.AGENT, UserRole.ADMIN, UserRole.TEAM_LEADER],
     },
-     // Common items for all roles
+    // Common items for all roles
     {
       heading: 'Tasks',
       icon: CheckSquare,

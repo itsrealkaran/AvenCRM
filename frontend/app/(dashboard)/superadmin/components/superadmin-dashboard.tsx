@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { User } from '@/types';
 import { Building2, CreditCard, TrendingUp, Users } from 'lucide-react';
-import { planDistribution, revenue } from "../../../../test"
 import {
   Bar,
   BarChart,
@@ -16,9 +15,11 @@ import {
 } from 'recharts';
 import { toast } from 'sonner';
 
+import { DonutChart } from '@/components/charts/pie-chart';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
-import { DonutChart } from '@/components/charts/pie-chart';
+
+import { planDistribution, revenue } from '../../../../test';
 
 interface SuperAdminDashboardProps {
   user: User;
@@ -186,14 +187,14 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
               {/* Replace this with your actual data */}
               <DonutChart
                 data={planDistribution}
-                variant="pie"
+                variant='pie'
                 showLabel={true}
                 showTooltip={true}
-                category="name"
-                value="companies"
-                label="Total Companies"
+                category='name'
+                value='companies'
+                label='Total Companies'
                 valueFormatter={(value) => `${value}`}
-                className="h-[300px]"
+                className='h-[300px]'
               />
             </ResponsiveContainer>
           </CardContent>
