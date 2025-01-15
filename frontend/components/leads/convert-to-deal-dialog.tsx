@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { leadsApi } from '@/api/leads.service';
 import { Lead } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';

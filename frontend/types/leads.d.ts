@@ -1,3 +1,5 @@
+import { PropertyType } from './enums';
+
 export type Lead = {
   id: string;
   name: string;
@@ -8,7 +10,7 @@ export type Lead = {
   leadAmount?: number;
   source?: string;
   status: LeadStatus;
-  propertyType?: string;
+  propertyType: PropertyType;
   budget?: number;
   location?: string;
   lastContactDate?: Date;

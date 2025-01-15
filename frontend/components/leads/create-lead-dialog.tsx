@@ -1,9 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { leadsApi } from '@/services/leads.service';
-import { LeadStatus, PropertyType } from '@estate/database';
-import { CreateLead, createLeadSchema } from '@estate/types';
+import { leadsApi } from '@/api/leads.service';
+import { createLeadSchema } from '@/schema';
+import { CreateLead, LeadStatus, PropertyType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -18,7 +17,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import DocumentUpload from '../document/document-upload';
 import { BaseEntityDialog, CommonFormFields, NotesField } from '../entity-dialog';
 
 interface CreateLeadDialogProps {
@@ -29,12 +27,11 @@ interface CreateLeadDialogProps {
 
 export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDialogProps) {
   const queryClient = useQueryClient();
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
 
   const createLead = useMutation({
     mutationFn: async (values: CreateLead) => {
       try {
-        return await leadsApi.createLead(values, uploadedFiles);
+        return await leadsApi.createLead(values);
       } catch (error) {
         console.error('Error creating lead:', error);
         throw error;
@@ -42,7 +39,6 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
-      setUploadedFiles([]); // Reset files after successful creation
       onOpenChange(false);
       toast.success('Lead created successfully');
     },
@@ -51,17 +47,13 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
     },
   });
 
-  const handleFilesChange = (files: File[]) => {
-    setUploadedFiles(files);
-  };
-
   const defaultValues: CreateLead = {
     name: '',
     email: '',
     phone: '',
     status: LeadStatus.NEW,
     source: '',
-    propertyType: PropertyType.APARTMENT,
+    propertyType: PropertyType.COMMERCIAL,
     budget: undefined,
     location: '',
   };
@@ -80,14 +72,6 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
         <>
           <CommonFormFields form={form} isLoading={isLoading} />
 
-          <div className='space-y-4'>
-            <h3 className='text-lg font-medium'>Documents</h3>
-            <DocumentUpload
-              onFilesChange={handleFilesChange}
-              existingFiles={[]}
-              disabled={isLoading}
-            />
-          </div>
           <div className='grid grid-cols-2 gap-4'>
             <FormField
               control={form.control}

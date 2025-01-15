@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { dealsApi } from '@/api/deals';
+import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus, PropertyType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';

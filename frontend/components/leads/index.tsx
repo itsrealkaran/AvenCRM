@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { leadsApi } from '@/services/leads.service';
-import { DealStatus, LeadStatus } from '@estate/database';
-import { LeadResponse as Lead } from '@estate/types';
+import { SetStateAction, useCallback, useState } from 'react';
+import { leadsApi } from '@/api/leads.service';
+import { DealStatus, LeadStatus } from '@/types';
+import { Lead } from '@/types/leads';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -167,14 +167,14 @@ export default function LeadsPage() {
             columns={columns}
             data={leads}
             onEdit={handleEdit}
-            onBulkDelete={async (row) => {
-              const leadIds = row.map((row) => row.original.id);
+            onBulkDelete={async (row: any[]) => {
+              const leadIds = row.map((row: { original: { id: any } }) => row.original.id);
               await handleBulkDelete(leadIds);
             }}
             onDelete={handleDelete}
             onSelectionChange={handleSelectionChange}
             onStatusChange={handleStatusChange}
-            onConvertToDeal={(lead) => {
+            onConvertToDeal={(lead: SetStateAction<Lead | null>) => {
               setSelectedLead(lead);
               setIsConvertDialogOpen(true);
             }}

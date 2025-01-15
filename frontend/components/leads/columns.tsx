@@ -7,7 +7,6 @@ import {
   ArrowRightLeft,
   ArrowUpDown,
   CopyIcon,
-  FileText,
   MoreHorizontal,
   Pencil,
   Trash2,
@@ -16,6 +15,14 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +31,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-
-import { Checkbox } from '../ui/checkbox';
 
 const getStatusColor = (status: LeadStatus) => {
   const colors = {
@@ -84,15 +89,45 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: 'email',
-    header: 'Email',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Email
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'phone',
-    header: 'Phone',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Phone
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Status
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row, table }) => {
       const status: LeadStatus = row.getValue('status');
       const lead = row.original as Lead;
@@ -118,7 +153,11 @@ export const columns: ColumnDef<Lead>[] = [
                 className={status === statusOption ? 'bg-accent' : ''}
                 onClick={async () => {
                   if (status !== statusOption && meta.onStatusChange) {
-                    await meta.onStatusChange(lead.id, statusOption);
+                    toast.promise(meta.onStatusChange(lead.id, statusOption), {
+                      loading: 'Updating status...',
+                      success: 'Status updated successfully',
+                      error: 'Failed to update status',
+                    });
                   }
                 }}
               >
@@ -133,9 +172,81 @@ export const columns: ColumnDef<Lead>[] = [
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created At',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Created At
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
     cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+    },
+  },
+  {
+    accessorKey: 'notes',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Notes
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      const notes = row.original.notes || {};
+      const noteCount = Object.keys(notes).length;
+
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
+            >
+              <span className='font-medium text-gray-700'>{noteCount}</span>
+              {noteCount === 1 ? 'Note' : 'Notes'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
+            <DialogHeader>
+              <DialogTitle className='text-2xl font-semibold text-gray-800 mb-4'>
+                Notes Timeline
+              </DialogTitle>
+            </DialogHeader>
+            <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
+              {Object.entries(notes)
+                .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+                .map(([time, note], index) => (
+                  <div
+                    key={time}
+                    className='relative flex gap-6 items-start group animate-slide-up'
+                  >
+                    <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300 border border-blue-300 shadow-md'>
+                      <div className='w-2.5 h-2.5 rounded-full bg-blue-600 group-hover:animate-pulse'></div>
+                    </div>
+                    <div className='flex-1 ml-4 space-y-2 bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200'>
+                      <div className='text-xs text-gray-500'>
+                        {format(new Date(time), 'MMM d, yyyy HH:mm')}
+                      </div>
+                      <div className='text-sm text-gray-700 whitespace-pre-wrap leading-relaxed'>
+                        {note}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
     },
   },
   {

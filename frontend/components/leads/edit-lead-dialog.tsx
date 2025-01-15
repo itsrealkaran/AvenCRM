@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { leadsApi } from '@/services/leads.service';
-import { LeadStatus, PropertyType } from '@estate/database';
-import { UpdateLead, updateLeadSchema } from '@estate/types';
+import { leadsApi } from '@/api/leads.service';
+import { updateLeadSchema } from '@/schema';
+import { LeadStatus, PropertyType, UpdateLead } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { FileText, Loader2, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -19,13 +20,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import DocumentUpload from '../document/document-upload';
 import { BaseEntityDialog, CommonFormFields, NotesField } from '../entity-dialog';
 
 interface EditLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  lead: UpdateLead | null;
+  lead: z.infer<typeof updateLeadSchema> | null;
 }
 
 export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps) {
@@ -35,7 +35,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
   const updateLead = useMutation({
     mutationFn: async ({ values, files }: { values: UpdateLead; files: File[] }) => {
       if (!lead?.id) throw new Error('Lead ID is required');
-      return leadsApi.updateLead(lead.id, values, files);
+      return leadsApi.updateLead(lead.id, values);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['leads'] });
@@ -49,10 +49,6 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
     },
   });
 
-  const handleFilesChange = (files: File[]) => {
-    setUploadedFiles(files);
-  };
-
   if (!lead) return null;
 
   const defaultValues: UpdateLead = {
@@ -65,7 +61,6 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
     propertyType: lead.propertyType,
     budget: lead.budget ?? 0,
     location: lead.location ?? '',
-    document: lead.document ?? null,
     expectedDate:
       typeof lead.expectedDate === 'string' ? new Date(lead.expectedDate) : lead.expectedDate,
     lastContactDate:
@@ -96,82 +91,6 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
       {(form) => (
         <>
           <CommonFormFields form={form} isLoading={updateLead.isPending} />
-
-          <div className='space-y-4'>
-            <div className='flex justify-between items-center'>
-              <h3 className='text-lg font-medium'>Documents</h3>
-              {lead.document?.files && lead.document.files.length > 0 && (
-                <Button
-                  variant='outline'
-                  type='button'
-                  size='sm'
-                  onClick={() => {
-                    setUploadedFiles([]);
-                    form.setValue('document', null);
-                  }}
-                >
-                  Clear All
-                </Button>
-              )}
-            </div>
-
-            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
-              {lead.document?.files &&
-                lead.document.files.map((file, index) => (
-                  <div key={file.url} className='group relative border rounded-lg p-4 space-y-4'>
-                    <div className='aspect-video relative bg-muted rounded-md overflow-hidden'>
-                      {file.url.match(/\.(jpg|jpeg|png|gif)$/i) ? (
-                        <img
-                          src={file.url}
-                          alt={`File ${index + 1}`}
-                          className='object-cover w-full h-full'
-                        />
-                      ) : (
-                        <div className='flex items-center justify-center h-full'>
-                          <FileText className='h-12 w-12 text-muted-foreground' />
-                        </div>
-                      )}
-                      <Button
-                        variant='destructive'
-                        type='button'
-                        size='icon'
-                        className='absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity'
-                        onClick={() => {
-                          const newFiles =
-                            lead.document?.files?.filter((f) => f.url !== file.url) || [];
-                          form.setValue('document', {
-                            ...lead.document,
-                            files: newFiles,
-                          });
-                        }}
-                      >
-                        <X className='h-4 w-4' />
-                      </Button>
-                    </div>
-                    <div className='space-y-2'>
-                      <p className='font-medium truncate'>File {index + 1}</p>
-                      <div className='flex gap-2'>
-                        <Button
-                          variant='outline'
-                          type='button'
-                          size='sm'
-                          className='flex-1'
-                          onClick={() => window.open(file.url, '_blank')}
-                        >
-                          View
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-
-            <DocumentUpload
-              onFilesChange={handleFilesChange}
-              existingFiles={lead.document?.files || []}
-              disabled={updateLead.isPending}
-            />
-          </div>
 
           <div className='grid grid-cols-2 gap-4'>
             <FormField
