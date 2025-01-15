@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { User } from '@/types';
 import { Building2, CreditCard, TrendingUp, Users } from 'lucide-react';
+import { planDistribution, revenue } from "../../../../test"
 import {
   Bar,
   BarChart,
@@ -17,6 +18,7 @@ import { toast } from 'sonner';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
+import { DonutChart } from '@/components/charts/pie-chart';
 
 interface SuperAdminDashboardProps {
   user: User;
@@ -181,27 +183,18 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
           </CardHeader>
           <CardContent className='pl-2'>
             <ResponsiveContainer width='100%' height={350}>
-              <BarChart data={revenueData}>
-                <XAxis
-                  dataKey='month'
-                  stroke='#888888'
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis
-                  stroke='#888888'
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `$${value}`}
-                />
-                <Tooltip
-                  contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
-                  labelStyle={{ color: '#111827' }}
-                />
-                <Bar dataKey='revenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
-              </BarChart>
+              {/* Replace this with your actual data */}
+              <DonutChart
+                data={planDistribution}
+                variant="pie"
+                showLabel={true}
+                showTooltip={true}
+                category="name"
+                value="companies"
+                label="Total Companies"
+                valueFormatter={(value) => `${value}`}
+                className="h-[300px]"
+              />
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -213,7 +206,8 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width='100%' height={350}>
-              <LineChart data={revenueData}>
+              {/* replace this with your actual data */}
+              <LineChart data={revenue}>
                 <XAxis
                   dataKey='month'
                   stroke='#888888'
@@ -228,7 +222,7 @@ export function SuperAdminDashboard({ user }: SuperAdminDashboardProps) {
                 />
                 <Line
                   type='monotone'
-                  dataKey='companies'
+                  dataKey='revenue'
                   stroke='#10b981'
                   strokeWidth={2}
                   dot={{ fill: '#10b981' }}

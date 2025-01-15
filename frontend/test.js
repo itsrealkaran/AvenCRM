@@ -1,4 +1,4 @@
-[
+export const transactions = [
   {
     "id": "cm4flb6v00000xfokqdgf611e",
     "companyId": "dummycompany",
@@ -30,5 +30,48 @@
     "receiptUrl": null,
     "createdAt": "2024-12-08T12:39:42.033Z",
     "updatedAt": "2024-12-08T12:39:03.001Z"
+  }
+]
+
+export const revenue = [
+  {
+    month: "January",
+    revenue: 100000,
+    companies: 5,
+  },
+  {
+    month: "February",
+    revenue: 129122,
+    companies: 7,
+  },
+  {
+    month: "March",
+    revenue: 129348,
+    companies: 3,
+  },
+  {
+    month: "April",
+    revenue: 839184,
+    companies: 5,
+  },
+  {
+    month: "May",
+    revenue: 429413,
+    companies: 3,
+  }
+]
+
+export const planDistribution= [
+  {
+    name: "PROFESSIONAL",
+    companies: 32,
+  },
+  {
+    name: "ENTERPRISE",
+    companies: 23,
+  },
+  {
+    name: "BASIC",
+    companies: 12,
   }
 ]

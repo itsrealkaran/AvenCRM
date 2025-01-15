@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   Activity,
   ArrowDownRight,
@@ -17,7 +16,6 @@ import {
   CartesianGrid,
   Cell,
   Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -26,11 +24,14 @@ import {
   YAxis,
 } from 'recharts';
 import { toast } from 'sonner';
+import { useQuery, useQueryErrorResetBoundary } from '@tanstack/react-query';
+import { useEffect } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
+import { LineChart } from "@/components/charts/line-chart"
 
 interface TopPerformer {
   name: string;
@@ -49,6 +50,12 @@ interface AdminDashboardData {
   activeLeads: number;
   wonDeals: number;
   revenue: number;
+  growthRates: {
+    deals: number;
+    activeLeads: number;
+    wonDeals: number;
+    revenue: number;
+  };
   performanceData: {
     month: string;
     deals: number;
@@ -62,36 +69,34 @@ interface AdminDashboardData {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export function AdminDashboard() {
-  const [dashboardData, setDashboardData] = useState<AdminDashboardData>({
-    totalDeals: 0,
-    activeLeads: 0,
-    wonDeals: 0,
-    revenue: 0,
-    performanceData: [],
-    topPerformers: [],
-    leadMetrics: [],
+  const { data: dashboardData, isLoading, isError } = useQuery({
+    queryKey: ['adminDashboard'],
+    queryFn: async () => {
+      const response = await api.get('/api/dashboard/admin');
+      return response.data as AdminDashboardData;
+    },
+    retry: 2,
   });
 
-  const [loading, setLoading] = useState<boolean>(true);
-
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await api.get('/api/dashboard/admin');
-        const data = await response.data;
-        setDashboardData(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        toast.error('Failed to fetch dashboard data');
-        setLoading(false);
-      }
-    };
+    if (isError) {
+      console.error('Error fetching dashboard data');
+      toast.error('Failed to fetch dashboard data');
+    }
+  }, [isError]);
 
-    fetchData();
-  }, []);
+  if (isError) {
+    return (
+      <div className="flex items-center justify-center h-[600px]">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-gray-900">Failed to load dashboard data</h3>
+          <p className="text-sm text-gray-500 mt-2">Please try refreshing the page</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className='space-y-4'>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
@@ -174,10 +179,12 @@ export function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-gray-900'>{dashboardData.totalDeals}</div>
+            <div className='text-2xl font-bold text-gray-900'>{dashboardData?.totalDeals}</div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
-              <span className='text-xs text-green-500 ml-1'>+12% from last month</span>
+              <span className='text-xs text-green-500 ml-1'>
+                {dashboardData?.growthRates.deals! >= 0 ? '+' : ''}{dashboardData?.growthRates.deals.toFixed(1)}% from last month
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -190,10 +197,12 @@ export function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-gray-900'>{dashboardData.activeLeads}</div>
+            <div className='text-2xl font-bold text-gray-900'>{dashboardData?.activeLeads}</div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
-              <span className='text-xs text-green-500 ml-1'>+8% from last month</span>
+              <span className='text-xs text-green-500 ml-1'>
+                {dashboardData?.growthRates.activeLeads! >= 0 ? '+' : ''}{dashboardData?.growthRates.activeLeads.toFixed(1)}% from last month
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -206,10 +215,12 @@ export function AdminDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className='text-2xl font-bold text-gray-900'>{dashboardData.wonDeals}</div>
+            <div className='text-2xl font-bold text-gray-900'>{dashboardData?.wonDeals}</div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
-              <span className='text-xs text-green-500 ml-1'>+15% from last month</span>
+              <span className='text-xs text-green-500 ml-1'>
+                {dashboardData?.growthRates.wonDeals! >= 0 ? '+' : ''}{dashboardData?.growthRates.wonDeals.toFixed(1)}% from last month
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -223,11 +234,13 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
-              ${dashboardData.revenue.toLocaleString()}
+              ${dashboardData?.revenue.toLocaleString()}
             </div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
-              <span className='text-xs text-green-500 ml-1'>+20% from last month</span>
+              <span className='text-xs text-green-500 ml-1'>
+                {dashboardData?.growthRates.revenue! >= 0 ? '+' : ''}{dashboardData?.growthRates.revenue.toFixed(1)}% from last month
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -246,7 +259,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent className='pl-2'>
             <ResponsiveContainer width='100%' height={350}>
-              <BarChart data={dashboardData.performanceData}>
+              <BarChart data={dashboardData?.performanceData}>
                 <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
                 <XAxis
                   dataKey='month'
@@ -279,22 +292,15 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width='100%' height={350}>
-              <PieChart>
-                <Pie
-                  data={dashboardData.leadMetrics}
-                  dataKey='count'
-                  nameKey='status'
-                  cx='50%'
-                  cy='50%'
-                  outerRadius={130}
-                  label
-                >
-                  {dashboardData.leadMetrics.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
+            <LineChart
+              className="mt-4 h-72"
+              data={dashboardData!.leadMetrics}
+              index="date"
+              categories={["leads", "deals"]}
+              colors={["gray", "blue"]}
+              yAxisWidth={30}
+            />
+
             </ResponsiveContainer>
           </CardContent>
         </Card>
@@ -311,7 +317,7 @@ export function AdminDashboard() {
         </CardHeader>
         <CardContent>
           <div className='space-y-6'>
-            {dashboardData.topPerformers.map((performer, index) => (
+            {dashboardData?.topPerformers.map((performer, index) => (
               <div key={index} className='flex items-center justify-between'>
                 <div className='flex items-center space-x-4'>
                   <Avatar>

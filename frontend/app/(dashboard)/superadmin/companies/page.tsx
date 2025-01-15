@@ -11,6 +11,7 @@ import {
   MoreHorizontal,
   Phone,
   Plus,
+  RefreshCcw,
   Search,
   User as UserIcon,
 } from 'lucide-react';
@@ -46,7 +47,7 @@ import {
 } from '@/components/ui/table';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-
+import * as XLSX from 'xlsx';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -60,8 +61,38 @@ export default function CompaniesPage() {
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  function downloadAsCsv(jsonData: any, fileName: string) {
+    const worksheet = XLSX.utils.json_to_sheet(jsonData);
+    const csvContent = XLSX.utils.sheet_to_csv(worksheet);
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
+// Function to download as XLSX
+function downloadAsXlsx(jsonData: any, fileName: string) {
+    const worksheet = XLSX.utils.json_to_sheet(jsonData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
+    XLSX.writeFile(workbook, fileName);
+}
+
+// Example Usage:
+const jsonData = [
+    { name: "John", age: 30, city: "New York" },
+    { name: "Anna", age: 28, city: "London" }
+];
+
+
   const fetchData = useCallback(async () => {
     try {
+      setIsLoading(true);
+      setCompanies([]);
       const companiesRes = await api.get<Company[]>('/company');
       setCompanies(companiesRes.data);
       setPlans(companiesRes.data.map((company) => company.plan));
@@ -111,7 +142,26 @@ export default function CompaniesPage() {
     const confirmed = window.confirm('Are you sure you want to reactivate this company?');
     if (!confirmed) return;
     try {
-      await api.post(`/company/reactivate/${id}`);
+    await api.post(`/company/reactivate/${id}`);
+      fetchData();
+      toast({
+        title: 'Success',
+        description: 'Company reactivated successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to reactivate company',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleExtendPlan = async (id: string) => {
+    const confirmed = window.confirm('Are you sure you want to reactivate this company?');
+    if (!confirmed) return;
+    try {
+    await api.post(`/company/extend-plan/${id}`);
       fetchData();
       toast({
         title: 'Success',
@@ -130,6 +180,11 @@ export default function CompaniesPage() {
     setSelectedCompanyDetails(company);
     setIsDetailsDialogOpen(true);
   };
+
+  const handleRefresh = () => {
+    fetchData();
+
+  }
 
   const getStatusColor = (company: Company) => {
     if (company?.blocked) return 'bg-red-100 text-red-800';
@@ -169,6 +224,18 @@ export default function CompaniesPage() {
               className='pl-10'
             />
           </div>
+          <DropdownMenu>
+           <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md'>Download</DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => downloadAsCsv(companies, 'companies.csv')}>
+                CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => downloadAsXlsx(companies, 'companies.xlsx')}>
+                XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <RefreshCcw className='h-7 w-7 border-[1px] p-1 rounded-md hover:bg-muted/50' onClick={handleRefresh}/>
         </div>
         <div className='rounded-md border'>
         <Table>
@@ -256,7 +323,7 @@ export default function CompaniesPage() {
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleReactivate(company.id)}
+                              onClick={() => handleExtendPlan(company.id)}
                               className='text-blue-600'
                             >
                               Extend Plan

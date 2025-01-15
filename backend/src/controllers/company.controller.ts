@@ -274,6 +274,27 @@ export const reactivateCompany = async (req: Request, res: Response) => {
   }
 };
 
+export const extendPlan = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  try {
+    // update the company, its admin, and its users
+    const company = await prisma.company.update({
+      where: { id },
+      data: { planEnd: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+    });
+
+    await prisma.user.updateMany({
+      where: { companyId: id },
+      data: { isActive: true },
+    });
+
+    res.json(company);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to reactivate company" });
+  }
+};
+
 // Block a company (SuperAdmin only)
 export const blockCompany = async (req: Request, res: Response) => {
   const { id } = req.params;
