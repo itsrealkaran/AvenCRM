@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authService } from '@/services/auth.service';
+import { authService } from '@/api/auth.service';
 import { LoginCredentials, RegisterCredentials, User } from '@/types/user';
 import { toast } from 'sonner';
 

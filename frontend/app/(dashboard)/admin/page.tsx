@@ -1,6 +1,6 @@
 'use client';
 
-import { authApi } from '@/services/api';
+import { authApi } from '@/api/api';
 import { User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Mail } from 'lucide-react';

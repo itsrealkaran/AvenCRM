@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { leadsApi } from '@/services/leads';
+import { leadsApi } from '@/api/leads';
 import { Lead, LeadFilters, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';

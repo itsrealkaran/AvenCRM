@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { usersApi } from '@/services/users';
+import { usersApi } from '@/api/users';
 import { useMutation } from '@tanstack/react-query';
 import { Bell, Camera, Lock, LogOut, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';

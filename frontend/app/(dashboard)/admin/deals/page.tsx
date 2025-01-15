@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { dealsApi } from '@/services/deals';
+import { dealsApi } from '@/api/deals';
 import { Deal, DealFilters, DealStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';

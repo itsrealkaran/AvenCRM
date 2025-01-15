@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { transactionApi } from '@/services/api';
+import { transactionApi } from '@/api/api';
 import { Transaction, TransactionType } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
