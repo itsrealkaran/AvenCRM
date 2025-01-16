@@ -2,8 +2,7 @@
 
 import { SetStateAction, useCallback, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
-import { DealStatus, LeadStatus } from '@/types';
-import { Lead } from '@/types/leads';
+import { DealStatus, LeadResponse as Lead, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';

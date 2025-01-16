@@ -1,8 +1,8 @@
 'use client';
 
-import { leadsApi } from '@/api/leads.service';
-import { createLeadSchema } from '@/schema';
-import { CreateLead, LeadStatus, PropertyType } from '@/types';
+import { dealsApi } from '@/api/deals.service';
+import { createDealSchema } from '@/schema/deal.schema';
+import { CreateDeal, DealStatus, PropertyType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -19,45 +19,47 @@ import {
 
 import { BaseEntityDialog, CommonFormFields, NotesField } from '../entity-dialog';
 
-interface CreateLeadDialogProps {
+interface CreateDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isLoading?: boolean;
 }
 
-export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDialogProps) {
+export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDialogProps) {
   const queryClient = useQueryClient();
 
-  const createLead = useMutation({
-    mutationFn: async (values: CreateLead) => {
+  const createDeal = useMutation({
+    mutationFn: async (values: CreateDeal) => {
       try {
-        debugger;
-
-        return await leadsApi.createLead(values);
+        return await dealsApi.createDeal(values);
       } catch (error) {
-        console.error('Error creating lead:', error);
+        console.error('Error creating deal:', error);
         throw error;
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
       onOpenChange(false);
-      toast.success('Lead created successfully');
+      toast.success('Deal created successfully');
     },
     onError: () => {
-      toast.error('Failed to create lead');
+      toast.error('Failed to create deal');
     },
   });
 
-  const defaultValues: CreateLead = {
+  const defaultValues: CreateDeal = {
     name: '',
     email: '',
     phone: '',
-    status: LeadStatus.NEW,
-    source: '',
+    status: DealStatus.ACTIVE,
+    dealAmount: 0,
     propertyType: PropertyType.COMMERCIAL,
-    budget: undefined,
-    location: '',
+    propertyValue: 0,
+    propertyAddress: '',
+    expectedCloseDate: new Date(),
+    actualCloseDate: new Date(),
+    commissionRate: 0,
+    estimatedCommission: 0,
     notes: [],
   };
 
@@ -65,15 +67,10 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
     <BaseEntityDialog
       open={open}
       onOpenChange={onOpenChange}
-      title='Create New Lead'
-      schema={createLeadSchema}
+      title='Create New Deal'
+      schema={createDealSchema}
       defaultValues={defaultValues}
-      onSubmit={(values) => {
-        debugger;
-        console.log('Submitting values:', values); // Log the values being submitted
-        console.log('Submitting values:', JSON.stringify(values, null, 2)); // Log the values being submitted
-        createLead.mutate(values);
-      }}
+      onSubmit={(values) => createDeal.mutate(values)}
       isLoading={isLoading}
     >
       {(form) => (
@@ -86,7 +83,27 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
             Watch: <p>{JSON.stringify(form.watch(), null, 2)}</p>
             Form Valid: <p>{form.formState.isValid ? 'true' : 'false'}</p>
           </div>
+
           <div className='grid grid-cols-2 gap-4'>
+            <FormField
+              control={form.control}
+              name='dealAmount'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Deal Amount</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      placeholder='Enter deal amount'
+                      disabled={isLoading}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      value={field.value || ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name='status'
@@ -104,7 +121,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(LeadStatus).map((status) => (
+                      {Object.values(DealStatus).map((status) => (
                         <SelectItem key={status} value={status}>
                           {status}
                         </SelectItem>
@@ -115,7 +132,6 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name='propertyType'
@@ -144,17 +160,29 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name='budget'
+              name='propertyAddress'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Budget</FormLabel>
+                  <FormLabel>Property Address</FormLabel>
+                  <FormControl>
+                    <Input placeholder='Enter property address' disabled={isLoading} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name='propertyValue'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Property Value</FormLabel>
                   <FormControl>
                     <Input
                       type='number'
-                      placeholder='Enter budget'
+                      placeholder='Enter property value'
                       disabled={isLoading}
                       onChange={(e) => field.onChange(parseFloat(e.target.value))}
                       value={field.value || ''}
@@ -164,29 +192,75 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                 </FormItem>
               )}
             />
-
-            <FormField
+            {/* <FormField
               control={form.control}
-              name='location'
+              name="expectedCloseDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location</FormLabel>
+                  <FormLabel>Expected Close Date</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter location' disabled={isLoading} {...field} />
+                    <Input
+                      type="date"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name='source'
+              name="actualCloseDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source</FormLabel>
+                  <FormLabel>Actual Close Date</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter source' disabled={isLoading} {...field} />
+                    <Input
+                      type="date"
+                      disabled={isLoading}
+                      {...field}
+                      value={field.value ? new Date(field.value).toISOString().split('T')[0] : ''}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+            {/* <FormField
+              control={form.control}
+              name="commissionRate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Commission Rate (%)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="Enter commission rate"
+                      disabled={isLoading}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
+            <FormField
+              control={form.control}
+              name='estimatedCommission'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimated Commission</FormLabel>
+                  <FormControl>
+                    <Input
+                      type='number'
+                      placeholder='Enter estimated commission'
+                      disabled={isLoading}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      value={field.value || ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -206,7 +280,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
               Cancel
             </Button>
             <Button type='submit' disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Lead'}
+              {isLoading ? 'Creating...' : 'Create Deal'}
             </Button>
           </div>
         </>

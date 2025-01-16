@@ -1,7 +1,7 @@
-import { LeadStatus, PropertyType } from '@/types';
+import { LeadStatus, PropertyType } from '@prisma/client';
 import { z } from 'zod';
 
-import { noteEntrySchema } from './note.schema';
+import { noteEntrySchema } from './note.schema.js';
 
 // Base schema for common lead fields
 export const leadBaseSchema = z.object({
@@ -15,7 +15,7 @@ export const leadBaseSchema = z.object({
   location: z.string().nullish(),
   lastContactDate: z.date().nullish(),
   expectedDate: z.date().nullish(),
-  notes: z.array(noteEntrySchema).default([]),
+  notes: z.array(noteEntrySchema).default([]), // Changed from nullish to default([])
 });
 
 // Schema for creating a new lead

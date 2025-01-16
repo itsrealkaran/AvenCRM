@@ -1,13 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { leadsApi } from '@/api/leads.service';
-import { updateLeadSchema } from '@/schema';
-import { LeadStatus, PropertyType, UpdateLead } from '@/types';
+import { dealsApi } from '@/api/deals.service';
+import { updateDealSchema } from '@/schema/deal.schema';
+import { DealStatus, PropertyType, UpdateDeal } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -22,57 +21,56 @@ import {
 
 import { BaseEntityDialog, CommonFormFields, NotesField } from '../entity-dialog';
 
-interface EditLeadDialogProps {
+interface EditDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  lead: z.infer<typeof updateLeadSchema> | null;
+  deal: UpdateDeal | null;
 }
 
-export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps) {
+export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps) {
   const queryClient = useQueryClient();
-
-  const updateLead = useMutation({
-    mutationFn: async (values: UpdateLead) => {
-      if (!lead?.id) throw new Error('Lead ID is required');
-      return leadsApi.updateLead(lead.id, values);
+  const updateDeal = useMutation({
+    mutationFn: async (values: UpdateDeal) => {
+      if (!deal?.id) throw new Error('Deal ID is required');
+      return dealsApi.updateDeal(deal.id, values);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
       onOpenChange(false);
-      toast.success('Lead updated successfully');
+      toast.success('Deal updated successfully');
     },
     onError: (error) => {
-      console.error('Error updating lead:', error);
-      toast.error('Failed to update lead');
+      console.error('Error updating deal:', error);
+      toast.error('Failed to update deal');
     },
   });
 
-  if (!lead) return null;
+  if (!deal) return null;
 
-  const defaultValues: UpdateLead = {
-    id: lead.id,
-    name: lead.name,
-    email: lead.email ?? '',
-    phone: lead.phone ?? '',
-    status: lead.status,
-    source: lead.source ?? '',
-    propertyType: lead.propertyType,
-    budget: lead.budget ?? 0,
-    location: lead.location ?? '',
-    expectedDate:
-      typeof lead.expectedDate === 'string' ? new Date(lead.expectedDate) : lead.expectedDate,
-    lastContactDate:
-      typeof lead.lastContactDate === 'string'
-        ? new Date(lead.lastContactDate)
-        : lead.lastContactDate,
+  const defaultValues: UpdateDeal = {
+    id: deal.id,
+    name: deal.name,
+    email: deal.email ?? '',
+    phone: deal.phone ?? '',
+    status: deal.status,
+    dealAmount: deal.dealAmount,
+    propertyAddress: deal.propertyAddress ?? '',
+    propertyValue: deal.propertyValue ?? 0,
+    propertyType: deal.propertyType,
+    notes: deal.notes ?? [],
+    commissionRate: deal.commissionRate ?? 0,
+    expectedCloseDate:
+      typeof deal.expectedCloseDate === 'string'
+        ? new Date(deal.expectedCloseDate)
+        : deal.expectedCloseDate,
   };
 
-  const handleSubmit = async (values: UpdateLead) => {
+  const handleSubmit = async (values: UpdateDeal) => {
     try {
-      await updateLead.mutateAsync(values);
+      await updateDeal.mutateAsync(values);
     } catch (error) {
-      console.error('Error updating lead:', error);
-      toast.error('Failed to update lead');
+      console.error('Error updating deal:', error);
+      toast.error('Failed to update deal');
     }
   };
 
@@ -80,15 +78,15 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
     <BaseEntityDialog
       open={open}
       onOpenChange={onOpenChange}
-      title='Edit Lead'
-      schema={updateLeadSchema}
+      title='Edit Deal'
+      schema={updateDealSchema}
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
-      isLoading={updateLead.isPending}
+      isLoading={updateDeal.isPending}
     >
       {(form) => (
         <>
-          <CommonFormFields form={form} isLoading={updateLead.isPending} />
+          <CommonFormFields form={form} isLoading={updateDeal.isPending} />
           <div className='space-y-1 bg-red-200 text-red-800 p-4'>
             Errors: <p>{JSON.stringify(form.formState.errors, null, 2)}</p>
             Values: <p>{JSON.stringify(form.getValues(), null, 2)}</p>
@@ -101,11 +99,11 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
               name='status'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>Status 7</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={updateLead.isPending}
+                    disabled={updateDeal.isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -113,7 +111,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {Object.values(LeadStatus).map((status) => (
+                      {Object.values(DealStatus).map((status) => (
                         <SelectItem key={status} value={status}>
                           {status}
                         </SelectItem>
@@ -134,7 +132,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
-                    disabled={updateLead.isPending}
+                    disabled={updateDeal.isPending}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -164,7 +162,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                     <Input
                       type='number'
                       placeholder='Enter budget'
-                      disabled={updateLead.isPending}
+                      disabled={updateDeal.isPending}
                       onChange={(e) => field.onChange(parseFloat(e.target.value))}
                       value={field.value || ''}
                     />
@@ -183,7 +181,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                   <FormControl>
                     <Input
                       placeholder='Enter location'
-                      disabled={updateLead.isPending}
+                      disabled={updateDeal.isPending}
                       {...field}
                     />
                   </FormControl>
@@ -199,7 +197,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                 <FormItem>
                   <FormLabel>Source</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter source' disabled={updateLead.isPending} {...field} />
+                    <Input placeholder='Enter source' disabled={updateDeal.isPending} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -207,25 +205,25 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
             />
           </div>
 
-          <NotesField form={form} isLoading={updateLead.isPending} />
+          <NotesField form={form} isLoading={updateDeal.isPending} />
 
           <div className='flex justify-end space-x-4'>
             <Button
               type='button'
               variant='outline'
-              disabled={updateLead.isPending}
+              disabled={updateDeal.isPending}
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={updateLead.isPending} className='min-w-[100px]'>
-              {updateLead.isPending ? (
+            <Button type='submit' disabled={updateDeal.isPending} className='min-w-[100px]'>
+              {updateDeal.isPending ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                   Updating...
                 </>
               ) : (
-                'Update Lead'
+                'Update Deal'
               )}
             </Button>
           </div>

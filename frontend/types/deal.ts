@@ -1,27 +1,18 @@
+import {
+  createDealSchema,
+  dealBaseSchema,
+  dealFilterSchema,
+  dealResponseSchema,
+  dealsResponseSchema,
+  updateDealSchema,
+} from '@/schema/deal.schema';
+import { z } from 'zod';
+
 import { DealStatus, PropertyType } from './enums';
 
-export interface Deal {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-  companyId: string;
-  agentId: string;
-  agent?: {
-    id: string;
-    name: string;
-    email: string;
-  };
-  dealAmount: number;
-  status: DealStatus;
-  propertyType?: PropertyType;
-  propertyAddress?: string;
-  propertyValue?: number;
-  expectedCloseDate?: Date;
-  actualCloseDate?: Date;
-  commissionRate?: number;
-  estimatedCommission?: number;
-  notes?: Record<string, string>;
-  createdAt: Date;
-  updatedAt?: Date;
-}
+export type DealBase = z.infer<typeof dealBaseSchema>;
+export type CreateDeal = z.infer<typeof createDealSchema>;
+export type UpdateDeal = z.infer<typeof updateDealSchema>;
+export type DealFilter = z.infer<typeof dealFilterSchema>;
+export type Deal = z.infer<typeof dealResponseSchema>;
+export type DealsResponse = z.infer<typeof dealsResponseSchema>;
