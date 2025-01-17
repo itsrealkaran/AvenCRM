@@ -1,16 +1,9 @@
 'use client';
 
-import { Lead, LeadStatus } from '@/types';
+import { Deal } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import {
-  ArrowRightLeft,
-  ArrowUpDown,
-  CopyIcon,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from 'lucide-react';
+import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +25,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const getStatusColor = (status: LeadStatus) => {
+const statusTypes = [
+  'NEW',
+  'CONTACTED',
+  'QUALIFIED',
+  'PROPOSAL',
+  'NEGOTIATION',
+  'WON',
+  'LOST',
+  'ACTIVE',
+] as const;
+type StatusType = (typeof statusTypes)[number];
+
+const getStatusColor = (status: StatusType) => {
   const colors = {
     NEW: 'bg-blue-100 text-blue-800',
     CONTACTED: 'bg-purple-100 text-purple-800',
@@ -41,12 +46,11 @@ const getStatusColor = (status: LeadStatus) => {
     NEGOTIATION: 'bg-orange-100 text-orange-800',
     WON: 'bg-green-100 text-green-800',
     LOST: 'bg-red-100 text-red-800',
-    FOLLOWUP: 'bg-teal-100 text-teal-800',
+    ACTIVE: 'bg-emerald-100 text-emerald-800',
   };
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return colors[status] || 'bg-primary/10 text-primary';
 };
-
-export const columns: ColumnDef<Lead>[] = [
+export const columns: ColumnDef<Deal>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -88,118 +92,40 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
+    accessorKey: 'agent.name',
+    header: 'Created By',
+    cell: ({ row }) => {
+      const agent = row.original.agent;
+      return agent?.name || 'N/A';
     },
+  },
+  {
+    accessorKey: 'email',
+    header: 'Email',
   },
   {
     accessorKey: 'phone',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Phone
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Phone',
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row, table }) => {
-      const status: LeadStatus = row.getValue('status');
-      const lead = row.original as Lead;
-      const meta = table.options.meta as {
-        onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
-        onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 p-0'>
-              <Badge className={`${getStatusColor(status)} cursor-pointer`}>{status}</Badge>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[200px]'>
-            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {Object.values(LeadStatus).map((statusOption) => (
-              <DropdownMenuItem
-                key={statusOption}
-                className={status === statusOption ? 'bg-accent' : ''}
-                onClick={async () => {
-                  if (status !== statusOption && meta.onStatusChange) {
-                    toast.promise(meta.onStatusChange(lead.id, statusOption), {
-                      loading: 'Updating status...',
-                      success: 'Status updated successfully',
-                      error: 'Failed to update status',
-                    });
-                  }
-                }}
-              >
-                <Badge className={`${getStatusColor(statusOption)} mr-2`}>{statusOption}</Badge>
-                {/* {statusOption} */}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+    header: 'Status',
+    cell: ({ row }) => {
+      const status: StatusType = row.getValue('status');
+      return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
     },
   },
   {
-    accessorKey: 'createdAt',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Created At
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    accessorKey: 'dealAmount',
+    header: 'Amount',
     cell: ({ row }) => {
-      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+      const amount = row.getValue('dealAmount');
+      return amount ? `$${amount}` : '-';
     },
   },
   {
     accessorKey: 'notes',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Notes
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Notes',
     cell: ({ row }) => {
       const notes = row.original.notes || {};
       const noteCount = Object.keys(notes).length;
@@ -233,7 +159,7 @@ export const columns: ColumnDef<Lead>[] = [
                     <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300 border border-blue-300 shadow-md'>
                       <div className='w-2.5 h-2.5 rounded-full bg-blue-600 group-hover:animate-pulse'></div>
                     </div>
-                    <div className='flex-1 ml-4 space-y-2 bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200'>
+                    <div className='flex-1 ml-4 space-y-2 bg-white rounded-lg p-4 shadow-sm border border-gray-200'>
                       <div className='text-xs text-gray-500'>
                         {format(new Date(time), 'MMM d, yyyy HH:mm')}
                       </div>
@@ -250,14 +176,20 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
+    accessorKey: 'createdAt',
+    header: 'Created',
+    cell: ({ row }) => {
+      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+    },
+  },
+  {
     id: 'actions',
     header: 'Actions',
     cell: ({ row, table }) => {
-      const lead = row.original as Lead;
+      const deal = row.original as Deal;
       const meta = table.options.meta as {
-        onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
-        onConvertToDeal?: (lead: Lead) => void;
+        onEdit?: (deal: Deal) => void;
+        onDelete?: (dealId: string) => void;
       };
 
       return (
@@ -271,22 +203,19 @@ export const columns: ColumnDef<Lead>[] = [
           <DropdownMenuContent align='end' className='w-[160px]'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit lead
+            <DropdownMenuItem onClick={() => meta.onEdit?.(deal)}>
+              <Pencil className='mr-2 h-4 w-4' /> Edit deal
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onConvertToDeal?.(lead)}>
-              <ArrowRightLeft className='mr-2 h-4 w-4' /> Convert to Deal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
-              <Trash2 className='mr-2 h-4 w-4' /> Delete lead
+            <DropdownMenuItem onClick={() => meta.onDelete?.(deal.id)} className='text-red-600'>
+              <Trash2 className='mr-2 h-4 w-4' /> Delete deal
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                navigator.clipboard.writeText(lead.id);
-                toast.success('Lead ID copied to clipboard');
+                navigator.clipboard.writeText(deal.id);
+                toast.success('Deal ID copied to clipboard');
               }}
             >
-              <CopyIcon className='mr-2 h-4 w-4' /> Copy lead ID
+              <CopyIcon className='mr-2 h-4 w-4' /> Copy deal ID
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

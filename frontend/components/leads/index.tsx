@@ -38,7 +38,7 @@ export default function LeadsPage() {
     queryFn: getLeads,
   });
 
-  const leads = response?.data || [];
+  const leads = response || [];
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
@@ -74,29 +74,25 @@ export default function LeadsPage() {
     },
   });
 
-  const handleEdit = useCallback((lead: Lead) => {
+  const handleEdit = (lead: Lead) => {
     setSelectedLead(lead);
     setIsEditDialogOpen(true);
-  }, []);
-
-  const handleEditDialogClose = useCallback((open: boolean) => {
-    setIsEditDialogOpen(open);
-    if (!open) {
-      setSelectedLead(null);
-    }
-  }, []);
-
-  function isLeadStatus(status: any): status is LeadStatus {
-    return Object.values(LeadStatus).includes(status);
-  }
+  };
 
   const handleStatusChange = async (recordId: string, newStatus: LeadStatus | DealStatus) => {
-    debugger;
     try {
-      if (isLeadStatus(newStatus)) {
-        await leadsApi.updateLeadStatus(recordId, newStatus);
+      // Check if the newStatus is of type LeadStatus
+      if (newStatus in LeadStatus) {
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+          credentials: 'include',
+        });
       } else {
-        console.error('Invalid status:', newStatus);
+        // Handle DealStatus update here if necessary
       }
       await queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead status updated successfully');
@@ -126,10 +122,6 @@ export default function LeadsPage() {
   const handleSelectionChange = useCallback((leads: Lead[]) => {
     setSelectedRows(leads);
   }, []);
-
-  console.log('Leads: ', leads);
-  console.log('Selected Rows: ', selectedRows);
-  console.log('Selected Lead: ', selectedLead);
 
   if (isLoading) {
     return (
@@ -195,7 +187,7 @@ export default function LeadsPage() {
         />
         <EditLeadDialog
           open={isEditDialogOpen}
-          onOpenChange={handleEditDialogClose}
+          onOpenChange={setIsEditDialogOpen}
           lead={selectedLead}
         />
         <ConvertToDealDialog

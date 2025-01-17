@@ -52,9 +52,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en'>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} ${foundersGrotesk.variable} ${foundersGroteskMono.variable} antialiased bg-background`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} ${foundersGrotesk.variable} ${foundersGroteskMono.variable} antialiased bg-background`}>
         {children}
         <Sonner />
         <Toaster />

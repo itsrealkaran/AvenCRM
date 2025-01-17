@@ -1,13 +1,16 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React from 'react';
+import { Lead, LeadStatus } from '@/types';
 import {
+  ColumnDef,
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  Row,
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
@@ -26,20 +29,27 @@ import {
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
 
-import { BaseRecord, DataTableProps } from './types';
+interface DataTableProps<TData, TValue> {
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  onEdit?: (lead: Lead) => void;
+  onDelete: (leadId: string) => void;
+  onBulkDelete: (rows: Row<TData>[]) => void;
+  onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
+  onSelectionChange?: (selectedItems: Lead[]) => void;
+  onConvertToDeal?: (lead: Lead) => void;
+  disabled?: boolean;
+}
 
-export function DataTable<TData extends BaseRecord, TValue>({
+export function DataTable<TData, TValue>({
   columns,
   data,
   onEdit,
   onDelete,
   onBulkDelete,
   onStatusChange,
-  onSelectionChange,
   onConvertToDeal,
-  filterPlaceholder = 'Filter...',
-  disabled = false,
-  additionalActions,
+  disabled,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -49,19 +59,6 @@ export function DataTable<TData extends BaseRecord, TValue>({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = React.useState({});
-
-  const handleSelectionChange = useCallback(
-    (updatedSelection: typeof rowSelection) => {
-      setRowSelection(updatedSelection);
-      if (onSelectionChange) {
-        const selectedRows = Object.keys(updatedSelection)
-          .map((index) => data[parseInt(index)])
-          .filter((item): item is TData => item !== undefined) as TData[];
-        onSelectionChange(selectedRows);
-      }
-    },
-    [data, onSelectionChange]
-  );
 
   const table = useReactTable({
     data,
@@ -77,8 +74,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
       columnFilters,
       rowSelection,
     },
-    enableRowSelection: true,
-    onRowSelectionChange: handleSelectionChange,
+    onRowSelectionChange: setRowSelection,
     meta: {
       onEdit,
       onDelete,
@@ -92,47 +88,50 @@ export function DataTable<TData extends BaseRecord, TValue>({
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <Input
-          placeholder={filterPlaceholder}
+          placeholder='Filter leads...'
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className='max-w-sm'
         />
-        <div className='ml-auto flex gap-2'>
-          {additionalActions}
-          {onBulkDelete && table.getFilteredSelectedRowModel().rows.length > 0 && (
-            <Button
-              disabled={disabled}
-              size='sm'
-              variant='outline'
-              className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
-              onClick={async () => {
-                const ok = await confirm();
-                if (ok) {
-                  toast.loading('Deleting...', { id: 'delete' });
-                  onBulkDelete(table.getFilteredSelectedRowModel().rows);
-                  toast.dismiss('delete');
-                  table.resetRowSelection();
-                }
-              }}
-            >
-              <Trash className='size-4 mr-2' />
-              Delete({table.getFilteredSelectedRowModel().rows.length})
-            </Button>
-          )}
-        </div>
+        {table.getFilteredSelectedRowModel().rows.length > 0 && (
+          <Button
+            disabled={disabled}
+            size={'sm'}
+            variant={'outline'}
+            className='ml-auto font-normal test-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+            onClick={async () => {
+              const ok = await confirm();
+
+              if (ok) {
+                toast.loading('Deleting...', {
+                  id: 'delete',
+                });
+
+                onBulkDelete(table.getFilteredSelectedRowModel().rows);
+                toast.dismiss('delete');
+                table.resetRowSelection();
+              }
+            }}
+          >
+            <Trash className='size-4 mr-2 bg-f' />
+            Delete({table.getFilteredSelectedRowModel().rows.length})
+          </Button>
+        )}
       </div>
       <div className='rounded-md border'>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>

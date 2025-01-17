@@ -1,6 +1,6 @@
 'use client';
 
-import { SetStateAction, useCallback, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -27,7 +27,6 @@ async function getDeals() {
 export default function DealsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedRows, setSelectedRows] = useState<Deal[]>([]);
   const queryClient = useQueryClient();
@@ -73,29 +72,25 @@ export default function DealsPage() {
     },
   });
 
-  const handleEdit = useCallback((deal: Deal) => {
+  const handleEdit = (deal: Deal) => {
     setSelectedDeal(deal);
     setIsEditDialogOpen(true);
-  }, []);
-
-  const handleEditDialogClose = useCallback((open: boolean) => {
-    setIsEditDialogOpen(open);
-    if (!open) {
-      setSelectedDeal(null);
-    }
-  }, []);
-
-  function isDealStatus(status: any): status is DealStatus {
-    return Object.values(DealStatus).includes(status);
-  }
+  };
 
   const handleStatusChange = async (recordId: string, newStatus: DealStatus | LeadStatus) => {
-    debugger;
     try {
-      if (isDealStatus(newStatus)) {
-        await dealsApi.updateDealStatus(recordId, newStatus);
+      // Check if the newStatus is of type DealStatus
+      if (newStatus in DealStatus) {
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/deals/${recordId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+          credentials: 'include',
+        });
       } else {
-        console.error('Invalid status:', newStatus);
+        // Handle DealStatus update here if necessary
       }
       await queryClient.invalidateQueries({ queryKey: ['deals'] });
       toast.success('Deal status updated successfully');
@@ -125,10 +120,6 @@ export default function DealsPage() {
   const handleSelectionChange = useCallback((deals: Deal[]) => {
     setSelectedRows(deals);
   }, []);
-
-  console.log('Deals: ', deals);
-  console.log('Selected Rows: ', selectedRows);
-  console.log('Selected Deal: ', selectedDeal);
 
   if (isLoading) {
     return (
@@ -173,17 +164,13 @@ export default function DealsPage() {
             columns={columns}
             data={deals}
             onEdit={handleEdit}
-            onBulkDelete={async (row: any[]) => {
-              const dealIds = row.map((row: { original: { id: any } }) => row.original.id);
+            onBulkDelete={async (row) => {
+              const dealIds = row.map((row) => row.original.id);
               await handleBulkDelete(dealIds);
             }}
             onDelete={handleDelete}
             onSelectionChange={handleSelectionChange}
             onStatusChange={handleStatusChange}
-            onConvertToDeal={(deal: SetStateAction<Deal | null>) => {
-              setSelectedDeal(deal);
-              setIsConvertDialogOpen(true);
-            }}
           />
         </div>
 
@@ -194,7 +181,7 @@ export default function DealsPage() {
         />
         <EditDealDialog
           open={isEditDialogOpen}
-          onOpenChange={handleEditDialogClose}
+          onOpenChange={setIsEditDialogOpen}
           deal={selectedDeal}
         />
       </Card>

@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, MoreHorizontal, type LucideIcon } from 'lucide-react';
+import { TypeIcon as type, type LucideIcon, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
 
 import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Logo from './logo';
 
 interface MenuItem {
   heading: string;
@@ -105,15 +106,15 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              variant='ghost'
+              variant="ghost"
               className={`w-full mt-2 ${isCollapsed ? '' : 'justify-start'} ${isCollapsed ? 'px-2' : 'px-4'} text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
             >
-              <MoreHorizontal className='h-5 w-5' />
-              {!isCollapsed && <span className='ml-2'>More Options</span>}
+              <MoreHorizontal className="h-5 w-5" />
+              {!isCollapsed && <span className="ml-2">More Options</span>}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className='w-56' align={isCollapsed ? 'center' : 'start'} side='right'>
-            <div className='grid gap-2'>
+          <PopoverContent className="w-56" align={isCollapsed ? 'center' : 'start'} side="right">
+            <div className="grid gap-2">
               {iconTrayItems.map((item, index) => (
                 <Link
                   key={index}
@@ -121,7 +122,7 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
                   className={`flex items-center rounded-md p-2 text-sm transition-colors
                     ${pathname === item.path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}`}
                 >
-                  <item.icon className='mr-2 h-4 w-4' />
+                  <item.icon className="mr-2 h-4 w-4" />
                   <span>{item.heading}</span>
                 </Link>
               ))}

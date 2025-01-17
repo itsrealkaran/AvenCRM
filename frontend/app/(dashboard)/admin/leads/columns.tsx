@@ -3,14 +3,7 @@
 import { Lead, LeadStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import {
-  ArrowRightLeft,
-  ArrowUpDown,
-  CopyIcon,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from 'lucide-react';
+import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -33,15 +26,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const getStatusColor = (status: LeadStatus) => {
-  const colors = {
-    NEW: 'bg-blue-100 text-blue-800',
-    CONTACTED: 'bg-purple-100 text-purple-800',
-    QUALIFIED: 'bg-yellow-100 text-yellow-800',
-    PROPOSAL: 'bg-indigo-100 text-indigo-800',
-    NEGOTIATION: 'bg-orange-100 text-orange-800',
-    WON: 'bg-green-100 text-green-800',
-    LOST: 'bg-red-100 text-red-800',
-    FOLLOWUP: 'bg-teal-100 text-teal-800',
+  const colors: Record<LeadStatus, string> = {
+    [LeadStatus.NEW]: 'bg-blue-100 text-blue-800',
+    [LeadStatus.CONTACTED]: 'bg-purple-100 text-purple-800',
+    [LeadStatus.QUALIFIED]: 'bg-yellow-100 text-yellow-800',
+    [LeadStatus.NEGOTIATION]: 'bg-orange-100 text-orange-800',
+    [LeadStatus.WON]: 'bg-green-100 text-green-800',
+    [LeadStatus.LOST]: 'bg-red-100 text-red-800',
+    [LeadStatus.FOLLOWUP]: 'bg-indigo-100 text-indigo-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
@@ -88,118 +80,39 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
+    accessorKey: 'agent.name',
+    header: 'Created By',
+    cell: ({ row }) => {
+      const agent = row.original.agent;
+      return agent?.name || 'N/A';
     },
+  },
+  {
+    accessorKey: 'email',
+    header: 'Email',
   },
   {
     accessorKey: 'phone',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Phone
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Phone',
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row, table }) => {
+    header: 'Status',
+    cell: ({ row }) => {
       const status: LeadStatus = row.getValue('status');
-      const lead = row.original as Lead;
-      const meta = table.options.meta as {
-        onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
-        onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 p-0'>
-              <Badge className={`${getStatusColor(status)} cursor-pointer`}>{status}</Badge>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[200px]'>
-            <DropdownMenuLabel>Change Status</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {Object.values(LeadStatus).map((statusOption) => (
-              <DropdownMenuItem
-                key={statusOption}
-                className={status === statusOption ? 'bg-accent' : ''}
-                onClick={async () => {
-                  if (status !== statusOption && meta.onStatusChange) {
-                    toast.promise(meta.onStatusChange(lead.id, statusOption), {
-                      loading: 'Updating status...',
-                      success: 'Status updated successfully',
-                      error: 'Failed to update status',
-                    });
-                  }
-                }}
-              >
-                <Badge className={`${getStatusColor(statusOption)} mr-2`}>{statusOption}</Badge>
-                {/* {statusOption} */}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
+      return <Badge className={`${getStatusColor(status)}`}>{status}</Badge>;
     },
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Created At
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Created',
     cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },
   },
   {
     accessorKey: 'notes',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Notes
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Notes',
     cell: ({ row }) => {
       const notes = row.original.notes || {};
       const noteCount = Object.keys(notes).length;
@@ -256,8 +169,7 @@ export const columns: ColumnDef<Lead>[] = [
       const lead = row.original as Lead;
       const meta = table.options.meta as {
         onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
-        onConvertToDeal?: (lead: Lead) => void;
+        onDelete?: (lead: Lead) => void;
       };
 
       return (
@@ -274,10 +186,7 @@ export const columns: ColumnDef<Lead>[] = [
             <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
               <Pencil className='mr-2 h-4 w-4' /> Edit lead
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onConvertToDeal?.(lead)}>
-              <ArrowRightLeft className='mr-2 h-4 w-4' /> Convert to Deal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
+            <DropdownMenuItem onClick={() => meta.onDelete?.(lead)} className='text-red-600'>
               <Trash2 className='mr-2 h-4 w-4' /> Delete lead
             </DropdownMenuItem>
             <DropdownMenuItem

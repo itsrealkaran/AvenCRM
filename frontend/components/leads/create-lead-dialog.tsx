@@ -31,6 +31,8 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
   const createLead = useMutation({
     mutationFn: async (values: CreateLead) => {
       try {
+        debugger;
+
         return await leadsApi.createLead(values);
       } catch (error) {
         console.error('Error creating lead:', error);
@@ -67,6 +69,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       schema={createLeadSchema}
       defaultValues={defaultValues}
       onSubmit={(values) => {
+        debugger;
         console.log('Submitting values:', values); // Log the values being submitted
         console.log('Submitting values:', JSON.stringify(values, null, 2)); // Log the values being submitted
         createLead.mutate(values);
