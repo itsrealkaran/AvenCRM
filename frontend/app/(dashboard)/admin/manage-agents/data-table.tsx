@@ -162,9 +162,9 @@ export function DataTable<TData extends BaseData, TValue>({
               ))}
             </TableHeader>
             <TableBody>
-                {isLoading ? (
-                  [...Array(5)].map((_, index) => (
-                    <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
+              {isLoading ? (
+                [...Array(5)].map((_, index) => (
+                  <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
                     <TableCell>
                       <div className='h-4 bg-gray-300 rounded w-1/2'></div>
                     </TableCell>
@@ -195,9 +195,9 @@ export function DataTable<TData extends BaseData, TValue>({
                     <TableCell>
                       <div className='h-4 bg-gray-300 rounded w-3/4'></div>
                     </TableCell>
-                    </TableRow>
-                  ))) : 
-                table.getRowModel().rows?.length ? (
+                  </TableRow>
+                ))
+              ) : table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                     {row.getVisibleCells().map((cell) => (

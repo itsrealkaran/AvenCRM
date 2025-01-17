@@ -106,6 +106,12 @@ enum TaskStatus {
   COMPLETED
 }
 
+enum PropertyType {
+  COMMERCIAL
+  RESIDENTIAL
+  LAND
+}
+
 // Unified User Model
 model User {
   id           String     @id @default(cuid())
@@ -258,7 +264,7 @@ model Lead {
   status         LeadStatus  @default(NEW)
   
   // Property/Contact Details
-  propertyType   String?
+  propertyType   PropertyType @default(COMMERCIAL)
   budget         Float?
   location       String?
   
@@ -267,8 +273,7 @@ model Lead {
   lastContactDate DateTime?
   
   // Additional Details
-  notes          Json?
-  socialProfiles Json?
+  notes          Json[]      @default([])
 
   
   createdAt     DateTime    @default(now())
@@ -294,7 +299,7 @@ model Deal {
   status         DealStatus  @default(PROSPECT)
   
   // Property Details
-  propertyType   String?
+  propertyType   PropertyType @default(COMMERCIAL)
   propertyAddress String?
   propertyValue  Float?
   
@@ -307,7 +312,7 @@ model Deal {
   estimatedCommission Float?
   
   // Additional Details
-  notes          Json?
+  notes          Json[]      @default([])
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

@@ -10,11 +10,11 @@ import {
   Mail,
   MoreHorizontal,
   Phone,
-  Plus,
   RefreshCcw,
   Search,
   User as UserIcon,
 } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,11 +22,9 @@ import { Card } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   DropdownMenu,
@@ -47,7 +45,6 @@ import {
 } from '@/components/ui/table';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import * as XLSX from 'xlsx';
 
 export default function CompaniesPage() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -72,22 +69,21 @@ export default function CompaniesPage() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-}
+  }
 
-// Function to download as XLSX
-function downloadAsXlsx(jsonData: any, fileName: string) {
+  // Function to download as XLSX
+  function downloadAsXlsx(jsonData: any, fileName: string) {
     const worksheet = XLSX.utils.json_to_sheet(jsonData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Sheet1');
     XLSX.writeFile(workbook, fileName);
-}
+  }
 
-// Example Usage:
-const jsonData = [
-    { name: "John", age: 30, city: "New York" },
-    { name: "Anna", age: 28, city: "London" }
-];
-
+  // Example Usage:
+  const jsonData = [
+    { name: 'John', age: 30, city: 'New York' },
+    { name: 'Anna', age: 28, city: 'London' },
+  ];
 
   const fetchData = useCallback(async () => {
     try {
@@ -142,7 +138,7 @@ const jsonData = [
     const confirmed = window.confirm('Are you sure you want to reactivate this company?');
     if (!confirmed) return;
     try {
-    await api.post(`/company/reactivate/${id}`);
+      await api.post(`/company/reactivate/${id}`);
       fetchData();
       toast({
         title: 'Success',
@@ -161,7 +157,7 @@ const jsonData = [
     const confirmed = window.confirm('Are you sure you want to reactivate this company?');
     if (!confirmed) return;
     try {
-    await api.post(`/company/extend-plan/${id}`);
+      await api.post(`/company/extend-plan/${id}`);
       fetchData();
       toast({
         title: 'Success',
@@ -183,8 +179,7 @@ const jsonData = [
 
   const handleRefresh = () => {
     fetchData();
-
-  }
+  };
 
   const getStatusColor = (company: Company) => {
     if (company?.blocked) return 'bg-red-100 text-red-800';
@@ -225,7 +220,9 @@ const jsonData = [
             />
           </div>
           <DropdownMenu>
-           <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md'>Download</DropdownMenuTrigger>
+            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md'>
+              Download
+            </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => downloadAsCsv(companies, 'companies.csv')}>
                 CSV
@@ -235,20 +232,23 @@ const jsonData = [
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <RefreshCcw className='h-7 w-7 border-[1px] p-1 rounded-md hover:bg-muted/50' onClick={handleRefresh}/>
+          <RefreshCcw
+            className='h-7 w-7 border-[1px] p-1 rounded-md hover:bg-muted/50'
+            onClick={handleRefresh}
+          />
         </div>
         <div className='rounded-md border'>
-        <Table>
-          <TableHeader>
-            <TableRow className='bg-white/50'>
-              <TableHead className='font-semibold'>Company Info</TableHead>
-              <TableHead className='font-semibold'>Admin</TableHead>
-              <TableHead className='font-semibold'>Subscription</TableHead>
-              <TableHead className='font-semibold'>Status</TableHead>
-              <TableHead className='font-semibold'>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          {isLoading ? (
+          <Table>
+            <TableHeader>
+              <TableRow className='bg-white/50'>
+                <TableHead className='font-semibold'>Company Info</TableHead>
+                <TableHead className='font-semibold'>Admin</TableHead>
+                <TableHead className='font-semibold'>Subscription</TableHead>
+                <TableHead className='font-semibold'>Status</TableHead>
+                <TableHead className='font-semibold'>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            {isLoading ? (
               <TableBody>
                 {[...Array(10)].map((_, index) => (
                   <TableRow key={index} className='hover:bg-muted/50 animate-pulse overflow-y-auto'>
@@ -276,7 +276,7 @@ const jsonData = [
                   </TableRow>
                 ))}
               </TableBody>
-          ) : (
+            ) : (
               <TableBody>
                 {filteredCompanies.map((company) => (
                   <TableRow key={company.id} className='hover:bg-muted/50'>
@@ -319,7 +319,7 @@ const jsonData = [
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align='center' className='flex flex-col gap-1'>
                             <DropdownMenuItem onClick={() => handleDetailsOpen(company)}>
-                                View Details
+                              View Details
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -327,8 +327,9 @@ const jsonData = [
                               className='text-blue-600'
                             >
                               Extend Plan
-                            </DropdownMenuItem> {/* Implement Extend in backend */}
-                            <DropdownMenuSeparator/>
+                            </DropdownMenuItem>{' '}
+                            {/* Implement Extend in backend */}
+                            <DropdownMenuSeparator />
                             {company.blocked ? (
                               <DropdownMenuItem onClick={() => handleReactivate(company.id)}>
                                 Reactivate Company
@@ -358,7 +359,7 @@ const jsonData = [
                   </TableRow>
                 )}
               </TableBody>
-          )}
+            )}
           </Table>
         </div>
 
@@ -376,21 +377,27 @@ const jsonData = [
                     <Building2 className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Company Name</p>
-                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.name}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {selectedCompanyDetails?.name}
+                      </p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Mail className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Email</p>
-                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.email}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {selectedCompanyDetails?.email}
+                      </p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Phone className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Phone</p>
-                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.phone || 'N/A'}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {selectedCompanyDetails?.phone || 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -399,7 +406,9 @@ const jsonData = [
                     <Globe className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Website</p>
-                      <p className='text-sm text-muted-foreground'>{selectedCompanyDetails?.website || 'N/A'}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {selectedCompanyDetails?.website || 'N/A'}
+                      </p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
@@ -416,21 +425,30 @@ const jsonData = [
                     <UserIcon className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Admin Name</p>
-                      <p className='text-sm text-muted-foreground'>{admins.find(admin => admin.id === selectedCompanyDetails?.adminId)?.name || 'N/A'}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {admins.find((admin) => admin.id === selectedCompanyDetails?.adminId)
+                          ?.name || 'N/A'}
+                      </p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Mail className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Admin Email</p>
-                      <p className='text-sm text-muted-foreground'>{admins.find(admin => admin.id === selectedCompanyDetails?.adminId)?.email || 'N/A'}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {admins.find((admin) => admin.id === selectedCompanyDetails?.adminId)
+                          ?.email || 'N/A'}
+                      </p>
                     </div>
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Phone className='h-4 w-4 text-muted-foreground' />
                     <div>
                       <p className='text-sm font-medium'>Admin Phone</p>
-                      <p className='text-sm text-muted-foreground'>{admins.find(admin => admin.id === selectedCompanyDetails?.adminId)?.phone || 'N/A'}</p>
+                      <p className='text-sm text-muted-foreground'>
+                        {admins.find((admin) => admin.id === selectedCompanyDetails?.adminId)
+                          ?.phone || 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </div>

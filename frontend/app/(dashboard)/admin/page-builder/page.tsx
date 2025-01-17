@@ -7,11 +7,7 @@ import { Button } from '@/components/ui/button';
 
 function PageBuilder() {
   const router = useRouter();
-  return (
-    <div className='flex'>
-      this is page builder page
-    </div>
-  );
+  return <div className='flex'>this is page builder page</div>;
 }
 
 export default PageBuilder;

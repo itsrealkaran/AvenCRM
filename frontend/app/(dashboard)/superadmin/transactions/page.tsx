@@ -131,16 +131,16 @@ export default function TransactionsPage() {
             <p className='text-muted-foreground'>Manage and track your transactions in one place</p>
           </div>
         </div>
-          <DataTable
-            columns={columns}
-            data={transactions}
-            onEdit={handleEdit}
-            onDelete={async (row) => {
-              const transactionIds = row.map((row) => row.original.id);
-              await handleBulkDelete(transactionIds);
-            }}
-            onSelectionChange={handleSelectionChange}
-          />
+        <DataTable
+          columns={columns}
+          data={transactions}
+          onEdit={handleEdit}
+          onDelete={async (row) => {
+            const transactionIds = row.map((row) => row.original.id);
+            await handleBulkDelete(transactionIds);
+          }}
+          onSelectionChange={handleSelectionChange}
+        />
 
         <EditTransactionDialog
           open={isEditDialogOpen}

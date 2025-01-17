@@ -30,7 +30,14 @@ router.get("/", async (req: Request, res: Response) => {
                 }
             }
         });
-        res.json(deals);
+        const dealsResponse = {
+            deals: deals,
+            meta: {
+                total: deals.length
+                
+            }
+        }
+        res.json(dealsResponse);
     } catch (error) {
         res.status(500).json({ message: "Failed to fetch deals" });
     }

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/services/api';
+import { authApi } from '@/api/api';
 import { QuestionMarkIcon } from '@radix-ui/react-icons';
 import { Search, Settings, User } from 'lucide-react';
 import { CiBellOn } from 'react-icons/ci';

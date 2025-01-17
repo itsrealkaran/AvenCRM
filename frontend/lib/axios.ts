@@ -12,7 +12,7 @@ let isRefreshing = false;
 let failedQueue: any[] = [];
 
 const processQueue = (error: any = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -68,13 +68,13 @@ apiClient.interceptors.response.use(
 
         const response = await apiClient.post('/auth/refresh-token', { refreshToken });
         const { accessToken } = response.data;
-        
+
         localStorage.setItem('accessToken', accessToken);
-        
+
         // Update authorization header
         apiClient.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
         originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
-        
+
         processQueue();
         return apiClient(originalRequest);
       } catch (refreshError) {

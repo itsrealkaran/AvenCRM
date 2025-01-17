@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { usersApi } from '@/services/users';
+import { usersApi } from '@/api/users';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { Eye, EyeOff } from 'lucide-react';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usersApi } from '@/services/users';
+import { usersApi } from '@/api/users';
 import { Gender } from '@/types/enums';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';

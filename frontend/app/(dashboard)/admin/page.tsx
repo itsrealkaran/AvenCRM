@@ -1,16 +1,19 @@
 'use client';
 
+import { authApi } from '@/api/api';
+import { User } from '@/types';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { authApi } from '@/services/api';
-import { User } from '@/types';
-
 import { AdminDashboard } from './components/admin-dashboard';
 
 export default function DashboardPage() {
-  const { data: user, isLoading, isError } = useQuery({
+  const {
+    data: user,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['user'],
     queryFn: async () => {
       const { data } = await authApi.me();

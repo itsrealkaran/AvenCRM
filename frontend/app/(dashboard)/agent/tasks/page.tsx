@@ -281,59 +281,57 @@ export default function TaskPage() {
       </div>
 
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-      {loading ? (
-        Array.from({ length: 6 }).map((_, index) => (
-          <div
-            key={index}
-            className="p-4 rounded-lg shadow-md relative animate-pulse bg-gray-200"
-            style={{ borderLeft: '4px solid #666666' }}
-          >
-            <div className="flex justify-between items-start mb-2">
-              <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-              <div className="flex space-x-2">
-                <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
-                <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
-                <div className="h-4 w-4 bg-gray-300 rounded-full"></div>
+        {loading
+          ? Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className='p-4 rounded-lg shadow-md relative animate-pulse bg-gray-200'
+                style={{ borderLeft: '4px solid #666666' }}
+              >
+                <div className='flex justify-between items-start mb-2'>
+                  <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                  <div className='flex space-x-2'>
+                    <div className='h-4 w-4 bg-gray-300 rounded-full'></div>
+                    <div className='h-4 w-4 bg-gray-300 rounded-full'></div>
+                    <div className='h-4 w-4 bg-gray-300 rounded-full'></div>
+                  </div>
+                </div>
+                <div className='h-3 bg-gray-300 rounded w-full mb-3'></div>
+                <div className='flex justify-between items-center'>
+                  <div className='flex items-center space-x-2'>
+                    <div className='h-3 w-12 bg-gray-300 rounded-full'></div>
+                    <div className='h-3 w-12 bg-gray-300 rounded-full'></div>
+                  </div>
+                  <div className='h-3 w-20 bg-gray-300 rounded-full'></div>
+                </div>
               </div>
-            </div>
-            <div className="h-3 bg-gray-300 rounded w-full mb-3"></div>
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <div className="h-3 w-12 bg-gray-300 rounded-full"></div>
-                <div className="h-3 w-12 bg-gray-300 rounded-full"></div>
-              </div>
-              <div className="h-3 w-20 bg-gray-300 rounded-full"></div>
-            </div>
-          </div>
-        ))
-      ) : (
-        filteredTasks.map((task: Task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onEdit={() => {
-              setSelectedTask(task);
-              setFormData({
-                title: task.title,
-                description: task.description || '',
-                priority: task.priority,
-                status: task.status,
-                dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-                colorTag: task.colorTag || '#000000',
-                tags: task.tags || [],
-                category: '',
-              });
-              setIsEditModalOpen(true);
-            }}
-            onDelete={() => {
-              setSelectedTask(task);
-              setIsDeleteDialogOpen(true);
-            }}
-            isSelected={selectedTasks.has(task.id)}
-            onSelect={() => toggleTaskSelection(task.id)}
-          />
-        ))
-      )}
+            ))
+          : filteredTasks.map((task: Task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onEdit={() => {
+                  setSelectedTask(task);
+                  setFormData({
+                    title: task.title,
+                    description: task.description || '',
+                    priority: task.priority,
+                    status: task.status,
+                    dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+                    colorTag: task.colorTag || '#000000',
+                    tags: task.tags || [],
+                    category: '',
+                  });
+                  setIsEditModalOpen(true);
+                }}
+                onDelete={() => {
+                  setSelectedTask(task);
+                  setIsDeleteDialogOpen(true);
+                }}
+                isSelected={selectedTasks.has(task.id)}
+                onSelect={() => toggleTaskSelection(task.id)}
+              />
+            ))}
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>

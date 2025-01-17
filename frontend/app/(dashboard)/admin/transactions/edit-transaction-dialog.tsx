@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { transactionApi } from '@/services/api';
+import { transactionApi } from '@/api/api';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';

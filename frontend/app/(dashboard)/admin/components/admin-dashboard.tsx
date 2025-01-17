@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useQuery, useQueryErrorResetBoundary } from '@tanstack/react-query';
 import {
   Activity,
   ArrowDownRight,
@@ -24,14 +26,12 @@ import {
   YAxis,
 } from 'recharts';
 import { toast } from 'sonner';
-import { useQuery, useQueryErrorResetBoundary } from '@tanstack/react-query';
-import { useEffect } from 'react';
 
+import { LineChart } from '@/components/charts/line-chart';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { api } from '@/lib/api';
-import { LineChart } from "@/components/charts/line-chart"
 
 interface TopPerformer {
   name: string;
@@ -69,7 +69,11 @@ interface AdminDashboardData {
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export function AdminDashboard() {
-  const { data: dashboardData, isLoading, isError } = useQuery({
+  const {
+    data: dashboardData,
+    isLoading,
+    isError,
+  } = useQuery({
     queryKey: ['adminDashboard'],
     queryFn: async () => {
       const response = await api.get('/api/dashboard/admin');
@@ -87,10 +91,10 @@ export function AdminDashboard() {
 
   if (isError) {
     return (
-      <div className="flex items-center justify-center h-[600px]">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-gray-900">Failed to load dashboard data</h3>
-          <p className="text-sm text-gray-500 mt-2">Please try refreshing the page</p>
+      <div className='flex items-center justify-center h-[600px]'>
+        <div className='text-center'>
+          <h3 className='text-lg font-semibold text-gray-900'>Failed to load dashboard data</h3>
+          <p className='text-sm text-gray-500 mt-2'>Please try refreshing the page</p>
         </div>
       </div>
     );
@@ -183,7 +187,8 @@ export function AdminDashboard() {
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
               <span className='text-xs text-green-500 ml-1'>
-                {dashboardData?.growthRates.deals! >= 0 ? '+' : ''}{dashboardData?.growthRates.deals.toFixed(1)}% from last month
+                {dashboardData?.growthRates.deals! >= 0 ? '+' : ''}
+                {dashboardData?.growthRates.deals.toFixed(1)}% from last month
               </span>
             </div>
           </CardContent>
@@ -201,7 +206,8 @@ export function AdminDashboard() {
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
               <span className='text-xs text-green-500 ml-1'>
-                {dashboardData?.growthRates.activeLeads! >= 0 ? '+' : ''}{dashboardData?.growthRates.activeLeads.toFixed(1)}% from last month
+                {dashboardData?.growthRates.activeLeads! >= 0 ? '+' : ''}
+                {dashboardData?.growthRates.activeLeads.toFixed(1)}% from last month
               </span>
             </div>
           </CardContent>
@@ -219,7 +225,8 @@ export function AdminDashboard() {
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
               <span className='text-xs text-green-500 ml-1'>
-                {dashboardData?.growthRates.wonDeals! >= 0 ? '+' : ''}{dashboardData?.growthRates.wonDeals.toFixed(1)}% from last month
+                {dashboardData?.growthRates.wonDeals! >= 0 ? '+' : ''}
+                {dashboardData?.growthRates.wonDeals.toFixed(1)}% from last month
               </span>
             </div>
           </CardContent>
@@ -239,7 +246,8 @@ export function AdminDashboard() {
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
               <span className='text-xs text-green-500 ml-1'>
-                {dashboardData?.growthRates.revenue! >= 0 ? '+' : ''}{dashboardData?.growthRates.revenue.toFixed(1)}% from last month
+                {dashboardData?.growthRates.revenue! >= 0 ? '+' : ''}
+                {dashboardData?.growthRates.revenue.toFixed(1)}% from last month
               </span>
             </div>
           </CardContent>
@@ -292,15 +300,14 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width='100%' height={350}>
-            <LineChart
-              className="mt-4 h-72"
-              data={dashboardData!.leadMetrics}
-              index="date"
-              categories={["leads", "deals"]}
-              colors={["gray", "blue"]}
-              yAxisWidth={30}
-            />
-
+              <LineChart
+                className='mt-4 h-72'
+                data={dashboardData!.leadMetrics}
+                index='date'
+                categories={['leads', 'deals']}
+                colors={['gray', 'blue']}
+                yAxisWidth={30}
+              />
             </ResponsiveContainer>
           </CardContent>
         </Card>

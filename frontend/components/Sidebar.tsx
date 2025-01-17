@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { TypeIcon as type, type LucideIcon, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
 
+import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -160,4 +161,3 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
 };
 
 export default Sidebar;
-

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { authApi } from '@/services/api';
+import { authApi } from '@/api/api';
 import { User, UserRole } from '@/types';
 import {
   Building2,

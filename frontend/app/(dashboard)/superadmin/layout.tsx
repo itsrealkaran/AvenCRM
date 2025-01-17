@@ -1,8 +1,17 @@
-'use client'
+'use client';
+
+import {
+  Building,
+  Calendar,
+  CheckSquare,
+  LayoutDashboard,
+  Mail,
+  Settings,
+  Wallet,
+} from 'lucide-react';
 
 import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/Sidebar';
-import { LayoutDashboard, Building, CheckSquare, Calendar, Mail, Wallet, Settings } from 'lucide-react';
 
 const menuItems = [
   {

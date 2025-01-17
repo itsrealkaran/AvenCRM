@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/services/api';
-import { User } from '@/types/user';
+import { authApi } from '@/api/api';
 import { toast } from 'sonner';
 
 interface AuthGuardProps {

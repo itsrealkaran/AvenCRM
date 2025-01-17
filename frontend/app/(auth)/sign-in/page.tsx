@@ -2,8 +2,8 @@
 
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { authApi } from '@/services/api';
+import { useRouter } from 'next/navigation';
+import { authApi } from '@/api/api';
 import { UserRole } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';

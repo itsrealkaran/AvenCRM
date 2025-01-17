@@ -1,8 +1,23 @@
-'use client'
+'use client';
 
-import Sidebar from '@/components/Sidebar';
+import {
+  Building2,
+  Calendar,
+  CheckSquare,
+  FileText,
+  Handshake,
+  LayoutDashboard,
+  LineChart,
+  Mail,
+  Monitor,
+  Settings,
+  Store,
+  Users,
+  Wallet,
+} from 'lucide-react';
+
 import Topbar from '@/components/layout/Topbar';
-import { LayoutDashboard, Users, Wallet, Monitor, Building2, Store, Handshake, FileText, LineChart, CheckSquare, Calendar, Mail, Settings } from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
 
 const getUserRole = () => {
   

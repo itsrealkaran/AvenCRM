@@ -7,3 +7,5 @@ export * from './email';
 export * from './transaction';
 export * from './calendar';
 export * from './task';
+export * from './lead';
+export * from './deal';

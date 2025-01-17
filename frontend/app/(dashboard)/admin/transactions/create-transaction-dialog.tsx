@@ -1,6 +1,6 @@
 'use client';
 
-import { transactionApi } from '@/services/api';
+import { transactionApi } from '@/api/api';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
