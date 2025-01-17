@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { updateLeadSchema } from '@/schema';
 import { LeadStatus, PropertyType, UpdateLead } from '@/types';
@@ -29,6 +29,7 @@ interface EditLeadDialogProps {
 }
 
 export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps) {
+  const [formKey, setFormKey] = useState(0);
   const queryClient = useQueryClient();
 
   const updateLead = useMutation({
@@ -47,6 +48,14 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
     },
   });
 
+  // Reset form when lead changes
+  useEffect(() => {
+    if (open && lead) {
+      setFormKey((prev) => prev + 1);
+    }
+  }, [open, lead]);
+
+  console.log('Lead: ', lead);
   if (!lead) return null;
 
   const defaultValues: UpdateLead = {
@@ -85,6 +94,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
       isLoading={updateLead.isPending}
+      key={formKey}
     >
       {(form) => (
         <>

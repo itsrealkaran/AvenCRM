@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, RequestHandler, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { UserRole } from '@prisma/client';
 import { subMonths } from 'date-fns';
@@ -12,8 +12,17 @@ import {
 } from '../schema/lead.schema.js';
 import { InputJsonValue } from '@prisma/client/runtime/library';
 import logger from '../utils/logger.js';
+import multer from 'multer';
+import { z } from 'zod';
+import { LeadStatus } from '@prisma/client';
 
-export const leadsController = {
+const upload = multer();
+
+type Controller = {
+  [key: string]: RequestHandler | RequestHandler[];
+};
+
+export const leadsController: Controller  = {
   getAllLeads: async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -21,8 +30,18 @@ export const leadsController = {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const filterResult = leadFilterSchema.safeParse(req.query);
+      // Convert page and limit to numbers if they are present
+      const query: Record<string, any> = { ...req.query }; 
+      if (query.page) {
+        query.page = Number(query.page);
+      }
+      if (query.limit) {
+        query.limit = Number(query.limit);
+      }
+
+      const filterResult = leadFilterSchema.safeParse(query);
       if (!filterResult.success) {
+        logger.error('Error in getAllLeads:', filterResult.error);
         return res.status(400).json({ errors: filterResult.error.flatten() });
       }
 
@@ -118,53 +137,98 @@ export const leadsController = {
     }
   },
 
-  createLead: async (req: Request, res: Response) => {
-    try {
-      const validationResult = createLeadSchema.safeParse(req.body);
-      if (!validationResult.success) {
-        logger.error('Error in createLead:', validationResult.error);
-        return res.status(400).json({ errors: validationResult.error.flatten() });
+  createLead: [
+    // Use multer middleware to parse `multipart/form-data`
+    upload.none(),
+    async (req: Request, res: Response) => {
+      try {
+        // Parse the JSON string from the `FormData` key "data"
+        const rawData = req.body.data;
+        if (!rawData) {
+          return res.status(400).json({ message: 'Invalid request: Missing data field.' });
+        }
+
+        const parsedData = JSON.parse(rawData);
+
+        // Validate the parsed data using Zod
+        const validationResult = createLeadSchema.safeParse(parsedData);
+        if (!validationResult.success) {
+          logger.error('Validation error in createLead:', validationResult.error);
+          return res.status(400).json({ errors: validationResult.error.flatten() });
+        }
+
+        const leadData = validationResult.data;
+
+        // Save the validated lead data to the database
+        const lead = await prisma.lead.create({
+          data: {
+            ...leadData,
+            agentId: req.user?.id ?? '', // Assuming `req.user` is available from middleware
+            companyId: req.user?.companyId ?? '',
+            notes: leadData.notes
+              ? leadData.notes
+                  .filter((note) => note !== null)
+                  .map((note) => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined
+              : undefined,
+          },
+        });
+
+        // Validate the response before sending it back
+        const validatedResponse = leadResponseSchema.parse(lead);
+        return res.json(validatedResponse);
+      } catch (error) {
+        logger.error('Unexpected error in createLead:', error);
+        return res.status(500).json({ message: 'Failed to create lead' });
       }
+    },
+  ],
 
-      const leadData = validationResult.data;
-      const lead = await prisma.lead.create({
-        data: {
-          ...leadData,
-          agentId: req.user?.id ?? '',
-          companyId: req.user?.companyId ?? '',
-          notes: leadData.notes ? leadData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
-        },
-      });
-
-      const validatedResponse = leadResponseSchema.parse(lead);
-      return res.json(validatedResponse);
-    } catch (error) {
-      console.error('Error in createLead:', error);
-      return res.status(500).json({ message: 'Failed to create lead' });
-    }
-  },
-
-  updateLead: async (req: Request, res: Response) => {
-    try {
-      const validationResult = updateLeadSchema.safeParse({ ...req.body, id: req.params.id });
-      if (!validationResult.success) {
-        return res.status(400).json({ errors: validationResult.error.flatten() });
+  updateLead: [
+    upload.none(),
+    async (req: Request, res: Response) => {
+      try {
+        const validationResult = updateLeadSchema.safeParse(JSON.parse(req.body.data));
+        if (!validationResult.success) {
+          return res.status(400).json({ errors: validationResult.error.flatten() });
+        }
+  
+        const leadData = validationResult.data;
+        const lead = await prisma.lead.update({
+          where: { id: req.params.id },
+          data: {
+            ...leadData,
+            notes: leadData.notes ? leadData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
+          },
+        });
+  
+        const validatedResponse = leadResponseSchema.parse(lead);
+        return res.json(validatedResponse);
+      } catch (error) {
+        console.error('Error in updateLead:', error);
+        return res.status(500).json({ message: 'Failed to update lead' });
       }
+    },
+  ],
 
-      const leadData = validationResult.data;
+  updateLeadStatus: async (req: Request, res: Response) => {
+    try {
+      const { status } = req.body;
+  
+      // Validate the status
+      if (!status || !Object.values(LeadStatus).includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+  
       const lead = await prisma.lead.update({
         where: { id: req.params.id },
-        data: {
-          ...leadData,
-          notes: leadData.notes ? leadData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
-        },
+        data: { status },
       });
-
+  
       const validatedResponse = leadResponseSchema.parse(lead);
       return res.json(validatedResponse);
     } catch (error) {
-      console.error('Error in updateLead:', error);
-      return res.status(500).json({ message: 'Failed to update lead' });
+      console.error("Error in updateLeadStatus:", error);
+      return res.status(500).json({ message: "Failed to update lead status" });
     }
   },
 

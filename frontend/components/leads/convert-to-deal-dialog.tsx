@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
-import { Lead } from '@/types';
+import { Lead, LeadResponse } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { CalendarIcon, DollarSign } from 'lucide-react';
@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils';
 interface ConvertToDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  lead: Lead | null;
+  lead: LeadResponse | null;
 }
 
 export function ConvertToDealDialog({ open, onOpenChange, lead }: ConvertToDealDialogProps) {

@@ -108,9 +108,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
               onClick={async () => {
                 const ok = await confirm();
                 if (ok) {
-                  toast.loading('Deleting...', { id: 'delete' });
                   onBulkDelete(table.getFilteredSelectedRowModel().rows);
-                  toast.dismiss('delete');
                   table.resetRowSelection();
                 }
               }}
