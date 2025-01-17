@@ -39,10 +39,8 @@ export const leadsApi = {
     // Clean up the data and handle dates
     const cleanData = {
       ...data,
-      expectedDate: data.expectedDate ? new Date(data.expectedDate).toISOString() : undefined,
-      lastContactDate: data.lastContactDate
-        ? new Date(data.lastContactDate).toISOString()
-        : undefined,
+      expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
+      lastContactDate: data.lastContactDate ? new Date(data.lastContactDate) : undefined,
       budget: data.budget ? parseFloat(data.budget.toString()) : undefined,
     };
 
@@ -63,10 +61,8 @@ export const leadsApi = {
     // Clean up the data and handle dates
     const cleanData = {
       ...data,
-      expectedDate: data.expectedDate ? new Date(data.expectedDate).toISOString() : undefined,
-      lastContactDate: data.lastContactDate
-        ? new Date(data.lastContactDate).toISOString()
-        : undefined,
+      expectedDate: data.expectedDate ? new Date(data.expectedDate) : undefined,
+      lastContactDate: data.lastContactDate ? new Date(data.lastContactDate) : undefined,
       budget: data.budget ? parseFloat(data.budget.toString()) : undefined,
     };
 

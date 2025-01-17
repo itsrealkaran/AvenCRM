@@ -25,9 +25,8 @@ export const dealsApi = {
     // Clean up the data and handle dates
     const cleanData = {
       ...data,
-      expectedCloseDate: data.expectedCloseDate
-        ? new Date(data.expectedCloseDate).toISOString()
-        : undefined,
+      expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
+      actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined,
       dealAmount: data.dealAmount ? parseFloat(data.dealAmount.toString()) : undefined,
       propertyValue: data.propertyValue ? parseFloat(data.propertyValue.toString()) : undefined,
     };
@@ -56,9 +55,8 @@ export const dealsApi = {
     // Clean up the data and handle dates
     const cleanData = {
       ...data,
-      expectedCloseDate: data.expectedCloseDate
-        ? new Date(data.expectedCloseDate).toISOString()
-        : undefined,
+      expectedCloseDate: data.expectedCloseDate ? new Date(data.expectedCloseDate) : undefined,
+      actualCloseDate: data.actualCloseDate ? new Date(data.actualCloseDate) : undefined,
       dealAmount: data.dealAmount ? parseFloat(data.dealAmount.toString()) : undefined,
       propertyValue: data.propertyValue ? parseFloat(data.propertyValue.toString()) : undefined,
     };

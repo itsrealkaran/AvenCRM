@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { dealsApi } from '@/api/deals.service';
-import { updateDealSchema } from '@/schema/deal.schema';
+import { updateDealSchema } from '@/schema';
 import { DealStatus, PropertyType, UpdateDeal } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -24,11 +25,13 @@ import { BaseEntityDialog, CommonFormFields, NotesField } from '../entity-dialog
 interface EditDealDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  deal: UpdateDeal | null;
+  deal: z.infer<typeof updateDealSchema> | null;
 }
 
 export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps) {
+  const [formKey, setFormKey] = useState(0);
   const queryClient = useQueryClient();
+
   const updateDeal = useMutation({
     mutationFn: async (values: UpdateDeal) => {
       if (!deal?.id) throw new Error('Deal ID is required');
@@ -45,6 +48,14 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
     },
   });
 
+  // Reset form when deal changes
+  useEffect(() => {
+    if (open && deal) {
+      setFormKey((prev) => prev + 1);
+    }
+  }, [open, deal]);
+
+  console.log('Deal: ', deal);
   if (!deal) return null;
 
   const defaultValues: UpdateDeal = {
@@ -53,16 +64,21 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
     email: deal.email ?? '',
     phone: deal.phone ?? '',
     status: deal.status,
-    dealAmount: deal.dealAmount,
-    propertyAddress: deal.propertyAddress ?? '',
-    propertyValue: deal.propertyValue ?? 0,
     propertyType: deal.propertyType,
-    notes: deal.notes ?? [],
-    commissionRate: deal.commissionRate ?? 0,
+    propertyValue: deal.propertyValue ?? 0,
+    dealAmount: deal.dealAmount,
+    notes: deal.notes,
+    propertyAddress: deal.propertyAddress ?? '',
     expectedCloseDate:
       typeof deal.expectedCloseDate === 'string'
         ? new Date(deal.expectedCloseDate)
         : deal.expectedCloseDate,
+    actualCloseDate:
+      typeof deal.actualCloseDate === 'string'
+        ? new Date(deal.actualCloseDate)
+        : deal.actualCloseDate,
+    commissionRate: deal.commissionRate ?? 0,
+    estimatedCommission: deal.estimatedCommission ?? 0,
   };
 
   const handleSubmit = async (values: UpdateDeal) => {
@@ -83,6 +99,7 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
       defaultValues={defaultValues}
       onSubmit={handleSubmit}
       isLoading={updateDeal.isPending}
+      key={formKey}
     >
       {(form) => (
         <>
@@ -99,7 +116,7 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
               name='status'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status 7</FormLabel>
+                  <FormLabel>Status</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
