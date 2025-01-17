@@ -10,7 +10,7 @@ import { SectionNavigator } from "@/components/landing/section-navigator"
 export default function Home() {
   return (
     <main className="bg-white selection:bg-violet-200">
-      <section id="hero">
+      <section id="hero" className="bg-gradient-to-br from-[#9BF3F0] via-[#DAFFED] to-[#FFC2B4]">
         <Hero />
       </section>
       <section id="video-section" className="bg-gradient-to-b from-blue-50 via-white to-blue-50">
@@ -22,10 +22,10 @@ export default function Home() {
       <section id="insights">
         <InsightsSection />
       </section>
-      <section id="brands">
+      <section id="brands" className="border-t-2 border-[#d6d6d6]">
         <BrandsSection />
       </section>
-      <section id="faq">
+      <section id="faq" className="border-t-2 border-[#d6d6d6]">
         <FaqSection />
       </section>
       <Footer />

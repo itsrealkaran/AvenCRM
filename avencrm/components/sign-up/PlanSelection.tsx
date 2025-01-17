@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Switch } from "@/components/ui/switch"
-import { useSignUp } from './SignUpContext'
+import { useSignUp } from '@/contexts/SignUpContext'
 
 interface StepProps {
   onNext: () => void

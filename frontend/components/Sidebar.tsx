@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { type LucideIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { TypeIcon as type, type LucideIcon, ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
 
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import Logo from '@/components/logo';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import Logo from './logo';
 
 interface MenuItem {
   heading: string;
@@ -41,13 +42,15 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const mainMenuItems = menuItems.slice(0, 8);
+  const iconTrayItems = menuItems.slice(8);
+
   return (
     <div
       className={`h-screen z-50 sticky top-0 select-none overflow-x-hidden bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
         ${isMobile ? 'absolute' : 'relative'}`}
     >
-      {/* Logo and Brand */}
       <div
         className={`w-full flex items-center gap-[2px] pb-[30px] ${isCollapsed ? 'justify-center' : ''}`}
       >
@@ -60,13 +63,12 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
             className='text-[1.24rem] text-[#5932ea] flex gap-[2px] items-end font-bold'
           >
             <h1>AvenCRM</h1>
-            <span className='text-[10px] opacity-70 pb-[3px]'>v.01</span>
           </Link>
         )}
       </div>
 
       <div className='w-full h-[calc(100%-120px)] flex flex-col gap-[2px] overflow-y-auto'>
-        {menuItems.map((item, index) => (
+        {mainMenuItems.map((item, index) => (
           <TooltipProvider key={index}>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -99,9 +101,35 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
             </Tooltip>
           </TooltipProvider>
         ))}
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              className={`w-full mt-2 ${isCollapsed ? '' : 'justify-start'} ${isCollapsed ? 'px-2' : 'px-4'} text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
+            >
+              <MoreHorizontal className="h-5 w-5" />
+              {!isCollapsed && <span className="ml-2">More Options</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-56" align={isCollapsed ? 'center' : 'start'} side="right">
+            <div className="grid gap-2">
+              {iconTrayItems.map((item, index) => (
+                <Link
+                  key={index}
+                  href={item.path}
+                  className={`flex items-center rounded-md p-2 text-sm transition-colors
+                    ${pathname === item.path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  <item.icon className="mr-2 h-4 w-4" />
+                  <span>{item.heading}</span>
+                </Link>
+              ))}
+            </div>
+          </PopoverContent>
+        </Popover>
       </div>
 
-      {/* Collapse/Expand Button */}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

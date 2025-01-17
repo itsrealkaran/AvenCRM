@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useSignUp } from './SignUpContext'
+import { useSignUp } from '@/contexts/SignUpContext'
 
 interface StepProps {
   onNext: () => void
@@ -48,15 +48,6 @@ export default function PersonalInfo({ onNext, onBack }: StepProps) {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input 
-            id="phone" 
-            placeholder="Enter your phone number" 
-            value={phone}
-            onChange={(e) => updateField('phone', e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
           <Label htmlFor="gender">Gender</Label>
           <Select
             value={gender}
@@ -71,6 +62,15 @@ export default function PersonalInfo({ onNext, onBack }: StepProps) {
               <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="phone">Phone</Label>
+          <Input 
+            id="phone" 
+            placeholder="Enter your phone number" 
+            value={phone}
+            onChange={(e) => updateField('phone', e.target.value)}
+          />
         </div>
       </div>
 

@@ -4,15 +4,15 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from "framer-motion"
 import Link from "next/link"
 import Image from "next/image"
-import { SignUpProvider } from '../contexts/SignUpContext'
-import PlanSelection from '../../components/sign-up/PlanSelection'
-import CompanyDetails from '../../components/sign-up/CompanyDetails'
-import CompanyAddress from '../../components/sign-up/CompanyAddress'
-import CompanySize from '../../components/sign-up/CompanySize'
-import PersonalInfo from '../../components/sign-up/PersonalInfo'
-import SetPassword from '../../components/sign-up/SetPassword'
-import Preferences from '../../components/sign-up/Preferences'
-import Success from '../../components/sign-up/Success'
+import { SignUpProvider } from '@/contexts/SignUpContext'
+import PlanSelection from '@/components/sign-up/PlanSelection'
+import CompanyDetails from '@/components/sign-up/CompanyDetails'
+import CompanyAddress from '@/components/sign-up/CompanyAddress'
+import CompanySize from '@/components/sign-up/CompanySize'
+import PersonalInfo from '@/components/sign-up/PersonalInfo'
+import SetPassword from '@/components/sign-up/SetPassword'
+import Preferences from '@/components/sign-up/Preferences'
+import Success from '@/components/sign-up/Success'
 import { Loader2 } from 'lucide-react'
 
 export default function SignUp() {
@@ -73,7 +73,7 @@ export default function SignUp() {
                     {step === 5 && <PersonalInfo onNext={nextStep} onBack={prevStep} />}
                     {step === 6 && <Preferences onNext={nextStep} onBack={prevStep} />}
                     {step === 7 && <SetPassword onNext={handleSignUpComplete} onBack={prevStep} />}
-                    {step === 8 && <Success />}
+                    {step === 8 && <Success onNext={() => {}} />}
                   </>
                 )}
               </AnimatePresence>

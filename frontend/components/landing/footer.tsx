@@ -76,7 +76,6 @@ export function Footer() {
                 className='text-[1rem] md:text-[1.3rem] flex gap-[2px] items-end font-bold'
                   >
                   <h1>AvenCRM</h1>
-                  <span className='text-[6px] md:text-[10px] opacity-70 pb-[3px]'>v.01</span>
                 </div>
               </Link>
               <p className="text-[#5c5f66] max-w-sm">

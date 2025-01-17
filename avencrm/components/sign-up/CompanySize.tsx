@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { useSignUp } from './SignUpContext'
+import { useSignUp } from '@/contexts/SignUpContext'
 
 interface StepProps {
   onNext: () => void

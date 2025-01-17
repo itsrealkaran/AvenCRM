@@ -4,7 +4,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useSignUp } from './SignUpContext'
+import { useSignUp } from "@/contexts/SignUpContext"
 import { useState } from 'react'
 import { Upload } from 'lucide-react'
 

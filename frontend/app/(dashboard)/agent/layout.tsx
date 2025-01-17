@@ -6,7 +6,7 @@ import { LayoutDashboard, Users, Wallet, Monitor, Building2, Store, Handshake, F
 
 const getUserRole = () => {
   
-  return 'agent';
+  return 'teamleader';
 };
 
 const menuItems = [

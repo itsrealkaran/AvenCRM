@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useSignUp } from '../../app/contexts/SignUpContext'
+import { useSignUp } from '../../contexts/SignUpContext'
 import { AlertCircle, Check, X } from 'lucide-react'
 import { signUp } from '../../app/utils/api'
 import { useRouter } from 'next/navigation'

@@ -155,7 +155,7 @@ export function PricingSection() {
         whileInView="visible"
         viewport={{ once: true }}
       >
-        <div className="text-center mb-16">
+        <div className="text-center mb-14">
           <motion.div variants={itemVariants} className="flex items-center justify-center">
             <span className="text-sm font-bold text-[#303030]">PRICING</span>
           </motion.div>
@@ -215,7 +215,7 @@ export function PricingSection() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
-            className="grid md:grid-cols-3 gap-8"
+            className="grid md:grid-cols-3 gap-8 mb-10"
           >
             {plans.map((plan) => (
               <motion.div
@@ -226,7 +226,7 @@ export function PricingSection() {
                 <div className={`p-8 h-full flex flex-col rounded-2xl ${
                   plan.popular 
                     ? 'bg-[#2c3b47] text-white' 
-                    : 'bg-gray-50 mt-20 border border-[#d9dbe9]'
+                    : 'bg-gray-50 mt-16 border border-[#d9dbe9]'
                 }`}>
                   {plan.popular && (
                     <span className="absolute top-4 right-4 text-xs font-medium bg-[#00bdbd] text-white px-3 py-1 rounded-full">

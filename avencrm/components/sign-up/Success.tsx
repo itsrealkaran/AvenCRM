@@ -6,10 +6,9 @@ import Image from "next/image"
 
 interface StepProps {
   onNext: () => void
-  onBack: () => void
 }
 
-export default function Success({ onNext, onBack }: StepProps) {
+export default function Success({ onNext }: StepProps) {
   return (
     <motion.div
       initial={{ opacity: 0, x: 20 }}
