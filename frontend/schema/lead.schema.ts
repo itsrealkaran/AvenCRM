@@ -46,11 +46,18 @@ export const convertToDealSchema = z.object({
   expectedCloseDate: z.string().optional(),
 });
 
+const leadAgentSchema = z.object({
+  name: z.string().nullish(),
+  email: z.string().email().nullish(),
+  phone: z.string().nullish(),
+});
+
 // Response schemas
 export const leadResponseSchema = leadBaseSchema.extend({
   id: z.string().cuid(),
   companyId: z.string().cuid(),
   agentId: z.string().cuid(),
+  agent: leadAgentSchema,
   createdAt: z.date(),
   updatedAt: z.date().nullish(),
 });

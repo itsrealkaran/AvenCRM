@@ -20,7 +20,6 @@ import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/Sidebar';
 
 const getUserRole = () => {
-  
   return 'teamleader';
 };
 

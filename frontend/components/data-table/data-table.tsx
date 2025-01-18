@@ -40,6 +40,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
   filterPlaceholder = 'Filter...',
   disabled = false,
   additionalActions,
+  buttons,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -98,6 +99,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
           className='max-w-sm'
         />
         <div className='ml-auto flex gap-2'>
+          {buttons}
           {additionalActions}
           {onBulkDelete && table.getFilteredSelectedRowModel().rows.length > 0 && (
             <Button
@@ -123,7 +125,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
       </div>
       <div className='rounded-md border'>
         <Table>
-          <TableHeader>
+          <TableHeader className='bg-white'>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

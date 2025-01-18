@@ -89,12 +89,12 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
       {(form) => (
         <>
           <CommonFormFields form={form} isLoading={updateLead.isPending} />
-          <div className='space-y-1 bg-red-200 text-red-800 p-4'>
+          {/* <div className='space-y-1 bg-red-200 text-red-800 p-4'>
             Errors: <p>{JSON.stringify(form.formState.errors, null, 2)}</p>
             Values: <p>{JSON.stringify(form.getValues(), null, 2)}</p>
             Watch: <p>{JSON.stringify(form.watch(), null, 2)}</p>
             Form Valid: <p>{form.formState.isValid ? 'true' : 'false'}</p>
-          </div>
+          </div> */}
           <div className='grid grid-cols-2 gap-4'>
             <FormField
               control={form.control}
@@ -218,7 +218,11 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
             >
               Cancel
             </Button>
-            <Button type='submit' disabled={updateLead.isPending} className='min-w-[100px]'>
+            <Button
+              type='submit'
+              disabled={updateLead.isPending || !form.formState.isValid}
+              className='min-w-[100px]'
+            >
               {updateLead.isPending ? (
                 <>
                   <Loader2 className='mr-2 h-4 w-4 animate-spin' />

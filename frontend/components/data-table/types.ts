@@ -19,4 +19,5 @@ export interface DataTableProps<TData extends BaseRecord, TValue> {
   filterPlaceholder?: string;
   disabled?: boolean;
   additionalActions?: React.ReactNode;
+  buttons?: React.ReactNode;
 }

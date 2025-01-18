@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
-import { Lead } from '@/types';
+import { LeadResponse as Lead } from '@/types';
 import { useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { CalendarIcon, DollarSign } from 'lucide-react';

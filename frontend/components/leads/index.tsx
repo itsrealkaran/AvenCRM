@@ -2,7 +2,7 @@
 
 import { SetStateAction, useCallback, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
-import { DealStatus, LeadResponse as Lead, LeadStatus } from '@/types';
+import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,8 +10,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
 
 import { DataTable } from '../data-table';
+import { adminColumns } from './admin-columns';
 import { columns } from './columns';
 import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -32,6 +34,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: response, isLoading } = useQuery({
     queryKey: ['leads'],
@@ -163,7 +166,7 @@ export default function LeadsPage() {
 
         <div className='space-4 p-6'>
           <DataTable
-            columns={columns}
+            columns={user?.role === UserRole.ADMIN ? adminColumns : columns}
             data={leads}
             onEdit={handleEdit}
             onBulkDelete={async (row: any[]) => {
