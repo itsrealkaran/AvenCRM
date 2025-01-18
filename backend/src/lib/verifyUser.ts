@@ -1,4 +1,4 @@
-import {prisma} from "../lib/prisma.js"
+import {prisma} from "./prisma.js"
 
 export const verifyAdmin = async (id: string) => {
     const admin = await prisma.user.findFirst({

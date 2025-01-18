@@ -10,7 +10,6 @@ import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import Logo from './logo';
 
 interface MenuItem {
   heading: string;

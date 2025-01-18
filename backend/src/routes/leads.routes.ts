@@ -19,9 +19,6 @@ router.post('/', leadsController.createLead);
 // Update lead
 router.put('/:id', leadsController.updateLead);
 
-// Update lead status
-router.patch('/:id/status', leadsController.updateLeadStatus);
-
 // Delete single lead
 router.delete('/:id', leadsController.deleteLead);
 
