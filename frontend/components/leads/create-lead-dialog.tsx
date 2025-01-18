@@ -79,13 +79,6 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       {(form) => (
         <>
           <CommonFormFields form={form} isLoading={isLoading} />
-
-          <div className='space-y-1 bg-red-200 text-red-800 p-4'>
-            Errors: <p>{JSON.stringify(form.formState.errors, null, 2)}</p>
-            Values: <p>{JSON.stringify(form.getValues(), null, 2)}</p>
-            Watch: <p>{JSON.stringify(form.watch(), null, 2)}</p>
-            Form Valid: <p>{form.formState.isValid ? 'true' : 'false'}</p>
-          </div>
           <div className='grid grid-cols-2 gap-4'>
             <FormField
               control={form.control}

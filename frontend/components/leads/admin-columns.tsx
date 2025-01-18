@@ -15,7 +15,6 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -46,33 +45,7 @@ const getStatusColor = (status: LeadStatus) => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
-export const columns: ColumnDef<Lead>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+export const adminColumns: ColumnDef<Lead>[] = [
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -85,6 +58,14 @@ export const columns: ColumnDef<Lead>[] = [
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );
+    },
+  },
+  {
+    accessorKey: 'agent.name',
+    header: 'Created By',
+    cell: ({ row }) => {
+      const agent = row.original.agent;
+      return agent?.name || 'N/A';
     },
   },
   {
@@ -224,13 +205,13 @@ export const columns: ColumnDef<Lead>[] = [
             </DialogHeader>
             <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
               {notes.map((note, index) => (
-                <div key={index} className='space-y-2'>
+                <div key={index} className='space-y-1'>
                   <div className='flex items-center gap-2'>
                     <span className='text-gray-600'>
                       {format(new Date(note.time), 'MMM d, yyyy')}
-                    </span>{' '}
-                    {note.note}
+                    </span>
                   </div>
+                  <p className='text-gray-700'>{note.note}</p>
                 </div>
               ))}
             </div>
