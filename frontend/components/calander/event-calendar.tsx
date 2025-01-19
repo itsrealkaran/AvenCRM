@@ -365,20 +365,18 @@ export default function CalendarView() {
             onClick={handleConnectGoogle}
             disabled={loading || isGoogleConnected}
           >
-            <img src='/google-calendar.svg' alt='Google Calendar' className='w-4 h-4 mr-2' />
+            <Calendar className="w-4 h-4 mr-2" />
             {isGoogleConnected ? 'Connected to Google' : 'Connect Google Calendar'}
           </Button>
           <Button
-            variant='outline'
-            className='bg-white hover:bg-gray-50 text-xs sm:text-sm'
-            onClick={() =>
-              toast({
-                title: 'Coming soon',
-                description: 'Outlook sync will be available soon!',
-              })
-            }
+            variant="outline"
+            className="bg-white hover:bg-gray-50 text-xs sm:text-sm"
+            onClick={() => toast({
+              title: "Coming soon",
+              description: "Outlook sync will be available soon!",
+            })}
           >
-            <img src='/outlook.svg' alt='Outlook' className='w-4 h-4 mr-2' />
+            <Calendar className="w-4 h-4 mr-2" />
             Sync with Outlook
           </Button>
           <Button
