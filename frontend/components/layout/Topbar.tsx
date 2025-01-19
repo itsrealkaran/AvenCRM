@@ -2,12 +2,12 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/api/api';
 import { QuestionMarkIcon } from '@radix-ui/react-icons';
-import { Search, Settings, User } from 'lucide-react';
+import { Search, Settings } from 'lucide-react';
 import { CiBellOn } from 'react-icons/ci';
-import { FaQuestion } from 'react-icons/fa6';
 import { IoCaretDown, IoCaretUp } from 'react-icons/io5';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { NotificationList } from '@/components/NotificationList';
 
 import { SignOutButton } from '@/components/SignOutButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +24,7 @@ export default function Topbar() {
   const router = useRouter();
   const { user } = useAuth();
   const [isDropdownActive, setIsDropdownActive] = useState(false);
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -33,16 +34,24 @@ export default function Topbar() {
   };
 
   return (
-    <div className='w-full px-4 py-4 shadow-lg shadow-black/10 z-40 flex justify-between bg-white  items-center'>
+    <div className='w-full px-4 py-4 shadow-lg shadow-black/10 z-40 flex justify-between bg-white items-center'>
       <div className='relative w-[20%]'>
         <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
         <Input type='search' placeholder='Search dashboard...' className='pl-8 bg-background' />
       </div>
 
       <div className='flex items-center gap-4 cursor-pointer'>
-        <div className='w-7 h-7 flex opacity-50 items-center justify-center text-[1.2rem] rounded-[8px] border-black/70 border-[1px]'>
-          <CiBellOn />
-        </div>
+        <Popover open={notificationOpen} onOpenChange={setNotificationOpen}>
+          <PopoverTrigger asChild>
+            <div className='relative w-7 h-7 flex items-center justify-center text-[1.2rem] rounded-[8px] border-black/70 border-[1px] hover:bg-accent transition-colors'>
+              <CiBellOn />
+              <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></span>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="end">
+            <NotificationList />
+          </PopoverContent>
+        </Popover>
         <div className='w-7 h-7 flex items-center opacity-50 justify-center text-[1.1rem] rounded-[8px] border-black/70 border-[1px]'>
           <QuestionMarkIcon />
         </div>
@@ -91,3 +100,4 @@ export default function Topbar() {
     </div>
   );
 }
+
