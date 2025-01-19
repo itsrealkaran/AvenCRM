@@ -45,7 +45,7 @@ const getStatusColor = (status: DealStatus): string => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
-export const columns: ColumnDef<Deal>[] = [
+export const adminColumns: ColumnDef<Deal>[] = [
   {
     id: 'select',
     header: ({ table }) => (
