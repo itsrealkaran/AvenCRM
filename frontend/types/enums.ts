@@ -29,6 +29,13 @@ export enum PropertyType {
   LAND = 'LAND',
 }
 
+export enum PropertyStatus {
+  ACTIVE = 'ACTIVE',
+  PENDING = 'PENDING',
+  SOLD = 'SOLD',
+  INACTIVE = 'INACTIVE',
+}
+
 export enum TransactionType {
   INCOME = 'INCOME',
   EXPENSE = 'EXPENSE',

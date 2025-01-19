@@ -13,7 +13,6 @@ import {
 import { InputJsonValue } from '@prisma/client/runtime/library';
 import logger from '../utils/logger.js';
 import multer from 'multer';
-import { z } from 'zod';
 import { LeadStatus } from '@prisma/client';
 
 const upload = multer();
@@ -171,6 +170,31 @@ export const leadsController: Controller  = {
                   .map((note) => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined
               : undefined,
           },
+
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            source: true,
+            status: true,
+            propertyType: true,
+            budget: true,
+            location: true,
+            lastContactDate: true,
+            expectedDate: true,
+            agent: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            },
+            agentId: true,
+            companyId: true,
+            createdAt: true,
+            updatedAt: true
+          }
         });
 
         // Validate the response before sending it back
@@ -199,6 +223,30 @@ export const leadsController: Controller  = {
             ...leadData,
             notes: leadData.notes ? leadData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
           },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            source: true,
+            status: true,
+            propertyType: true,
+            budget: true,
+            location: true,
+            lastContactDate: true,
+            expectedDate: true,
+            agent: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            },
+            agentId: true,
+            companyId: true,
+            createdAt: true,
+            updatedAt: true
+          }
         });
   
         const validatedResponse = leadResponseSchema.parse(lead);

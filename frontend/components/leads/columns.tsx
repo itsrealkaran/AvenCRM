@@ -88,6 +88,14 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
+    accessorKey: 'agent.name',
+    header: 'Created By',
+    cell: ({ row }) => {
+      const agent = row.original.agent;
+      return agent?.name || 'N/A';
+    },
+  },
+  {
     accessorKey: 'email',
     header: ({ column }) => {
       return (

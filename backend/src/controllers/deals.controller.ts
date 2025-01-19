@@ -180,6 +180,32 @@ export const dealsController: Controller  = {
                   .map((note) => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined
               : undefined,
           },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            dealAmount: true,
+            status: true,
+            propertyType: true,
+            propertyAddress: true,
+            propertyValue: true,
+            expectedCloseDate: true,
+            actualCloseDate: true,
+            commissionRate: true,
+            estimatedCommission: true,
+            agent: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            },
+            agentId: true,
+            companyId: true,
+            createdAt: true,
+            updatedAt: true
+          }
         });
 
         // Validate the response before sending it back
@@ -223,6 +249,33 @@ export const dealsController: Controller  = {
             ...dealData,
             notes: dealData.notes ? dealData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
           },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true,
+            dealAmount: true,
+            status: true,
+            notes: true,
+            propertyType: true,
+            propertyAddress: true,
+            propertyValue: true,
+            expectedCloseDate: true,
+            actualCloseDate: true,
+            commissionRate: true,
+            estimatedCommission: true,
+            agent: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            },
+            agentId: true,
+            companyId: true,
+            createdAt: true,
+            updatedAt: true
+          }
         });
   
         const validatedResponse = dealResponseSchema.parse(deal);

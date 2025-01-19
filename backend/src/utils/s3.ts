@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3"
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand, PutObjectCommandOutput } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import dotenv from 'dotenv'
 
@@ -17,7 +17,16 @@ const s3Client = new S3Client({
   region: region,
 });
 
-export function uploadFile(fileBuffer: Buffer, fileName: string, mimetype: string) {
+interface UploadResult {
+  url: string;
+  key: string;
+}
+
+export async function uploadFile(fileBuffer: Buffer, fileName: string, mimetype: string): Promise<UploadResult> {
+  if (!bucketName) {
+    throw new Error('AWS S3 Bucket name is not configured');
+  }
+
   const uploadParams = {
     Bucket: bucketName,
     Body: fileBuffer,
@@ -25,7 +34,20 @@ export function uploadFile(fileBuffer: Buffer, fileName: string, mimetype: strin
     ContentType: mimetype
   }
 
-  return s3Client.send(new PutObjectCommand(uploadParams));
+  try {
+    await s3Client.send(new PutObjectCommand(uploadParams));
+
+    // Construct the S3 URL manually
+    const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
+
+    return {
+      url: imageUrl,
+      key: fileName
+    };
+  } catch (error) {
+    console.error('S3 Upload Error:', error);
+    throw error;
+  }
 }
 
 export function deleteFile(fileName: string) {

@@ -17,7 +17,7 @@ import logger from './utils/logger.js';
 import { manageCalendar } from './routes/calander.routes.js'
 import { companyMonitoring } from './routes/company/companyMonitoring.js';
 import { manageSubscription } from './routes/company/subscription.js';
-import { propertyRoutes } from './routes/propertyRoutes.js';
+import propertyRoutes from './routes/property.routes.js';
 import { propertyView } from './routes/publicPropertyView.js';
 import cookieParser from 'cookie-parser';
 import { teamRoutes } from './routes/team.routes.js';

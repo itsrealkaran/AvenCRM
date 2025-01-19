@@ -44,11 +44,18 @@ export const dealFilterSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional(),
 });
 
+const leadAgentSchema = z.object({
+  name: z.string().nullish(),
+  email: z.string().email().nullish(),
+  phone: z.string().nullish(),
+});
+
 // Response schemas
 export const dealResponseSchema = dealBaseSchema.extend({
   id: z.string().cuid(),
   companyId: z.string().cuid(),
   agentId: z.string().cuid(),
+  agent: leadAgentSchema,
   createdAt: z.date(),
   updatedAt: z.date().nullish(),
 });
