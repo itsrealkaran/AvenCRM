@@ -267,44 +267,4 @@ export const columns: ColumnDef<Deal>[] = [
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },
   },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row, table }) => {
-      const deal = row.original as Deal;
-      const meta = table.options.meta as {
-        onEdit?: (deal: Deal) => void;
-        onDelete?: (dealId: string) => void;
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[160px]'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(deal)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit deal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(deal.id)} className='text-red-600'>
-              <Trash2 className='mr-2 h-4 w-4' /> Delete deal
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                navigator.clipboard.writeText(deal.id);
-                toast.success('Deal ID copied to clipboard');
-              }}
-            >
-              <CopyIcon className='mr-2 h-4 w-4' /> Copy deal ID
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
 ];

@@ -89,19 +89,19 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
+      <DialogContent className='sm:max-w-[800px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Create New Property</DialogTitle>
           <DialogDescription>Add a new property to your listings</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
-            <div className='space-y-1 bg-red-200 text-red-800 p-4'>
+            {/* <div className='space-y-1 bg-red-200 text-red-800 p-4'>
               Errors: <p>{JSON.stringify(form.formState.errors, null, 2)}</p>
               Values: <p>{JSON.stringify(form.getValues(), null, 2)}</p>
               Watch: <p>{JSON.stringify(form.watch(), null, 2)}</p>
               Form Valid: <p>{form.formState.isValid ? 'true' : 'false'}</p>
-            </div>
+            </div> */}
             <FormField
               control={form.control}
               name='title'
