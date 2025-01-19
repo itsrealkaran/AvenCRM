@@ -95,13 +95,7 @@ const menuItems = [
     icon: Wallet,
     path: '/agent/transactions',
     description: 'Transaction history',
-  },
-  {
-    heading: 'Settings',
-    icon: Settings,
-    path: '/agent/settings',
-    description: 'System preferences',
-  },
+  }
 ];
 
 if (getUserRole() === 'teamleader') {
