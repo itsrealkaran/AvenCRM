@@ -26,7 +26,7 @@ export const propertiesApi = {
   },
 
   // Create a new property with files
-  createProperty: async (data: CreateProperty): Promise<PropertyResponse> => {
+  createProperty: async (data: CreateProperty, files?: File[]): Promise<PropertyResponse> => {
     const formData = new FormData();
 
     // Clean up the data and handle numeric values
@@ -37,6 +37,12 @@ export const propertiesApi = {
     };
 
     formData.append('data', JSON.stringify(cleanData));
+
+    if (files) {
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+    }
 
     const response = await api.post<PropertyResponse>('/property', formData, {
       headers: {

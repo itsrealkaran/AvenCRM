@@ -3,9 +3,11 @@ import React from 'react';
 import Calendar from '@/components/calander/event-calendar';
 
 function CalendarPage() {
-  return <section className='flex-1 rounded-xl shadow-lg bg-white'>
+  return (
+    <section className='flex-1 rounded-xl shadow-lg bg-white'>
       <Calendar />
-    </section> ;
+    </section>
+  );
 }
 
 export default CalendarPage;

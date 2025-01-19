@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { propertiesApi } from '@/api/property.service';
 import { createPropertySchema } from '@/schema/property.schema';
-import { Property, PropertyStatus, PropertyType, UpdateProperty } from '@/types/property';
+import { PropertyStatus, PropertyType, UpdateProperty } from '@/types/property';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -36,6 +36,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
+import DocumentUpload from '../documents/document-upload';
+
 interface EditPropertyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,6 +46,7 @@ interface EditPropertyDialogProps {
 
 export function EditPropertyDialog({ open, onOpenChange, property }: EditPropertyDialogProps) {
   const queryClient = useQueryClient();
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const form = useForm({
     resolver: zodResolver(createPropertySchema),
     defaultValues: {
@@ -80,7 +83,7 @@ export function EditPropertyDialog({ open, onOpenChange, property }: EditPropert
 
   const updateProperty = useMutation({
     mutationFn: async (data: UpdateProperty) => {
-      return propertiesApi.updateProperty(property!.id, data);
+      return propertiesApi.updateProperty(property?.id ?? '', data, selectedFiles);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
@@ -92,14 +95,17 @@ export function EditPropertyDialog({ open, onOpenChange, property }: EditPropert
     },
   });
 
-  const onSubmit = (data: any) => {
-    if (!property) return;
+  const onSubmit = (data: UpdateProperty) => {
     updateProperty.mutate(data);
+  };
+
+  const handleFilesChange = (files: File[]) => {
+    setSelectedFiles(files);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[600px]'>
+      <DialogContent className='sm:max-w-[600px] max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Edit Property</DialogTitle>
           <DialogDescription>Update property information</DialogDescription>
@@ -140,7 +146,12 @@ export function EditPropertyDialog({ open, onOpenChange, property }: EditPropert
                   <FormItem>
                     <FormLabel>Price</FormLabel>
                     <FormControl>
-                      <Input type='number' placeholder='Enter price' {...field} />
+                      <Input
+                        type='number'
+                        placeholder='Enter budget'
+                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        value={field.value || ''}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -249,6 +260,14 @@ export function EditPropertyDialog({ open, onOpenChange, property }: EditPropert
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+            </div>
+            <div className='space-y-4'>
+              <h3 className='text-lg font-medium'>Documents</h3>
+              <DocumentUpload
+                onFilesChange={handleFilesChange}
+                existingFiles={[]}
+                disabled={false}
               />
             </div>
             <DialogFooter>

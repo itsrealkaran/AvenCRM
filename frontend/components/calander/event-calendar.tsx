@@ -1,21 +1,20 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import moment from 'moment';
 import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Search } from 'lucide-react';
+import moment from 'moment';
 
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { GoogleCalendarService } from '@/lib/google-calendar';
+import { useToast } from '@/hooks/use-toast';
 
 import { createEvent, deleteEvent, fetchEvents, updateEvent } from './api';
+import EventCard from './event-card';
 import EventModal from './event-modal';
 import { getEventStyle } from './event-utils';
-import EventCard from './event-card';
-
-import { useToast } from '@/hooks/use-toast';
-import { GoogleCalendarService } from '@/lib/google-calendar';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -80,9 +79,10 @@ export default function CalendarView() {
   }, [loadEvents]);
 
   useEffect(() => {
-    const filtered = events.filter(event =>
-      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    const filtered = events.filter(
+      (event) =>
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.description?.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredEvents(filtered);
   }, [searchTerm, events]);
@@ -275,9 +275,7 @@ export default function CalendarView() {
       const isToday = day.isSame(moment(), 'day');
       const isSelected = day.isSame(selectedDate, 'day');
 
-      const dayEvents = filteredEvents.filter(event =>
-        moment(event.start).isSame(day, 'day')
-      );
+      const dayEvents = filteredEvents.filter((event) => moment(event.start).isSame(day, 'day'));
 
       week.push(
         <button
@@ -285,19 +283,22 @@ export default function CalendarView() {
           onClick={() => handleSelectDate(day)}
           className={`flex flex-col items-start justify-start p-1 sm:p-2 h-16 sm:h-24 w-full border border-gray-200 transition-all duration-200 ease-in-out ${
             isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
-          } ${isToday ? 'font-bold bg-blue-100' : ''} ${
-            isSelected ? 'bg-purple-100' : ''
-          }`}
+          } ${isToday ? 'font-bold bg-blue-100' : ''} ${isSelected ? 'bg-purple-100' : ''}`}
         >
-          <span className={`text-xs sm:text-sm ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}>
+          <span
+            className={`text-xs sm:text-sm ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}
+          >
             {day.format('D')}
           </span>
-          <div className="flex flex-col w-full mt-1 space-y-1 overflow-hidden">
+          <div className='flex flex-col w-full mt-1 space-y-1 overflow-hidden'>
             {dayEvents.slice(0, 2).map((event, index) => (
               <div
                 key={event.id}
-                className="w-full text-xs truncate px-1 py-0.5 rounded cursor-pointer hover:opacity-80"
-                style={{ backgroundColor: getEventStyle(event).backgroundColor, color: getEventStyle(event).textColor }}
+                className='w-full text-xs truncate px-1 py-0.5 rounded cursor-pointer hover:opacity-80'
+                style={{
+                  backgroundColor: getEventStyle(event).backgroundColor,
+                  color: getEventStyle(event).textColor,
+                }}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSelectEvent(event);
@@ -307,14 +308,17 @@ export default function CalendarView() {
               </div>
             ))}
             {dayEvents.length > 2 && (
-              <div className="text-xs text-gray-500 cursor-pointer hover:text-gray-700" onClick={(e) => {
-                e.stopPropagation();
-                // TODO: Implement a modal to show all events for this day
-                toast({
-                  title: 'Coming soon',
-                  description: 'View all events for this day',
-                });
-              }}>
+              <div
+                className='text-xs text-gray-500 cursor-pointer hover:text-gray-700'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // TODO: Implement a modal to show all events for this day
+                  toast({
+                    title: 'Coming soon',
+                    description: 'View all events for this day',
+                  });
+                }}
+              >
                 +{dayEvents.length - 2} more
               </div>
             )}
@@ -324,7 +328,7 @@ export default function CalendarView() {
 
       if (week.length === 7) {
         calendar.push(
-          <div key={day.format('YYYY-MM-DD')} className="grid grid-cols-7 gap-px">
+          <div key={day.format('YYYY-MM-DD')} className='grid grid-cols-7 gap-px'>
             {week}
           </div>
         );
@@ -334,7 +338,7 @@ export default function CalendarView() {
 
     if (week.length > 0) {
       calendar.push(
-        <div key={endDay.format('YYYY-MM-DD')} className="grid grid-cols-7 gap-px">
+        <div key={endDay.format('YYYY-MM-DD')} className='grid grid-cols-7 gap-px'>
           {week}
         </div>
       );
@@ -343,114 +347,106 @@ export default function CalendarView() {
     return calendar;
   };
 
-  const selectedDateEvents = filteredEvents.filter(event =>
+  const selectedDateEvents = filteredEvents.filter((event) =>
     moment(event.start).isSame(selectedDate, 'day')
   );
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 pb-0 space-y-4 sm:space-y-0">
+    <div className='flex flex-col h-full'>
+      <div className='flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 sm:p-6 pb-0 space-y-4 sm:space-y-0'>
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Calendar</h1>
-          <p className="text-sm text-gray-500">Manage your events and schedules</p>
+          <h1 className='text-2xl font-semibold text-gray-900'>Calendar</h1>
+          <p className='text-sm text-gray-500'>Manage your events and schedules</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className='flex flex-wrap items-center gap-3'>
           <Button
-            variant="outline"
-            className="bg-white hover:bg-gray-50 text-xs sm:text-sm"
+            variant='outline'
+            className='bg-white hover:bg-gray-50 text-xs sm:text-sm'
             onClick={handleConnectGoogle}
             disabled={loading || isGoogleConnected}
           >
-            <img
-              src="/google-calendar.svg"
-              alt="Google Calendar"
-              className="w-4 h-4 mr-2"
-            />
+            <img src='/google-calendar.svg' alt='Google Calendar' className='w-4 h-4 mr-2' />
             {isGoogleConnected ? 'Connected to Google' : 'Connect Google Calendar'}
           </Button>
           <Button
-            variant="outline"
-            className="bg-white hover:bg-gray-50 text-xs sm:text-sm"
-            onClick={() => toast({
-              title: "Coming soon",
-              description: "Outlook sync will be available soon!",
-            })}
+            variant='outline'
+            className='bg-white hover:bg-gray-50 text-xs sm:text-sm'
+            onClick={() =>
+              toast({
+                title: 'Coming soon',
+                description: 'Outlook sync will be available soon!',
+              })
+            }
           >
-            <img
-              src="/outlook.svg"
-              alt="Outlook"
-              className="w-4 h-4 mr-2"
-            />
+            <img src='/outlook.svg' alt='Outlook' className='w-4 h-4 mr-2' />
             Sync with Outlook
           </Button>
           <Button
             onClick={handleSelectSlot}
-            className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium text-xs sm:text-sm"
+            className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium text-xs sm:text-sm'
           >
-            <Plus className="w-4 h-4 mr-2" />
+            <Plus className='w-4 h-4 mr-2' />
             Add Event
           </Button>
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 flex-1">
-      <div className="h-full">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full flex flex-col">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold">{currentDate.format('MMMM YYYY')}</h2>
-              <div className="flex gap-2">
+      <div className='p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 flex-1'>
+        <div className='h-full'>
+          <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full flex flex-col'>
+            <div className='flex justify-between items-center mb-4'>
+              <h2 className='text-lg sm:text-xl font-semibold'>
+                {currentDate.format('MMMM YYYY')}
+              </h2>
+              <div className='flex gap-2'>
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant='outline'
+                  size='icon'
                   onClick={() => setCurrentDate(currentDate.clone().subtract(1, 'month'))}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className='h-4 w-4' />
                 </Button>
                 <Button
-                  variant="outline"
-                  size="icon"
+                  variant='outline'
+                  size='icon'
                   onClick={() => setCurrentDate(currentDate.clone().add(1, 'month'))}
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className='h-4 w-4' />
                 </Button>
               </div>
             </div>
-            <div className="grid grid-cols-7 gap-px mb-2">
-              {WEEKDAYS.map(day => (
-                <div key={day} className="text-center text-xs sm:text-sm font-medium text-gray-500">
+            <div className='grid grid-cols-7 gap-px mb-2'>
+              {WEEKDAYS.map((day) => (
+                <div key={day} className='text-center text-xs sm:text-sm font-medium text-gray-500'>
                   {day}
                 </div>
               ))}
             </div>
-            <ScrollArea className="flex-grow">
-              <div className="space-y-px">
-                {renderCalendar()}
-              </div>
+            <ScrollArea className='flex-grow'>
+              <div className='space-y-px'>{renderCalendar()}</div>
             </ScrollArea>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="w-full">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <div className="flex items-center gap-2 text-gray-700">
-                <Calendar className="h-5 w-5" />
-                <h2 className="font-medium">
-                  {selectedDate.format('MMMM D, YYYY')}
-                </h2>
+        <div className='bg-white rounded-lg shadow-sm border border-gray-200'>
+          <div className='w-full'>
+            <div className='flex items-center justify-between p-4 border-b border-gray-200'>
+              <div className='flex items-center gap-2 text-gray-700'>
+                <Calendar className='h-5 w-5' />
+                <h2 className='font-medium'>{selectedDate.format('MMMM D, YYYY')}</h2>
               </div>
             </div>
-            <div className="p-0">
-              <ScrollArea className="h-[calc(100vh-15rem)]">
-                <div className="p-4">
+            <div className='p-0'>
+              <ScrollArea className='h-[calc(100vh-15rem)]'>
+                <div className='p-4'>
                   {selectedDateEvents.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Clock className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-                      <p className="font-medium">No events scheduled</p>
-                      <p className="text-sm">Click the + button to add a new event</p>
+                    <div className='text-center py-8 text-gray-500'>
+                      <Clock className='h-12 w-12 mx-auto mb-3 text-gray-400' />
+                      <p className='font-medium'>No events scheduled</p>
+                      <p className='text-sm'>Click the + button to add a new event</p>
                     </div>
                   ) : (
-                    <div className="space-y-4">
+                    <div className='space-y-4'>
                       {selectedDateEvents.map((event) => (
                         <EventCard
                           key={event.id}
@@ -477,4 +473,3 @@ export default function CalendarView() {
     </div>
   );
 }
-

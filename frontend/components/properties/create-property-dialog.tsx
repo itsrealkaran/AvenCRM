@@ -1,8 +1,9 @@
 'use client';
 
+import { useRef, useState } from 'react';
 import { propertiesApi } from '@/api/property.service';
 import { createPropertySchema } from '@/schema/property.schema';
-import { CreateProperty, Property, PropertyStatus, PropertyType } from '@/types/property';
+import { CreateProperty, PropertyStatus, PropertyType } from '@/types/property';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -35,6 +36,8 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 
+import DocumentUpload from '../documents/document-upload';
+
 interface CreatePropertyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -42,6 +45,8 @@ interface CreatePropertyDialogProps {
 
 export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialogProps) {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const form = useForm({
     resolver: zodResolver(createPropertySchema),
     defaultValues: {
@@ -61,7 +66,7 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
 
   const createProperty = useMutation({
     mutationFn: async (data: CreateProperty) => {
-      return propertiesApi.createProperty(data);
+      return propertiesApi.createProperty(data, selectedFiles);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] });
@@ -74,8 +79,12 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: CreateProperty) => {
     createProperty.mutate(data);
+  };
+
+  const handleFilesChange = (files: File[]) => {
+    setSelectedFiles(files);
   };
 
   return (
@@ -256,6 +265,14 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
                     <FormMessage />
                   </FormItem>
                 )}
+              />
+            </div>
+            <div className='space-y-4'>
+              <h3 className='text-lg font-medium'>Documents</h3>
+              <DocumentUpload
+                onFilesChange={handleFilesChange}
+                existingFiles={[]}
+                disabled={false}
               />
             </div>
             <DialogFooter>

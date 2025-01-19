@@ -53,9 +53,9 @@ export function PropertyCard({ property, onEdit, onDelete }: PropertyCardProps) 
     <Card className='w-full max-w-sm transition-all hover:shadow-lg'>
       <CardHeader className='relative p-0'>
         <div className='relative h-48 w-full overflow-hidden'>
-          {!isImageError && property.images[0] ? (
+          {!isImageError && property?.images?.[0] ? (
             <Image
-              src={property.images[0].imageUrl}
+              src={property?.images[0]}
               alt={property.title}
               fill
               className='object-cover'

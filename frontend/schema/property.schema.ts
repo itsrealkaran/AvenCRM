@@ -21,7 +21,7 @@ export const createPropertySchema = propertyBaseSchema;
 
 // Schema for updating a property
 export const updatePropertySchema = propertyBaseSchema.partial().extend({
-  id: z.string().cuid(),
+  id: z.string().cuid().optional(),
   images: z.array(z.string()).optional(),
 });
 

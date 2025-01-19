@@ -97,7 +97,7 @@ const menuItems = [
     icon: Wallet,
     path: '/admin/transactions',
     description: 'Transaction history',
-  }
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

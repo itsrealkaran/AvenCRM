@@ -12,6 +12,7 @@ import {
 import logger from '../utils/logger.js';
 import multer from 'multer';
 import { uploadFile } from '../utils/s3.js';
+import { v4 as uuidv4 } from 'uuid';
 
 const upload = multer();
 
@@ -133,7 +134,7 @@ export const propertiesController: Controller = {
   },
 
   createProperty: [
-    upload.none(),
+    upload.array('files', 10),
     async (req: Request, res: Response) => {
       try {
         const rawData = req.body.data;
@@ -142,7 +143,6 @@ export const propertiesController: Controller = {
         }
 
         const parsedData = JSON.parse(rawData);
-
         const validationResult = createPropertySchema.safeParse(parsedData);
         if (!validationResult.success) {
           logger.error('Validation error in createProperty:', validationResult.error);
@@ -150,6 +150,17 @@ export const propertiesController: Controller = {
         }
 
         const propertyData = validationResult.data;
+        const files = req.files as Express.Multer.File[];
+        const imageUrls: string[] = [];
+
+        // Upload files to S3 if present
+        if (files && files.length > 0) {
+          for (const file of files) {
+            const fileName = `properties/${uuidv4()}-${file.originalname}`;
+            const result = await uploadFile(file.buffer, fileName, file.mimetype);
+            imageUrls.push(result.url);
+          }
+        }
 
         const property = await prisma.property.create({
           data: {
@@ -158,7 +169,8 @@ export const propertiesController: Controller = {
             createdById: req.user?.id ?? '',
             companyId: req.user?.companyId ?? '',
             price: propertyData.price ?? 0,
-            sqft: propertyData.sqft ?? 0
+            sqft: propertyData.sqft ?? 0,
+            images: imageUrls
           },
           select: {
             id: true,
@@ -197,7 +209,7 @@ export const propertiesController: Controller = {
   ],
 
   updateProperty: [
-    upload.none(),
+    upload.array('files', 10),
     async (req: Request, res: Response) => {
       try {
         const rawData = req.body.data;
@@ -206,7 +218,7 @@ export const propertiesController: Controller = {
         }
 
         const parsedData = JSON.parse(rawData);
-        parsedData.id = req.params.id;  // Add the ID from the route parameter
+        parsedData.id = req.params.id;
 
         const validationResult = updatePropertySchema.safeParse(parsedData);
         if (!validationResult.success) {
@@ -214,12 +226,34 @@ export const propertiesController: Controller = {
         }
   
         const propertyData = validationResult.data;
+        const files = req.files as Express.Multer.File[];
+        let imageUrls: string[] = [];
+
+        // Get existing property to preserve existing images
+        const existingProperty = await prisma.property.findUnique({
+          where: { id: req.params.id },
+          select: { images: true }
+        });
+
+        // Keep existing images
+        imageUrls = existingProperty?.images || [];
+
+        // Upload new files to S3 if present
+        if (files && files.length > 0) {
+          for (const file of files) {
+            const fileName = `properties/${uuidv4()}-${file.originalname}`;
+            const result = await uploadFile(file.buffer, fileName, file.mimetype);
+            imageUrls.push(result.url);
+          }
+        }
+
         const property = await prisma.property.update({
           where: { id: req.params.id },
           data: {
             ...propertyData,
             location: propertyData.location,
             price: propertyData.price,
+            images: imageUrls
           },
           select: {
             id: true,
