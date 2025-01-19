@@ -112,6 +112,19 @@ enum PropertyType {
   LAND
 }
 
+enum PropertyStatus {
+  ACTIVE
+  PENDING
+  SOLD
+  INACTIVE
+}
+
+enum LeadRole {
+  SALE
+  BUY
+  RENT
+}
+
 // Unified User Model
 model User {
   id           String     @id @default(cuid())
@@ -209,6 +222,8 @@ model Company {
   updatedAt    DateTime? @updatedAt
 
   EmailRecipient EmailRecipient[]
+
+  Property Property[]
 }
 
 // Updated Team Model
@@ -313,6 +328,7 @@ model Deal {
   
   // Additional Details
   notes          Json[]      @default([])
+  role           LeadRole    @default(SALE)
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -344,6 +360,8 @@ model Transaction {
   // Additional Financial Info
   transactionMethod  String?
   receiptUrl     String?
+
+  role           LeadRole    @default(SALE)
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
@@ -494,31 +512,41 @@ model CompanyAuditLog {
 model Property {
   id              String   @id @default(cuid())
   title           String
-  description     String
-  price           Float
+  description     String   @db.Text
+  price           Int?
   address         String
   sqft            Int
   bedrooms        Int?
+  bathrooms       Int?
   
-  propertySummary Json
-  bathrooms       Json
-  interiorFeatures Json
-  buildingFeatures Json
-  heatingNcooling Json
-  exteriorFeatures Json
-  measurements    Json
-  parking Json
-  lotFeatures     Json
-  rooms           Json[]
+  // Property Details
+  propertyType    PropertyType  @default(COMMERCIAL)     // e.g., Residential, Commercial, Industrial
+  buildingType    String?  // e.g., Single Family, Apartment, Office
+  yearBuilt       Int?
+  status          PropertyStatus  @default(ACTIVE) // ACTIVE, PENDING, SOLD, INACTIVE
+  
+  // Features as JSON for flexibility
+  amenities       Json?    // Basic amenities and features
+  specifications  Json?    // Detailed specifications
+  location        String?    // Geocoding data
+  rooms           Json[]   // Array of room details
   images          String[] // URLs of property images
 
-  // Created and updated timestamps
+  // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-// Relationships
-  createdBy       User?   @relation(fields: [creatorId], references: [id])
-  creatorId       String?
+  // Relationships
+  createdBy       User    @relation(fields: [createdById], references: [id])
+  createdById     String
+
+  company         Company  @relation(fields: [companyId], references: [id])
+  companyId       String
+
+  // Indexes for better query performance
+  @@index([status])
+  @@index([propertyType])
+  @@index([createdById])
 }
 
 // Email Template

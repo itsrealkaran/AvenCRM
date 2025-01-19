@@ -1,71 +1,39 @@
-export type Property = {
-  id: string;
-  address: string;
-  price: number;
-  bedrooms: number;
-  sqft: number;
-  description: string;
-  title: string;
-  imageUrl: string;
-  propertySummary: {
-    propertyType: string;
-    buildingType: string;
-    squareFootage: number;
-    communityName: string;
-    subdivision: string;
-    storeys: number;
-    landSize: number;
-    buildIn: string;
-    annualPropretyTax: number;
-    parkingType: string;
-  };
-  bathrooms: {
-    totalBathrooms: string;
-    partailBathrooms: number;
-  };
-  interiorFeatures: {
-    appliaanceIncluded: string;
-    flooring: string;
-    basementType: string;
-  };
-  buildingFeatures: {
-    features: string;
-    foundationType: string;
-    style: string;
-    architectureStyle: string;
-    constructionMaterial: string;
-  };
-  heatingNcooling: {
-    cooling: string;
-    fireplace: string;
-    heatingType: string;
-  };
-  exteriorFeatures: {
-    exteriorFinishing: string;
-    roofType: string;
-  };
-  parking: {
-    squareFootage: string;
-    totalFinishedArea: number;
-  };
-  measurements: {
-    sqft: number;
-    totalfinishSqft: number;
-  };
-  rooms: room[];
-  lotFeatures: {
-    fencing: string;
-    frontage: string;
-    landDepth: string;
-  };
-  images: JSON[];
-  agentId: string;
-};
+import {
+  CreatePropertySchema,
+  PropertiesResponseSchema,
+  PropertyFilterSchema,
+  PropertyResponseSchema,
+  UpdatePropertySchema,
+} from '@/schema/property.schema';
 
-type room = {
-  level: string;
-  roomType: string;
-  width: number;
-  length: number;
-  height: number;
-};
+export enum PropertyStatus {
+  ACTIVE = 'ACTIVE',
+  SOLD = 'SOLD',
+  PENDING = 'PENDING',
+  INACTIVE = 'INACTIVE',
+}
+
+export enum PropertyType {
+  RESIDENTIAL = 'RESIDENTIAL',
+  COMMERCIAL = 'COMMERCIAL',
+  LAND = 'LAND',
+}
+
+export type Property = PropertyResponseSchema;
+export type CreateProperty = CreatePropertySchema;
+export type UpdateProperty = UpdatePropertySchema;
+export type PropertyFilter = PropertyFilterSchema;
+export type PropertyResponse = PropertyResponseSchema;
+export type PropertiesResponse = PropertiesResponseSchema;
+
+// Additional utility types for frontend use
+export interface PropertyImage {
+  id: string;
+  imageUrl: string;
+}
+
+export interface PropertyAgent {
+  name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+}

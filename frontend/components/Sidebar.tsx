@@ -3,13 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  TypeIcon as type,
-  type LucideIcon,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, MoreHorizontal, type LucideIcon } from 'lucide-react';
 import { FaAngleRight } from 'react-icons/fa6';
 
 import Logo from '@/components/logo';

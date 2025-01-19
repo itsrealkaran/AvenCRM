@@ -154,7 +154,7 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
 
             <FormField
               control={form.control}
-              name='budget'
+              name='propertyValue'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Budget</FormLabel>
@@ -174,7 +174,7 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
 
             <FormField
               control={form.control}
-              name='location'
+              name='propertyAddress'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Location</FormLabel>
@@ -192,12 +192,19 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
 
             <FormField
               control={form.control}
-              name='source'
+              name='dealAmount'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source</FormLabel>
+                  <FormLabel>Deal Amount</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter source' disabled={updateDeal.isPending} {...field} />
+                    <Input
+                      placeholder='Enter deal amount'
+                      disabled={updateDeal.isPending}
+                      type='number'
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      value={field.value || ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

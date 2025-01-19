@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from 'react';
 import { dealsApi } from '@/api/deals.service';
-import { Deal, DealStatus, LeadStatus } from '@/types';
+import { Deal, DealStatus, LeadStatus, UserRole } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,8 +10,10 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/hooks/useAuth';
 
 import { DataTable } from '../data-table';
+import { adminColumns } from './admin-columns';
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
 import { EditDealDialog } from './edit-deal-dialog';
@@ -30,6 +32,7 @@ export default function DealsPage() {
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
   const [selectedRows, setSelectedRows] = useState<Deal[]>([]);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: response, isLoading } = useQuery({
     queryKey: ['deals'],
@@ -161,7 +164,7 @@ export default function DealsPage() {
 
         <div className='space-4 p-6'>
           <DataTable
-            columns={columns}
+            columns={user?.role === UserRole.ADMIN ? adminColumns : columns}
             data={deals}
             onEdit={handleEdit}
             onBulkDelete={async (row) => {

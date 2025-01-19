@@ -1,89 +1,113 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { PropertyData } from '@/types/propertyTypes';
-import axios from 'axios';
+import React, { useCallback, useState } from 'react';
+import { propertiesApi } from '@/api/property.service';
+import { PropertiesResponse, PropertyResponse, UpdateProperty } from '@/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
-import PropertyBox from '@/components/PropertyBox';
+import { CreatePropertyDialog } from '@/components/properties/create-property-dialog';
+import { EditPropertyDialog } from '@/components/properties/edit-property-dialog';
+import { PropertyCard } from '@/components/properties/property-card';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+
+async function getProperties(): Promise<PropertiesResponse> {
+  try {
+    return await propertiesApi.getProperties();
+  } catch (error) {
+    throw new Error('Failed to fetch properties');
+  }
+}
 
 const Page = () => {
-  const [response, setResponse] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<UpdateProperty | null>(null);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const token = localStorage.getItem('accessToken');
-    const fetchData = async () => {
-      try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/property`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        });
-        setResponse(res.data);
-      } catch (error) {
-        console.error('Error fetching properties:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
+  const { data: properties, isLoading } = useQuery({
+    queryKey: ['properties'],
+    queryFn: getProperties,
+  });
+
+  const deleteProperty = useMutation({
+    mutationFn: async (propertyId: string) => {
+      await propertiesApi.deleteProperty(propertyId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      toast.success('Property deleted successfully');
+    },
+    onError: () => {
+      toast.error('Failed to delete property');
+    },
+  });
+
+  const handleEdit = useCallback((property: UpdateProperty) => {
+    setSelectedProperty(property);
+    setIsEditDialogOpen(true);
   }, []);
 
+  const handleDelete = useCallback(
+    async (propertyId: string) => {
+      try {
+        await deleteProperty.mutateAsync(propertyId);
+      } catch (error) {
+        console.error('Error deleting property:', error);
+      }
+    },
+    [deleteProperty]
+  );
+
   const PropertySkeleton = () => (
-    <div className='bg-gray-100 rounded-lg p-4 w-80 h-[400px] animate-pulse'>
-      <div className='w-full h-[200px] bg-gray-200 rounded-md mb-4'></div>
-      <div className='space-y-3'>
+    <Card className='w-full max-w-sm animate-pulse'>
+      <div className='h-48 w-full bg-gray-200'></div>
+      <div className='p-4 space-y-4'>
         <div className='h-4 bg-gray-200 rounded w-3/4'></div>
         <div className='h-4 bg-gray-200 rounded w-1/2'></div>
-        <div className='flex gap-2'>
-          <div className='h-4 bg-gray-200 rounded w-1/4'></div>
-          <div className='h-4 bg-gray-200 rounded w-1/4'></div>
-          <div className='h-4 bg-gray-200 rounded w-1/4'></div>
+        <div className='grid grid-cols-3 gap-4'>
+          <div className='h-4 bg-gray-200 rounded'></div>
+          <div className='h-4 bg-gray-200 rounded'></div>
+          <div className='h-4 bg-gray-200 rounded'></div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 
   return (
-    <div className='relative h-full overflow-y-auto gap-2'>
-      <div className='w-full mt-8 flex justify-center items-center'>
-        <h2 className='text-center text-xl font-semibold justify-self-center'>
-          Properties Listing
-        </h2>
-        <Link
-          href={'/agent/property/add'}
-          className='bg-violet-600 text-white p-2 px-4 rounded-md absolute right-24'
-        >
-          Add
-        </Link>
-        <button className='bg-violet-600 text-white p-2 px-4 rounded-md absolute right-2'>
-          Delete
-        </button>
+    <div className='container mx-auto p-4 space-y-6'>
+      <div className='flex justify-between items-center'>
+        <div>
+          <h1 className='text-3xl font-bold tracking-tight'>Properties</h1>
+          <p className='text-muted-foreground'>Manage your property listings</p>
+        </div>
+        <Button onClick={() => setIsCreateDialogOpen(true)}>
+          <Plus className='mr-2 h-4 w-4' /> Add Property
+        </Button>
       </div>
-      <div className='flex flex-wrap gap-2 m-6 '>
-        {isLoading ? (
-          <>
-            {[...Array(6)].map((_, index) => (
-              <PropertySkeleton key={index} />
+
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+        {isLoading
+          ? Array.from({ length: 8 }).map((_, index) => <PropertySkeleton key={index} />)
+          : properties?.data?.map((property: PropertyResponse) => (
+              <PropertyCard
+                key={property.id}
+                property={property}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
             ))}
-          </>
-        ) : (
-          response.map((item: PropertyData) => (
-            <PropertyBox
-              key={item.id}
-              id={item.id}
-              imageUrl={item.images[0].imageUrl || ''}
-              address={item.address}
-              price={item.price}
-              landSize={item.sqft}
-              bedrooms={item.bedrooms}
-              bathrooms={item.bathrooms.partailBathrooms}
-            />
-          ))
-        )}
       </div>
+
+      <CreatePropertyDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+
+      <EditPropertyDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        property={selectedProperty}
+      />
     </div>
   );
 };

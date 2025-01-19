@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
+import { ReloadIcon } from '@radix-ui/react-icons';
 import {
   ColumnFiltersState,
   flexRender,
@@ -11,7 +12,7 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, Trash } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -104,6 +105,15 @@ export function DataTable<TData extends BaseRecord, TValue>({
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className='max-w-sm'
         />
+        <Button
+          variant='secondary'
+          size='sm'
+          className='hover:bg-gray-100 transition duration-200 ml-2'
+          onClick={() => table.reset()}
+        >
+          <ReloadIcon className='size-4 mr-2' />
+          Reload
+        </Button>
         <div className='ml-auto flex gap-2'>
           {buttons}
           {additionalActions}
