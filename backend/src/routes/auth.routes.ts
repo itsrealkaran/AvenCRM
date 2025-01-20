@@ -118,9 +118,9 @@ router.post('/sign-in', async (req: Request, res: Response) => {
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    // if (!isPasswordValid) {
-    //   return res.status(401).json({ message: 'Invalid credentials' });
-    // }
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
 
     const { password: _, ...userWithoutPassword } = user;
     const tokens = generateTokens(user);
