@@ -128,8 +128,8 @@ export default function LeadsPage() {
 
   if (isLoading) {
     return (
-      <section className='flex-1 p-2 md:p-4'>
-        <Card className='container mx-auto p-4 md:p-5'>
+      <section className='p-4'>
+        <Card className='mx-auto max-w-[1400px] p-4'>
           <div className='flex justify-between items-center '>
             <div>
               <Skeleton className='h-10 w-60 mb-2' />
@@ -150,9 +150,9 @@ export default function LeadsPage() {
   }
 
   return (
-    <section className='flex-1 p-2 md:p-4 h-full'>
-      <Card className='container mx-auto p-4 md:p-5'>
-        <div className='flex justify-between items-center '>
+    <section className='p-4'>
+      <Card className='mx-auto max-w-[1400px] p-4'>
+        <div className='flex justify-between items-center'>
           <div>
             <h1 className='text-3xl font-bold tracking-tight text-primary'>Leads Management</h1>
             <p className='text-muted-foreground'>Manage and track your leads in one place</p>

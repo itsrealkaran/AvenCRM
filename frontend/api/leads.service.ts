@@ -34,7 +34,6 @@ export const leadsApi = {
   // Create a new lead with files
   createLead: async (data: CreateLead): Promise<LeadResponse> => {
     const formData = new FormData();
-    debugger;
 
     // Clean up the data and handle dates
     const cleanData = {

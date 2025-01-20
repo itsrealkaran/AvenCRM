@@ -234,13 +234,14 @@ export const columns: ColumnDef<Deal>[] = [
                   },
                   index: Key | null | undefined
                 ) => (
-                  <div key={index} className='space-y-2'>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm text-gray-500'>
+                  <div key={index} className='relative pl-6'>
+                    <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
+                    <div className='space-y-1'>
+                      <span className='block text-sm text-gray-500'>
                         {format(new Date(note.time), 'MMM d, yyyy')}
                       </span>
+                      <p className='text-gray-700'>{note.note}</p>
                     </div>
-                    <p className='text-gray-700'>{note.note}</p>
                   </div>
                 )
               )}
