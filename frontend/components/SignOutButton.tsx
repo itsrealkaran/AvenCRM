@@ -30,7 +30,7 @@ export function SignOutButton({
           .replace(/^ +/, '')
           .replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
       });
-      router.push('/sign-in');
+      router.push('/');
       toast.success('Signed out successfully');
     } catch (error) {
       console.error('Sign out error:', error);
