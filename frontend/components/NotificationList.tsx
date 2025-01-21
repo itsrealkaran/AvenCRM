@@ -6,6 +6,7 @@ interface Activity {
   subtitle: string;
   timestamp: string;
   type: 'calendar' | 'email' | 'task';
+  isRead: boolean;
 }
 
 const activities: Activity[] = [
@@ -15,6 +16,7 @@ const activities: Activity[] = [
     subtitle: 'with Enterprise Team',
     timestamp: 'Today at 2:00 PM',
     type: 'calendar',
+    isRead: false,
   },
   {
     id: 2,
@@ -22,6 +24,7 @@ const activities: Activity[] = [
     subtitle: 'from contact@example.com',
     timestamp: 'Yesterday at 4:30 PM',
     type: 'email',
+    isRead: true,
   },
   {
     id: 3,
@@ -29,6 +32,7 @@ const activities: Activity[] = [
     subtitle: 'Due in 2 hours',
     timestamp: 'Today at 5:00 PM',
     type: 'task',
+    isRead: false,
   },
   {
     id: 4,
@@ -36,6 +40,7 @@ const activities: Activity[] = [
     subtitle: 'Weekly Progress Review',
     timestamp: 'Tomorrow at 10:00 AM',
     type: 'calendar',
+    isRead: false,
   },
   {
     id: 5,
@@ -43,6 +48,7 @@ const activities: Activity[] = [
     subtitle: 'Pending approval',
     timestamp: 'Today at 3:00 PM',
     type: 'task',
+    isRead: true,
   },
   {
     id: 6,
@@ -50,6 +56,7 @@ const activities: Activity[] = [
     subtitle: 'Due in 2 hours',
     timestamp: 'Today at 5:00 PM',
     type: 'task',
+    isRead: true,
   },
   {
     id: 7,
@@ -57,6 +64,7 @@ const activities: Activity[] = [
     subtitle: 'Weekly Progress Review',
     timestamp: 'Tomorrow at 10:00 AM',
     type: 'calendar',
+    isRead: true,
   },
   {
     id: 8,
@@ -64,6 +72,7 @@ const activities: Activity[] = [
     subtitle: 'Pending approval',
     timestamp: 'Today at 3:00 PM',
     type: 'task',
+    isRead: true,
   }
 ];
 
@@ -101,7 +110,9 @@ export function NotificationList() {
         {activities.map((activity) => (
           <div
             key={activity.id}
-            className="flex items-start gap-3 p-2 hover:bg-accent rounded-lg transition-colors cursor-pointer"
+            className={`flex items-start gap-3 p-2 hover:bg-accent rounded-lg transition-colors cursor-pointer ${
+              !activity.isRead ? 'bg-blue-50' : ''
+            }`}
           >
             <div 
               className={`p-2 rounded-full ${getIconBgColor(activity.type)} flex items-center justify-center`}
@@ -110,10 +121,15 @@ export function NotificationList() {
               {getIconByType(activity.type)}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+              <p className={`text-sm font-medium ${!activity.isRead ? 'text-blue-600' : 'text-gray-900'}`}>
+                {activity.title}
+              </p>
               <p className="text-sm text-muted-foreground">{activity.subtitle}</p>
               <p className="text-xs text-muted-foreground mt-1">{activity.timestamp}</p>
             </div>
+            {!activity.isRead && (
+              <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+            )}
           </div>
         ))}
       </div>
