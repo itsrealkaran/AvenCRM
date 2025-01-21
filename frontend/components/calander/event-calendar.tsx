@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleCalendarService } from '@/lib/google-calendar';
+import { MicrosoftCalendarService } from '@/lib/microsoft-calendar';
 import { useToast } from '@/hooks/use-toast';
 
 import { createEvent, deleteEvent, fetchEvents, updateEvent } from './api';
@@ -29,6 +30,8 @@ export default function CalendarView() {
   const [searchTerm, setSearchTerm] = useState('');
   const [isGoogleConnected, setIsGoogleConnected] = useState(false);
   const googleCalendar = GoogleCalendarService.getInstance();
+  const [isMicrosoftConnected, setIsMicrosoftConnected] = useState(false);
+  const microsoftCalendar = MicrosoftCalendarService.getInstance();
   const { toast } = useToast();
 
   const loadEvents = useCallback(async () => {
@@ -60,6 +63,20 @@ export default function CalendarView() {
           });
         }
       }
+      console.log('isMicrosoftConnected', isMicrosoftConnected);
+      if (isMicrosoftConnected) {
+        try {
+          const microsoftEvents = await microsoftCalendar.listEvents();
+          allEvents = [...allEvents, ...microsoftEvents];
+        } catch (error) {
+          console.error('Error loading Microsoft events:', error);
+          toast({
+            title: 'Warning',
+            description: 'Failed to load Microsoft Calendar events',
+            variant: 'destructive',
+          });
+        }
+      }
 
       setEvents(allEvents);
       setFilteredEvents(allEvents);
@@ -72,10 +89,19 @@ export default function CalendarView() {
     } finally {
       setLoading(false);
     }
-  }, [isGoogleConnected, toast]);
+  }, [isGoogleConnected, isMicrosoftConnected, toast]);
 
   useEffect(() => {
     loadEvents();
+    const checkMicrosoftConnection = async () => {
+      try {
+        await microsoftCalendar.login();
+        await loadEvents();
+      } catch (error) {
+        console.error('Error checking Microsoft connection:', error);
+      }
+    };
+    checkMicrosoftConnection();
   }, [loadEvents]);
 
   useEffect(() => {
@@ -111,10 +137,18 @@ export default function CalendarView() {
       try {
         setLoading(true);
         let updatedEvent: any;
-
+        console.log('eventData', eventData);
         if (eventData.id) {
           if (eventData.source === 'google') {
             updatedEvent = await googleCalendar.updateEvent(eventData.id, {
+              title: eventData.title,
+              description: eventData.description,
+              start: eventData.start,
+              end: eventData.end,
+              location: eventData.location,
+            });
+          } else if (eventData.source === 'microsoft') {
+            updatedEvent = await microsoftCalendar.updateEvent(eventData.id, {
               title: eventData.title,
               description: eventData.description,
               start: eventData.start,
@@ -176,6 +210,28 @@ export default function CalendarView() {
             description: 'Event created successfully!',
             variant: 'success',
           });
+        }
+        if (isMicrosoftConnected) {
+          try {
+            const microsoftEvent = await microsoftCalendar.createEvent({
+              title: eventData.title,
+              description: eventData.description,
+              start: eventData.start,
+              end: eventData.end,
+              location: eventData.location,
+            });
+            updatedEvent = {
+              ...updatedEvent,
+              microsoftEventId: microsoftEvent.id,
+            };
+          } catch (error) {
+            console.error('Failed to create event in Microsoft Calendar:', error);
+            toast({
+              title: 'Warning',
+              description: 'Event created locally but failed to sync with Microsoft Calendar',
+              variant: 'destructive',
+            });
+          }
         }
 
         await loadEvents();
@@ -365,18 +421,31 @@ export default function CalendarView() {
             onClick={handleConnectGoogle}
             disabled={loading || isGoogleConnected}
           >
-            <Calendar className="w-4 h-4 mr-2" />
+            <Calendar className='w-4 h-4 mr-2' />
             {isGoogleConnected ? 'Connected to Google' : 'Connect Google Calendar'}
           </Button>
           <Button
-            variant="outline"
-            className="bg-white hover:bg-gray-50 text-xs sm:text-sm"
-            onClick={() => toast({
-              title: "Coming soon",
-              description: "Outlook sync will be available soon!",
-            })}
+            variant='outline'
+            className='bg-white hover:bg-gray-50 text-xs sm:text-sm'
+            onClick={async () => {
+              try {
+                await microsoftCalendar.login();
+                const isConnected = await microsoftCalendar.isConnected();
+                setIsMicrosoftConnected(isConnected);
+                if (isConnected) {
+                  loadEvents();
+                }
+              } catch (error) {
+                toast({
+                  title: 'Error',
+                  description: 'Failed to connect to Microsoft Calendar',
+                  variant: 'destructive',
+                });
+              }
+            }}
+            disabled={loading || isMicrosoftConnected}
           >
-            <Calendar className="w-4 h-4 mr-2" />
+            <Calendar className='w-4 h-4 mr-2' />
             Sync with Outlook
           </Button>
           <Button
