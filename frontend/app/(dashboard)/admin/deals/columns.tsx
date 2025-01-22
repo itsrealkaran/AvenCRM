@@ -152,10 +152,7 @@ export const columns: ColumnDef<Deal>[] = [
               {Object.entries(row.original.notes)
                 .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
                 .map(([time, note], index) => (
-                  <div
-                    key={time}
-                    className='relative pl-6'
-                  >
+                  <div key={time} className='relative pl-6'>
                     <div className='top-2 w-2 h-2 rounded-full bg-gray-300'></div>
                     <div className='space-y-2'>
                       <div className='flex items-center gap-2'>

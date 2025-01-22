@@ -49,12 +49,15 @@ function SignInContent() {
     try {
       const { data } = await authApi.login(values);
 
+      console.log("data", data)
+
       if (data.access_token) {
         toast.success('Sign-in successful!');
 
         // Redirect to the callback URL or default dashboard
         let role = data.user.role as UserRole;
         const callbackUrl = role === UserRole.TEAM_LEADER ? '/agent' : `/${role.toLowerCase()}`;
+        console.log("callbackUrl", callbackUrl);
         router.push(callbackUrl);
       } else {
         throw new Error('No access token received');

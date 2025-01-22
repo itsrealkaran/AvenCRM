@@ -6,9 +6,8 @@ import { QuestionMarkIcon } from '@radix-ui/react-icons';
 import { Search, Settings } from 'lucide-react';
 import { CiBellOn } from 'react-icons/ci';
 import { IoCaretDown, IoCaretUp } from 'react-icons/io5';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { NotificationList } from '@/components/NotificationList';
 
+import { NotificationList } from '@/components/NotificationList';
 import { SignOutButton } from '@/components/SignOutButton';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -18,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function Topbar() {
@@ -45,10 +45,10 @@ export default function Topbar() {
           <PopoverTrigger asChild>
             <div className='relative w-7 h-7 flex items-center justify-center text-[1.2rem] rounded-[8px] border-black/70 border-[1px] hover:bg-accent transition-colors'>
               <CiBellOn />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></span>
+              <span className='absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full'></span>
             </div>
           </PopoverTrigger>
-          <PopoverContent className="w-80 p-0" align="end">
+          <PopoverContent className='w-80 p-0' align='end'>
             <NotificationList />
           </PopoverContent>
         </Popover>
@@ -100,4 +100,3 @@ export default function Topbar() {
     </div>
   );
 }
-

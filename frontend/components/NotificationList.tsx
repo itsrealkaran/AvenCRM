@@ -1,4 +1,4 @@
-import { Calendar, Mail, CheckSquare } from 'lucide-react';
+import { Calendar, CheckSquare, Mail } from 'lucide-react';
 
 interface Activity {
   id: number;
@@ -73,12 +73,12 @@ const activities: Activity[] = [
     timestamp: 'Today at 3:00 PM',
     type: 'task',
     isRead: true,
-  }
+  },
 ];
 
 const getIconByType = (type: Activity['type']) => {
   const iconProps = { className: 'w-4 h-4 text-white' };
-  
+
   switch (type) {
     case 'calendar':
       return <Calendar {...iconProps} />;
@@ -102,11 +102,11 @@ const getIconBgColor = (type: Activity['type']) => {
 
 export function NotificationList() {
   return (
-    <div className="w-full">
-      <div className="px-4 py-3 border-b">
-        <h3 className="font-semibold text-base">Recent Activities</h3>
+    <div className='w-full'>
+      <div className='px-4 py-3 border-b'>
+        <h3 className='font-semibold text-base'>Recent Activities</h3>
       </div>
-      <div className="p-2 h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <div className='p-2 h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
         {activities.map((activity) => (
           <div
             key={activity.id}
@@ -114,26 +114,25 @@ export function NotificationList() {
               !activity.isRead ? 'bg-blue-50' : ''
             }`}
           >
-            <div 
+            <div
               className={`p-2 rounded-full ${getIconBgColor(activity.type)} flex items-center justify-center`}
               style={{ minWidth: '32px', height: '32px' }}
             >
               {getIconByType(activity.type)}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className={`text-sm font-medium ${!activity.isRead ? 'text-blue-600' : 'text-gray-900'}`}>
+            <div className='flex-1 min-w-0'>
+              <p
+                className={`text-sm font-medium ${!activity.isRead ? 'text-blue-600' : 'text-gray-900'}`}
+              >
                 {activity.title}
               </p>
-              <p className="text-sm text-muted-foreground">{activity.subtitle}</p>
-              <p className="text-xs text-muted-foreground mt-1">{activity.timestamp}</p>
+              <p className='text-sm text-muted-foreground'>{activity.subtitle}</p>
+              <p className='text-xs text-muted-foreground mt-1'>{activity.timestamp}</p>
             </div>
-            {!activity.isRead && (
-              <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
-            )}
+            {!activity.isRead && <div className='w-2 h-2 bg-blue-500 rounded-full mt-1'></div>}
           </div>
         ))}
       </div>
     </div>
   );
 }
-

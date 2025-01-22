@@ -20,6 +20,7 @@ const Select = React.forwardRef<React.ElementRef<typeof SelectPrimitive.Root>, S
     </div>
   )
 );
+Select.displayName = "Select"
 
 const SelectGroup = SelectPrimitive.Group;
 
