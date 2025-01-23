@@ -30,12 +30,37 @@ const app = express();
 app.use(cookieParser());
 
 // Configure CORS with specific options
+const allowedOrigins = [
+  'https://crm.avencrm.com',
+  'https://avencrm.com',
+  'https://*.avencrm.com', 
+  'http://localhost:3000' 
+];
+
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin is allowed or matches wildcard pattern
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (allowedOrigin.includes('*')) {
+        const pattern = allowedOrigin.replace('*', '.*');
+        return new RegExp(pattern).test(origin);
+      }
+      return allowedOrigin === origin;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  exposedHeaders: ['Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['Authorization', 'Set-Cookie'],
 }));
 
 app.use((req, res, next) => {
@@ -65,9 +90,11 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000
+      sameSite: 'none',
+      maxAge: 24 * 60 * 60 * 1000,
+      domain: '.avencrm.com'
     }
-  })
+  } as SessionOptions)
 );
 
 
@@ -186,7 +213,7 @@ process.on('unhandledRejection', (reason, promise) => {
   });
 });
 
-const PORT = 8000;
+const PORT = `${process.env.PORT}`;
 app.listen(PORT, () => {
   logger.info(`Server started successfully`, {
     port: PORT,

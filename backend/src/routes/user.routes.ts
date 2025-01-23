@@ -3,7 +3,6 @@ import { userController } from '../controllers/user.controller.js';
 import { protect } from '../middleware/auth.js';
 import { validateRole } from '../middleware/roleValidator.js';
 import { UserRole } from '@prisma/client';
-import express from 'express';
 import multer from 'multer';
 
 const router: Router = Router();

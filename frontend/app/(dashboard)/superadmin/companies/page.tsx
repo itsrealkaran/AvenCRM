@@ -154,8 +154,8 @@ export default function CompaniesPage() {
   };
 
   const handleExtendPlan = async (id: string) => {
-    const confirmed = window.confirm('Are you sure you want to reactivate this company?');
-    if (!confirmed) return;
+    // const confirmed = window.confirm('Are you sure you want to reactivate this company?');
+    // if (!confirmed) return;
     try {
       await api.post(`/company/extend-plan/${id}`);
       fetchData();
