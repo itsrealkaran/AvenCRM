@@ -33,18 +33,14 @@ app.use(cookieParser());
 const allowedOrigins = [
   'https://crm.avencrm.com',
   'https://avencrm.com',
-  'https://*.avencrm.com',
-  'http://localhost:3000'  // Always include localhost for development
+  'https://*.avencrm.com', 
+  'http://localhost:3000' 
 ];
 
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
-    if (origin === 'http://localhost:3000') {
-      return callback(null, true);
-    }
     
     // Check if the origin is allowed or matches wildcard pattern
     const isAllowed = allowedOrigins.some(allowedOrigin => {
@@ -58,7 +54,6 @@ app.use(cors({
     if (isAllowed) {
       callback(null, true);
     } else {
-      logger.warn(`Blocked request from unauthorized origin: ${origin}`);
       callback(new Error('Not allowed by CORS'));
     }
   },
