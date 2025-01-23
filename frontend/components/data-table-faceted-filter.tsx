@@ -5,8 +5,8 @@ import { Column } from '@tanstack/react-table';
 import { FaCheck } from 'react-icons/fa';
 import { FaPlus } from 'react-icons/fa6';
 
-import { Badge } from '@/components/landing/ui/badge';
-import { Button } from '@/components/landing/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -15,9 +15,9 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '@/components/landing/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/landing/ui/popover';
-import { Separator } from '@/components/landing/ui/separator';
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 
 interface DataTableFacetedFilterProps<TData, TValue> {

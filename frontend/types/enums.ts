@@ -23,18 +23,18 @@ export enum DealStatus {
   CLOSED_LOST = 'CLOSED_LOST',
 }
 
-export enum PropertyType {
-  RESIDENTIAL = 'RESIDENTIAL',
-  COMMERCIAL = 'COMMERCIAL',
-  LAND = 'LAND',
-}
+// export enum PropertyType {
+//   RESIDENTIAL = 'RESIDENTIAL',
+//   COMMERCIAL = 'COMMERCIAL',
+//   LAND = 'LAND',
+// }
 
-export enum PropertyStatus {
-  ACTIVE = 'ACTIVE',
-  PENDING = 'PENDING',
-  SOLD = 'SOLD',
-  INACTIVE = 'INACTIVE',
-}
+// export enum PropertyStatus {
+//   ACTIVE = 'ACTIVE',
+//   PENDING = 'PENDING',
+//   SOLD = 'SOLD',
+//   INACTIVE = 'INACTIVE',
+// }
 
 export enum TransactionType {
   INCOME = 'INCOME',

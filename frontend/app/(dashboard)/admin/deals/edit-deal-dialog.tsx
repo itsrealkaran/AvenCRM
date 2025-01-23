@@ -81,7 +81,10 @@ export function EditDealDialog({
       const notesArray = deal.notes
         ? Object.entries(deal.notes)
             .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
-            .map(([time, note]) => ({ time, note }))
+            .map(([time, note]) => ({
+              time,
+              note: typeof note === 'string' ? note : String(note ?? ''),
+            }))
         : [{ time: format(new Date(), "yyyy-MM-dd'T'HH:mm"), note: '' }];
 
       form.reset({
@@ -107,6 +110,7 @@ export function EditDealDialog({
       if (!deal?.id) throw new Error('Deal ID is required');
 
       const formattedValues = {
+        id: deal.id,
         ...values,
         dealAmount: values.dealAmount ? parseFloat(values.dealAmount) : undefined,
         propertyValue: values.propertyValue ? parseFloat(values.propertyValue) : undefined,
@@ -114,15 +118,12 @@ export function EditDealDialog({
         estimatedCommission: values.estimatedCommission
           ? parseFloat(values.estimatedCommission)
           : undefined,
-        notes: values.notes.reduce(
-          (acc, { time, note }) => {
-            if (note.trim()) {
-              acc[time] = note;
-            }
-            return acc;
-          },
-          {} as Record<string, string>
-        ),
+        notes: values.notes
+          .filter((note) => note.note.trim()) // Remove empty notes
+          .map(({ time, note }) => ({
+            time,
+            note: note.trim(),
+          })),
       };
 
       return dealsApi.updateDeal(deal.id, formattedValues);

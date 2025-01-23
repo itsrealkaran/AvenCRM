@@ -18,7 +18,7 @@ const protectedRoutes = ['/dashboard', '/agent', '/admin', '/superadmin', '/cale
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log("pathname", pathname)
+  console.log('pathname', pathname);
 
   // Allow public routes without authentication
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
     }
     return NextResponse.next();
   }
-  
+
   // Check if the current path requires authentication
   const requiresAuth = protectedRoutes.some((route) => pathname.startsWith(route));
 
@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('Authorization')?.value;
 
   if (!accessToken) {
-    console.log("request", request)
+    console.log('request', request);
     // give a warning that user is not authenticated
     const url = new URL('/', request.url);
     return NextResponse.redirect(url);

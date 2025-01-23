@@ -1,4 +1,4 @@
-import { DealStatus, LeadStatus, PropertyType } from './enums';
+import { DealStatus, LeadStatus } from './enums';
 
 export interface BaseFilters {
   page?: number;

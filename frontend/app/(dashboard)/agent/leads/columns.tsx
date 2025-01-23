@@ -238,7 +238,8 @@ export const columns: ColumnDef<Lead>[] = [
                         {format(new Date(time), 'MMM d, yyyy HH:mm')}
                       </div>
                       <div className='text-sm text-gray-700 whitespace-pre-wrap leading-relaxed'>
-                        {note}
+                        <p>{note.time}</p>
+                        <p>{note.note}</p>
                       </div>
                     </div>
                   </div>

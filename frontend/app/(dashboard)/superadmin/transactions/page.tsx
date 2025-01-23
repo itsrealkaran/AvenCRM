@@ -7,7 +7,6 @@ import axios from 'axios';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import LoadingTableSkeleton from '@/components/loading-table';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
