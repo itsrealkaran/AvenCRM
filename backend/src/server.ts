@@ -39,15 +39,13 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
       return callback(null, true);
     }
 
-    // Check if the origin is allowed
     if (allowedOrigins.includes(origin) || 
         origin.endsWith('.avencrm.com') || 
-        (process.env.NODE_ENV !== 'production' && origin.includes('localhost'))) {
+        origin.includes('localhost')) {
       callback(null, true);
     } else {
       callback(new Error(`Origin ${origin} not allowed by CORS`));
@@ -57,17 +55,15 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
   exposedHeaders: ['Set-Cookie'],
-  maxAge: 86400, // 24 hours in seconds
+  maxAge: 86400,
 };
 
 app.use(cors(corsOptions));
 
-// Add these headers for additional CORS support
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   if (origin && (allowedOrigins.includes(origin) || 
-      origin.endsWith('.avencrm.com') || 
-      (process.env.NODE_ENV !== 'production' && origin.includes('localhost')))) {
+      origin.endsWith('.avencrm.com') || origin.includes('localhost'))) {
     res.setHeader('Access-Control-Allow-Origin', origin);
   }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
