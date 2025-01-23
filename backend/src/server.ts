@@ -33,35 +33,48 @@ app.use(cookieParser());
 const allowedOrigins = [
   'https://crm.avencrm.com',
   'https://avencrm.com',
-  'https://*.avencrm.com', 
-  'http://localhost:3000' 
+  'https://backend.avencrm.com',
+  'http://localhost:3000'
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin is allowed or matches wildcard pattern
-    const isAllowed = allowedOrigins.some(allowedOrigin => {
-      if (allowedOrigin.includes('*')) {
-        const pattern = allowedOrigin.replace('*', '.*');
-        return new RegExp(pattern).test(origin);
-      }
-      return allowedOrigin === origin;
-    });
+    if (!origin) {
+      return callback(null, true);
+    }
 
-    if (isAllowed) {
+    // Check if the origin is allowed
+    if (allowedOrigins.includes(origin) || 
+        origin.endsWith('.avencrm.com') || 
+        (process.env.NODE_ENV !== 'production' && origin.includes('localhost'))) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Authorization', 'Set-Cookie'],
-}));
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With'],
+  exposedHeaders: ['Set-Cookie'],
+  maxAge: 86400, // 24 hours in seconds
+};
+
+app.use(cors(corsOptions));
+
+// Add these headers for additional CORS support
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && (allowedOrigins.includes(origin) || 
+      origin.endsWith('.avencrm.com') || 
+      (process.env.NODE_ENV !== 'production' && origin.includes('localhost')))) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie, X-Requested-With');
+  next();
+});
 
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
