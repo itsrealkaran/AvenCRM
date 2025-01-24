@@ -11,15 +11,13 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
+const publicRoutes = ['/'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/dashboard', '/agent', '/admin', '/superadmin', '/calendar'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log('pathname', pathname);
-
   // Allow public routes without authentication
   if (publicRoutes.some((route) => pathname.startsWith(route))) {
     // If user is already authenticated, redirect to dashboard
@@ -31,16 +29,24 @@ export async function middleware(request: NextRequest) {
           const role = decoded.role.toLowerCase();
           // Redirect team leaders to /agent route
           if (role === 'team_leader') {
-            return NextResponse.redirect(new URL('/agent', request.url));
+            const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+            redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+            return redirectResponse;
           }
-          return NextResponse.redirect(new URL(`/${role}`, request.url));
+          const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
+          redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+          return redirectResponse;
         }
       } catch (error) {
         toast.error('Invalid token');
-        return NextResponse.redirect(new URL('/sign-in', request.url));
+        const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+        redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+        return redirectResponse;
       }
     }
-    return NextResponse.next();
+    const redirectResponse = NextResponse.next();
+    redirectResponse.headers.set('x-middleware-cache', 'no-cache'); // ! FIX: Disable caching
+    return redirectResponse;
   }
 
   // Check if the current path requires authentication
@@ -55,10 +61,10 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('Authorization')?.value;
 
   if (!accessToken) {
-    console.log('request', request);
     // give a warning that user is not authenticated
-    const url = new URL('/', request.url);
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+    redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+    return redirectResponse;
   }
 
   try {
@@ -68,9 +74,11 @@ export async function middleware(request: NextRequest) {
     // Check token expiration
     if (decoded?.exp * 1000 < Date.now()) {
       // Token is expired - redirect to sign-in
-      const url = new URL('/sign-in', request.url);
+      const url = new URL('/', request.url);
       url.searchParams.set('callbackUrl', pathname);
-      return NextResponse.redirect(url);
+      const redirectResponse = NextResponse.redirect(url);
+      redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+      return redirectResponse;
     }
 
     // Validate role-based access
@@ -83,7 +91,9 @@ export async function middleware(request: NextRequest) {
         return NextResponse.next();
       }
       // Redirect to /agent for any other routes
-      return NextResponse.redirect(new URL('/agent', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+      redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+      return redirectResponse;
     }
 
     // For other roles, check if they're accessing their designated route
@@ -92,12 +102,16 @@ export async function middleware(request: NextRequest) {
     }
 
     // Redirect to appropriate role-based route
-    return NextResponse.redirect(new URL(`/${role}`, request.url));
+    const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
+    redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+    return redirectResponse;
   } catch (error) {
     // Invalid token - redirect to sign-in
-    const url = new URL('/sign-in', request.url);
+    const url = new URL('/', request.url);
     url.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(url);
+    redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+    return redirectResponse;
   }
 }
 
