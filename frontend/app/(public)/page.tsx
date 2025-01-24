@@ -58,7 +58,10 @@ function SignInContent() {
         let role = data.user.role as UserRole;
         const callbackUrl = role === UserRole.TEAM_LEADER ? '/agent' : `/${role.toLowerCase()}`;
         console.log('callbackUrl', callbackUrl);
-        router.push(callbackUrl);
+        // router.push(callbackUrl);
+        setTimeout(() => {
+          router.push(callbackUrl);
+        }, 1000);
       } else {
         throw new Error('No access token received');
       }
