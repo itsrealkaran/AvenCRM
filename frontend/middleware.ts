@@ -11,41 +11,43 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/'];
+const publicRoutes = ['/sign-in', '/'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/dashboard', '/agent', '/admin', '/superadmin', '/calendar'];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  // Allow public routes without authentication
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
-    // If user is already authenticated, redirect to dashboard
+
+  // Allow access to public routes without authentication
+  if (publicRoutes.includes(pathname)) {
     const accessToken = request.cookies.get('Authorization')?.value;
     if (accessToken) {
       try {
         const decoded = jwtDecode<JWTPayload>(accessToken);
         if (decoded?.exp * 1000 > Date.now()) {
           const role = decoded.role.toLowerCase();
-          // Redirect team leaders to /agent route
-          if (role === 'team_leader') {
-            const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+          // Only redirect if we're on the root path or sign-in page
+          if (pathname === '/' || pathname === '/sign-in') {
+            if (role === 'team_leader') {
+              const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+              redirectResponse.headers.set('x-middleware-cache', 'no-cache');
+              return redirectResponse;
+            }
+            const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
             redirectResponse.headers.set('x-middleware-cache', 'no-cache');
             return redirectResponse;
           }
-          const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
-          redirectResponse.headers.set('x-middleware-cache', 'no-cache');
-          return redirectResponse;
         }
       } catch (error) {
-        toast.error('Invalid token');
-        const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+        // Invalid token - allow access to public routes
+        const redirectResponse = NextResponse.next();
         redirectResponse.headers.set('x-middleware-cache', 'no-cache');
         return redirectResponse;
       }
     }
     const redirectResponse = NextResponse.next();
-    redirectResponse.headers.set('x-middleware-cache', 'no-cache'); // ! FIX: Disable caching
+    redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }
 
@@ -53,7 +55,6 @@ export async function middleware(request: NextRequest) {
   const requiresAuth = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (!requiresAuth) {
-    // If it's not a protected route, proceed normally
     return NextResponse.next();
   }
 
@@ -61,55 +62,44 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('Authorization')?.value;
 
   if (!accessToken) {
-    // give a warning that user is not authenticated
     const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }
 
   try {
-    // Decode and validate token
     const decoded = jwtDecode<JWTPayload>(accessToken);
 
-    // Check token expiration
     if (decoded?.exp * 1000 < Date.now()) {
-      // Token is expired - redirect to sign-in
-      const url = new URL('/', request.url);
-      url.searchParams.set('callbackUrl', pathname);
-      const redirectResponse = NextResponse.redirect(url);
+      const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
       return redirectResponse;
     }
 
-    // Validate role-based access
     const role = decoded.role.toLowerCase();
+    const currentPath = pathname.split('/')[1]; // Get the first segment of the path
 
-    // Handle team leader redirection
+    // Handle team leader permissions
     if (role === 'team_leader') {
-      // Allow access to /agent route for team leaders
       if (pathname.startsWith('/agent') || pathname.startsWith('/dashboard')) {
         return NextResponse.next();
       }
-      // Redirect to /agent for any other routes
       const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
       return redirectResponse;
     }
 
-    // For other roles, check if they're accessing their designated route
-    if (pathname.startsWith(`/${role}`) || pathname.startsWith('/dashboard')) {
+    // For other roles, allow access if they're in their designated area or dashboard
+    if (currentPath === role || pathname.startsWith('/dashboard')) {
       return NextResponse.next();
     }
 
-    // Redirect to appropriate role-based route
+    // Redirect to their role-specific home page
     const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   } catch (error) {
-    // Invalid token - redirect to sign-in
-    const url = new URL('/', request.url);
-    url.searchParams.set('callbackUrl', pathname);
-    const redirectResponse = NextResponse.redirect(url);
+    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }
