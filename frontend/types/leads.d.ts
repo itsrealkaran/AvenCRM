@@ -1,7 +1,6 @@
 import { PropertyType } from './enums';
 
 export type Lead = {
-  id: string;
   name: string;
   email?: string;
   phone?: string;
@@ -14,7 +13,7 @@ export type Lead = {
   budget?: number;
   location?: string;
   lastContactDate?: Date;
-  notes?: Record<string, string>;
+  notes?: Record<Date, string>;
   socialProfiles?: Record<string, any>;
   createdAt: Date;
   updatedAt?: Date;

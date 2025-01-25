@@ -12,6 +12,7 @@ export const leadBaseSchema = z.object({
   status: z.nativeEnum(LeadStatus).default(LeadStatus.NEW),
   propertyType: z.nativeEnum(PropertyType).default(PropertyType.COMMERCIAL),
   budget: z.number().nullish(),
+  leadAmount: z.number().nullish(),
   location: z.string().nullish(),
   lastContactDate: z.date().nullish(),
   expectedDate: z.date().nullish(),
