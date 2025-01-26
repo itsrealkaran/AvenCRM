@@ -458,7 +458,7 @@ export default function CalendarView() {
         </div>
       </div>
 
-      <div className='p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 flex-1'>
+      <div className='p-6 pt-0 grid grid-cols-1 lg:grid-cols-[1fr,380px] gap-6 flex-1'>
         <div className='h-full'>
           <div className='bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full flex flex-col'>
             <div className='flex justify-between items-center mb-4'>
