@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { ChevronLeft, ChevronRight, Trash, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { read, utils } from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -33,9 +34,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
-import { read, utils } from 'xlsx';
-import FileImportModal from './file-import-modal';
 
+import FileImportModal from './file-import-modal';
 import { BaseRecord, DataTableProps } from './types';
 
 export function DataTable<TData extends BaseRecord, TValue>({
@@ -92,14 +92,17 @@ export function DataTable<TData extends BaseRecord, TValue>({
       if (fileType === 'csv') {
         const text = await file.text();
         const rows = text.split('\n');
-        const headers = rows[0].split(',').map(header => header.trim());
-        
-        jsonData = rows.slice(1).map(row => {
-          const values = row.split(',').map(value => value.trim());
-          return headers.reduce((obj, header, index) => {
-            obj[header] = values[index];
-            return obj;
-          }, {} as Record<string, string>);
+        const headers = rows[0].split(',').map((header) => header.trim());
+
+        jsonData = rows.slice(1).map((row) => {
+          const values = row.split(',').map((value) => value.trim());
+          return headers.reduce(
+            (obj, header, index) => {
+              obj[header] = values[index];
+              return obj;
+            },
+            {} as Record<string, string>
+          );
         });
       } else if (fileType === 'xlsx') {
         const buffer = await file.arrayBuffer();
@@ -111,11 +114,13 @@ export function DataTable<TData extends BaseRecord, TValue>({
       }
 
       // Filter out empty objects (from empty lines)
-      const filteredData = jsonData.filter(obj => Object.keys(obj).length > 0);
-      
+      const filteredData = jsonData.filter((obj) => Object.keys(obj).length > 0);
+
       console.log('Converted data:', filteredData);
-      toast.success(`Successfully parsed ${filteredData.length} rows from ${fileType?.toUpperCase()}`);
-      
+      toast.success(
+        `Successfully parsed ${filteredData.length} rows from ${fileType?.toUpperCase()}`
+      );
+
       // Reset the file input for future uploads
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
@@ -184,25 +189,25 @@ export function DataTable<TData extends BaseRecord, TValue>({
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <label className="flex w-full cursor-pointer">
+                <label className='flex w-full cursor-pointer'>
                   CSV
                   <input
-                    type="file"
+                    type='file'
                     ref={fileInputRef}
                     accept='.csv'
-                    className="hidden"
+                    className='hidden'
                     onChange={handleFileUpload}
                     onClick={(e) => e.stopPropagation()}
                   />
                 </label>
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <label className="flex w-full cursor-pointer">
+                <label className='flex w-full cursor-pointer'>
                   XLSX
                   <input
-                    type="file"
+                    type='file'
                     accept='.xlsx'
-                    className="hidden"
+                    className='hidden'
                     onChange={handleFileUpload}
                     onClick={(e) => e.stopPropagation()}
                   />
@@ -237,10 +242,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
         </div>
       </div>
       {fileData && fileData.length > 0 && (
-        <FileImportModal 
-          jsonData={fileData} 
-          onClose={() => setFileData(null)}
-        />
+        <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
       )}
       <div className='rounded-md border overflow-hidden'>
         <div className='overflow-x-auto'>
