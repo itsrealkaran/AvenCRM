@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtDecode } from 'jwt-decode';
-import { toast } from 'sonner';
 
 interface JWTPayload {
   id: string;
@@ -11,7 +10,7 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/'];
+const publicRoutes = ['/', '/signin'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/agent', '/admin', '/superadmin'];
