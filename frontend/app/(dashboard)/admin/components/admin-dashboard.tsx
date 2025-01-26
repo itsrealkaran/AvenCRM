@@ -83,6 +83,7 @@ export function AdminDashboard() {
   });
 
   useEffect(() => {
+    console.log(dashboardData?.leadMetrics);
     if (isError) {
       console.error('Error fetching dashboard data');
       toast.error('Failed to fetch dashboard data');
@@ -285,8 +286,8 @@ export function AdminDashboard() {
                   }}
                   labelStyle={{ color: '#111827' }}
                 />
-                <Bar dataKey='deals' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={30} />
-                <Bar dataKey='revenue' fill='#10b981' radius={[4, 4, 0, 0]} barSize={30} />
+                <Bar dataKey='dealCount' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={30} />
+                <Bar dataKey='totalAmount' fill='#10b981' radius={[4, 4, 0, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -302,7 +303,7 @@ export function AdminDashboard() {
             <ResponsiveContainer width='100%' height={350}>
               <LineChart
                 className='mt-4 h-72'
-                data={dashboardData!.leadMetrics}
+                data={dashboardData?.leadMetrics || []}
                 index='date'
                 categories={['leads', 'deals']}
                 colors={['gray', 'blue']}
