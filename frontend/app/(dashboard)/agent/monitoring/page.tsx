@@ -46,8 +46,8 @@ const agentPerformanceData = [
 
 export default function MonitoringPage() {
   return (
-    <section className='p-3'>
-      <Card className='container mx-auto p-6 space-y-6 h-full pb-8 overflow-y-auto'>
+    <section>
+      <Card className='container mx-auto p-6 space-y-6 h-full overflow-y-auto'>
         {/* Header Section */}
         <div className='flex justify-between items-center sticky top-0 bg-white z-10'>
           <div>

@@ -50,7 +50,7 @@ export function PropertyCard({ property, onEdit, onDelete }: PropertyCardProps) 
   };
 
   return (
-    <Card className='w-full max-w-sm transition-all hover:shadow-lg'>
+    <Card className='w-full max-w-lg transition-all hover:shadow-lg'>
       <CardHeader className='relative p-0'>
         <div className='relative h-48 w-full overflow-hidden'>
           {!isImageError && property?.images?.[0] ? (

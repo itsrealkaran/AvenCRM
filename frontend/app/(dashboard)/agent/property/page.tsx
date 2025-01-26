@@ -77,11 +77,11 @@ const Page = () => {
   );
 
   return (
-    <div className='container mx-auto p-4 space-y-6'>
+    <Card className='h-full p-4 space-y-6'>
       <div className='flex justify-between items-center'>
         <div>
-          <h1 className='text-3xl font-bold tracking-tight'>Properties</h1>
-          <p className='text-muted-foreground'>Manage your property listings</p>
+          <h1 className='text-2xl font-bold tracking-tight'>Properties</h1>
+          <p className='text-sm text-muted-foreground'>Manage your property listings</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className='mr-2 h-4 w-4' /> Add Property
@@ -108,7 +108,7 @@ const Page = () => {
         onOpenChange={setIsEditDialogOpen}
         property={selectedProperty}
       />
-    </div>
+    </Card>
   );
 };
 
