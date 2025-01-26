@@ -141,23 +141,23 @@ export default function TransactionsPage() {
 
       <TransactionFilters onFilterChange={handleFilterChange} typeOptions={typeOptions} />
 
-        <DataTable
-          columns={columns}
-          data={transactions}
-          onEdit={(transaction) => {
-            setSelectedTransaction(transaction);
-            setIsEditDialogOpen(true);
-          }}
-          onDelete={async (transactionId) => {
-            await deleteTransaction.mutateAsync(transactionId);
-          }}
-          onVerify={async (transactionId, isVerified) => {
-            await verifyTransaction.mutateAsync({ transactionId, isVerified });
-          }}
-          onBulkDelete={async (rows: any[]) => {
-            await bulkDeleteTransactions.mutateAsync(rows.map((row: { id: any }) => row.id));
-          }}
-        />
+      <DataTable
+        columns={columns}
+        data={transactions}
+        onEdit={(transaction) => {
+          setSelectedTransaction(transaction);
+          setIsEditDialogOpen(true);
+        }}
+        onDelete={async (transactionId) => {
+          await deleteTransaction.mutateAsync(transactionId);
+        }}
+        onVerify={async (transactionId, isVerified) => {
+          await verifyTransaction.mutateAsync({ transactionId, isVerified });
+        }}
+        onBulkDelete={async (rows: any[]) => {
+          await bulkDeleteTransactions.mutateAsync(rows.map((row: { id: any }) => row.id));
+        }}
+      />
 
       <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 

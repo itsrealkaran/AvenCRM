@@ -155,7 +155,9 @@ export default function LeadsPage() {
         <div className='flex justify-between items-center'>
           <div>
             <h1 className='text-2xl font-bold'>Leads Management</h1>
-            <p className='text-sm text-muted-foreground'>Manage and track your leads in one place</p>
+            <p className='text-sm text-muted-foreground'>
+              Manage and track your leads in one place
+            </p>
           </div>
           <div className='flex gap-2'>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
