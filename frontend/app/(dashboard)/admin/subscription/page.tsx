@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react"
 import axios from "axios"
-import { format } from "date-fns"
 import { FaCheck } from "react-icons/fa"
 
 import { StripeModal } from "@/components/stripe/stripe-modal"
