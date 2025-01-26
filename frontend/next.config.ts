@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       'images.pexels.com',
       'avencrm-bucket.s3.ap-south-1.amazonaws.com',
       'img.freepik.com',
+      'www.pngarts.com'
     ],
   },
 };
