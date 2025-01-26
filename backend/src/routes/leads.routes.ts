@@ -16,6 +16,9 @@ router.get('/:id', leadsController.getLeadById);
 // Create new lead
 router.post('/', leadsController.createLead);
 
+// Create multiple leads
+router.post('/bulk', leadsController.createManyLeads);
+
 // Update lead
 router.put('/:id', leadsController.updateLead);
 

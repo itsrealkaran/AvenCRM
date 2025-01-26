@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ReloadIcon } from '@radix-ui/react-icons';
 import {
   ColumnFiltersState,
@@ -12,10 +12,17 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, Trash, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -26,6 +33,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
+import { read, utils } from 'xlsx';
+import FileImportModal from './file-import-modal';
 
 import { BaseRecord, DataTableProps } from './types';
 
@@ -48,10 +57,12 @@ export function DataTable<TData extends BaseRecord, TValue>({
     'You are about to perform a bulk delete.'
   );
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = React.useState({});
-  const [currentPage, setCurrentPage] = React.useState(0);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectionChange = useCallback(
     (updatedSelection: typeof rowSelection) => {
@@ -65,6 +76,58 @@ export function DataTable<TData extends BaseRecord, TValue>({
     },
     [data, onSelectionChange]
   );
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.error('No file selected');
+      return;
+    }
+
+    try {
+      let jsonData: Record<string, string>[] = [];
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileType === 'csv') {
+        const text = await file.text();
+        const rows = text.split('\n');
+        const headers = rows[0].split(',').map(header => header.trim());
+        
+        jsonData = rows.slice(1).map(row => {
+          const values = row.split(',').map(value => value.trim());
+          return headers.reduce((obj, header, index) => {
+            obj[header] = values[index];
+            return obj;
+          }, {} as Record<string, string>);
+        });
+      } else if (fileType === 'xlsx') {
+        const buffer = await file.arrayBuffer();
+        const workbook = read(buffer);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        jsonData = utils.sheet_to_json(worksheet);
+      } else {
+        throw new Error('Unsupported file format');
+      }
+
+      // Filter out empty objects (from empty lines)
+      const filteredData = jsonData.filter(obj => Object.keys(obj).length > 0);
+      
+      console.log('Converted data:', filteredData);
+      toast.success(`Successfully parsed ${filteredData.length} rows from ${fileType?.toUpperCase()}`);
+      
+      // Reset the file input for future uploads
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      setFileData(filteredData);
+    } catch (error) {
+      console.error(`Error parsing ${file.name}:`, error);
+      toast.error(`Failed to parse ${file.name}. Please check the format.`);
+      setFileData(null);
+    }
+  };
 
   const table = useReactTable({
     data,
@@ -99,21 +162,55 @@ export function DataTable<TData extends BaseRecord, TValue>({
     <div>
       <ConfirmDialog />
       <div className='flex items-center py-4'>
-        <Input
-          placeholder={filterPlaceholder}
-          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
-          className='max-w-sm'
-        />
-        <Button
-          variant='secondary'
-          size='sm'
-          className='hover:bg-gray-100 transition duration-200 ml-2'
-          onClick={() => table.reset()}
-        >
-          <ReloadIcon className='size-4 mr-2' />
-          Reload
-        </Button>
+        <div className='flex items-center gap-2'>
+          <Input
+            placeholder={filterPlaceholder}
+            value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
+            onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+            className='max-w-sm'
+          />
+          <Button
+            variant='ghost'
+            className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'
+            onClick={() => table.reset()}
+          >
+            <ReloadIcon className='size-4 mr-2' />
+            Reload
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'>
+              <Upload className='size-4 mr-2' />
+              Upload
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className="flex w-full cursor-pointer">
+                  CSV
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    accept='.csv'
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className="flex w-full cursor-pointer">
+                  XLSX
+                  <input
+                    type="file"
+                    accept='.xlsx'
+                    className="hidden"
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
         <div className='ml-auto flex gap-2'>
           {buttons}
           {additionalActions}
@@ -139,6 +236,12 @@ export function DataTable<TData extends BaseRecord, TValue>({
           )}
         </div>
       </div>
+      {fileData && fileData.length > 0 && (
+        <FileImportModal 
+          jsonData={fileData} 
+          onClose={() => setFileData(null)}
+        />
+      )}
       <div className='rounded-md border overflow-hidden'>
         <div className='overflow-x-auto'>
           <Table>
