@@ -157,6 +157,7 @@ export function AgentDashboard() {
                   labelStyle={{ color: '#111827' }}
                 />
                 <Bar dataKey='deals' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey='leads' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

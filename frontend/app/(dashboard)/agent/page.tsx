@@ -3,22 +3,7 @@
 import { useEffect, useState } from 'react';
 import { authApi } from '@/api/api';
 import { User, UserRole } from '@/types';
-import {
-  Building2,
-  Calendar,
-  CreditCard,
-  DollarSign,
-  Home,
-  Mail,
-  ShieldCheck,
-  TrendingUp,
-  Users,
-} from 'lucide-react';
 import { toast } from 'sonner';
-
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // import { AdminDashboard } from './components/admin-dashboard';
 import { AgentDashboard } from './components/agent-dashboard';

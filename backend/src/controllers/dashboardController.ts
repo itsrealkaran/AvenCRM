@@ -231,12 +231,27 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       },
     });
 
+    const performanceData = Object.values(
+      monthlyPerformance.reduce((acc, item) => {
+        const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+        if (!acc[month]) {
+          acc[month] = {
+            month,
+            dealCount: 0,
+            totalAmount: 0
+          };
+        }
+        acc[month].dealCount += item._count;
+        acc[month].totalAmount += item._sum.dealAmount || 0;
+        return acc;
+      }, {} as Record<string, { month: string; dealCount: number; totalAmount: number }>)
+    );
+
     // Get top performing agents
     const topAgents = await prisma.deal.groupBy({
       by: ['agentId'],
       where: {
         companyId,
-        status: 'CLOSED_WON',
       },
       _count: true,
       _sum: {
@@ -266,9 +281,9 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       })
     );
 
-    // Get lead conversion metrics
-    const leadMetrics = await prisma.lead.groupBy({
-      by: ['status'],
+    // Get lead conversion metrics grouped by month
+    const monthlyLeads = await prisma.lead.groupBy({
+      by: ['createdAt'],
       where: {
         companyId,
         createdAt: {
@@ -278,22 +293,54 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       _count: true,
     });
 
+    const monthlyDeals = await prisma.deal.groupBy({
+      by: ['createdAt'],
+      where: {
+        companyId,
+        createdAt: {
+          gte: sixMonthsAgo,
+        },
+      },
+      _count: true,
+    });
+
+    // Create a map to store combined metrics by month
+    const metricsByMonth = new Map<string, { month: string; leads: number; deals: number }>();
+
+    // Process leads
+    monthlyLeads.forEach((item) => {
+      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+      if (!metricsByMonth.has(month)) {
+        metricsByMonth.set(month, { month, leads: 0, deals: 0 });
+      }
+      metricsByMonth.get(month)!.leads += item._count;
+    });
+
+    // Process deals
+    monthlyDeals.forEach((item) => {
+      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+      if (!metricsByMonth.has(month)) {
+        metricsByMonth.set(month, { month, leads: 0, deals: 0 });
+      }
+      metricsByMonth.get(month)!.deals += item._count;
+    });
+
+    // Convert to array and sort by month
+    const leadMetrics = Array.from(metricsByMonth.values())
+      .sort((a, b) => a.month.localeCompare(b.month));
+
     res.json({
       totalDeals: deals,
       activeLeads,
       wonDeals,
       revenue: revenue._sum.amount || 0,
       growthRates,
-      performanceData: monthlyPerformance.map((item) => ({
-        month: new Date(item.createdAt).toLocaleString('default', { month: 'short' }),
-        deals: item._count,
-        status: item.status,
-        revenue: item._sum?.dealAmount || 0,
-      })),
+      performanceData,
       topPerformers: agentDetails,
       leadMetrics: leadMetrics.map((metric) => ({
-        status: metric.status,
-        count: metric._count,
+        month: metric.month,
+        leads: metric.leads,
+        deals: metric.deals,
       })),
     });
   } catch (error) {
@@ -335,7 +382,7 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
     });
 
     // Get monthly performance data
-    const monthlyPerformance = await prisma.deal.groupBy({
+    const leads = await prisma.lead.groupBy({
       by: ['createdAt'],
       where: {
         agentId: userId,
@@ -346,14 +393,50 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
       _count: true,
     });
 
+    const deals = await prisma.deal.groupBy({
+      by: ['createdAt'],
+      where: {
+        agentId: userId,
+        createdAt: {
+          gte: sixMonthsAgo,
+        },
+      },
+      _count: true,
+    });
+
+    // Create a map to store combined metrics by month
+    const metricsByMonth = new Map<string, { month: string; leads: number; deals: number }>();
+
+    // Process leads
+    leads.forEach((item) => {
+      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+      if (!metricsByMonth.has(month)) {
+        metricsByMonth.set(month, { month, leads: 0, deals: 0 });
+      }
+      metricsByMonth.get(month)!.leads += item._count;
+    });
+
+    // Process deals
+    deals.forEach((item) => {
+      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+      if (!metricsByMonth.has(month)) {
+        metricsByMonth.set(month, { month, leads: 0, deals: 0 });
+      }
+      metricsByMonth.get(month)!.deals += item._count;
+    });
+
+    // Convert to array and sort by month
+    const monthlyPerformance = Array.from(metricsByMonth.values())
+      .sort((a, b) => a.month.localeCompare(b.month));
+
     res.json({
       totalLeads: myLeads,
       totalDeals: myDeals,
       pendingTasks: myTasks,
       revenue: myRevenue._sum.dealAmount || 0,
       performanceData: monthlyPerformance.map((item) => ({
-        month: new Date(item.createdAt).toLocaleString('default', { month: 'short' }),
-        deals: item._count,
+        month: new Date(item.month).toLocaleString('default', { month: 'short' }),
+        deals: item.deals,
       })),
     });
   } catch (error) {
