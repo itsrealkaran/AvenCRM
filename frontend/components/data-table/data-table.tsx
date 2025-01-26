@@ -177,43 +177,6 @@ export function DataTable<TData extends BaseRecord, TValue>({
           </Table>
         </div>
       </div>
-      <div className='flex items-center justify-between space-x-2 py-4'>
-        <div className='flex-1 text-sm text-muted-foreground'>
-          Showing {table.getRowModel().rows.length} of {data.length} results
-        </div>
-        <div className='flex items-center space-x-2'>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => {
-              table.previousPage();
-              setCurrentPage((prev) => Math.max(0, prev - 1));
-            }}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <ChevronLeft className='h-4 w-4 mr-2' />
-            Previous
-          </Button>
-          <div className='flex items-center gap-1'>
-            <span className='text-sm font-medium'>Page</span>
-            <span className='text-sm font-medium'>
-              {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-            </span>
-          </div>
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={() => {
-              table.nextPage();
-              setCurrentPage((prev) => Math.min(table.getPageCount() - 1, prev + 1));
-            }}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-            <ChevronRight className='h-4 w-4 ml-2' />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

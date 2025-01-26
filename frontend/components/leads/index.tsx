@@ -129,7 +129,7 @@ export default function LeadsPage() {
   if (isLoading) {
     return (
       <section className='p-4'>
-        <Card className='mx-auto max-w-[1400px] p-4'>
+        <Card className='h-full w-full p-4'>
           <div className='flex justify-between items-center '>
             <div>
               <Skeleton className='h-10 w-60 mb-2' />
@@ -150,12 +150,12 @@ export default function LeadsPage() {
   }
 
   return (
-    <section className='p-4'>
-      <Card className='mx-auto max-w-[1400px] p-4'>
+    <section className='h-full'>
+      <Card className='h-full w-full p-6'>
         <div className='flex justify-between items-center'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight text-primary'>Leads Management</h1>
-            <p className='text-muted-foreground'>Manage and track your leads in one place</p>
+            <h1 className='text-2xl font-bold'>Leads Management</h1>
+            <p className='text-sm text-muted-foreground'>Manage and track your leads in one place</p>
           </div>
           <div className='flex gap-2'>
             <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -164,7 +164,7 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <div className='space-4 p-6'>
+        <div className='space-4'>
           <DataTable
             columns={user?.role === UserRole.ADMIN ? adminColumns : columns}
             data={leads}

@@ -38,12 +38,12 @@ const menuItems = [
     path: '/admin/subscription',
     description: 'Subscription management',
   },
-  {
-    heading: 'Monitoring',
-    icon: Monitor,
-    path: '/admin/monitoring',
-    description: 'System monitoring',
-  },
+  // {
+  //   heading: 'Monitoring',
+  //   icon: Monitor,
+  //   path: '/admin/monitoring',
+  //   description: 'System monitoring',
+  // },
   {
     heading: 'Properties',
     icon: Building2,

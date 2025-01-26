@@ -123,14 +123,14 @@ export default function TransactionsPage() {
 
   if (isLoading) {
     return (
-      <Card className='p-6'>
+      <Card className='h-full p-6'>
         <Skeleton className='h-[400px] w-full' />
       </Card>
     );
   }
 
   return (
-    <Card className='flex flex-col gap-4 p-7 max-h-[calc(100vh-150px)] overflow-y-auto'>
+    <Card className='flex flex-col gap-4 p-6 h-full'>
       <div className='flex items-center justify-between'>
         <h1 className='text-2xl font-semibold'>Transactions</h1>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
@@ -141,7 +141,6 @@ export default function TransactionsPage() {
 
       <TransactionFilters onFilterChange={handleFilterChange} typeOptions={typeOptions} />
 
-      <Card>
         <DataTable
           columns={columns}
           data={transactions}
@@ -159,7 +158,6 @@ export default function TransactionsPage() {
             await bulkDeleteTransactions.mutateAsync(rows.map((row: { id: any }) => row.id));
           }}
         />
-      </Card>
 
       <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
