@@ -102,32 +102,34 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
           </TooltipProvider>
         ))}
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant='ghost'
-              className={`w-full mt-2 ${isCollapsed ? '' : 'justify-start'} ${isCollapsed ? 'px-2' : 'px-4'} text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
-            >
-              <MoreHorizontal className='h-5 w-5' />
-              {!isCollapsed && <span className='ml-2'>More Options</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className='w-56' align={isCollapsed ? 'center' : 'start'} side='right'>
-            <div className='grid gap-2'>
-              {iconTrayItems.map((item, index) => (
-                <Link
-                  key={index}
-                  href={item.path}
-                  className={`flex items-center rounded-md p-2 text-sm transition-colors
-                    ${pathname === item.path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}`}
-                >
-                  <item.icon className='mr-2 h-4 w-4' />
-                  <span>{item.heading}</span>
-                </Link>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
+        {menuItems.length > 8 && (
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant='ghost'
+                className={`w-full mt-2 ${isCollapsed ? '' : 'justify-start'} ${isCollapsed ? 'px-2' : 'px-4'} text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
+              >
+                <MoreHorizontal className='h-5 w-5' />
+                {!isCollapsed && <span className='ml-2'>More Options</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className='w-56' align={isCollapsed ? 'center' : 'start'} side='right'>
+              <div className='grid gap-2'>
+                {iconTrayItems.map((item, index) => (
+                  <Link
+                    key={index}
+                    href={item.path}
+                    className={`flex items-center rounded-md p-2 text-sm transition-colors
+                      ${pathname === item.path ? 'bg-primary text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+                  >
+                    <item.icon className='mr-2 h-4 w-4' />
+                    <span>{item.heading}</span>
+                  </Link>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        )}
       </div>
 
       <TooltipProvider>

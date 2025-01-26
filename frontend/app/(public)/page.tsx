@@ -70,7 +70,7 @@ function SignInContent() {
   return (
     <div className="min-h-screen w-full flex bg-gradient-to-br from-[#9BF3F0] via-[#DAFFED] to-[#FFC2B4]">
       {/* Left Side - Form */}
-      <div className="w-full lg:w-3/5 p-6 sm:p-8 md:p-12 flex flex-col justify-center bg-white">
+      <div className="w-full lg:w-1/2 p-6 sm:p-8 md:p-12 flex flex-col justify-center bg-white">
         <div className="max-w-md mx-auto w-full">
           <div className="mb-8">
             <Link href="/" className="inline-flex items-center">
@@ -159,7 +159,7 @@ function SignInContent() {
       </div>
 
       {/* Right Side - Illustration */}
-      <div className="hidden lg:block lg:w-2/5 relative overflow-hidden">
+      <div className="hidden lg:block lg:w-1/2 relative overflow-hidden">
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
