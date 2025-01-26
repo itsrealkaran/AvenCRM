@@ -20,13 +20,13 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
         if (user) {
           setIsAuthenticated(true);
         } else {
-          router.push('/sign-in');
+          router.push('/');
         }
       } catch (error) {
         toast.error('Authentication failed');
         localStorage.removeItem('accessToken');
         setIsAuthenticated(false);
-        router.push('/sign-in');
+        router.push('/');
       }
     };
 

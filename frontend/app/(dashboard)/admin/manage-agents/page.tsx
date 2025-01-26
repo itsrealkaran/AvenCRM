@@ -9,7 +9,6 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 
 import { AgentMetricsDialog } from './agent-metrics-dialog';
 import { columns } from './columns';

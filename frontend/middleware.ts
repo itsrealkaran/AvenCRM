@@ -11,7 +11,7 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/sign-in', '/'];
+const publicRoutes = ['/'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/agent', '/admin', '/superadmin'];
@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
         if (decoded?.exp * 1000 > Date.now()) {
           const role = decoded.role.toLowerCase();
           // Only redirect if we're on the root path or sign-in page
-          if (pathname === '/' || pathname === '/sign-in') {
+          if (pathname === '/' || pathname === '/') {
             if (role === 'team_leader') {
               const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
               redirectResponse.headers.set('x-middleware-cache', 'no-cache');
@@ -62,7 +62,7 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('Authorization')?.value;
 
   if (!accessToken) {
-    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/', request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }
@@ -71,7 +71,7 @@ export async function middleware(request: NextRequest) {
     const decoded = jwtDecode<JWTPayload>(accessToken);
 
     if (decoded?.exp * 1000 < Date.now()) {
-      const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/', request.url));
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
       return redirectResponse;
     }
@@ -99,7 +99,7 @@ export async function middleware(request: NextRequest) {
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   } catch (error) {
-    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/', request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }

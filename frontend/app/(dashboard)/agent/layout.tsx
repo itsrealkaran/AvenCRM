@@ -117,11 +117,11 @@ if (getUserRole() === 'teamleader') {
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className='flex min-h-screen bg-slate-100'>
+    <div className='flex h-screen bg-slate-100 relative'>
       <Sidebar menuItems={menuItems} />
-      <div className='flex-1 flex flex-col min-w-0'>
+      <div className='flex-1 flex flex-col'>
         <Topbar />
-        <main className='flex-1 overflow-y-auto'>{children}</main>
+        <main className='flex-1 overflow-y-auto p-4'>{children}</main>
       </div>
     </div>
   );
