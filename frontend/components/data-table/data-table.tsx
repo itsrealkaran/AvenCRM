@@ -51,6 +51,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
   disabled = false,
   additionalActions,
   buttons,
+  refetch,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -177,7 +178,10 @@ export function DataTable<TData extends BaseRecord, TValue>({
           <Button
             variant='ghost'
             className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'
-            onClick={() => table.reset()}
+            onClick={() => {
+              table.reset();
+              refetch?.();
+            }}
           >
             <ReloadIcon className='size-4 mr-2' />
             Reload
@@ -228,7 +232,6 @@ export function DataTable<TData extends BaseRecord, TValue>({
               onClick={async () => {
                 const ok = await confirm();
                 if (ok) {
-                  toast.loading('Deleting...', { id: 'delete' });
                   onBulkDelete(table.getFilteredSelectedRowModel().rows);
                   toast.dismiss('delete');
                   table.resetRowSelection();
