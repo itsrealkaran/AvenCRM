@@ -190,7 +190,7 @@ export default function TaskPage() {
     });
 
   return (
-    <Card className='p-6 h-full'>
+    <Card className='p-6 min-h-full'>
       <div className='flex justify-between items-center mb-6'>
         <h1 className='text-2xl font-bold'>Tasks</h1>
         <div className='flex gap-2'>

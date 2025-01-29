@@ -47,7 +47,7 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
 
   return (
     <div
-      className={`h-screen z-50 sticky top-0 select-none overflow-x-hidden bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
+      className={`h-screen flex-shrink-0  z-50 sticky top-0 select-none overflow-x-hidden bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
         ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
         ${isMobile ? 'absolute' : 'relative'}`}
     >
