@@ -20,4 +20,5 @@ export interface DataTableProps<TData extends BaseRecord, TValue> {
   disabled?: boolean;
   additionalActions?: React.ReactNode;
   buttons?: React.ReactNode;
+  refetch?: () => void;
 }

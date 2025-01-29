@@ -34,7 +34,7 @@ export default function DealsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: response, isLoading } = useQuery({
+  const { data: response, isLoading, refetch } = useQuery({
     queryKey: ['deals'],
     queryFn: getDeals,
   });
@@ -176,6 +176,7 @@ export default function DealsPage() {
             onDelete={handleDelete}
             onSelectionChange={handleSelectionChange}
             onStatusChange={handleStatusChange}
+            refetch={refetch}
           />
         </div>
 

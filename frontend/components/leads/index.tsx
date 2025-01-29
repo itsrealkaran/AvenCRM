@@ -36,7 +36,7 @@ export default function LeadsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: response, isLoading } = useQuery({
+  const { data: response, isLoading, refetch } = useQuery({
     queryKey: ['leads'],
     queryFn: getLeads,
   });
@@ -182,6 +182,7 @@ export default function LeadsPage() {
               setSelectedLead(lead);
               setIsConvertDialogOpen(true);
             }}
+            refetch={refetch}
           />
         </div>
 
