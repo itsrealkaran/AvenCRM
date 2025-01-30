@@ -11,7 +11,7 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/'];
+const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/agent', '/admin', '/superadmin'];
@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
           }
         } catch (error) {
           toast.error('Invalid token');
-          const redirectResponse = NextResponse.redirect(new URL('/', request.url));
+          const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
           redirectResponse.headers.set('x-middleware-cache', 'no-cache');
           return redirectResponse;
         }
@@ -63,7 +63,7 @@ export async function middleware(request: NextRequest) {
 
     if (!accessToken) {
       // give a warning that user is not authenticated
-      const redirectResponse = NextResponse.redirect(new URL('/', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
       return redirectResponse;
     }
@@ -75,7 +75,7 @@ export async function middleware(request: NextRequest) {
       // Check token expiration
       if (decoded?.exp * 1000 < Date.now()) {
         // Token is expired - redirect to sign-in
-        const url = new URL('/', request.url);
+        const url = new URL('/sign-in', request.url);
         url.searchParams.set('callbackUrl', pathname);
         const redirectResponse = NextResponse.redirect(url);
         redirectResponse.headers.set('x-middleware-cache', 'no-cache');
@@ -103,7 +103,7 @@ export async function middleware(request: NextRequest) {
       return redirectResponse;
     } catch (error) {
       // Invalid token - redirect to sign-in
-      const url = new URL('/', request.url);
+      const url = new URL('/sign-in', request.url);
       url.searchParams.set('callbackUrl', pathname);
       const redirectResponse = NextResponse.redirect(url);
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
@@ -121,7 +121,7 @@ export async function middleware(request: NextRequest) {
         if (decoded?.exp * 1000 > Date.now()) {
           const role = decoded.role.toLowerCase();
           // Only redirect if we're on the root path or sign-in page
-          if (pathname === '/' || pathname === '/') {
+          if (pathname === '/' || pathname === '/sign-in') {
             if (role === 'team_leader') {
               const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
               redirectResponse.headers.set('x-middleware-cache', 'no-cache');
@@ -155,7 +155,7 @@ export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get('Authorization')?.value;
 
   if (!accessToken) {
-    const redirectResponse = NextResponse.redirect(new URL('/', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }
@@ -164,7 +164,7 @@ export async function middleware(request: NextRequest) {
     const decoded = jwtDecode<JWTPayload>(accessToken);
 
     if (decoded?.exp * 1000 < Date.now()) {
-      const redirectResponse = NextResponse.redirect(new URL('/', request.url));
+      const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
       return redirectResponse;
     }
@@ -192,7 +192,7 @@ export async function middleware(request: NextRequest) {
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   } catch (error) {
-    const redirectResponse = NextResponse.redirect(new URL('/', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
     redirectResponse.headers.set('x-middleware-cache', 'no-cache');
     return redirectResponse;
   }
