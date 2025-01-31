@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Transaction } from '@/types';
+import { Transaction, TransactionStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
@@ -17,7 +17,7 @@ import { EditTransactionDialog } from './edit-transaction-dialog';
 
 async function getTransactions(): Promise<Transaction[]> {
   try {
-    const response = await api.get('/transactions');
+    const response = await api.get('/transactions/teamleader');
     return response.data;
   } catch (error) {
     console.error('Error fetching transactions:', error);
@@ -77,6 +77,21 @@ export default function TransactionsPage() {
     },
   });
 
+  const verifyTransaction = useMutation({
+    mutationFn: async ({ id, isVerified }: { id: string; isVerified: TransactionStatus }) => {
+      try {
+        await api.put(`/transactions/teamleader/verify/${id}`, { isVerified });
+      } catch (error) {
+        console.error('Error verifying transaction:', error);
+        throw new Error('Failed to verify transaction');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction status updated successfully');
+    },
+  });
+
   const handleEdit = (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setIsEditDialogOpen(true);
@@ -96,6 +111,14 @@ export default function TransactionsPage() {
       } catch (error) {
         toast.error('Failed to delete some transactions');
       }
+    }
+  };
+
+  const handleVerify = async (id: string, isVerified: TransactionStatus) => {
+    try {
+      await verifyTransaction.mutateAsync({ id, isVerified });
+    } catch (error) {
+      toast.error('Failed to update transaction status');
     }
   };
 
@@ -129,6 +152,7 @@ export default function TransactionsPage() {
               const transactionIds = row.map((row) => row.original.id);
               await handleBulkDelete(transactionIds);
             }}
+            onVerify={handleVerify}
             onSelectionChange={handleSelectionChange}
           />
         </div>

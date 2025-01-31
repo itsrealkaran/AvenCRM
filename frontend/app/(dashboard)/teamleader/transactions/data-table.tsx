@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Transaction } from '@/types';
+import { Transaction, TransactionStatus } from '@/types';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -34,6 +34,7 @@ interface DataTableProps<TData, TValue> {
   data: TData[];
   onEdit?: (transaction: Transaction) => void;
   onDelete: (rows: Row<TData>[]) => void;
+  onVerify?: (id: string, isVerified: TransactionStatus) => void;
   onSelectionChange?: (selectedItems: Transaction[]) => void;
   disabled?: boolean;
 }
@@ -43,6 +44,7 @@ export function DataTable<TData, TValue>({
   data,
   onEdit,
   onDelete,
+  onVerify,
   onSelectionChange,
   disabled,
 }: DataTableProps<TData, TValue>) {
@@ -73,6 +75,7 @@ export function DataTable<TData, TValue>({
     meta: {
       onEdit,
       onDelete,
+      onVerify,
     },
   });
 

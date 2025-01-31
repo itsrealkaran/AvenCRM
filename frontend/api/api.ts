@@ -85,7 +85,7 @@ export const transactionApi = {
     apiClient.delete('/transactions', { data: { transactionIds } }),
 
   verify: (id: string, isVerified: boolean) =>
-    apiClient.put<Transaction>(`/transactions/${id}/verify`, { isVerified }),
+    apiClient.put<Transaction>(`/transactions/admin/verify/${id}`, { isVerified }),
 };
 
 export const userApi = {

@@ -348,8 +348,7 @@ model Transaction {
   agentId        String
 
   //verified status
-  isApprovedByTeamLeader Boolean @default(false)
-  isApprovedByAdmin      Boolean @default(false)
+  isApprovedByTeamLeader TransactionStatus @default(PENDING)
   status                 TransactionStatus @default(PENDING)
   
   // Invoice and Billing

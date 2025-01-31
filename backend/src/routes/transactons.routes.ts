@@ -2,7 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { protect } from "../middleware/auth.js";
 import { Request } from "express";
-import { PlanTier, UserRole } from "@prisma/client";
+import { PlanTier, TransactionStatus, UserRole } from "@prisma/client";
 import { getAllTransactions } from "../controllers/transactions.controller.js";
 
 const router: Router = Router();
@@ -90,11 +90,11 @@ router.post("/", async (req: Request, res: Response) => {
         const invoiceNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
         console.log(invoiceNumber);
 
-        let isApprovedByTeamLeader = false;
+        let isApprovedByTeamLeader: TransactionStatus = TransactionStatus.PENDING;
         if(req.user?.role === UserRole.TEAM_LEADER) {
-            isApprovedByTeamLeader = true;
+            isApprovedByTeamLeader = TransactionStatus.APPROVED;
         } else if (req.user?.teamId === null || req.user?.teamId === "") {
-            isApprovedByTeamLeader = true;
+            isApprovedByTeamLeader = TransactionStatus.APPROVED;
         }
         
         const transaction = await prisma.transaction.create({
@@ -123,6 +123,52 @@ router.post("/", async (req: Request, res: Response) => {
     } catch (error) {
         console.error("Create transaction error:", error);
         res.status(500).json({ message: "Failed to create transaction" });
+    }
+});
+
+router.put("/teamleader/verify/:id", async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { isVerified } = req.body;
+
+        if (req.user?.role !== "TEAM_LEADER") {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        await prisma.transaction.update({
+            where: { id },
+            data: {
+                isApprovedByTeamLeader: isVerified
+            }
+        });
+
+        res.json("transaction verified");
+    } catch (error) {
+        console.error('Error verifying transaction:', error);
+        res.status(500).json({ message: 'Failed to verify transaction' });
+    }
+});
+
+router.put("/admin/verify/:id", async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { isVerified } = req.body;
+
+        if (req.user?.role !== "ADMIN") {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+         await prisma.transaction.update({
+            where: { id },
+            data: {
+                status: isVerified
+            }
+        });
+
+        res.json("transaction verified");
+    } catch (error) {
+        console.error('Error verifying transaction:', error);
+        res.status(500).json({ message: 'Failed to verify transaction' });
     }
 });
 
@@ -226,43 +272,5 @@ router.delete("/", async (req: Request, res: Response) => {
         res.status(500).json({ message: "Failed to delete transactions" });
     }
 });
-
-
-// router.put("/:id/verify", async (req: Request, res: Response) => {
-//     try {
-//         const { isVerified } = req.body;
-        
-//         // Check if transaction exists and belongs to the user's company
-//         const existingTransaction = await prisma.transaction.findFirst({
-//             where: {
-//                 id: req.params.id,
-//                 companyId: req.user?.companyId
-//             }
-//         });
-
-//         if (!existingTransaction) {
-//             return res.status(404).json({ message: "Transaction not found" });
-//         }
-
-//         const transaction = await prisma.transaction.update({
-//             where: { id: req.params.id },
-//             data: { isVerified: isVerified },
-//             include: {
-//                 agent: {
-//                     select: {
-//                         id: true,
-//                         name: true,
-//                         email: true
-//                     }
-//                 }
-//             }
-//         });
-        
-//         res.json(transaction);
-//     } catch (error) {
-//         console.error("Verify transaction error:", error);
-//         res.status(500).json({ message: "Failed to verify transaction" });
-//     }
-// });
 
 export default router;

@@ -1,6 +1,6 @@
 'use client';
 
-import { Transaction } from '@/types';
+import { Transaction, TransactionStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, Copy, MoreHorizontal, Pencil, Trash } from 'lucide-react';
@@ -81,34 +81,6 @@ export const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: 'type',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Type
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-  },
-  {
-    accessorKey: 'planType',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Plan Type
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-  },
-  {
     accessorKey: 'isVerfied',
     header: ({ column }) => {
       return (
@@ -122,12 +94,23 @@ export const columns: ColumnDef<Transaction>[] = [
       );
     },
     cell: ({ row }) => {
-      const isVerified = row.getValue('isVerfied');
+      const status = row.original.status;
+
       return (
         <Badge
-          className={isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
+          className={
+            status === TransactionStatus.APPROVED
+              ? 'bg-green-100 text-green-800'
+              : TransactionStatus.REJECTED
+                ? 'bg-red-100 text-red-800'
+                : 'bg-yellow-100 text-yellow-800'
+          }
         >
-          {isVerified ? 'Verified' : 'Pending'}
+          {status === TransactionStatus.APPROVED
+            ? 'Verified'
+            : status === TransactionStatus.REJECTED
+              ? 'Rejected'
+              : 'Pending'}
         </Badge>
       );
     },

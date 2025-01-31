@@ -1,24 +1,23 @@
-import { PlanTier, TransactionType } from './enums';
+import { TransactionStatus } from './enums';
 
 export interface Transaction {
   id: string;
   companyId: string;
   amount: number;
   date: Date;
-  type: TransactionType;
   agentId: string;
   agent?: {
     id: string;
     name: string;
     email: string;
   };
-  planType?: PlanTier;
+  isApprovedByTeamLeader: TransactionStatus;
+  status: TransactionStatus;
   isVerfied: boolean;
   invoiceNumber?: string;
-  taxRate?: number;
+  commissionRate?: number;
   totalAmount?: number;
   transactionMethod?: string;
-  receiptUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 }

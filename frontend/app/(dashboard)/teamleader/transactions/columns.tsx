@@ -1,6 +1,6 @@
 'use client';
 
-import { Transaction } from '@/types';
+import { Transaction, TransactionStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, Copy, MoreHorizontal, Pencil, Trash } from 'lucide-react';
@@ -81,34 +81,6 @@ export const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: 'type',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Type
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-  },
-  {
-    accessorKey: 'planType',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Plan Type
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-  },
-  {
     accessorKey: 'isVerfied',
     header: ({ column }) => {
       return (
@@ -121,14 +93,37 @@ export const columns: ColumnDef<Transaction>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => {
-      const isVerified = row.getValue('isVerfied');
+    cell: ({ row, table }) => {
+      const isApproved = row.original.isApprovedByTeamLeader;
+      const meta = table.options.meta as {
+        onVerify?: (id: string, isVerified: boolean) => void;
+      };
+
+      if (isApproved === TransactionStatus.APPROVED) {
+        return <Badge variant="outline" className="bg-green-50 text-green-600 text-center">Approved</Badge>;
+      } else if (isApproved === TransactionStatus.REJECTED) {
+        return <Badge variant="outline" className="bg-red-50 text-red-600 text-center">Rejected</Badge>;
+      }
+
       return (
-        <Badge
-          className={isVerified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}
-        >
-          {isVerified ? 'Verified' : 'Pending'}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
+            onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.APPROVED)}
+          >
+            Approve
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700"
+            onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.REJECTED)}
+          >
+            Reject
+          </Button>
+        </div>
       );
     },
   },

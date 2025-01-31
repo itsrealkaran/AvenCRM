@@ -1,6 +1,6 @@
 'use client';
 
-import { Transaction } from '@/types';
+import { Transaction, TransactionStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';
@@ -100,11 +100,17 @@ export const columns: ColumnDef<Transaction>[] = [
     accessorKey: 'isVerified',
     header: 'Status',
     cell: ({ row, table }) => {
-      const isVerified: boolean = row.getValue('isVerified') as boolean; // Explicitly type as boolean
       const transaction = row.original;
+      const isVerified = transaction.status;
       const meta = table.options.meta as {
         onVerify?: (transactionId: string, isVerified: boolean) => void;
       };
+
+      if (isVerified === TransactionStatus.APPROVED) {
+        return <Badge variant="outline" className="bg-green-50 text-green-600">Approved</Badge>;
+      } else if (isVerified === TransactionStatus.REJECTED) {
+        return <Badge variant="outline" className="bg-red-50 text-red-600">Rejected</Badge>;
+      }
 
       return (
         <div className='flex items-center gap-2'>
@@ -113,7 +119,7 @@ export const columns: ColumnDef<Transaction>[] = [
               variant='outline'
               size='sm'
               disabled={isVerified}
-              onClick={() => meta.onVerify?.(transaction.id, true)}
+              onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.APPROVED)}
               className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
             >
               {isVerified ? 'Verified' : 'Verify'}
@@ -122,7 +128,7 @@ export const columns: ColumnDef<Transaction>[] = [
               variant='ghost'
               size='sm'
               disabled={!isVerified}
-              onClick={() => meta.onVerify?.(transaction.id, false)}
+              onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.REJECTED)}
               className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
             >
               {!isVerified ? 'Unverified' : 'Unverify'}

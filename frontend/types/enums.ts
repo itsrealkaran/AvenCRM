@@ -43,6 +43,12 @@ export enum TransactionType {
   COMMISSION = 'COMMISSION',
 }
 
+export enum TransactionStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
 export enum PlanTier {
   BASIC = 'BASIC',
   PROFESSIONAL = 'PROFESSIONAL',

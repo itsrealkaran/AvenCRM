@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { TransactionFilter } from '../types/filters.js';
-import { UserRole } from '@prisma/client';
+import { TransactionStatus, UserRole } from '@prisma/client';
 import { subMonths } from 'date-fns';
 
 export const getAllTransactions = async (req: Request, res: Response) => {
@@ -60,7 +60,10 @@ export const getAllTransactions = async (req: Request, res: Response) => {
 
         // Get transactions with pagination and filters
         const transactions = await prisma.transaction.findMany({
-            where,
+            where: {
+                ...where,
+                isApprovedByTeamLeader: TransactionStatus.APPROVED
+            },
             include: {
                 agent: {
                     select: {
