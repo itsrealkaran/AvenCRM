@@ -176,43 +176,40 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
 }
 
 async function handleSubscriptionCancellation(subscription: Stripe.Subscription) {
-  const customerId = subscription.customer as string;
-  const metadata = subscription.metadata;
+  // const customerId = subscription.customer as string;
+  // const metadata = subscription.metadata;
 
-  if (!metadata?.companyId) {
-    throw new Error('Company ID not found in subscription metadata');
-  }
+  // if (!metadata?.companyId) {
+  //   throw new Error('Company ID not found in subscription metadata');
+  // }
 
-  try {
-    // Create a cancellation transaction record
-    await prisma.transaction.create({
-      data: {
-        amount: 0,
-        type: 'SUBSCRIPTION',
-        company: {
-          connect: { id: metadata.companyId }
-        },
-        agent: {
-          connect: { id: metadata.userId }
-        },
-        planType: metadata.planType as PlanTier,
-        isVerified: true,
-        transactionMethod: 'STRIPE',
-        receiptUrl: null,
-      },
-    });
+  // try {
+  //   // Create a cancellation transaction record
+  //   await prisma.transaction.create({
+  //     data: {
+  //       amount: 0,
+  //       company: {
+  //         connect: { id: metadata.companyId }
+  //       },
+  //       agent: {
+  //         connect: { id: metadata.userId }
+  //       },
+  //       transactionMethod: 'STRIPE',
+  //       receiptUrl: null,
+  //     },
+  //   });
 
-    // Update company subscription details
-    await prisma.company.update({
-      where: { id: metadata.companyId },
-      data: {
-        planEnd: new Date(), // End subscription immediately
-      },
-    });
-  } catch (error) {
-    console.error('Error handling subscription cancellation:', error);
-    throw error;
-  }
+  //   // Update company subscription details
+  //   await prisma.company.update({
+  //     where: { id: metadata.companyId },
+  //     data: {
+  //       planEnd: new Date(), // End subscription immediately
+  //     },
+  //   });
+  // } catch (error) {
+  //   console.error('Error handling subscription cancellation:', error);
+  //   throw error;
+  // }
 }
 
 export default router;

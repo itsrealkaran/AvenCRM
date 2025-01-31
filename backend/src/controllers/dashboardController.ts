@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import prisma from '../db/index.js';
-import { UserRole, DealStatus, LeadStatus } from '@prisma/client';
 
 // Helper function to calculate growth rate
 const calculateGrowthRate = (current: number, previous: number): number => {
@@ -21,7 +20,6 @@ const getMonthlyData = async (startDate: Date, companyId: string) => {
     by: ['createdAt'],
     where: {
       companyId,
-      type: 'INCOME',
       createdAt: {
         gte: startDate,
       },
@@ -77,7 +75,6 @@ const getPreviousMonthData = async (companyId: string) => {
   const lastMonthRevenue = await prisma.transaction.aggregate({
     where: {
       companyId,
-      type: 'INCOME',
       createdAt: {
         gte: firstDayOfLastMonth,
         lt: firstDayOfCurrentMonth
@@ -134,7 +131,7 @@ export const getSuperAdminDashboard = async (req: Request, res: Response) => {
     });
 
     // Calculate total revenue
-    const totalRevenue = await prisma.transaction.aggregate({
+    const totalRevenue = await prisma.payments.aggregate({
       _sum: {
         amount: true,
       },
@@ -198,7 +195,6 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
     const revenue = await prisma.transaction.aggregate({
       where: {
         companyId,
-        type: 'INCOME',
       },
       _sum: {
         amount: true,
@@ -476,7 +472,6 @@ export const getMonitoringData = async (req: Request, res: Response) => {
     const totalRevenue = await prisma.transaction.aggregate({
       where: {
         companyId,
-        type: 'INCOME',
       },
       _sum: {
         amount: true,
@@ -486,7 +481,6 @@ export const getMonitoringData = async (req: Request, res: Response) => {
     const previousMonthRevenue = await prisma.transaction.aggregate({
       where: {
         companyId,
-        type: 'INCOME',
         createdAt: {
           lt: new Date(new Date().setMonth(new Date().getMonth() - 1)),
         },

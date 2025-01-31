@@ -39,11 +39,10 @@ enum DealStatus {
   CLOSED_LOST
 }
 
-enum TransactionType {
-  INCOME
-  EXPENSE
-  SUBSCRIPTION
-  COMMISSION
+enum TransactionStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum PlanTier {
@@ -345,23 +344,22 @@ model Transaction {
   // Tranasctions Details
   amount         Float
   date           DateTime    @default(now())
-  type           TransactionType
   agent          User       @relation(fields: [agentId], references: [id])
   agentId        String
 
-  planType       PlanTier?
-  isVerified      Boolean     @default(false)
+  //verified status
+  isApprovedByTeamLeader Boolean @default(false)
+  isApprovedByAdmin      Boolean @default(false)
+  status                 TransactionStatus @default(PENDING)
   
   // Invoice and Billing
-  invoiceNumber  String?
-  taxRate        Float?
+  invoiceNumber  String
+  commissionRate Float?
   totalAmount    Float?
   
   // Additional Financial Info
   transactionMethod  String?
   receiptUrl     String?
-
-  role           LeadRole    @default(SALE)
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

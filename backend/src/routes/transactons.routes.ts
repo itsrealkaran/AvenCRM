@@ -2,7 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { protect } from "../middleware/auth.js";
 import { Request } from "express";
-import { PlanTier } from "@prisma/client";
+import { PlanTier, UserRole } from "@prisma/client";
 import { getAllTransactions } from "../controllers/transactions.controller.js";
 
 const router: Router = Router();
@@ -35,6 +35,40 @@ router.get("/", async (req: Request, res: Response) => {
     }
 });
 
+router.get("/teamleader", async (req: Request, res: Response) => {
+    try {
+        const role = req.user?.role;
+        if (role && role !== "TEAM_LEADER") {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
+
+        const team = await prisma.team.findFirst({
+            where: {
+                teamLeaderId: req.user?.id
+            },
+            include: {
+                members: true
+            }
+        })
+        
+        if(!team){
+            return res.status(404).json({ message: "Team not found" });
+        }
+
+        const agentsId = team.members.map(member => member.id);
+        const transactions = await prisma.transaction.findMany({
+            where: {
+                agentId: {
+                    in: agentsId
+                }
+            }
+        });
+        res.json(transactions);
+    } catch (error) {
+        console.error("Get teamleader transactions error:", error);
+        res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+})
 
 router.get("/:id", async (req: Request, res: Response) => {
     try {
@@ -50,20 +84,29 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
     try {
-        const { amount, type, planType, invoiceNumber, taxRate, transactionMethod, date } = req.body;
+        const { amount, commissionRate, transactionMethod, date } = req.body;
+
+        // generate a random 10 digit invoice number
+        const invoiceNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+        console.log(invoiceNumber);
+
+        let isApprovedByTeamLeader = false;
+        if(req.user?.role === UserRole.TEAM_LEADER) {
+            isApprovedByTeamLeader = true;
+        } else if (req.user?.teamId === null || req.user?.teamId === "") {
+            isApprovedByTeamLeader = true;
+        }
         
         const transaction = await prisma.transaction.create({
             data: {
                 amount: parseFloat(amount),
-                type,
-                planType,
-                invoiceNumber,
-                taxRate: taxRate ? parseFloat(taxRate) : null,
+                invoiceNumber: invoiceNumber,
+                commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
                 date: new Date(date),
                 agentId: req.user?.id!,
                 companyId: req.user?.companyId!,
-                isVerified: false
+                isApprovedByTeamLeader
             },
             include: {
                 agent: {
@@ -85,7 +128,7 @@ router.post("/", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
     try {
-        const { amount, type, planType, invoiceNumber, taxRate, transactionMethod, date } = req.body;
+        const { amount, type, planType, invoiceNumber, commissionRate, transactionMethod, date } = req.body;
         
         // Check if transaction exists and belongs to the user's company
         const existingTransaction = await prisma.transaction.findFirst({
@@ -103,10 +146,8 @@ router.put("/:id", async (req: Request, res: Response) => {
             where: { id: req.params.id },
             data: {
                 amount: parseFloat(amount),
-                type,
-                planType,
                 invoiceNumber,
-                taxRate: taxRate ? parseFloat(taxRate) : null,
+                commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
                 date: new Date(date)
             },
@@ -186,41 +227,42 @@ router.delete("/", async (req: Request, res: Response) => {
     }
 });
 
-router.put("/:id/verify", async (req: Request, res: Response) => {
-    try {
-        const { isVerified } = req.body;
-        
-        // Check if transaction exists and belongs to the user's company
-        const existingTransaction = await prisma.transaction.findFirst({
-            where: {
-                id: req.params.id,
-                companyId: req.user?.companyId
-            }
-        });
 
-        if (!existingTransaction) {
-            return res.status(404).json({ message: "Transaction not found" });
-        }
-
-        const transaction = await prisma.transaction.update({
-            where: { id: req.params.id },
-            data: { isVerified: isVerified },
-            include: {
-                agent: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true
-                    }
-                }
-            }
-        });
+// router.put("/:id/verify", async (req: Request, res: Response) => {
+//     try {
+//         const { isVerified } = req.body;
         
-        res.json(transaction);
-    } catch (error) {
-        console.error("Verify transaction error:", error);
-        res.status(500).json({ message: "Failed to verify transaction" });
-    }
-});
+//         // Check if transaction exists and belongs to the user's company
+//         const existingTransaction = await prisma.transaction.findFirst({
+//             where: {
+//                 id: req.params.id,
+//                 companyId: req.user?.companyId
+//             }
+//         });
+
+//         if (!existingTransaction) {
+//             return res.status(404).json({ message: "Transaction not found" });
+//         }
+
+//         const transaction = await prisma.transaction.update({
+//             where: { id: req.params.id },
+//             data: { isVerified: isVerified },
+//             include: {
+//                 agent: {
+//                     select: {
+//                         id: true,
+//                         name: true,
+//                         email: true
+//                     }
+//                 }
+//             }
+//         });
+        
+//         res.json(transaction);
+//     } catch (error) {
+//         console.error("Verify transaction error:", error);
+//         res.status(500).json({ message: "Failed to verify transaction" });
+//     }
+// });
 
 export default router;
