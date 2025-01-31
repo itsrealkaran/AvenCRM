@@ -8,8 +8,8 @@ import { toast } from 'sonner';
 
 import apiClient from '@/lib/axios';
 
-import { Button } from '../ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../ui/dialog';
+} from '@/components/ui/dialog';
 
 const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => void }) => {
   const pathname = usePathname();
@@ -26,51 +26,25 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
   const [erroredData, setErroredData] = useState<any>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-  type LeadFields = {
-    name: string;
-    email: string;
-    phone: string;
-    leadAmount: string;
-    budget: string;
-    location: string;
-  };
-
-  type AgentFields = {
-    name: string;
-    email: string;
-    phone: string;
-    dob: string;
-    designation: string;
-  };
-
-  type MappedFields = LeadFields | AgentFields;
-
   const initialRecords =
-    (route === 'leads' && {
-      name: fieldMatcher.name(jsonData[0]),
-      email: fieldMatcher.email(jsonData[0]),
-      phone: fieldMatcher.phone(jsonData[0]),
-      leadAmount: fieldMatcher.leadAmount(jsonData[0]),
-      budget: fieldMatcher.budget(jsonData[0]),
-      location: fieldMatcher.location(jsonData[0]),
-    }) ||
-    (route === 'manage-agents' && {
-      name: fieldMatcher.name(jsonData[0]),
-      email: fieldMatcher.email(jsonData[0]),
-      phone: fieldMatcher.phone(jsonData[0]),
-      dob: fieldMatcher.dob(jsonData[0]),
-      designation: fieldMatcher.designation(jsonData[0]),
-    });
-  const [mappedFields, setMappedFields] = useState<MappedFields | false>(initialRecords);
+    route === 'leads'
+      ? {
+          name: fieldMatcher.name(jsonData[0]),
+          email: fieldMatcher.email(jsonData[0]),
+          phone: fieldMatcher.phone(jsonData[0]),
+          leadAmount: fieldMatcher.leadAmount(jsonData[0]),
+          budget: fieldMatcher.budget(jsonData[0]),
+          location: fieldMatcher.location(jsonData[0]),
+        }
+      : {};
+
+  const [mappedFields, setMappedFields] = useState(initialRecords);
 
   const handleFieldChange = (key: string, value: string) => {
-    setMappedFields((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        [key]: value,
-      } as MappedFields;
-    });
+    setMappedFields((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   };
 
   const handleDownloadCSV = () => {
@@ -115,33 +89,9 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
         Object.entries(item).forEach(([key, value]) => {
           const mappedKey = fieldMapping[key];
           if (mappedKey) {
-            if (route === 'leads' && (mappedKey === 'leadAmount' || mappedKey === 'budget')) {
+            // Convert numeric strings to numbers for amount fields
+            if (mappedKey === 'leadAmount' || mappedKey === 'budget') {
               mappedItem[mappedKey] = value ? Number(value) : 0;
-            } else if (route === 'manage-agents' && mappedKey === 'dob') {
-              if (value) {
-                try {
-                  const [day, month, year] = (value as string).split('-').map(Number);
-                  console.log("value", value, day, month, year)
-                  // Validate date parts
-                  if (isNaN(day) || isNaN(month) || isNaN(year) ||
-                      day < 1 || day > 31 || month < 1 || month > 12 || 
-                      year < 1900 || year > new Date().getFullYear()) {
-                    mappedItem[mappedKey] = null;
-                  } else {
-                    const date = new Date(year, month - 1, day, 12, 0, 0);
-                    console.log("date", date);
-                    if (date.toString() === 'Invalid Date') {
-                      mappedItem[mappedKey] = null;
-                    } else {
-                      mappedItem[mappedKey] = date.toISOString();
-                    }
-                  }
-                } catch (error) {
-                  mappedItem[mappedKey] = null;
-                }
-              } else {
-                mappedItem[mappedKey] = null;
-              }
             } else {
               mappedItem[mappedKey] = value;
             }
@@ -150,9 +100,8 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
         return mappedItem;
       });
 
-      // Send the mapped data to the server based on route
-      const endpoint = route === 'leads' ? '/leads/bulk' : '/user/bulk';
-      const { data } = await apiClient.post(endpoint, mappedData);
+      // Send the mapped data to the server
+      const { data } = await apiClient.post('/leads/bulk', mappedData);
 
       if (data.erroredData?.length > 0 && data.erroredData[0] !== null) {
         toast.warning(`${data.message}. Some records could not be imported.`);

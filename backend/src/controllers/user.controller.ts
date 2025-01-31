@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { UserRole } from "@prisma/client";
 import db from "../db/index.js";
 import bcrypt from "bcrypt";
-import { AuthenticatedRequest } from '../middleware/auth.js';
+import { AuthenticatedRequest } from "../middleware/auth.js";
 import { uploadFile } from "../utils/s3.js";
 
 export const userController = {
@@ -85,20 +85,22 @@ export const userController = {
               companyId,
             },
           });
-          await tx.team.update({
-            where: {
-              id: teamId,
-            },
-            data: {
-              members: {
-                connect: {
-                  id: user.id,
+          if (user.teamId) {
+            await tx.team.update({
+              where: {
+                id: teamId,
+              },
+              data: {
+                members: {
+                  connect: {
+                    id: user.id,
+                  },
                 },
               },
-            },
-          });
+            });
+          }
           return user;
-        })
+        });
 
         res.status(201).json({
           message: "User created successfully",
@@ -113,6 +115,112 @@ export const userController = {
       }
     } catch (error) {
       res.status(500).json({ message: "Error creating user", error });
+    }
+  },
+
+  async createBulkUser(req: AuthenticatedRequest, res: Response) {
+    try {
+      const user = req.user;
+      if (!user || !user.companyId || user.role !== "ADMIN") {
+        return res.status(401).json({ message: "Unauthorized: Missing user information or insufficient permissions" });
+      }
+
+      const usersData = req.body;
+      if (!Array.isArray(usersData)) {
+        return res.status(400).json({ message: "Invalid request: Data must be an array of users." });
+      }
+
+      // Validate each user in the array
+      const validatedUsers = [];
+      const errors = [];
+
+      for (let i = 0; i < usersData.length; i++) {
+        const userData = {
+          ...usersData[i],
+          companyId: user.companyId,
+          role: "AGENT",
+          password: bcrypt.hashSync("123456", 12)
+        };
+
+        try {
+          // Basic validation
+          if (!userData.name || !userData.email || !userData.phone) {
+            errors.push({
+              row: i + 1,
+              error: "Missing required fields: name, email, or phone"
+            });
+            continue;
+          }
+
+          // Check if email already exists
+          const existingUser = await db.user.findUnique({
+            where: { email: userData.email }
+          });
+
+          if (existingUser) {
+            errors.push({
+              row: i + 1,
+              error: "Email already exists"
+            });
+            continue;
+          }
+
+          validatedUsers.push(userData);
+        } catch (error) {
+          errors.push({
+            row: i + 1,
+            error: "Validation failed",
+            details: error
+          });
+        }
+      }
+
+      // Create users individually and collect errors
+      const createdUsers = [];
+      for (let i = 0; i < validatedUsers.length; i++) {
+        const userData = validatedUsers[i];
+        try {
+          const createdUser = await db.user.create({
+            data: {
+              name: userData.name,
+              email: userData.email,
+              password: userData.password,
+              phone: userData.phone.toString(),
+              dob: userData.dob ? new Date(userData.dob) : null,
+              designation: userData.designation || null,
+              role: "AGENT",
+              companyId: userData.companyId,
+            },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              designation: true,
+              role: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          });
+          createdUsers.push(createdUser);
+        } catch (error) {
+          errors.push({
+            row: i + 1,
+            error: "Failed to create user",
+            details: error instanceof Error ? error.message : "Unknown error"
+          });
+        }
+      }
+
+      return res.status(201).json({
+        message: `Successfully created ${createdUsers.length} users`,
+        data: createdUsers,
+        erroredData: errors.length > 0 ? errors : null
+      });
+
+    } catch (error) {
+      console.error("Error in createBulkUser:", error);
+      return res.status(500).json({ message: "Failed to create users" });
     }
   },
 
@@ -325,7 +433,6 @@ export const userController = {
     }
   },
 
-
   // Team Management (Admin & Team Leader)
   async assignTeam(req: AuthenticatedRequest, res: Response) {
     const { userId, teamId } = req.body;
@@ -455,9 +562,14 @@ export const userController = {
         return res.status(404).json({ message: "User not found" });
       }
 
-      const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+      const isPasswordValid = await bcrypt.compare(
+        currentPassword,
+        user.password
+      );
       if (!isPasswordValid) {
-        return res.status(400).json({ message: "Current password is incorrect" });
+        return res
+          .status(400)
+          .json({ message: "Current password is incorrect" });
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -513,26 +625,32 @@ export const userController = {
   async uploadAvatar(req: AuthenticatedRequest, res: Response) {
     try {
       if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
+        return res.status(400).json({ error: "No file uploaded" });
       }
 
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ error: 'Unauthorized' });
+        return res.status(401).json({ error: "Unauthorized" });
       }
 
       // Validate bucket name
       const bucketName = process.env.AWS_S3_BUCKET_NAME;
       if (!bucketName) {
-        return res.status(500).json({ error: 'S3 bucket name is not configured' });
+        return res
+          .status(500)
+          .json({ error: "S3 bucket name is not configured" });
       }
 
       const imageName = `avatars/${userId}-${Date.now()}`;
-      const file = await uploadFile(req.file.buffer, imageName, req.file.mimetype);
-      
+      const file = await uploadFile(
+        req.file.buffer,
+        imageName,
+        req.file.mimetype
+      );
+
       // Update user's avatar URL in database
       const imageUrl = `https://${bucketName}.s3.${process.env.AWS_S3_REGION}.amazonaws.com/${imageName}`;
-      
+
       const updatedUser = await db.user.update({
         where: { id: userId },
         data: { avatar: imageUrl },
@@ -548,32 +666,32 @@ export const userController = {
 
       res.status(200).json(updatedUser);
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      res.status(500).json({ error: 'Avatar upload failed' });
+      console.error("Error uploading avatar:", error);
+      res.status(500).json({ error: "Avatar upload failed" });
     }
   },
 
   async getAvatar(req: AuthenticatedRequest, res: Response) {
     try {
       const userId = req.params.userId;
-      
+
       const user = await db.user.findUnique({
         where: { id: userId },
         select: { avatar: true },
       });
 
       if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ error: "User not found" });
       }
 
       if (!user.avatar) {
-        return res.status(404).json({ error: 'Avatar not found' });
+        return res.status(404).json({ error: "Avatar not found" });
       }
 
       res.status(200).json({ imageUrl: user.avatar });
     } catch (error) {
-      console.error('Error fetching avatar:', error);
-      res.status(500).json({ error: 'Failed to fetch avatar' });
+      console.error("Error fetching avatar:", error);
+      res.status(500).json({ error: "Failed to fetch avatar" });
     }
   },
 };

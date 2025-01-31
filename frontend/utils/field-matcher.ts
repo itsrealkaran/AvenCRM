@@ -75,4 +75,16 @@ export const fieldMatcher = {
       Object.entries(fields).find(([key, value]) => matcher.includes(key.toLowerCase()))?.[0] || ''
     );
   },
+  dob(fields: any) {
+    const matcher = ['dob', 'date_of_birth', 'dateofbirth', 'date of birth', 'birth_date', 'birthdate', 'birth date', 'birthday', 'birth day'];
+    return (
+      Object.entries(fields).find(([key, value]) => matcher.includes(key.toLowerCase()))?.[0] || ''
+    );
+  },
+  designation(fields: any) {
+    const matcher = ['designation', 'title', 'job_title', 'jobtitle', 'job title', 'position', 'positiontitle', 'position title'];
+    return (
+      Object.entries(fields).find(([key, value]) => matcher.includes(key.toLowerCase()))?.[0] || ''
+    );
+  }
 };

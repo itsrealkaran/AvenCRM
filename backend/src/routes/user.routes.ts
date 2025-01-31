@@ -34,6 +34,7 @@ router.get('/avatar/:userId', userController.getAvatar);
 
 // SuperAdmin & Admin Routes
 router.post('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.createUser);
+router.post('/bulk', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.createBulkUser);
 router.get('/', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.getUsers);
 router.get('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.getUserById);
 router.put('/:id', validateRole([UserRole.SUPERADMIN, UserRole.ADMIN]), userController.updateUser);

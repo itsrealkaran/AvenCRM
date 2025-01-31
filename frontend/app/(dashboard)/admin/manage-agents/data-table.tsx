@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useRef, useState } from 'react';
 import type { User } from '@/types';
 import {
   flexRender,
@@ -14,7 +14,7 @@ import {
   type Row,
   type SortingState,
 } from '@tanstack/react-table';
-import { Download, Plus, RefreshCw, Trash, UserPlus } from 'lucide-react';
+import { Download, Plus, RefreshCw, Trash, Upload, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
+import { read, utils } from 'xlsx';
+import FileImportModal from '@/components/data-table/file-import-modal';
 
 // Add base interface for data items
 interface BaseData {
@@ -76,9 +78,11 @@ export function DataTable<TData extends BaseData, TValue>({
     'You are about to perform a bulk delete of agents. This action cannot be undone.'
   );
 
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [rowSelection, setRowSelection] = React.useState({});
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [rowSelection, setRowSelection] = useState({});
+  const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const table = useReactTable({
     data,
@@ -102,6 +106,63 @@ export function DataTable<TData extends BaseData, TValue>({
       onAddTeamMember,
     },
   });
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.error('No file selected');
+      return;
+    }
+
+    try {
+      let jsonData: Record<string, string>[] = [];
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileType === 'csv') {
+        const text = await file.text();
+        const rows = text.split('\n');
+        const headers = rows[0].split(',').map((header) => header.trim());
+
+        jsonData = rows.slice(1).map((row) => {
+          const values = row.split(',').map((value) => value.trim());
+          return headers.reduce(
+            (obj, header, index) => {
+              obj[header] = values[index];
+              return obj;
+            },
+            {} as Record<string, string>
+          );
+        });
+      } else if (fileType === 'xlsx') {
+        const buffer = await file.arrayBuffer();
+        const workbook = read(buffer);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        jsonData = utils.sheet_to_json(worksheet);
+      } else {
+        throw new Error('Unsupported file format');
+      }
+
+      // Filter out empty objects (from empty lines)
+      const filteredData = jsonData.filter((obj) => Object.keys(obj).length > 0);
+
+      console.log('Converted data:', filteredData);
+      toast.success(
+        `Successfully parsed ${filteredData.length} rows from ${fileType?.toUpperCase()}`
+      );
+
+      // Reset the file input for future uploads
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      setFileData(filteredData);
+    } catch (error) {
+      console.error(`Error parsing ${file.name}:`, error);
+      toast.error(`Failed to parse ${file.name}. Please check the format.`);
+      setFileData(null);
+    }
+  };
 
   return (
     <div>
@@ -149,6 +210,39 @@ export function DataTable<TData extends BaseData, TValue>({
               Add Team Member
             </Button>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'>
+              <Upload className='size-4 mr-2' />
+              Upload
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  CSV
+                  <input
+                    type='file'
+                    ref={fileInputRef}
+                    accept='.csv'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  XLSX
+                  <input
+                    type='file'
+                    accept='.xlsx'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant='outline' size='sm' onClick={onRefresh}>
             <RefreshCw className='mr-2 h-4 w-4' />
             Refresh
@@ -245,6 +339,9 @@ export function DataTable<TData extends BaseData, TValue>({
               )}
             </TableBody>
           </Table>
+          {fileData && (
+            <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
+          )}
         </div>
       </div>
     </div>
