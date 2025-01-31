@@ -19,6 +19,10 @@ import {
 import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/Sidebar';
 
+const getUserRole = () => {
+  return 'teamleader';
+};
+
 const menuItems = [
   {
     heading: 'Dashboard',
@@ -92,6 +96,18 @@ const menuItems = [
     path: '/agent/transactions',
     description: 'Transaction history',
   },
+  {
+    heading: 'Manage Team',
+    icon: Users,
+    path: '/agent/manage-team',
+    description: 'Team management',
+  },
+  {
+    heading: 'Team Monitoring',
+    icon: Monitor,
+    path: '/agent/team-monitoring',
+    description: 'Monitor team performance',
+  }
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

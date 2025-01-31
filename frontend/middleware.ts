@@ -30,7 +30,7 @@ export async function middleware(request: NextRequest) {
             const role = decoded.role.toLowerCase();
             // Redirect team leaders to /agent route
             if (role === 'team_leader') {
-              const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+              const redirectResponse = NextResponse.redirect(new URL('/teamleader', request.url));
               redirectResponse.headers.set('x-middleware-cache', 'no-cache');
               return redirectResponse;
             }
@@ -88,7 +88,7 @@ export async function middleware(request: NextRequest) {
       // Handle team leader redirection
       if (role === 'team_leader') {
         // Allow access to /agent route for team leaders
-        if (pathname.startsWith('/agent') || pathname.startsWith('/dashboard')) {
+        if (pathname.startsWith('/teamleader') || pathname.startsWith('/dashboard')) {
           return NextResponse.next();
         }
         // Redirect to /agent for any other routes
