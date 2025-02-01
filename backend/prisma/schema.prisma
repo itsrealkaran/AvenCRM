@@ -144,6 +144,11 @@ model User {
   company      Company?    @relation("CompanyUsers", fields: [companyId], references: [id])
   companyId    String?
 
+  // commission
+  commissionRate   Float?
+  commissionThreshhold   Float? @default(0)
+  commissionAfterThreshhold Float? @default(0)
+
   // For ADMIN role - Company they manage
   managedCompanies Company[] @relation("CompanyAdmin")
   
@@ -269,8 +274,8 @@ model Lead {
   companyId      String
   
   // Agent Relation
-  agent          User       @relation(fields: [agentId], references: [id])
-  agentId        String
+  agent          User?       @relation(fields: [agentId], references: [id])
+  agentId        String?
   
   // Lead Details
   leadAmount     Float?

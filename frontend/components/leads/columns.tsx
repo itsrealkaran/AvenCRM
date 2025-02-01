@@ -88,14 +88,6 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
-    accessorKey: 'agent.name',
-    header: 'Created By',
-    cell: ({ row }) => {
-      const agent = row.original.agent;
-      return agent?.name || 'N/A';
-    },
-  },
-  {
     accessorKey: 'email',
     header: ({ column }) => {
       return (
@@ -118,6 +110,20 @@ export const columns: ColumnDef<Lead>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Phone
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: 'source',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Source
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );

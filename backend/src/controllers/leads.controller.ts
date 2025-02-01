@@ -63,6 +63,23 @@ export const leadsController: Controller  = {
         where.companyId = user.companyId;
       } else if (user.role === UserRole.AGENT) {
         where.agentId = user.id;
+      } else if (user.role === UserRole.TEAM_LEADER) {
+        // Get all team members' IDs
+        const teamMembers = await prisma.user.findMany({
+          where: {
+            teamId: user.teamId,
+            companyId: user.companyId
+          },
+          select: {
+            id: true
+          }
+        });
+        
+        const teamMemberIds = teamMembers.map(member => member.id);
+        where.agentId = {
+          in: teamMemberIds
+        };
+        where.companyId = user.companyId;
       }
 
       if (filters.createdById) where.agentId = filters.createdById;
@@ -247,7 +264,7 @@ export const leadsController: Controller  = {
                     .map((note: any) => ({ time: note.time, note: note.note })) as InputJsonValue[]
                 : [],
               // Ensure required fields
-              agentId: user.id,
+              agentId: user.role === UserRole.ADMIN ? null : user.id,
               companyId: user.companyId,
               // Set default values
               status: validationResult.data.status || 'NEW',
@@ -441,7 +458,7 @@ export const leadsController: Controller  = {
             expectedCloseDate: expectedCloseDate ? new Date(expectedCloseDate) : lead.expectedDate,
             notes: lead.notes ? lead.notes.filter(note => note !== null) : [],
             companyId: lead.companyId,
-            agentId: lead.agentId,
+            agentId: lead.agentId || "",
             status: 'ACTIVE',
             phone: lead.phone,
             id: lead.id
@@ -463,5 +480,47 @@ export const leadsController: Controller  = {
         error: error instanceof Error ? error.message : 'Unknown error occurred'
       });
     }
-  }
+  },
+
+  updateLeadAgent: async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { id } = req.params;
+      const { agentId } = req.body;
+
+      const lead = await prisma.lead.findFirst({
+        where: {
+          id,
+          companyId: user.companyId,
+        },
+      });
+
+      if (!lead) {
+        return res.status(404).json({ message: 'Lead not found' });
+      }
+
+      const updatedLead = await prisma.lead.update({
+        where: { id },
+        data: { agentId },
+        include: {
+          agent: true,
+        },
+      });
+
+      const result = leadResponseSchema.safeParse(updatedLead);
+      if (!result.success) {
+        logger.error('Error in updateLeadAgent:', result.error);
+        return res.status(500).json({ message: 'Failed to validate updated lead' });
+      }
+
+      return res.json(result.data);
+    } catch (error) {
+      logger.error('Error in updateLeadAgent:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  },
 };

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { UserRole } from "@prisma/client";
+import { Gender, UserRole } from "@prisma/client";
 import db from "../db/index.js";
 import bcrypt from "bcrypt";
 import { AuthenticatedRequest } from "../middleware/auth.js";
@@ -8,7 +8,7 @@ import { uploadFile } from "../utils/s3.js";
 export const userController = {
   // User Management (SuperAdmin & Admin)
   async createUser(req: AuthenticatedRequest, res: Response) {
-    const { name, email, agentRole, gender, teamId, phone, dob } = req.body;
+    const { name, email, agentRole, gender, teamId, phone, dob, commissionRate, commissionThreshhold, commissionAfterThreshhold } = req.body;
     const authUser = req.user;
 
     try {
@@ -44,6 +44,9 @@ export const userController = {
               gender,
               phone,
               dob: new Date(dob),
+              commissionRate,
+              commissionThreshhold,
+              commissionAfterThreshhold,
               role: agentRole,
               companyId,
             },
@@ -83,6 +86,9 @@ export const userController = {
               role: agentRole,
               teamId: teamId || null,
               companyId,
+              commissionRate,
+              commissionThreshhold,
+              commissionAfterThreshhold,
             },
           });
           if (user.teamId) {
@@ -226,7 +232,7 @@ export const userController = {
 
   async updateUser(req: AuthenticatedRequest, res: Response) {
     const { id } = req.params;
-    const { name, email, designation, isActive, teamId } = req.body;
+    const { name, email, agentRole, gender, teamId, phone, dob, commissionRate, commissionThreshhold, commissionAfterThreshhold } = req.body;
     const authUser = req.user;
 
     try {
@@ -251,9 +257,14 @@ export const userController = {
         data: {
           name,
           email,
-          designation,
-          isActive,
-          teamId,
+          gender: gender === "" ? null : gender,
+          phone,
+          dob: new Date(dob),
+          role: agentRole,
+          teamId: teamId || null,
+          commissionRate,
+          commissionThreshhold,
+          commissionAfterThreshhold,
         },
       });
 

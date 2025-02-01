@@ -168,7 +168,7 @@ export default function LeadsPage() {
 
         <div className='space-4'>
           <DataTable
-            columns={user?.role === UserRole.ADMIN ? adminColumns : columns}
+            columns={columns}
             data={leads}
             onEdit={handleEdit}
             onBulkDelete={async (row: any[]) => {

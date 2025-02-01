@@ -2,6 +2,7 @@
 
 import { Lead, LeadStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
   ArrowRightLeft,
@@ -31,6 +32,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import axios from 'axios';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const getStatusColor = (status: LeadStatus) => {
   const colors = {
@@ -44,6 +47,18 @@ const getStatusColor = (status: LeadStatus) => {
     FOLLOWUP: 'bg-teal-100 text-teal-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
+};
+
+const updateLeadAgent = async (leadId: string, agentId: string | null) => {
+  const response = await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/agent/${leadId}`, {
+    agentId,
+  }, { withCredentials: true });
+  
+  if (!response) {
+    throw new Error('Failed to update agent');
+  }
+  
+  return response.data;
 };
 
 export const columns: ColumnDef<Lead>[] = [
@@ -88,6 +103,62 @@ export const columns: ColumnDef<Lead>[] = [
     },
   },
   {
+    accessorKey: 'assignedTo',
+    header: 'Assigned To',
+    cell: ({ row }) => {
+      const queryClient = useQueryClient();
+      const { data: agents } = useQuery({
+        queryKey: ['team'],
+        queryFn: async () => {
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/team`, { withCredentials: true });
+          if (!response) {
+            throw new Error('Failed to fetch agents');
+          }
+          return response.data;
+        },
+      });
+
+      const mutation = useMutation({
+        mutationFn: ({ leadId, agentId }: { leadId: string; agentId: string | null }) =>
+          updateLeadAgent(leadId, agentId),
+        onSuccess: () => {
+          queryClient.invalidateQueries({ queryKey: ['leads'] });
+          toast.success('Agent updated successfully');
+        },
+        onError: (error) => {
+          toast.error('Failed to update agent');
+          console.error('Error updating agent:', error);
+        },
+      });
+
+      const handleAgentChange = (agentId: string) => {
+        mutation.mutate({ 
+          leadId: row.original.id, 
+          agentId: agentId === 'unassigned' ? null : agentId 
+        });
+      };
+
+      return (
+        <Select
+          value={row.original.agentId || 'unassigned'}
+          onValueChange={handleAgentChange}
+        >
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Select an agent" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="unassigned">Unassigned</SelectItem>
+            {agents?.map((agent: any) => (
+              <SelectItem key={agent.id} value={agent.id}>
+                {agent.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      );
+    },
+  },
+  {
     accessorKey: 'email',
     header: ({ column }) => {
       return (
@@ -110,6 +181,20 @@ export const columns: ColumnDef<Lead>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Phone
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+  },
+  {
+    accessorKey: 'source',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Source
           <ArrowUpDown className='ml-2 h-4 w-4' />
         </Button>
       );

@@ -22,6 +22,7 @@ import {
 const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => void }) => {
   const pathname = usePathname();
   const route = pathname.split('/')[2];
+  const isAdmin = pathname.split('/')[1] === 'admin';
   const [isImporting, setIsImporting] = useState(false);
   const [erroredData, setErroredData] = useState<any>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
