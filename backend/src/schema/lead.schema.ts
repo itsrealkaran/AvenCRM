@@ -57,8 +57,8 @@ const leadAgentSchema = z.object({
 export const leadResponseSchema = leadBaseSchema.extend({
   id: z.string().cuid(),
   companyId: z.string().cuid(),
-  agentId: z.string().cuid(),
-  agent: leadAgentSchema,
+  agentId: z.string().cuid().nullable(),
+  agent: leadAgentSchema.nullable(),
   createdAt: z.date(),
   updatedAt: z.date().nullish(),
 });

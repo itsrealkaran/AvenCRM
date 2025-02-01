@@ -22,6 +22,9 @@ router.post('/bulk', leadsController.createManyLeads);
 // Update lead
 router.put('/:id', leadsController.updateLead);
 
+// Update lead agent
+router.patch('/agent/:id', leadsController.updateLeadAgent);
+
 // Update lead status
 router.patch('/:id/status', leadsController.updateLeadStatus);
 

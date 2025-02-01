@@ -269,8 +269,8 @@ model Lead {
   companyId      String
   
   // Agent Relation
-  agent          User       @relation(fields: [agentId], references: [id])
-  agentId        String
+  agent          User?       @relation(fields: [agentId], references: [id])
+  agentId        String?
   
   // Lead Details
   leadAmount     Float?
