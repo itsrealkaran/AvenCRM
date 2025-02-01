@@ -248,9 +248,9 @@ export function DataTable<TData extends BaseRecord, TValue>({
         <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
       )}
       <div className='rounded-md border overflow-hidden'>
-        <div className='overflow-x-auto'>
+        <div className='overflow-x-auto h-[500px]'>
           <Table>
-            <TableHeader className='bg-white'>
+            <TableHeader className='bg-white sticky top-0'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
@@ -263,7 +263,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody>
+            <TableBody className='max-h-[500px] overflow-y-auto'>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
                   <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
