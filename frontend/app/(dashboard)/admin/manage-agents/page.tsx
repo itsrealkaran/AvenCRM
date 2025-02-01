@@ -12,7 +12,6 @@ import { AgentMetricsDialog } from './agent-metrics-dialog';
 import { columns } from './columns';
 import { CreateAgentDialog } from './create-agent-dialog';
 import { DataTable } from './data-table';
-import { EditAgentDialog } from './edit-agent-dialog';
 
 async function getAgents(): Promise<User[]> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
@@ -222,10 +221,16 @@ export default function ManageAgentsPage() {
         </CardContent>
       </Card>
 
-      <CreateAgentDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
-      <EditAgentDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
+      <CreateAgentDialog 
+        open={isCreateDialogOpen || isEditDialogOpen} 
+        onOpenChange={(open) => {
+          if (isEditDialogOpen) {
+            setIsEditDialogOpen(open);
+          } else {
+            setIsCreateDialogOpen(open);
+          }
+        }}
+        // @ts-ignore
         user={selectedAgent}
       />
       <AgentMetricsDialog

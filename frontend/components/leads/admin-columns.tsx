@@ -160,6 +160,20 @@ export const adminColumns: ColumnDef<Lead>[] = [
     },
   },
   {
+    accessorKey: 'source',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Source
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+  },
+  {
     accessorKey: 'status',
     header: ({ column }) => {
       return (

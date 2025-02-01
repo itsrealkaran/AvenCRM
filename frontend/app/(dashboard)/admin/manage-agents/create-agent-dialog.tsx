@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Gender, UserRole } from '@/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import axios from 'axios';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -23,14 +24,44 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface CreateAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  user?: User; // Optional user for editing mode
 }
 
-export function CreateAgentDialog({ open, onOpenChange }: CreateAgentDialogProps) {
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  gender: string;
+  dob: string;
+  role: UserRole;
+  commissionRate: number;
+  commissionThreshhold: number;
+  commissionAfterThreshhold: number;
+  teamId: string;
+}
+
+interface Team {
+  id: string;
+  name: string;
+}
+
+const getTeams = async (): Promise<Team[]> => {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/team/get-teams`, {
+    credentials: 'include',
+  });
+  if (!response.ok) throw new Error('Failed to fetch teams');
+  return response.json();
+};
+
+export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [showThreshold, setShowThreshold] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,55 +69,85 @@ export function CreateAgentDialog({ open, onOpenChange }: CreateAgentDialogProps
     gender: '',
     dob: '',
     agentRole: UserRole.AGENT,
+    commissionRate: 0,
+    commissionThreshhold: 0,
+    commissionAfterThreshhold: 0,
     teamId: '',
   });
 
-  const queryClient = useQueryClient();
-
-  const { data: teams = [] } = useQuery({
-    queryKey: ['teams'],
-    queryFn: async () => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/team/get-teams`, {
-        credentials: 'include',
+  useEffect(() => {
+    if (user) {
+      const formatDate = (dateString: string | null) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toISOString().split('T')[0];
+      };
+      console.log(user.gender, "user");
+      console.log('User Role:', user.role, 'TeamId:', user.teamId);
+      setFormData({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        gender: user.gender?.toUpperCase() || '',
+        dob: formatDate(user.dob),
+        agentRole: user.role || UserRole.AGENT,
+        commissionRate: user.commissionRate || 0,
+        commissionThreshhold: user.commissionThreshhold || 0,
+        commissionAfterThreshhold: user.commissionAfterThreshhold || 0,
+        teamId: user.teamId || '',
       });
-      if (!response.ok) throw new Error('Failed to fetch teams');
-      return response.json();
-    },
+      setShowThreshold(!!user.commissionThreshhold);
+    }
+  }, [user]);
+
+  const queryClient = useQueryClient();
+  const { data: teams = [] } = useQuery<Team[]>({
+    queryKey: ['teams'],
+    queryFn: getTeams,
   });
 
-  console.log(teams);
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to create agent');
+      if (user) {
+        console.log(formData, "updating user");
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.id}`,
+          formData,
+          { withCredentials: true }
+        );
+      } else {
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user`,
+          formData,
+          { withCredentials: true }
+        );
       }
-
-      await queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Agent created successfully');
+      
+      queryClient.invalidateQueries({ queryKey: ['agents'] });
       onOpenChange(false);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        gender: '',
-        dob: '',
-        agentRole: UserRole.AGENT,
-        teamId: '',
-      });
+      toast.success(`Agent ${user ? 'updated' : 'created'} successfully`);
+      
+      // Reset form data only when creating new agent
+      if (!user) {
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          gender: '',
+          dob: '',
+          commissionRate: 0,
+          commissionThreshhold: 0,
+          commissionAfterThreshhold: 0,
+          agentRole: UserRole.AGENT,
+          teamId: '',
+        });
+      }
     } catch (error) {
-      toast.error('Failed to create agent');
+      console.error('Error:', error);
+      toast.error(`Failed to ${user ? 'update' : 'create'} agent. Please try again.`);
     } finally {
       setLoading(false);
     }
@@ -96,124 +157,180 @@ export function CreateAgentDialog({ open, onOpenChange }: CreateAgentDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='sm:max-w-[425px]'>
         <DialogHeader>
-          <DialogTitle>Create New Agent</DialogTitle>
+          <DialogTitle>{user ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
           <DialogDescription>
-            Enter the details to create a new agent. They will receive an email with login
-            credentials.
+            {user 
+              ? 'Update the agent details below.'
+              : 'Enter the details to create a new agent. They will receive an email with login credentials.'
+            }
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-          <div className='grid gap-4 py-4'>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='name' className='text-right'>
-                Name
-              </Label>
-              <Input
-                id='name'
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className='col-span-3'
-                required
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='email' className='text-right'>
-                Email
-              </Label>
-              <Input
-                id='email'
-                type='email'
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className='col-span-3'
-                required
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='phone' className='text-right'>
-                Phone
-              </Label>
-              <Input
-                id='phone'
-                type='tel'
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='gender' className='text-right'>
-                Gender
-              </Label>
-              <Select
-                value={formData.gender}
-                onValueChange={(value) => setFormData({ ...formData, gender: value })}
-              >
-                <SelectTrigger className='col-span-3'>
-                  <SelectValue placeholder='Select gender' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={Gender.MALE}>Male</SelectItem>
-                  <SelectItem value={Gender.FEMALE}>Female</SelectItem>
-                  <SelectItem value={Gender.OTHERS}>Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='dob' className='text-right'>
-                Date of Birth
-              </Label>
-              <Input
-                id='dob'
-                type='date'
-                value={formData.dob}
-                onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                className='col-span-3'
-              />
-            </div>
-            <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='role' className='text-right'>
-                Role
-              </Label>
-              <Select
-                value={formData.agentRole}
-                onValueChange={(value: UserRole) => setFormData({ ...formData, agentRole: value })}
-              >
-                <SelectTrigger className='col-span-3'>
-                  <SelectValue placeholder='Select role' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={UserRole.AGENT}>Agent</SelectItem>
-                  <SelectItem value={UserRole.TEAM_LEADER}>Team Leader</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {formData.agentRole === UserRole.AGENT && (
-              <div className='grid grid-cols-4 items-center gap-4'>
-                <Label htmlFor='team' className='text-right'>
-                  Team
-                </Label>
+          <div className='grid gap-6 py-4'>
+            <div className='grid grid-cols-2 gap-6'>
+              <div className='grid gap-2'>
+                <Label htmlFor='name'>Name</Label>
+                <Input
+                  id='name'
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  required
+                />
+              </div>
+              
+              <div className='grid gap-2'>
+                <Label htmlFor='email'>Email</Label>
+                <Input
+                  id='email'
+                  type='email'
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className='grid gap-2'>
+                <Label htmlFor='phone'>Phone</Label>
+                <Input
+                  id='phone'
+                  type='tel'
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+
+              <div className='grid gap-2'>
+                <Label htmlFor='gender'>Gender</Label>
                 <Select
-                  value={formData.teamId}
-                  onValueChange={(value) => setFormData({ ...formData, teamId: value })}
+                  value={formData.gender}
+                  onValueChange={(value) => setFormData({ ...formData, gender: value })}
                 >
-                  <SelectTrigger className='col-span-3'>
-                    <SelectValue placeholder='Select team' />
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select gender' />
                   </SelectTrigger>
                   <SelectContent>
-                    {teams.map((team: any) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
+                    <SelectItem value={Gender.MALE}>Male</SelectItem>
+                    <SelectItem value={Gender.FEMALE}>Female</SelectItem>
+                    <SelectItem value={Gender.OTHERS}>Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-            )}
+
+              <div className='grid gap-2'>
+                <Label htmlFor='dob'>Date of Birth</Label>
+                <Input
+                  id='dob'
+                  type='date'
+                  value={formData.dob}
+                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                />
+              </div>
+
+              <div className='grid gap-2'>
+                <Label htmlFor='role'>Role</Label>
+                <Select
+                  value={formData.agentRole}
+                  onValueChange={(value: UserRole) => setFormData({ ...formData, agentRole: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder='Select role' />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UserRole.AGENT}>Agent</SelectItem>
+                    <SelectItem value={UserRole.TEAM_LEADER}>Team Leader</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(formData.agentRole === UserRole.AGENT || formData.teamId) && (
+                <div className='grid gap-2'>
+                  <Label htmlFor='team'>Team</Label>
+                  <Select
+                    value={formData.teamId}
+                    onValueChange={(value) => setFormData({ ...formData, teamId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select team' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teams?.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          {team.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className='grid gap-2'>
+                <Label htmlFor='commissionRate'>Commission Rate (%)</Label>
+                <Input
+                  id='commissionRate'
+                  type='number'
+                  min={0}
+                  max={100}
+                  step={0.1}
+                  value={formData.commissionRate}
+                  onChange={(e) => setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })}
+                  placeholder='Enter commission rate'
+                />
+              </div>
+
+              </div>
+              <div className='grid gap-2'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox 
+                    id="hasThreshold" 
+                    checked={showThreshold}
+                    onCheckedChange={(checked) => {
+                      setShowThreshold(checked === true);
+                      if (!checked) {
+                        setFormData({ ...formData, commissionThreshhold: 0, commissionAfterThreshhold: 0 });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="hasThreshold" className='whitespace-nowrap'>Enable Commission Threshold</Label>
+                </div>
+                {showThreshold && (
+                  <div className='grid gap-6 py-4'>
+                    <div className='flex gap-6'>
+                      <div className='grid gap-2 flex-1'>
+                        <Label htmlFor='commissionThreshhold' className='whitespace-nowrap'>
+                          Threshold Amount
+                        </Label>
+                        <Input
+                          id='commissionThreshhold'
+                          type='number'
+                          min={0}
+                          step={1000}
+                          value={formData.commissionThreshhold}
+                          onChange={(e) => setFormData({ ...formData, commissionThreshhold: parseFloat(e.target.value) || 0 })}
+                          placeholder='Enter threshold'
+                        />
+                      </div>
+                      <div className='grid gap-2 flex-1'>
+                        <Label htmlFor='commissionAfterThreshhold' className='whitespace-nowrap'>
+                          Commission After (%)
+                        </Label>
+                        <Input
+                          id='commissionAfterThreshhold'
+                          type='number'
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          value={formData.commissionAfterThreshhold}
+                          onChange={(e) => setFormData({ ...formData, commissionAfterThreshhold: parseFloat(e.target.value) || 0 })}
+                          placeholder='Enter rate'
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+            </div>
           </div>
           <DialogFooter>
             <Button type='submit' disabled={loading}>
-              {loading ? 'Creating...' : 'Create Agent'}
+              {loading ? 'Creating...' : user ? 'Update Agent' : 'Create Agent'}
             </Button>
           </DialogFooter>
         </form>
