@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { transactionApi } from '@/api/api';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -27,15 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { api } from '@/lib/api';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
-  type: z.string().min(1, 'Payment type is required'),
-  planType: z.string().optional(),
+  commissionRate: z.string().optional(),
   invoiceNumber: z.string().optional(),
-  taxRate: z.string().optional(),
   transactionMethod: z.string().optional(),
-  receiptUrl: z.string().optional(),
   date: z.string(),
 });
 
@@ -45,24 +42,25 @@ interface EditTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transactionId: string) => Promise<void>;
 }
 
 export function EditTransactionDialog({
   open,
   onOpenChange,
   transaction,
+  onEdit,
+  onDelete,
 }: EditTransactionDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionFormSchema),
     defaultValues: {
       amount: '',
-      type: '',
-      planType: '',
+      commissionRate: '',
       invoiceNumber: '',
-      taxRate: '',
       transactionMethod: '',
-      receiptUrl: '',
       date: new Date().toISOString().split('T')[0],
     },
   });
@@ -71,12 +69,9 @@ export function EditTransactionDialog({
     if (transaction) {
       form.reset({
         amount: transaction.amount.toString(),
-        type: transaction.type,
-        planType: transaction.planType || '',
+        commissionRate: transaction.commissionRate?.toString() || '',
         invoiceNumber: transaction.invoiceNumber || '',
-        taxRate: transaction.taxRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
-        receiptUrl: transaction.receiptUrl || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
       });
     }
@@ -84,27 +79,33 @@ export function EditTransactionDialog({
 
   const editTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
-      if (!transaction?.id) {
-        throw new Error('Transaction ID is required');
+      if (!transaction) {
+        throw new Error('No transaction selected for editing');
       }
 
-      const payload = {
-        ...values,
-        amount: parseFloat(values.amount),
-        taxRate: values.taxRate ? parseFloat(values.taxRate) : 0,
-        date: new Date(values.date).toISOString(),
-      };
+      try {
+        const payload = {
+          ...values,
+          amount: parseFloat(values.amount),
+          commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : null,
+          date: new Date(values.date).toISOString(),
+        };
 
-      return transactionApi.update(transaction.id, payload);
+        const response = await api.put(`/transactions/${transaction.id}`, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error updating transaction:', error);
+        throw new Error('Failed to update transaction');
+      }
     },
-    onSuccess: () => {
+    onSuccess: (updatedTransaction) => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       onOpenChange(false);
-      form.reset();
+      onEdit(updatedTransaction);
       toast.success('Transaction updated successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update transaction');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to update transaction');
     },
   });
 
@@ -136,92 +137,13 @@ export function EditTransactionDialog({
               />
               <FormField
                 control={form.control}
-                name='type'
+                name='commissionRate'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Payment Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select payment type' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='CREDIT'>Credit</SelectItem>
-                        <SelectItem value='DEBIT'>Debit</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='planType'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select plan type' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='FREE'>Free</SelectItem>
-                        <SelectItem value='BASIC'>Basic</SelectItem>
-                        <SelectItem value='PRO'>Pro</SelectItem>
-                        <SelectItem value='ENTERPRISE'>Enterprise</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='invoiceNumber'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Invoice Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder='INV-001' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='taxRate'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Rate (%)</FormLabel>
+                    <FormLabel>Commission Rate (%)</FormLabel>
                     <FormControl>
                       <Input type='number' placeholder='10' {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='transactionMethod'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Transaction Method</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select method' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='CARD'>Card</SelectItem>
-                        <SelectItem value='BANK_TRANSFER'>Bank Transfer</SelectItem>
-                        <SelectItem value='CASH'>Cash</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

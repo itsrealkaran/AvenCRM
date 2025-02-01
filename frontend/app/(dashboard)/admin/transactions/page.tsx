@@ -105,6 +105,17 @@ export default function TransactionsPage() {
     },
   });
 
+  const handleEdit = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDelete = async (transactionId: string) => {
+    if (window.confirm('Are you sure you want to delete this transaction?')) {
+      deleteTransaction.mutate(transactionId);
+    }
+  };
+
   const verifyTransaction = useMutation({
     mutationFn: ({ transactionId, isVerified }: { transactionId: string; isVerified: boolean }) => {
       setLoading(true);
@@ -163,9 +174,11 @@ export default function TransactionsPage() {
 
       {selectedTransaction && (
         <EditTransactionDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          transaction={selectedTransaction}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        transaction={selectedTransaction}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
         />
       )}
     </Card>

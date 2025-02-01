@@ -91,6 +91,10 @@ router.post("/", async (req: Request, res: Response) => {
         console.log(invoiceNumber);
 
         let isApprovedByTeamLeader: TransactionStatus = TransactionStatus.PENDING;
+        let status: TransactionStatus = TransactionStatus.PENDING;
+        if(req.user?.role === UserRole.ADMIN) {
+            status = TransactionStatus.APPROVED;
+        }
         if(req.user?.role === UserRole.TEAM_LEADER) {
             isApprovedByTeamLeader = TransactionStatus.APPROVED;
         } else if (req.user?.teamId === null || req.user?.teamId === "") {
@@ -103,6 +107,7 @@ router.post("/", async (req: Request, res: Response) => {
                 invoiceNumber: invoiceNumber,
                 commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
+                status,
                 date: new Date(date),
                 agentId: req.user?.id!,
                 companyId: req.user?.companyId!,
