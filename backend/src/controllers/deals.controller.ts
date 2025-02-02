@@ -1,19 +1,19 @@
-import { Request, RequestHandler, Response } from 'express';
-import { prisma } from '../lib/prisma.js';
-import { UserRole } from '@prisma/client';
-import { subMonths } from 'date-fns';
-import { 
-  createDealSchema, 
-  updateDealSchema, 
-  dealFilterSchema, 
+import { Request, RequestHandler, Response } from "express";
+import { prisma } from "../lib/prisma.js";
+import { UserRole } from "@prisma/client";
+import { subMonths } from "date-fns";
+import {
+  createDealSchema,
+  updateDealSchema,
+  dealFilterSchema,
   dealsResponseSchema,
-  dealResponseSchema
-} from '../schema/deal.schema.js';
-import { InputJsonValue } from '@prisma/client/runtime/library';
-import logger from '../utils/logger.js';
-import multer from 'multer';
-import { z } from 'zod';
-import { DealStatus } from '@prisma/client';
+  dealResponseSchema,
+} from "../schema/deal.schema.js";
+import { InputJsonValue } from "@prisma/client/runtime/library";
+import logger from "../utils/logger.js";
+import multer from "multer";
+import { z } from "zod";
+import { DealStatus } from "@prisma/client";
 
 const upload = multer();
 
@@ -21,16 +21,16 @@ type Controller = {
   [key: string]: RequestHandler | RequestHandler[];
 };
 
-export const dealsController: Controller  = {
+export const dealsController: Controller = {
   getAllDeals: async (req: Request, res: Response) => {
     try {
       const user = req.user;
       if (!user) {
-        return res.status(401).json({ message: 'Unauthorized' });
+        return res.status(401).json({ message: "Unauthorized" });
       }
 
       // Convert page and limit to numbers if they are present
-      const query: Record<string, any> = { ...req.query }; 
+      const query: Record<string, any> = { ...req.query };
       if (query.page) {
         query.page = Number(query.page);
       }
@@ -40,7 +40,7 @@ export const dealsController: Controller  = {
 
       const filterResult = dealFilterSchema.safeParse(query);
       if (!filterResult.success) {
-        logger.error('Error in getAllDeals:', filterResult.error);
+        logger.error("Error in getAllDeals:", filterResult.error);
         return res.status(400).json({ errors: filterResult.error.flatten() });
       }
 
@@ -49,14 +49,16 @@ export const dealsController: Controller  = {
       const limit = filters.limit || 10;
       const skip = (page - 1) * limit;
 
-      const startDate = filters.startDate ? new Date(filters.startDate) : subMonths(new Date(), 1);
+      const startDate = filters.startDate
+        ? new Date(filters.startDate)
+        : subMonths(new Date(), 1);
       const endDate = filters.endDate ? new Date(filters.endDate) : new Date();
 
       const where: any = {
         createdAt: {
           gte: startDate,
-          lte: endDate
-        }
+          lte: endDate,
+        },
       };
 
       if (user.role === UserRole.ADMIN) {
@@ -70,7 +72,8 @@ export const dealsController: Controller  = {
       if (filters.propertyType) where.propertyType = filters.propertyType;
       if (filters.minAmount) where.dealAmount = { gte: filters.minAmount };
       if (filters.maxAmount) where.dealAmount = { lte: filters.maxAmount };
-      if (filters.commissionRate) where.commissionRate = { gte: filters.commissionRate };
+      if (filters.commissionRate)
+        where.commissionRate = { gte: filters.commissionRate };
 
       const total = await prisma.deal.count({ where });
 
@@ -81,17 +84,19 @@ export const dealsController: Controller  = {
             select: {
               id: true,
               name: true,
-              email: true
-            }
-          }
+              email: true,
+            },
+          },
         },
         skip,
         take: limit,
-        orderBy: filters.sortBy ? {
-          [filters.sortBy]: filters.sortOrder || 'desc'
-        } : {
-          createdAt: 'desc'
-        }
+        orderBy: filters.sortBy
+          ? {
+              [filters.sortBy]: filters.sortOrder || "desc",
+            }
+          : {
+              createdAt: "desc",
+            },
       });
 
       const response = {
@@ -100,15 +105,15 @@ export const dealsController: Controller  = {
           total,
           page,
           limit,
-          totalPages: Math.ceil(total / limit)
-        }
+          totalPages: Math.ceil(total / limit),
+        },
       };
 
       const validatedResponse = dealsResponseSchema.parse(response);
       return res.json(validatedResponse);
     } catch (error) {
-      logger.error('Error in getAllDeals:', error);
-      return res.status(500).json({ message: 'Failed to fetch deals' });
+      logger.error("Error in getAllDeals:", error);
+      return res.status(500).json({ message: "Failed to fetch deals" });
     }
   },
 
@@ -121,21 +126,21 @@ export const dealsController: Controller  = {
             select: {
               id: true,
               name: true,
-              email: true
-            }
-          }
-        }
+              email: true,
+            },
+          },
+        },
       });
 
       if (!deal) {
-        return res.status(404).json({ message: 'Deal not found' });
+        return res.status(404).json({ message: "Deal not found" });
       }
 
       const validatedResponse = dealResponseSchema.parse(deal);
       return res.json(validatedResponse);
     } catch (error) {
-      logger.error('Error in getDealById:', error);
-      return res.status(500).json({ message: 'Failed to fetch deal' });
+      logger.error("Error in getDealById:", error);
+      return res.status(500).json({ message: "Failed to fetch deal" });
     }
   },
 
@@ -147,23 +152,30 @@ export const dealsController: Controller  = {
         // Parse the JSON string from the `FormData` key "data"
         const rawData = req.body.data;
         if (!rawData) {
-          return res.status(400).json({ message: 'Invalid request: Missing data field.' });
+          return res
+            .status(400)
+            .json({ message: "Invalid request: Missing data field." });
         }
 
         const parsedData = JSON.parse(rawData);
-        if(typeof parsedData.expectedCloseDate === 'string') {
+        if (typeof parsedData.expectedCloseDate === "string") {
           parsedData.expectedCloseDate = new Date(parsedData.expectedCloseDate);
         }
 
-        if(typeof parsedData.actualCloseDate === 'string') {
+        if (typeof parsedData.actualCloseDate === "string") {
           parsedData.actualCloseDate = new Date(parsedData.actualCloseDate);
         }
 
         // Validate the parsed data using Zod
         const validationResult = createDealSchema.safeParse(parsedData);
         if (!validationResult.success) {
-          logger.error('Validation error in createDeal:', validationResult.error);
-          return res.status(400).json({ errors: validationResult.error.flatten() });
+          logger.error(
+            "Validation error in createDeal:",
+            validationResult.error
+          );
+          return res
+            .status(400)
+            .json({ errors: validationResult.error.flatten() });
         }
 
         const dealData = validationResult.data;
@@ -172,12 +184,23 @@ export const dealsController: Controller  = {
         const deal = await prisma.deal.create({
           data: {
             ...dealData,
-            agentId: req.user?.id ?? '', // Assuming `req.user` is available from middleware
-            companyId: req.user?.companyId ?? '',
+            agentId: req.user?.id ?? "", // Assuming `req.user` is available from middleware
+            companyId: req.user?.companyId ?? "",
             notes: dealData.notes
-              ? dealData.notes
+              ? (dealData.notes
                   .filter((note) => note !== null)
-                  .map((note) => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined
+                  .map((note) => ({ time: note.time, note: note.note })) as
+                  | InputJsonValue[]
+                  | undefined)
+              : undefined,
+            coOwners: dealData.coOwners
+              ? (dealData.coOwners
+                  .filter((coOwner) => coOwner !== null)
+                  .map((coOwner) => ({
+                    name: coOwner.name,
+                    email: coOwner.email,
+                    phone: coOwner.phone,
+                  })) as InputJsonValue[] | undefined)
               : undefined,
           },
           select: {
@@ -198,22 +221,22 @@ export const dealsController: Controller  = {
               select: {
                 id: true,
                 name: true,
-                email: true
-              }
+                email: true,
+              },
             },
             agentId: true,
             companyId: true,
             createdAt: true,
-            updatedAt: true
-          }
+            updatedAt: true,
+          },
         });
 
         // Validate the response before sending it back
         const validatedResponse = dealResponseSchema.parse(deal);
         return res.json(validatedResponse);
       } catch (error) {
-        logger.error('Unexpected error in createDeal:', error);
-        return res.status(500).json({ message: 'Failed to create deal' });
+        logger.error("Unexpected error in createDeal:", error);
+        return res.status(500).json({ message: "Failed to create deal" });
       }
     },
   ],
@@ -224,30 +247,52 @@ export const dealsController: Controller  = {
       try {
         const rawData = req.body.data;
         if (!rawData) {
-          return res.status(400).json({ message: 'Invalid request: Missing data field.' });
+          return res
+            .status(400)
+            .json({ message: "Invalid request: Missing data field." });
         }
 
         const parsedData = JSON.parse(rawData);
-        if(typeof parsedData.expectedCloseDate === 'string') {
+        if (typeof parsedData.expectedCloseDate === "string") {
           parsedData.expectedCloseDate = new Date(parsedData.expectedCloseDate);
         }
 
-        if(typeof parsedData.actualCloseDate === 'string') {
+        if (typeof parsedData.actualCloseDate === "string") {
           parsedData.actualCloseDate = new Date(parsedData.actualCloseDate);
         }
 
         const validationResult = updateDealSchema.safeParse(parsedData);
         if (!validationResult.success) {
-            logger.error('Validation error in updateDeal:', validationResult.error);
-          return res.status(400).json({ errors: validationResult.error.flatten() });
+          logger.error(
+            "Validation error in updateDeal:",
+            validationResult.error
+          );
+          return res
+            .status(400)
+            .json({ errors: validationResult.error.flatten() });
         }
-  
+
         const dealData = validationResult.data;
         const deal = await prisma.deal.update({
           where: { id: req.params.id },
           data: {
             ...dealData,
-            notes: dealData.notes ? dealData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
+            notes: dealData.notes
+              ? (dealData.notes
+                  .filter((note) => note !== null)
+                  .map((note) => ({ time: note.time, note: note.note })) as
+                  | InputJsonValue[]
+                  | undefined)
+              : undefined,
+            coOwners: dealData.coOwners
+              ? (dealData.coOwners
+                  .filter((coOwner) => coOwner !== null)
+                  .map((coOwner) => ({
+                    name: coOwner.name,
+                    email: coOwner.email,
+                    phone: coOwner.phone,
+                  })) as InputJsonValue[] | undefined)
+              : undefined,
           },
           select: {
             id: true,
@@ -268,21 +313,21 @@ export const dealsController: Controller  = {
               select: {
                 id: true,
                 name: true,
-                email: true
-              }
+                email: true,
+              },
             },
             agentId: true,
             companyId: true,
             createdAt: true,
-            updatedAt: true
-          }
+            updatedAt: true,
+          },
         });
-  
+
         const validatedResponse = dealResponseSchema.parse(deal);
         return res.json(validatedResponse);
       } catch (error) {
-        console.error('Error in updateDeal:', error);
-        return res.status(500).json({ message: 'Failed to update deal' });
+        console.error("Error in updateDeal:", error);
+        return res.status(500).json({ message: "Failed to update deal" });
       }
     },
   ],
@@ -290,17 +335,17 @@ export const dealsController: Controller  = {
   updateDealStatus: async (req: Request, res: Response) => {
     try {
       const { status } = req.body;
-  
+
       // Validate the status
       if (!status || !Object.values(DealStatus).includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
       }
-  
+
       const deal = await prisma.deal.update({
         where: { id: req.params.id },
         data: { status },
       });
-  
+
       const validatedResponse = dealResponseSchema.parse(deal);
       return res.json(validatedResponse);
     } catch (error) {
@@ -314,10 +359,10 @@ export const dealsController: Controller  = {
       const deal = await prisma.deal.delete({
         where: { id: req.params.id },
       });
-      return res.json({ message: 'Deal deleted successfully', deal });
+      return res.json({ message: "Deal deleted successfully", deal });
     } catch (error) {
-      console.error('Error in deleteDeal:', error);
-      return res.status(500).json({ message: 'Failed to delete deal' });
+      console.error("Error in deleteDeal:", error);
+      return res.status(500).json({ message: "Failed to delete deal" });
     }
   },
 
@@ -325,20 +370,23 @@ export const dealsController: Controller  = {
     try {
       const { dealIds } = req.body;
       if (!Array.isArray(dealIds)) {
-        return res.status(400).json({ message: 'dealIds must be an array' });
+        return res.status(400).json({ message: "dealIds must be an array" });
       }
 
       const result = await prisma.deal.deleteMany({
         where: {
           id: {
-            in: dealIds
-          }
-        }
+            in: dealIds,
+          },
+        },
       });
-      return res.json({ message: 'Deals deleted successfully', count: result.count });
+      return res.json({
+        message: "Deals deleted successfully",
+        count: result.count,
+      });
     } catch (error) {
-      console.error('Error in deleteMultipleDeals:', error);
-      return res.status(500).json({ message: 'Failed to delete deals' });
+      console.error("Error in deleteMultipleDeals:", error);
+      return res.status(500).json({ message: "Failed to delete deals" });
     }
   },
 };

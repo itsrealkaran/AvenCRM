@@ -32,11 +32,12 @@ enum LeadStatus {
 }
 
 enum DealStatus {
-  PROSPECT
-  ACTIVE
+  NEW
+  DISCOVERY
+  PROPOSAL
   UNDER_CONTRACT
-  CLOSED_WON
-  CLOSED_LOST
+  NEGOTIATION
+  WON
 }
 
 enum TransactionStatus {
@@ -315,7 +316,7 @@ model Deal {
   
   // Deal Specifics
   dealAmount     Float
-  status         DealStatus  @default(PROSPECT)
+  status         DealStatus  @default(NEW)
   
   // Property Details
   propertyType   PropertyType @default(COMMERCIAL)
@@ -333,6 +334,9 @@ model Deal {
   // Additional Details
   notes          Json[]      @default([])
   role           LeadRole    @default(SALE)
+
+  //co-owners
+  coOwners       Json[]      @default([])
   
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt

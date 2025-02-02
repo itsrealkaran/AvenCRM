@@ -89,14 +89,6 @@ export const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: 'type',
-    header: 'Type',
-  },
-  {
-    accessorKey: 'planType',
-    header: 'Plan',
-  },
-  {
     accessorKey: 'isVerified',
     header: 'Status',
     cell: ({ row, table }) => {

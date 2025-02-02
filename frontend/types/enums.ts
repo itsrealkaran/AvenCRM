@@ -16,11 +16,12 @@ export enum LeadStatus {
 }
 
 export enum DealStatus {
-  PROSPECT = 'PROSPECT',
-  ACTIVE = 'ACTIVE',
+  NEW = 'NEW',
+  DISCOVERY = 'DISCOVERY',
+  PROPOSAL = 'PROPOSAL',
   UNDER_CONTRACT = 'UNDER_CONTRACT',
-  CLOSED_WON = 'CLOSED_WON',
-  CLOSED_LOST = 'CLOSED_LOST',
+  NEGOTIATION = 'NEGOTIATION',
+  WON = 'WON',
 }
 
 // export enum PropertyType {

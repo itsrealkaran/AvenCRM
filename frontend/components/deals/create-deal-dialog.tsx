@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { BaseEntityDialog, CommonFormFields, NotesField } from '../entity-dialog';
+import { BaseEntityDialog, CommonFormFields, NotesField, CoOwnersField } from '../entity-dialog';
 
 interface CreateDealDialogProps {
   open: boolean;
@@ -51,7 +51,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
     name: '',
     email: '',
     phone: '',
-    status: DealStatus.ACTIVE,
+    status: DealStatus.NEW,
     dealAmount: 0,
     propertyType: PropertyType.COMMERCIAL,
     propertyValue: 0,
@@ -61,6 +61,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
     commissionRate: 0,
     estimatedCommission: 0,
     notes: [],
+    coOwners: [],
   };
 
   return (
@@ -269,6 +270,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
           </div>
 
           <NotesField form={form} isLoading={isLoading} />
+          <CoOwnersField form={form} isLoading={isLoading} />
 
           <div className='flex justify-end space-x-4'>
             <Button

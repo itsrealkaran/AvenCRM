@@ -64,7 +64,7 @@ const getPreviousMonthData = async (companyId: string) => {
   const lastMonthWonDeals = await prisma.deal.count({
     where: {
       companyId,
-      status: 'CLOSED_WON',
+      status: 'WON',
       createdAt: {
         gte: firstDayOfLastMonth,
         lt: firstDayOfCurrentMonth
@@ -188,7 +188,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
     const wonDeals = await prisma.deal.count({
       where: {
         companyId,
-        status: 'CLOSED_WON',
+        status: 'WON',
       },
     });
 
@@ -370,7 +370,7 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
     const myRevenue = await prisma.deal.aggregate({
       where: {
         agentId: userId,
-        status: 'CLOSED_WON',
+        status: 'WON',
       },
       _sum: {
         dealAmount: true,
@@ -429,7 +429,7 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
       totalLeads: myLeads,
       totalDeals: myDeals,
       pendingTasks: myTasks,
-      revenue: myRevenue._sum.dealAmount || 0,
+      revenue: myRevenue?._sum.dealAmount || 0,
       performanceData: monthlyPerformance.map((item) => ({
         month: new Date(item.month).toLocaleString('default', { month: 'short' }),
         deals: item.deals,
@@ -494,7 +494,7 @@ export const getMonitoringData = async (req: Request, res: Response) => {
     const dealsWithAmount = await prisma.deal.aggregate({
       where: {
         companyId,
-        status: 'CLOSED_WON',
+        status: 'WON',
       },
       _avg: {
         dealAmount: true,
@@ -519,7 +519,7 @@ export const getMonitoringData = async (req: Request, res: Response) => {
       by: ['agentId'],
       where: {
         companyId,
-        status: 'CLOSED_WON',
+        status: 'WON',
       },
       _count: true,
       _sum: {
