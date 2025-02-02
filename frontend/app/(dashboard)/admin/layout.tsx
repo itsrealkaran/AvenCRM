@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 
 import Topbar from '@/components/layout/Topbar';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '@/components/layout/Sidebar';
 
 const menuItems = [
   {

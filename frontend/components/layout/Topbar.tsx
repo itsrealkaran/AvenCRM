@@ -27,9 +27,7 @@ export default function Topbar() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const getInitials = (name: string) => {
     return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
+      .split(' ')[0][0]
       .toUpperCase();
   };
 

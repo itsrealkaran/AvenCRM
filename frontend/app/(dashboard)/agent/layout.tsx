@@ -10,14 +10,14 @@ import {
   LineChart,
   Mail,
   Monitor,
-  Settings,
   Store,
-  Users,
-  Wallet,
+  Wallet
 } from 'lucide-react';
 
 import Topbar from '@/components/layout/Topbar';
-import Sidebar from '@/components/Sidebar';
+import Sidebar from '@/components/layout/Sidebar';
+import { FaFacebook } from 'react-icons/fa';
+import { FaWhatsapp } from 'react-icons/fa';
 
 const menuItems = [
   {
@@ -28,16 +28,22 @@ const menuItems = [
   },
   {
     heading: 'Meta Ads',
-    icon: LineChart,
-    path: '/agent/meta-ads',
+    icon: FaFacebook,
+    path: '/agent/meta-ads', 
     description: 'Manage Meta advertisements',
   },
   {
-    heading: 'Monitoring',
-    icon: Monitor,
-    path: '/agent/monitoring',
-    description: 'System monitoring',
+    heading: 'WhatsApp',
+    icon: FaWhatsapp,
+    path: '/agent/whatsapp-campaign',
+    description: 'Manage WhatsApp campaigns',
   },
+  // {
+  //   heading: 'Monitoring',
+  //   icon: Monitor,
+  //   path: '/agent/monitoring',
+  //   description: 'System monitoring',
+  // },
   {
     heading: 'Properties',
     icon: Building2,
@@ -56,18 +62,18 @@ const menuItems = [
     path: '/agent/deals',
     description: 'Deal management',
   },
-  {
-    heading: 'Page Builder',
-    icon: FileText,
-    path: '/agent/page-builder',
-    description: 'Build and manage pages',
-  },
-  {
-    heading: 'Marketing',
-    icon: LineChart,
-    path: '/agent/marketing',
-    description: 'Marketing management',
-  },
+  // {
+  //   heading: 'Page Builder',
+  //   icon: FileText,
+  //   path: '/agent/page-builder',
+  //   description: 'Build and manage pages',
+  // },
+  // {
+  //   heading: 'Marketing',
+  //   icon: LineChart,
+  //   path: '/agent/marketing',
+  //   description: 'Marketing management',
+  // },
   {
     heading: 'Tasks',
     icon: CheckSquare,
