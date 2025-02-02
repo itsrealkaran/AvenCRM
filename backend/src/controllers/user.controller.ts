@@ -508,7 +508,7 @@ export const userController = {
         db.deal.aggregate({
           where: {
             id: id,
-            status: "CLOSED_WON",
+            status: "WON",
             createdAt: {
               gte: startDate ? new Date(startDate as string) : undefined,
               lte: endDate ? new Date(endDate as string) : undefined,

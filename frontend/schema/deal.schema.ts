@@ -1,7 +1,7 @@
 import { DealStatus, PropertyType } from '@/types';
 import { z } from 'zod';
 
-import { noteEntrySchema } from './note.schema';
+import { noteEntrySchema, coownerSchema } from './note-and-coowner.schema';
 
 // Base schema for common deal fields
 export const dealBaseSchema = z.object({
@@ -9,7 +9,7 @@ export const dealBaseSchema = z.object({
   email: z.string().email().nullish(),
   phone: z.string().nullish(),
   dealAmount: z.number().positive('Deal amount must be positive'),
-  status: z.nativeEnum(DealStatus).default(DealStatus.PROSPECT),
+  status: z.nativeEnum(DealStatus).default(DealStatus.NEW),
   propertyType: z.nativeEnum(PropertyType).default(PropertyType.COMMERCIAL),
   propertyAddress: z.string().nullish(),
   propertyValue: z.number().positive().nullish(),
@@ -18,6 +18,7 @@ export const dealBaseSchema = z.object({
   commissionRate: z.number().min(0).max(100).nullish(),
   estimatedCommission: z.number().positive().nullish(),
   notes: z.array(noteEntrySchema).default([]),
+  coOwners: z.array(coownerSchema).default([]),
 });
 
 // Schema for creating a new deal

@@ -1,7 +1,7 @@
 import { LeadStatus, PropertyType } from '@prisma/client';
 import { z } from 'zod';
 
-import { noteEntrySchema } from './note.schema.js';
+import { noteEntrySchema } from './note-and-coowners.schema.js';
 
 // Base schema for common lead fields
 export const leadBaseSchema = z.object({

@@ -1,7 +1,7 @@
 import { LeadStatus, PropertyType } from '@/types';
 import { z } from 'zod';
 
-import { noteEntrySchema } from './note.schema';
+import { noteEntrySchema } from './note-and-coowner.schema';
 
 // Base schema for common lead fields
 export const leadBaseSchema = z.object({

@@ -34,11 +34,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const colors: Record<DealStatus, string> = {
-  CLOSED_LOST: 'bg-purple-100 text-purple-800',
-  CLOSED_WON: 'bg-yellow-100 text-yellow-800',
+  NEW: 'bg-purple-100 text-purple-800',
+  DISCOVERY: 'bg-orange-100 text-orange-800',
+  PROPOSAL: 'bg-emerald-100 text-emerald-800',
   UNDER_CONTRACT: 'bg-indigo-100 text-indigo-800',
-  PROSPECT: 'bg-orange-100 text-orange-800',
-  ACTIVE: 'bg-emerald-100 text-emerald-800',
+  NEGOTIATION: 'bg-yellow-100 text-yellow-800',
+  WON: 'bg-green-100 text-green-800',
 };
 
 const getStatusColor = (status: DealStatus): string => {
@@ -188,6 +189,61 @@ export const columns: ColumnDef<Deal>[] = [
     cell: ({ row }) => {
       const amount = row.getValue('dealAmount');
       return amount ? `$${amount}` : '-';
+    },
+  },
+  {
+    accessorKey: 'coOwners',
+    header: 'Co-owners',
+    cell: ({ row }) => {
+      const coOwners = row.original.coOwners || [];
+      const coOwnerCount = coOwners.length;
+
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
+            >
+              <span className='font-medium text-gray-700'>{coOwnerCount}</span>
+              {coOwnerCount === 1 ? 'Co-owner' : 'Co-owners'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
+            <DialogHeader>
+              <DialogTitle>Co-owners</DialogTitle>
+            </DialogHeader>
+            <div className='space-y-4'>
+              {coOwners.length > 0 ? (
+                coOwners.map((coOwner: any, index: number) => (
+                  <div
+                    key={index}
+                    className='flex flex-col gap-2 p-4 rounded-lg border border-gray-200'
+                  >
+                    <div className='grid grid-cols-3 gap-4'>
+                      <div>
+                        <span className='text-sm font-medium text-gray-500'>Name</span>
+                        <p className='text-sm text-gray-900'>{coOwner.name || '-'}</p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-medium text-gray-500'>Email</span>
+                        <p className='text-sm text-gray-900'>{coOwner.email || '-'}</p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-medium text-gray-500'>Phone</span>
+                        <p className='text-sm text-gray-900'>{coOwner.phone || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className='text-center text-gray-500'>No co-owners found</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
     },
   },
   {

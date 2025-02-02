@@ -459,7 +459,7 @@ export const leadsController: Controller  = {
             notes: lead.notes ? lead.notes.filter(note => note !== null) : [],
             companyId: lead.companyId,
             agentId: lead.agentId || "",
-            status: 'ACTIVE',
+            status: 'NEW',
             phone: lead.phone,
             id: lead.id
           },
