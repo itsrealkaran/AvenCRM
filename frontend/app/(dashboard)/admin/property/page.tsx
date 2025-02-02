@@ -107,8 +107,8 @@ const Page: React.FC = () => {
           <CardDescription>Properties that need your review</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex flex-wrap gap-3" style={{ minWidth: "max-content" }}>
+          <div className="overflow-y-auto max-h-[400px] pb-4">
+            <div className="flex flex-wrap gap-3">
               {isLoading ? (
                 Array(3)
                   .fill(0)
@@ -136,8 +136,8 @@ const Page: React.FC = () => {
           <CardDescription>All verified property listings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex flex-wrap gap-3" style={{ minWidth: "max-content" }}>
+          <div className="overflow-y-auto max-h-[600px] pb-4">
+            <div className="flex flex-wrap gap-3">
               {isLoading
                 ? Array(6)
                     .fill(0)

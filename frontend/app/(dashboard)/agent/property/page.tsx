@@ -137,10 +137,9 @@ const Page: React.FC = () => {
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
-      <div className="flex justify-between items-center">
+           <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Property Management</h1>
-
           <p className="text-muted-foreground">Manage and track your property listings</p>
         </div>
         <div className="flex gap-3">
@@ -159,14 +158,14 @@ const Page: React.FC = () => {
         </div>
       </div>
 
-      <Card className="w-[40%]">
+      <Card>
         <CardHeader>
           <CardTitle>My Properties</CardTitle>
           <CardDescription>Properties that need verification will appear here</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex flex-nowrap gap-3" style={{ minWidth: "max-content" }}>
+          <div className="overflow-y-auto max-h-[400px] pb-4">
+            <div className="flex flex-wrap gap-3">
               {isLoading
                 ? Array(3)
                     .fill(0)
@@ -179,14 +178,14 @@ const Page: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Card className="w-[60%]">
+      <Card>
         <CardHeader>
           <CardTitle>All Properties</CardTitle>
           <CardDescription>Browse all available properties</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex flex-wrap gap-3" style={{ minWidth: "max-content" }}>
+          <div className="overflow-y-auto max-h-[600px] pb-4">
+            <div className="flex flex-wrap gap-3">
               {isLoading
                 ? Array(6)
                     .fill(0)
