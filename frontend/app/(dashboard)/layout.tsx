@@ -2,12 +2,15 @@ import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 import { Providers } from '../providers';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-      <Providers>{children}</Providers>
-    </AuthProvider>
+    <CurrencyProvider>
+      <AuthProvider>
+        <Providers>{children}</Providers>
+      </AuthProvider>
+    </CurrencyProvider>
   );
 }
 

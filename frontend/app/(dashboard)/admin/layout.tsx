@@ -18,6 +18,7 @@ import {
 
 import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/layout/Sidebar';
+import { FaFacebook, FaWhatsapp } from 'react-icons/fa';
 
 const menuItems = [
   {
@@ -31,6 +32,18 @@ const menuItems = [
     icon: Users,
     path: '/admin/manage-agents',
     description: 'User management',
+  },
+  {
+    heading: 'Meta Ads',
+    icon: FaFacebook,
+    path: '/admin/meta-ads',
+    description: 'Manage Meta advertisements',
+  },
+  {
+    heading: 'WhatsApp',
+    icon: FaWhatsapp,
+    path: '/admin/whatsapp-campaign',
+    description: 'Manage WhatsApp campaigns',
   },
   {
     heading: 'Subscription',
@@ -62,18 +75,18 @@ const menuItems = [
     path: '/admin/deals',
     description: 'Deal management',
   },
-  {
-    heading: 'Page Builder',
-    icon: FileText,
-    path: '/admin/page-builder',
-    description: 'Build and manage pages',
-  },
-  {
-    heading: 'Marketing',
-    icon: LineChart,
-    path: '/admin/marketing',
-    description: 'Marketing management',
-  },
+  // {
+  //   heading: 'Page Builder',
+  //   icon: FileText,
+  //   path: '/admin/page-builder',
+  //   description: 'Build and manage pages',
+  // },
+  // {
+  //   heading: 'Marketing',
+  //   icon: LineChart,
+  //   path: '/admin/marketing',
+  //   description: 'Marketing management',
+  // },
   {
     heading: 'Tasks',
     icon: CheckSquare,
