@@ -362,7 +362,7 @@ model Transaction {
   
   // Invoice and Billing
   invoiceNumber  String
-  commissionRate Float?
+  commissionRate Float? @default(0)
   totalAmount    Float?
   
   // Additional Financial Info
