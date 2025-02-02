@@ -60,9 +60,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           <Button variant="outline" size="icon" className="rounded-full bg-white/90 backdrop-blur-sm hover:bg-white">
             <Share2 className="w-4 h-4 text-gray-700" />
           </Button>
-          <Button variant="outline" size="icon" className="rounded-full bg-white/90 backdrop-blur-sm hover:bg-white">
-            <Heart className="w-4 h-4 text-gray-700" />
-          </Button>
         </div>
       </div>
 
