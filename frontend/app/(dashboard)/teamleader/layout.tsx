@@ -18,10 +18,7 @@ import {
 
 import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/layout/Sidebar';
-
-const getUserRole = () => {
-  return 'teamleader';
-};
+import { FaFacebook, FaWhatsapp } from 'react-icons/fa';
 
 const menuItems = [
   {
@@ -31,10 +28,28 @@ const menuItems = [
     description: 'Overview of your CRM',
   },
   {
+    heading: 'Manage Team',
+    icon: Users,
+    path: '/teamleader/manage-team',
+    description: 'Team management',
+  },
+  // {
+  //   heading: 'Team Monitoring',
+  //   icon: Monitor,
+  //   path: '/teamleader/team-monitoring',
+  //   description: 'Monitor team performance',
+  // },
+  {
     heading: 'Meta Ads',
-    icon: LineChart,
+    icon: FaFacebook,
     path: '/teamleader/meta-ads',
     description: 'Manage Meta advertisements',
+  },
+  {
+    heading: 'WhatsApp',
+    icon: FaWhatsapp,
+    path: '/teamleader/whatsapp-campaign',
+    description: 'Manage WhatsApp campaigns',
   },
   {
     heading: 'Monitoring',
@@ -95,18 +110,6 @@ const menuItems = [
     icon: Wallet,
     path: '/teamleader/transactions',
     description: 'Transaction history',
-  },
-  {
-    heading: 'Manage Team',
-    icon: Users,
-    path: '/teamleader/manage-team',
-    description: 'Team management',
-  },
-  {
-    heading: 'Team Monitoring',
-    icon: Monitor,
-    path: '/teamleader/team-monitoring',
-    description: 'Monitor team performance',
   }
 ];
 
