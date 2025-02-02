@@ -113,7 +113,7 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
               Next
             </Button>
           ) : (
-            <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white">
+            <Button type="submit" className="bg-[#7C3AED] hover:bg-[#6D28D9] text-white" onClick={handleSubmit}>
               {propertyToEdit ? "Update" : "Submit"}
             </Button>
           )}
