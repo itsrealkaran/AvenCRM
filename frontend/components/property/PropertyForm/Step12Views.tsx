@@ -22,11 +22,9 @@ const views = [
   "Community View",
   "Sunrise",
   "Sunset",
-  "Road View",
   "Partial Golf Course",
   "Race Course",
-  "Park",
-  "Stadium",
+  "Park"
 ]
 
 const Step12Views: React.FC = () => {
