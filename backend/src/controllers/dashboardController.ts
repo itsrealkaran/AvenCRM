@@ -192,14 +192,26 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       },
     });
 
-    const revenue = await prisma.transaction.aggregate({
+    const revenueData = await prisma.transaction.groupBy({
       where: {
         companyId,
       },
+      by: ['id', 'amount', 'commissionRate'],
       _sum: {
         amount: true,
       },
     });
+
+    const totalRevenue = revenueData.reduce((sum, transaction) => sum + transaction.amount, 0);
+    const commissionRevenue = revenueData.reduce((sum, transaction) => {
+      const commissionRate = transaction.commissionRate || 0;
+      return sum + (transaction.amount * (commissionRate / 100));
+    }, 0);
+
+    const revenue = {
+      totalRevenue,
+      commissionRevenue,
+    };
 
     // Get last month's data for growth calculation
     const lastMonthData = await getPreviousMonthData(companyId);
@@ -209,7 +221,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       deals: calculateGrowthRate(deals, lastMonthData.deals),
       activeLeads: calculateGrowthRate(activeLeads, lastMonthData.activeLeads),
       wonDeals: calculateGrowthRate(wonDeals, lastMonthData.wonDeals),
-      revenue: calculateGrowthRate(revenue._sum.amount || 0, lastMonthData.revenue)
+      revenue: calculateGrowthRate(revenue.totalRevenue, lastMonthData.revenue)
     };
 
     // Get monthly performance data with more details
@@ -329,7 +341,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       totalDeals: deals,
       activeLeads,
       wonDeals,
-      revenue: revenue._sum.amount || 0,
+      revenue,
       growthRates,
       performanceData,
       topPerformers: agentDetails,
@@ -469,14 +481,28 @@ export const getMonitoringData = async (req: Request, res: Response) => {
     });
 
     // Get revenue metrics
-    const totalRevenue = await prisma.transaction.aggregate({
+    const revenueData = await prisma.transaction.groupBy({
       where: {
         companyId,
       },
+      by: ['id', 'amount', 'commissionRate'],
       _sum: {
         amount: true,
       },
     });
+
+    const totalRevenue = revenueData.reduce((sum, transaction) => sum + transaction.amount, 0);
+    const commissionRevenue = revenueData.reduce((sum, transaction) => {
+      const commissionRate = transaction.commissionRate || 0;
+      return sum + (transaction.amount * (commissionRate / 100));
+    }, 0);
+    const grossRevenue = totalRevenue + commissionRevenue;
+
+    const revenue = {
+      totalRevenue,
+      commissionRevenue,
+      grossRevenue
+    };
 
     const previousMonthRevenue = await prisma.transaction.aggregate({
       where: {
@@ -551,14 +577,14 @@ export const getMonitoringData = async (req: Request, res: Response) => {
     // Calculate growth rates
     const agentGrowth = calculateGrowthRate(totalAgents, previousMonthAgents);
     const revenueGrowth = calculateGrowthRate(
-      totalRevenue._sum.amount || 0,
+      revenue.grossRevenue,
       previousMonthRevenue._sum.amount || 0
     );
 
     res.json({
       totalAgents,
       agentGrowth,
-      totalRevenue: totalRevenue._sum.amount || 0,
+      totalRevenue: revenue.totalRevenue,
       revenueGrowth,
       avgDealSize: dealsWithAmount._avg.dealAmount || 0,
       conversionRate: (dealsWithAmount._count / (await prisma.lead.count({ where: { companyId } }))) * 100,

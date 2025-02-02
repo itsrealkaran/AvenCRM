@@ -580,7 +580,7 @@ const LineChart = React.forwardRef<HTMLDivElement, LineChartProps>((props, ref) 
               : undefined
           }
           margin={{
-            bottom: xAxisLabel ? 30 : undefined,
+            bottom: xAxisLabel ? 45 : undefined,
             left: yAxisLabel ? 20 : undefined,
             right: yAxisLabel ? 5 : undefined,
             top: 5,
@@ -614,8 +614,8 @@ const LineChart = React.forwardRef<HTMLDivElement, LineChartProps>((props, ref) 
           >
             {xAxisLabel && (
               <Label
-                position='insideBottom'
-                offset={-20}
+                position='bottom'
+                offset={0}
                 className='fill-gray-800 text-sm font-medium dark:fill-gray-200'
               >
                 {xAxisLabel}
