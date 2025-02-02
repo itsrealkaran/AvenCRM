@@ -115,7 +115,7 @@ const Page: React.FC = () => {
   )
 
   return (
-    <div className="space-y-8 p-6">
+    <Card className='p-6 space-y-6 min-h-full'>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Property Management</h1>
@@ -200,7 +200,7 @@ const Page: React.FC = () => {
           propertyToEdit={propertyToEdit}
         />
       </PropertyFormProvider>
-    </div>
+    </Card>
   )
 }
 
