@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Bell,
   Building2,
   Calendar,
   CheckSquare,
@@ -110,8 +111,15 @@ const menuItems = [
     icon: Wallet,
     path: '/teamleader/transactions',
     description: 'Transaction history',
-  }
+  },
+  {
+    heading: 'Notifications',
+    icon: Bell,
+    path: '/teamleader/notification',
+    description: 'Notification management',
+  },
 ];
+
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

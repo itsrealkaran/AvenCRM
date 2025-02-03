@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Bell,
   Building,
   Calendar,
   CheckSquare,
@@ -55,6 +56,12 @@ const menuItems = [
     icon: Settings,
     path: '/superadmin/settings',
     description: 'System preferences',
+  },
+  {
+    heading: 'Notifications',
+    icon: Bell,
+    path: '/superadmin/notification',
+    description: 'Notification management',
   },
 ];
 

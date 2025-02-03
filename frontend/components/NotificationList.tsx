@@ -1,4 +1,5 @@
 import { Calendar, CheckSquare, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Activity {
   id: number;
@@ -101,12 +102,14 @@ const getIconBgColor = (type: Activity['type']) => {
 };
 
 export function NotificationList() {
+  const router = useRouter();
+
   return (
     <div className='w-full'>
       <div className='px-4 py-3 border-b'>
         <h3 className='font-semibold text-base'>Recent Activities</h3>
       </div>
-      <div className='p-2 h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
+      <div className='p-2 h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
         {activities.map((activity) => (
           <div
             key={activity.id}
@@ -132,6 +135,14 @@ export function NotificationList() {
             {!activity.isRead && <div className='w-2 h-2 bg-blue-500 rounded-full mt-1'></div>}
           </div>
         ))}
+      </div>
+      <div className='px-4 py-2 border-t'>
+        <button 
+          onClick={() => router.push('/admin/notification')}
+          className='w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2'
+        >
+          View All Notifications
+        </button>
       </div>
     </div>
   );

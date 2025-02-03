@@ -109,11 +109,12 @@ const Step3Location: React.FC = () => {
   return (
     <div className="flex space-x-4">
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&libraries=places`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
         onLoad={initMap}
       />
       {/* Left Section */}
       <div className="w-1/2 space-y-4">
+
         <div className="space-y-2">
           <Label htmlFor="addressLine">Address Line</Label>
           <Input

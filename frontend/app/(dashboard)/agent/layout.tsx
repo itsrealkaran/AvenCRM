@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  Bell,
   Building2,
   Calendar,
   CheckSquare,
@@ -98,10 +99,17 @@ const menuItems = [
     path: '/agent/transactions',
     description: 'Transaction history',
   },
+  {
+    heading: 'Notifications',
+    icon: Bell,
+    path: '/agent/notification',
+    description: 'Notification management',
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
+
     <div className='flex h-screen bg-slate-100 relative'>
       <Sidebar menuItems={menuItems} />
       <div className='flex-1 flex w-[82%] flex-col'>
