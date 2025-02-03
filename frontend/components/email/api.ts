@@ -28,6 +28,12 @@ export const fetchEmailTemplates = async (): Promise<EmailTemplate[]> => {
   return response.data.templates;
 };
 
+export const fetchEmailTemplate = async (templateId: string): Promise<EmailTemplate> => {
+  const response = await api.get(`/email/templates/${templateId}`);
+  if (!response.data) throw new Error('Failed to fetch template');
+  return response.data;
+};
+
 export const createEmailTemplate = async (
   template: Partial<EmailTemplate>
 ): Promise<EmailTemplate> => {
