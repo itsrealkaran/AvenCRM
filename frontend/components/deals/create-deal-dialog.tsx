@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { BaseEntityDialog, CommonFormFields, NotesField, CoOwnersField } from '../entity-dialog';
+import { BaseEntityDialog, CommonFormFields, CoOwnersField, NotesField } from '../entity-dialog';
 
 interface CreateDealDialogProps {
   open: boolean;

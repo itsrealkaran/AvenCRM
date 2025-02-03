@@ -1,8 +1,9 @@
 'use client';
 
 import { Lead, LeadStatus } from '@/types';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { format } from 'date-fns';
 import {
   ArrowRightLeft,
@@ -32,8 +33,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import axios from 'axios';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const getStatusColor = (status: LeadStatus) => {
   const colors = {
@@ -50,14 +56,18 @@ const getStatusColor = (status: LeadStatus) => {
 };
 
 const updateLeadAgent = async (leadId: string, agentId: string | null) => {
-  const response = await axios.patch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/agent/${leadId}`, {
-    agentId,
-  }, { withCredentials: true });
-  
+  const response = await axios.patch(
+    `${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/agent/${leadId}`,
+    {
+      agentId,
+    },
+    { withCredentials: true }
+  );
+
   if (!response) {
     throw new Error('Failed to update agent');
   }
-  
+
   return response.data;
 };
 
@@ -105,12 +115,14 @@ export const columns: ColumnDef<Lead>[] = [
   {
     accessorKey: 'assignedTo',
     header: 'Assigned To',
-    cell: ({ row }) => {
+    cell: function AssignedToCell({ row }) {
       const queryClient = useQueryClient();
       const { data: agents } = useQuery({
         queryKey: ['team'],
         queryFn: async () => {
-          const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/team`, { withCredentials: true });
+          const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/team`, {
+            withCredentials: true,
+          });
           if (!response) {
             throw new Error('Failed to fetch agents');
           }
@@ -132,22 +144,19 @@ export const columns: ColumnDef<Lead>[] = [
       });
 
       const handleAgentChange = (agentId: string) => {
-        mutation.mutate({ 
-          leadId: row.original.id, 
-          agentId: agentId === 'unassigned' ? null : agentId 
+        mutation.mutate({
+          leadId: row.original.id,
+          agentId: agentId === 'unassigned' ? null : agentId,
         });
       };
 
       return (
-        <Select
-          value={row.original.agentId || 'unassigned'}
-          onValueChange={handleAgentChange}
-        >
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Select an agent" />
+        <Select value={row.original.agentId || 'unassigned'} onValueChange={handleAgentChange}>
+          <SelectTrigger className='w-[150px]'>
+            <SelectValue placeholder='Select an agent' />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="unassigned">Unassigned</SelectItem>
+            <SelectItem value='unassigned'>Unassigned</SelectItem>
             {agents?.map((agent: any) => (
               <SelectItem key={agent.id} value={agent.id}>
                 {agent.name}

@@ -16,10 +16,10 @@ import {
   Users,
   Wallet,
 } from 'lucide-react';
-
-import Topbar from '@/components/layout/Topbar';
-import Sidebar from '@/components/layout/Sidebar';
 import { FaFacebook, FaWhatsapp } from 'react-icons/fa';
+
+import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
 
 const menuItems = [
   {
@@ -119,7 +119,6 @@ const menuItems = [
     description: 'Notification management',
   },
 ];
-
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

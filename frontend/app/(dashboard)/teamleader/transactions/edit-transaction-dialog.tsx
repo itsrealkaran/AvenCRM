@@ -75,12 +75,9 @@ export function EditTransactionDialog({
     if (transaction) {
       form.reset({
         amount: transaction.amount.toString(),
-        type: transaction.type,
-        planType: transaction.planType || '',
         invoiceNumber: transaction.invoiceNumber || '',
-        taxRate: transaction.taxRate?.toString() || '',
+        taxRate: transaction.commissionRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
-        receiptUrl: transaction.receiptUrl || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
       });
     }

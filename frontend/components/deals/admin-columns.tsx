@@ -33,16 +33,17 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const colors: Record<DealStatus, string> = {
-  CLOSED_LOST: 'bg-purple-100 text-purple-800',
-  CLOSED_WON: 'bg-yellow-100 text-yellow-800',
+const statusColorMap: Record<DealStatus, string> = {
+  NEW: 'bg-gray-100 text-gray-800',
+  DISCOVERY: 'bg-blue-100 text-blue-800',
+  PROPOSAL: 'bg-purple-100 text-purple-800',
   UNDER_CONTRACT: 'bg-indigo-100 text-indigo-800',
-  PROSPECT: 'bg-orange-100 text-orange-800',
-  ACTIVE: 'bg-emerald-100 text-emerald-800',
+  NEGOTIATION: 'bg-orange-100 text-orange-800',
+  WON: 'bg-emerald-100 text-emerald-800',
 };
 
 const getStatusColor = (status: DealStatus): string => {
-  return colors[status] || 'bg-gray-100 text-gray-800';
+  return statusColorMap[status] || 'bg-gray-100 text-gray-800';
 };
 
 export const adminColumns: ColumnDef<Deal>[] = [

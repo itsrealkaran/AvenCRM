@@ -59,7 +59,8 @@ function SignInContent() {
 
         // Redirect to the callback URL or default dashboard
         const role = data.user.role as UserRole;
-        const callbackUrl = role === UserRole.TEAM_LEADER ? '/teamleader' : `/${role.toLowerCase()}`;
+        const callbackUrl =
+          role === UserRole.TEAM_LEADER ? '/teamleader' : `/${role.toLowerCase()}`;
         console.log('callbackUrl', callbackUrl);
         router.push(callbackUrl);
       } else {

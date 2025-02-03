@@ -12,13 +12,12 @@ import {
   Mail,
   Monitor,
   Store,
-  Wallet
+  Wallet,
 } from 'lucide-react';
+import { FaFacebook, FaWhatsapp } from 'react-icons/fa';
 
-import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/layout/Sidebar';
-import { FaFacebook } from 'react-icons/fa';
-import { FaWhatsapp } from 'react-icons/fa';
+import Topbar from '@/components/layout/Topbar';
 
 const menuItems = [
   {
@@ -30,7 +29,7 @@ const menuItems = [
   {
     heading: 'Meta Ads',
     icon: FaFacebook,
-    path: '/agent/meta-ads', 
+    path: '/agent/meta-ads',
     description: 'Manage Meta advertisements',
   },
   {
@@ -109,7 +108,6 @@ const menuItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-
     <div className='flex h-screen bg-slate-100 relative'>
       <Sidebar menuItems={menuItems} />
       <div className='flex-1 flex w-[82%] flex-col'>

@@ -2,30 +2,16 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import {
-  Activity,
-  ArrowUpRight,
-  Target,
-  Trophy,
-  Users,
-} from 'lucide-react';
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Activity, ArrowUpRight, Target, Trophy, Users } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { toast } from 'sonner';
 
 import { LineChart } from '@/components/charts/line-chart';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { Switch } from '@/components/ui/switch';
 import { api } from '@/lib/api';
-import { Switch } from "@/components/ui/switch";
 
 interface TopPerformer {
   name: string;
@@ -74,7 +60,7 @@ export function AdminDashboard() {
     queryKey: ['adminDashboard'],
     queryFn: async () => {
       const response = await api.get('/api/dashboard/admin');
-      console.log(response.data)
+      console.log(response.data);
       return response.data as AdminDashboardData;
     },
     retry: 2,
@@ -234,20 +220,27 @@ export function AdminDashboard() {
 
         <Card className='bg-white shadow-sm hover:shadow-md transition-all duration-200'>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className='text-sm font-medium text-gray-600'>{selectedRevenue === 'commission' ? 'Gross revenue' : 'Total Revenue'}</CardTitle>
-              <div className="flex items-center gap-2">
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-sm font-medium text-gray-600'>
+                {selectedRevenue === 'commission' ? 'Gross revenue' : 'Total Revenue'}
+              </CardTitle>
+              <div className='flex items-center gap-2'>
                 <Switch
                   checked={selectedRevenue === 'total'}
-                  onCheckedChange={(checked) => setSelectedRevenue(checked ? 'total' : 'commission')}
-                  className="scale-75"
+                  onCheckedChange={(checked) =>
+                    setSelectedRevenue(checked ? 'total' : 'commission')
+                  }
+                  className='scale-75'
                 />
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
-              ${dashboardData?.revenue[selectedRevenue === 'commission' ? 'commissionRevenue' : 'totalRevenue'].toLocaleString()}
+              $
+              {dashboardData?.revenue[
+                selectedRevenue === 'commission' ? 'commissionRevenue' : 'totalRevenue'
+              ].toLocaleString()}
             </div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
@@ -334,7 +327,9 @@ export function AdminDashboard() {
               <div key={index} className='flex items-center justify-between'>
                 <div className='flex items-center space-x-4'>
                   <Avatar>
-                  <AvatarFallback>{performer?.name ? performer.name.split(' ')[0][0].toUpperCase() : 'U'}</AvatarFallback>
+                    <AvatarFallback>
+                      {performer?.name ? performer.name.split(' ')[0][0].toUpperCase() : 'U'}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className='text-sm font-medium text-gray-900'>{performer.name}</p>

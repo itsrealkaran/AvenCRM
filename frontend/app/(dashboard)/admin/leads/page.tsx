@@ -7,15 +7,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-
 import { DataTable } from '@/components/data-table';
 import { adminColumns } from '@/components/leads/admin-columns';
 import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 async function getLeads() {
   try {
@@ -33,7 +32,11 @@ export default function LeadsPage() {
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
 
-  const { data: response, isLoading, refetch } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['leads'],
     queryFn: getLeads,
   });

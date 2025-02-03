@@ -95,13 +95,21 @@ export const columns: ColumnDef<Transaction>[] = [
       const transaction = row.original;
       const isVerified = transaction.status;
       const meta = table.options.meta as {
-        onVerify?: (transactionId: string, isVerified: boolean) => void;
+        onVerify?: (transactionId: string, isVerified: TransactionStatus) => void;
       };
 
       if (isVerified === TransactionStatus.APPROVED) {
-        return <Badge variant="outline" className="bg-green-50 text-green-600">Approved</Badge>;
+        return (
+          <Badge variant='outline' className='bg-green-50 text-green-600'>
+            Approved
+          </Badge>
+        );
       } else if (isVerified === TransactionStatus.REJECTED) {
-        return <Badge variant="outline" className="bg-red-50 text-red-600">Rejected</Badge>;
+        return (
+          <Badge variant='outline' className='bg-red-50 text-red-600'>
+            Rejected
+          </Badge>
+        );
       }
 
       return (
@@ -110,7 +118,7 @@ export const columns: ColumnDef<Transaction>[] = [
             <Button
               variant='outline'
               size='sm'
-              disabled={isVerified}
+              disabled={!!isVerified}
               onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.APPROVED)}
               className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
             >

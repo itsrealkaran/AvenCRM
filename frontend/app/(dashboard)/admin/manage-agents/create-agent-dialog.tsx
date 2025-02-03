@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Gender, UserRole } from '@/types';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import axios from 'axios';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +25,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface CreateAgentDialogProps {
   open: boolean;
@@ -82,7 +82,7 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
         const date = new Date(dateString);
         return date.toISOString().split('T')[0];
       };
-      console.log(user.gender, "user");
+      console.log(user.gender, 'user');
       console.log('User Role:', user.role, 'TeamId:', user.teamId);
       setFormData({
         name: user.name || '',
@@ -112,24 +112,20 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
     try {
       setLoading(true);
       if (user) {
-        console.log(formData, "updating user");
-        await axios.put(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.id}`,
-          formData,
-          { withCredentials: true }
-        );
+        console.log(formData, 'updating user');
+        await axios.put(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user/${user.id}`, formData, {
+          withCredentials: true,
+        });
       } else {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/user`,
-          formData,
-          { withCredentials: true }
-        );
+        await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, formData, {
+          withCredentials: true,
+        });
       }
-      
+
       queryClient.invalidateQueries({ queryKey: ['agents'] });
       onOpenChange(false);
       toast.success(`Agent ${user ? 'updated' : 'created'} successfully`);
-      
+
       // Reset form data only when creating new agent
       if (!user) {
         setFormData({
@@ -159,10 +155,9 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
         <DialogHeader>
           <DialogTitle>{user ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
           <DialogDescription>
-            {user 
+            {user
               ? 'Update the agent details below.'
-              : 'Enter the details to create a new agent. They will receive an email with login credentials.'
-            }
+              : 'Enter the details to create a new agent. They will receive an email with login credentials.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -177,7 +172,7 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
                   required
                 />
               </div>
-              
+
               <div className='grid gap-2'>
                 <Label htmlFor='email'>Email</Label>
                 <Input
@@ -230,7 +225,9 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
                 <Label htmlFor='role'>Role</Label>
                 <Select
                   value={formData.agentRole}
-                  onValueChange={(value: UserRole) => setFormData({ ...formData, agentRole: value })}
+                  onValueChange={(value: UserRole) =>
+                    setFormData({ ...formData, agentRole: value })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder='Select role' />
@@ -270,62 +267,78 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
                   max={100}
                   step={0.1}
                   value={formData.commissionRate}
-                  onChange={(e) => setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })
+                  }
                   placeholder='Enter commission rate'
                 />
               </div>
-
+            </div>
+            <div className='grid gap-2'>
+              <div className='flex items-center space-x-2'>
+                <Checkbox
+                  id='hasThreshold'
+                  checked={showThreshold}
+                  onCheckedChange={(checked) => {
+                    setShowThreshold(checked === true);
+                    if (!checked) {
+                      setFormData({
+                        ...formData,
+                        commissionThreshhold: 0,
+                        commissionAfterThreshhold: 0,
+                      });
+                    }
+                  }}
+                />
+                <Label htmlFor='hasThreshold' className='whitespace-nowrap'>
+                  Enable Commission Threshold
+                </Label>
               </div>
-              <div className='grid gap-2'>
-                <div className='flex items-center space-x-2'>
-                  <Checkbox 
-                    id="hasThreshold" 
-                    checked={showThreshold}
-                    onCheckedChange={(checked) => {
-                      setShowThreshold(checked === true);
-                      if (!checked) {
-                        setFormData({ ...formData, commissionThreshhold: 0, commissionAfterThreshhold: 0 });
-                      }
-                    }}
-                  />
-                  <Label htmlFor="hasThreshold" className='whitespace-nowrap'>Enable Commission Threshold</Label>
-                </div>
-                {showThreshold && (
-                  <div className='grid gap-6 py-4'>
-                    <div className='flex gap-6'>
-                      <div className='grid gap-2 flex-1'>
-                        <Label htmlFor='commissionThreshhold' className='whitespace-nowrap'>
-                          Threshold Amount
-                        </Label>
-                        <Input
-                          id='commissionThreshhold'
-                          type='number'
-                          min={0}
-                          step={1000}
-                          value={formData.commissionThreshhold}
-                          onChange={(e) => setFormData({ ...formData, commissionThreshhold: parseFloat(e.target.value) || 0 })}
-                          placeholder='Enter threshold'
-                        />
-                      </div>
-                      <div className='grid gap-2 flex-1'>
-                        <Label htmlFor='commissionAfterThreshhold' className='whitespace-nowrap'>
-                          Commission After (%)
-                        </Label>
-                        <Input
-                          id='commissionAfterThreshhold'
-                          type='number'
-                          min={0}
-                          max={100}
-                          step={0.1}
-                          value={formData.commissionAfterThreshhold}
-                          onChange={(e) => setFormData({ ...formData, commissionAfterThreshhold: parseFloat(e.target.value) || 0 })}
-                          placeholder='Enter rate'
-                        />
-                      </div>
+              {showThreshold && (
+                <div className='grid gap-6 py-4'>
+                  <div className='flex gap-6'>
+                    <div className='grid gap-2 flex-1'>
+                      <Label htmlFor='commissionThreshhold' className='whitespace-nowrap'>
+                        Threshold Amount
+                      </Label>
+                      <Input
+                        id='commissionThreshhold'
+                        type='number'
+                        min={0}
+                        step={1000}
+                        value={formData.commissionThreshhold}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            commissionThreshhold: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        placeholder='Enter threshold'
+                      />
+                    </div>
+                    <div className='grid gap-2 flex-1'>
+                      <Label htmlFor='commissionAfterThreshhold' className='whitespace-nowrap'>
+                        Commission After (%)
+                      </Label>
+                      <Input
+                        id='commissionAfterThreshhold'
+                        type='number'
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        value={formData.commissionAfterThreshhold}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            commissionAfterThreshhold: parseFloat(e.target.value) || 0,
+                          })
+                        }
+                        placeholder='Enter rate'
+                      />
                     </div>
                   </div>
-                )}
-
+                </div>
+              )}
             </div>
           </div>
           <DialogFooter>

@@ -96,29 +96,37 @@ export const columns: ColumnDef<Transaction>[] = [
     cell: ({ row, table }) => {
       const isApproved = row.original.isApprovedByTeamLeader;
       const meta = table.options.meta as {
-        onVerify?: (id: string, isVerified: boolean) => void;
+        onVerify?: (id: string, isVerified: TransactionStatus) => void;
       };
 
       if (isApproved === TransactionStatus.APPROVED) {
-        return <Badge variant="outline" className="bg-green-50 text-green-600 text-center">Approved</Badge>;
+        return (
+          <Badge variant='outline' className='bg-green-50 text-green-600 text-center'>
+            Approved
+          </Badge>
+        );
       } else if (isApproved === TransactionStatus.REJECTED) {
-        return <Badge variant="outline" className="bg-red-50 text-red-600 text-center">Rejected</Badge>;
+        return (
+          <Badge variant='outline' className='bg-red-50 text-red-600 text-center'>
+            Rejected
+          </Badge>
+        );
       }
 
       return (
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           <Button
-            variant="outline"
-            size="sm"
-            className="bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700"
+            variant='outline'
+            size='sm'
+            className='bg-green-50 hover:bg-green-100 text-green-600 hover:text-green-700'
             onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.APPROVED)}
           >
             Approve
           </Button>
           <Button
-            variant="outline"
-            size="sm"
-            className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700"
+            variant='outline'
+            size='sm'
+            className='bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700'
             onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.REJECTED)}
           >
             Reject

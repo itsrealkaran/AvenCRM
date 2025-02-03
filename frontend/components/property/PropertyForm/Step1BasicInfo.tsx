@@ -1,5 +1,6 @@
 import type React from 'react';
 import { usePropertyForm } from '@/contexts/PropertyFormContext';
+import axios from 'axios';
 import { X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import axios from 'axios';
 
 const propertyTypes = [
   { value: 'residential', label: 'Residential' },
@@ -72,29 +72,28 @@ const Step1BasicInfo = () => {
             headers: {
               'Content-Type': 'multipart/form-data',
             },
-            withCredentials: true
+            withCredentials: true,
           }
         );
-        console.log(file, "file")
-        console.log(file.type, "file")
+        console.log(file, 'file');
+        console.log(file.type, 'file');
         // Now upload the file directly to S3 using the presigned URL
         await axios.put(response.data.uploadUrl, file, {
           headers: {
             'Content-Type': file.type,
-          }
+          },
         });
 
         return response.data.downloadUrl;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
-      const validUrls = uploadedUrls.filter(url => url);
+      const validUrls = uploadedUrls.filter((url) => url);
 
       // Update form with new image URLs
       updateFormData({
-        images: [...(formData.images || []), ...validUrls]
+        images: [...(formData.images || []), ...validUrls],
       });
-
     } catch (error) {
       console.error('Error uploading images:', error);
       // TODO: Add proper error handling UI here
@@ -105,7 +104,7 @@ const Step1BasicInfo = () => {
 
   const removeImage = (index: number) => {
     if (!formData.images) return;
-    
+
     updateFormData({
       images: formData.images.filter((_, i) => i !== index),
     });
@@ -119,7 +118,6 @@ const Step1BasicInfo = () => {
           <Select
             onValueChange={(value) => updateFormData({ propertyType: value })}
             value={formData.propertyType}
-            className="w-full"
           >
             <SelectTrigger className='w-full'>
               <SelectValue placeholder='Select property type' />
@@ -138,7 +136,6 @@ const Step1BasicInfo = () => {
           <Select
             onValueChange={(value) => updateFormData({ zoningType: value })}
             value={formData.zoningType}
-            className='w-full'
           >
             <SelectTrigger className='w-full'>
               <SelectValue placeholder='Select zoning type' />
@@ -157,7 +154,6 @@ const Step1BasicInfo = () => {
           <Select
             onValueChange={(value) => updateFormData({ listingType: value })}
             value={formData.listingType}
-            className='w-full'
           >
             <SelectTrigger className='w-full'>
               <SelectValue placeholder='Select listing type' />
@@ -180,7 +176,7 @@ const Step1BasicInfo = () => {
             {formData.images.map((file, index) => (
               <div key={index} className='relative'>
                 <img
-                  src={file as any || '/placeholder.svg'}
+                  src={(file as any) || '/placeholder.svg'}
                   alt={`Uploaded ${index + 1}`}
                   className='w-full h-24 object-cover rounded-md'
                 />

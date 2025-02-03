@@ -7,17 +7,17 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { DataTable } from '@/components/data-table';
+import { adminColumns } from '@/components/leads/admin-columns';
+import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
+import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
+import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 
-import { DataTable } from '@/components/data-table';
-import { adminColumns } from '@/components/leads/admin-columns';
 import { columns } from './columns';
-import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
-import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
-import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 
 async function getLeads() {
   try {
@@ -36,7 +36,11 @@ export default function LeadsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: response, isLoading, refetch } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['leads'],
     queryFn: getLeads,
   });

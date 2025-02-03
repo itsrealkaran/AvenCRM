@@ -16,7 +16,9 @@ import {
 } from '@tanstack/react-table';
 import { Download, Plus, RefreshCw, Trash, Upload, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
+import { read, utils } from 'xlsx';
 
+import FileImportModal from '@/components/data-table/file-import-modal';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -34,8 +36,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
-import { read, utils } from 'xlsx';
-import FileImportModal from '@/components/data-table/file-import-modal';
 
 // Add base interface for data items
 interface BaseData {
@@ -339,9 +339,7 @@ export function DataTable<TData extends BaseData, TValue>({
               )}
             </TableBody>
           </Table>
-          {fileData && (
-            <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
-          )}
+          {fileData && <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />}
         </div>
       </div>
     </div>

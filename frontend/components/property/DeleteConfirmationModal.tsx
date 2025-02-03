@@ -1,4 +1,5 @@
-import type React from "react"
+import type React from 'react';
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,13 +9,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+} from '@/components/ui/alert-dialog';
 
 interface DeleteConfirmationModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  propertyTitle: string
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  propertyTitle: string;
 }
 
 const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
@@ -29,19 +30,20 @@ const DeleteConfirmationModal: React.FC<DeleteConfirmationModalProps> = ({
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure you want to delete this property?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the property "{propertyTitle}".
+            This action cannot be undone. This will permanently delete the property &quot;
+            {propertyTitle}
+            &quot;.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel onClick={onClose}>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-red-600 hover:bg-red-700">
+          <AlertDialogAction onClick={onConfirm} className='bg-red-600 hover:bg-red-700'>
             Delete
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
-}
+  );
+};
 
-export default DeleteConfirmationModal
-
+export default DeleteConfirmationModal;
