@@ -3,6 +3,13 @@
 import { useState } from 'react';
 import { ChevronDown, Facebook } from 'lucide-react';
 
+import { CampaignsList } from '@/components/meta-ads/campaigns-list';
+import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
+import { CreateCampaignModal, type Campaign } from '@/components/meta-ads/create-campaign-modal';
+import { CreateFormModal, type Form } from '@/components/meta-ads/create-form-modal';
+import { FacebookConnectModal } from '@/components/meta-ads/facebook-connect-modal';
+import { FormsList } from '@/components/meta-ads/forms-list';
+import { MetricsCards } from '@/components/meta-ads/metrics-cards';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -12,14 +19,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-import { CampaignsList } from '@/components/meta-ads/campaigns-list';
-import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
-import { CreateCampaignModal, type Campaign } from '@/components/meta-ads/create-campaign-modal';
-import { CreateFormModal, type Form } from '@/components/meta-ads/create-form-modal';
-import { FacebookConnectModal } from '@/components/meta-ads/facebook-connect-modal';
-import { FormsList } from '@/components/meta-ads/forms-list';
-import { MetricsCards } from '@/components/meta-ads/metrics-cards';
 
 export default function MetaAdsPage() {
   const [showFacebookModal, setShowFacebookModal] = useState(false);

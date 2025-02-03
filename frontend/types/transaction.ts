@@ -1,4 +1,4 @@
-import { TransactionStatus } from './enums';
+import { TransactionStatus, TransactionType } from './enums';
 
 export interface Transaction {
   id: string;
@@ -11,6 +11,7 @@ export interface Transaction {
     name: string;
     email: string;
   };
+  transactionType: TransactionType;
   isApprovedByTeamLeader: TransactionStatus;
   status: TransactionStatus;
   isVerfied: boolean;

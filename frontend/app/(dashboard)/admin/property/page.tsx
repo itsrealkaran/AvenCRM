@@ -1,140 +1,143 @@
-'use client'
+'use client';
 
-import type React from "react"
-import { useEffect, useState } from "react"
-import { RefreshCcw } from "lucide-react"
-import PropertyCard from "@/components/property/PropertyCard"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { useToast } from "@/hooks/use-toast"
-import PropertyFormModal from "@/components/property/PropertyFormModal"
-import { PropertyFormProvider } from "@/contexts/PropertyFormContext"
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { PropertyFormProvider } from '@/contexts/PropertyFormContext';
+import { RefreshCcw } from 'lucide-react';
 
-
+import PropertyCard from '@/components/property/PropertyCard';
+import PropertyFormModal from '@/components/property/PropertyFormModal';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface Property {
-  id: string
-  title: string
-  address: string
-  price: number
-  isVerified: boolean
-  image?: string
-  beds: number
-  baths: number
-  sqft: number
+  id: string;
+  title: string;
+  address: string;
+  price: number;
+  isVerified: boolean;
+  image?: string;
+  beds: number;
+  baths: number;
+  sqft: number;
   agent: {
-    name: string
-    image?: string
-  }
+    name: string;
+    image?: string;
+  };
 }
 
 const Page: React.FC = () => {
-  const [unverifiedProperties, setUnverifiedProperties] = useState<Property[]>([])
-  const [verifiedProperties, setVerifiedProperties] = useState<Property[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const { toast } = useToast()
-  const [isPropertyFormModalOpen, setIsPropertyFormModalOpen] = useState(false)
-  const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null)
+  const [unverifiedProperties, setUnverifiedProperties] = useState<Property[]>([]);
+  const [verifiedProperties, setVerifiedProperties] = useState<Property[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { toast } = useToast();
+  const [isPropertyFormModalOpen, setIsPropertyFormModalOpen] = useState(false);
+  const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
 
   useEffect(() => {
-    fetchProperties()
-  }, [])
+    fetchProperties();
+  }, []);
 
   const fetchProperties = async () => {
     try {
-      setIsRefreshing(true)
+      setIsRefreshing(true);
       const [unverifiedRes, verifiedRes] = await Promise.all([
-        fetch("/api/properties?isVerified=false"),
-        fetch("/api/properties?isVerified=true"),
-      ])
-      const unverifiedProps = await unverifiedRes.json()
-      const verifiedProps = await verifiedRes.json()
-      setUnverifiedProperties(unverifiedProps)
-      setVerifiedProperties(verifiedProps)
+        fetch('/api/properties?isVerified=false'),
+        fetch('/api/properties?isVerified=true'),
+      ]);
+      const unverifiedProps = await unverifiedRes.json();
+      const verifiedProps = await verifiedRes.json();
+      setUnverifiedProperties(unverifiedProps);
+      setVerifiedProperties(verifiedProps);
     } catch (error) {
-      console.error("Error fetching properties:", error)
+      console.error('Error fetching properties:', error);
     } finally {
-      setIsLoading(false)
-      setIsRefreshing(false)
+      setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }
+  };
 
   const handleVerify = async (id: string) => {
     try {
       // In a real scenario, you'd make an API call to verify the property
-      setUnverifiedProperties((prev) => prev.filter((p) => p.id !== id))
-      const verifiedProperty = unverifiedProperties.find((p) => p.id === id)!
-      setVerifiedProperties((prev) => [...prev, { ...verifiedProperty, isVerified: true }])
+      setUnverifiedProperties((prev) => prev.filter((p) => p.id !== id));
+      const verifiedProperty = unverifiedProperties.find((p) => p.id === id)!;
+      setVerifiedProperties((prev) => [...prev, { ...verifiedProperty, isVerified: true }]);
 
       toast({
-        title: "Property Verified",
-        description: "The property has been successfully verified.",
-      })
+        title: 'Property Verified',
+        description: 'The property has been successfully verified.',
+      });
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to verify property. Please try again.",
-        variant: "destructive",
-      })
+        title: 'Error',
+        description: 'Failed to verify property. Please try again.',
+        variant: 'destructive',
+      });
     }
-  }
+  };
 
   const handleDeleteProperty = (propertyId: string) => {
     // In a real application, you would send a delete request to your API
     // Here we're just updating the local state
-    setUnverifiedProperties(unverifiedProperties.filter((prop) => prop.id !== propertyId))
-    setVerifiedProperties(verifiedProperties.filter((prop) => prop.id !== propertyId))
+    setUnverifiedProperties(unverifiedProperties.filter((prop) => prop.id !== propertyId));
+    setVerifiedProperties(verifiedProperties.filter((prop) => prop.id !== propertyId));
     toast({
-      title: "Property Deleted",
-      description: "The property has been successfully deleted.",
-    })
-  }
+      title: 'Property Deleted',
+      description: 'The property has been successfully deleted.',
+    });
+  };
 
   const handleEditProperty = (property: Property) => {
-    setPropertyToEdit(property)
-    setIsPropertyFormModalOpen(true)
-  }
+    setPropertyToEdit(property);
+    setIsPropertyFormModalOpen(true);
+  };
 
   const handleSubmitProperty = (property: any) => {
-    console.log("Property submitted in AdminView:", property)
+    console.log('Property submitted in AdminView:', property);
     if (propertyToEdit) {
       // Update existing property
-      setUnverifiedProperties(unverifiedProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p)))
-      setVerifiedProperties(verifiedProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p)))
+      setUnverifiedProperties(
+        unverifiedProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p))
+      );
+      setVerifiedProperties(
+        verifiedProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p))
+      );
       toast({
-        title: "Property Updated",
-        description: "The property has been successfully updated.",
-      })
+        title: 'Property Updated',
+        description: 'The property has been successfully updated.',
+      });
     }
-    setPropertyToEdit(null)
-    setIsPropertyFormModalOpen(false)
-  }
+    setPropertyToEdit(null);
+    setIsPropertyFormModalOpen(false);
+  };
 
   const PropertySkeleton = () => (
-    <Card className="w-[260px] flex-shrink-0">
-      <CardContent className="p-0">
-        <Skeleton className="h-[180px] w-full" />
-        <div className="p-3 space-y-3">
-          <Skeleton className="h-3 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-          <Skeleton className="h-3 w-full" />
+    <Card className='w-[260px] flex-shrink-0'>
+      <CardContent className='p-0'>
+        <Skeleton className='h-[180px] w-full' />
+        <div className='p-3 space-y-3'>
+          <Skeleton className='h-3 w-3/4' />
+          <Skeleton className='h-3 w-1/2' />
+          <Skeleton className='h-3 w-full' />
         </div>
       </CardContent>
     </Card>
-  )
+  );
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
-      <div className="flex justify-between items-center">
+      <div className='flex justify-between items-center'>
         <div>
-          <h1 className="text-2xl font-bold">Property Management</h1>
+          <h1 className='text-2xl font-bold'>Property Management</h1>
 
-          <p className="text-muted-foreground">Review and verify property listings</p>
+          <p className='text-muted-foreground'>Review and verify property listings</p>
         </div>
-        <Button variant="outline" size="sm" onClick={fetchProperties} disabled={isRefreshing}>
-          <RefreshCcw className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
+        <Button variant='outline' size='sm' onClick={fetchProperties} disabled={isRefreshing}>
+          <RefreshCcw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -145,14 +148,16 @@ const Page: React.FC = () => {
           <CardDescription>Properties that need your review</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex flex-wrap gap-3" style={{ minWidth: "max-content" }}>
+          <div className='overflow-x-auto pb-4'>
+            <div className='flex flex-wrap gap-3' style={{ minWidth: 'max-content' }}>
               {isLoading ? (
                 Array(3)
                   .fill(0)
                   .map((_, i) => <PropertySkeleton key={i} />)
               ) : unverifiedProperties.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8 w-full">No properties pending verification</p>
+                <p className='text-center text-muted-foreground py-8 w-full'>
+                  No properties pending verification
+                </p>
               ) : (
                 unverifiedProperties.map((prop) => (
                   <PropertyCard
@@ -161,7 +166,6 @@ const Page: React.FC = () => {
                     onVerify={() => handleVerify(prop.id)}
                     onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop)}
-                    className="w-[260px] flex-shrink-0"
                   />
                 ))
               )}
@@ -176,8 +180,8 @@ const Page: React.FC = () => {
           <CardDescription>All verified property listings</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto pb-4">
-            <div className="flex flex-wrap gap-3" style={{ minWidth: "max-content" }}>
+          <div className='overflow-x-auto pb-4'>
+            <div className='flex flex-wrap gap-3' style={{ minWidth: 'max-content' }}>
               {isLoading
                 ? Array(6)
                     .fill(0)
@@ -188,7 +192,6 @@ const Page: React.FC = () => {
                       {...prop}
                       onDelete={() => handleDeleteProperty(prop.id)}
                       onEdit={() => handleEditProperty(prop)}
-                      className="w-[260px] flex-shrink-0"
                     />
                   ))}
             </div>
@@ -204,8 +207,7 @@ const Page: React.FC = () => {
         />
       </PropertyFormProvider>
     </Card>
-  )
-}
+  );
+};
 
-export default Page
-
+export default Page;

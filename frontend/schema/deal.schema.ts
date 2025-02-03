@@ -1,7 +1,7 @@
 import { DealStatus, PropertyType } from '@/types';
 import { z } from 'zod';
 
-import { noteEntrySchema, coownerSchema } from './note-and-coowner.schema';
+import { coownerSchema, noteEntrySchema } from './note-and-coowner.schema';
 
 // Base schema for common deal fields
 export const dealBaseSchema = z.object({

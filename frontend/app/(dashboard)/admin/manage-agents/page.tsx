@@ -221,8 +221,8 @@ export default function ManageAgentsPage() {
         </CardContent>
       </Card>
 
-      <CreateAgentDialog 
-        open={isCreateDialogOpen || isEditDialogOpen} 
+      <CreateAgentDialog
+        open={isCreateDialogOpen || isEditDialogOpen}
         onOpenChange={(open) => {
           if (isEditDialogOpen) {
             setIsEditDialogOpen(open);

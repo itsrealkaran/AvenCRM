@@ -1,5 +1,5 @@
-import { Calendar, CheckSquare, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Calendar, CheckSquare, Mail } from 'lucide-react';
 
 interface Activity {
   id: number;
@@ -137,7 +137,7 @@ export function NotificationList() {
         ))}
       </div>
       <div className='px-4 py-2 border-t'>
-        <button 
+        <button
           onClick={() => router.push('/admin/notification')}
           className='w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2'
         >

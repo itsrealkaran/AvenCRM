@@ -4,13 +4,7 @@ import { PlusCircle, Trash2 } from 'lucide-react';
 import { useFieldArray, UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
 interface CoOwnersFieldProps {

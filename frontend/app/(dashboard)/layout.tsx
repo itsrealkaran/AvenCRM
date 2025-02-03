@@ -1,8 +1,8 @@
 import React from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 import { Providers } from '../providers';
-import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (

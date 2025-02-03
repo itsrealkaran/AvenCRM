@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Transaction } from '@/types';
+import { Transaction, TransactionType } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -29,7 +29,7 @@ import {
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
-  type: z.string().min(1, 'Payment type is required'),
+  type: z.string().min(1, 'Transaction type is required'),
   planType: z.string().optional(),
   invoiceNumber: z.string().optional(),
   taxRate: z.string().optional(),
@@ -74,12 +74,9 @@ export function EditTransactionDialog({
     if (transaction) {
       form.reset({
         amount: transaction.amount.toString(),
-        type: transaction.type,
-        planType: transaction.planType || '',
         invoiceNumber: transaction.invoiceNumber || '',
-        taxRate: transaction.taxRate?.toString() || '',
+        taxRate: transaction.commissionRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
-        receiptUrl: transaction.receiptUrl || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
       });
     }
@@ -139,114 +136,121 @@ export function EditTransactionDialog({
           <DialogTitle>Edit Transaction</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
-            <div className='grid grid-cols-2 gap-4'>
-              <FormField
-                control={form.control}
-                name='amount'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Amount</FormLabel>
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>
+            <FormField
+              control={form.control}
+              name='amount'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amount</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='type'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input type='number' placeholder='1000' {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select transaction type' />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='type'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Payment Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select payment type' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='CREDIT'>Credit</SelectItem>
-                        <SelectItem value='DEBIT'>Debit</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='planType'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Plan Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select plan type' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='FREE'>Free</SelectItem>
-                        <SelectItem value='BASIC'>Basic</SelectItem>
-                        <SelectItem value='PRO'>Pro</SelectItem>
-                        <SelectItem value='ENTERPRISE'>Enterprise</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='invoiceNumber'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Invoice Number</FormLabel>
+                    <SelectContent>
+                      {Object.values(TransactionType).map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='planType'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Plan Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input placeholder='INV-001' {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select plan type' />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='taxRate'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tax Rate (%)</FormLabel>
+                    <SelectContent>
+                      <SelectItem value='FREE'>Free</SelectItem>
+                      <SelectItem value='BASIC'>Basic</SelectItem>
+                      <SelectItem value='PRO'>Pro</SelectItem>
+                      <SelectItem value='ENTERPRISE'>Enterprise</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='invoiceNumber'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Invoice Number</FormLabel>
+                  <FormControl>
+                    <Input placeholder='INV-001' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='taxRate'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tax Rate (%)</FormLabel>
+                  <FormControl>
+                    <Input type='number' placeholder='10' {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='transactionMethod'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Transaction Method</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input type='number' placeholder='10' {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select method' />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='transactionMethod'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Transaction Method</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select method' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value='CARD'>Card</SelectItem>
-                        <SelectItem value='BANK_TRANSFER'>Bank Transfer</SelectItem>
-                        <SelectItem value='CASH'>Cash</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      <SelectItem value='CARD'>Card</SelectItem>
+                      <SelectItem value='BANK_TRANSFER'>Bank Transfer</SelectItem>
+                      <SelectItem value='CASH'>Cash</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name='date'
@@ -260,6 +264,7 @@ export function EditTransactionDialog({
                 </FormItem>
               )}
             />
+
             <div className='flex justify-end space-x-4'>
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel

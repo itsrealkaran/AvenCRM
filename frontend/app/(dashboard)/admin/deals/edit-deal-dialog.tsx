@@ -66,7 +66,7 @@ export function EditDealDialog({
   const form = useForm<DealFormValues>({
     resolver: zodResolver(dealFormSchema),
     defaultValues: {
-      status: DealStatus.PROSPECT,
+      status: DealStatus.NEW,
       notes: [],
     },
   });

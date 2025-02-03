@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ChevronLeft, ChevronRight, MoreHorizontal, type LucideIcon } from 'lucide-react';
-import { FaAngleRight } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
+import { FaAngleRight } from 'react-icons/fa6';
+
 import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

@@ -36,7 +36,11 @@ export default function LeadsPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
-  const { data: response, isLoading, refetch } = useQuery({
+  const {
+    data: response,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['leads'],
     queryFn: getLeads,
   });

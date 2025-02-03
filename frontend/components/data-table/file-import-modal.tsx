@@ -122,15 +122,23 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
               if (value) {
                 try {
                   const [day, month, year] = (value as string).split('-').map(Number);
-                  console.log("value", value, day, month, year)
+                  console.log('value', value, day, month, year);
                   // Validate date parts
-                  if (isNaN(day) || isNaN(month) || isNaN(year) ||
-                      day < 1 || day > 31 || month < 1 || month > 12 || 
-                      year < 1900 || year > new Date().getFullYear()) {
+                  if (
+                    isNaN(day) ||
+                    isNaN(month) ||
+                    isNaN(year) ||
+                    day < 1 ||
+                    day > 31 ||
+                    month < 1 ||
+                    month > 12 ||
+                    year < 1900 ||
+                    year > new Date().getFullYear()
+                  ) {
                     mappedItem[mappedKey] = null;
                   } else {
                     const date = new Date(year, month - 1, day, 12, 0, 0);
-                    console.log("date", date);
+                    console.log('date', date);
                     if (date.toString() === 'Invalid Date') {
                       mappedItem[mappedKey] = null;
                     } else {

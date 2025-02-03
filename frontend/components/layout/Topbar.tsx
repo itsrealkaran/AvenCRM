@@ -26,9 +26,7 @@ export default function Topbar() {
   const [isDropdownActive, setIsDropdownActive] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const getInitials = (name: string) => {
-    return name
-      .split(' ')[0][0]
-      .toUpperCase();
+    return name.split(' ')[0][0].toUpperCase();
   };
 
   return (

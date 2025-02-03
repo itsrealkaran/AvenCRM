@@ -11,8 +11,8 @@ import {
   Wallet,
 } from 'lucide-react';
 
-import Topbar from '@/components/layout/Topbar';
 import Sidebar from '@/components/layout/Sidebar';
+import Topbar from '@/components/layout/Topbar';
 
 const menuItems = [
   {

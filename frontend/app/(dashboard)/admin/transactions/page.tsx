@@ -174,11 +174,11 @@ export default function TransactionsPage() {
 
       {selectedTransaction && (
         <EditTransactionDialog
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        transaction={selectedTransaction}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          transaction={selectedTransaction}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
       )}
     </Card>

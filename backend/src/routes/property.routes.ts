@@ -1,8 +1,17 @@
 import { Router } from 'express';
 import { protect } from '../middleware/auth.js';
 import { propertiesController } from '../controllers/property.controller.js';
+import multer from 'multer';
 
 const router: Router = Router();
+
+// Configure multer for memory storage
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  }
+});
 
 // Apply authentication middleware to all routes
 router.use(protect);
@@ -11,6 +20,7 @@ router.use(protect);
 router.get('/', propertiesController.getAllProperties);
 router.get('/:id', propertiesController.getPropertyById);
 router.post('/', propertiesController.createProperty);
+router.post('/upload-file', upload.single('file'), propertiesController.uploadFile);
 router.put('/:id', propertiesController.updateProperty);
 router.patch('/:id/status', propertiesController.updatePropertyStatus);
 router.delete('/:id', propertiesController.deleteProperty);
