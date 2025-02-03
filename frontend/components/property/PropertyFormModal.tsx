@@ -16,6 +16,7 @@ import Step10LocationFeatures from "./PropertyForm/Step10LocationFeatures"
 import Step11GeneralFeatures from "./PropertyForm/Step11GeneralFeatures"
 import Step12Views from "./PropertyForm/Step12Views"
 import LastDocuments from "./PropertyForm/LastDocuments"
+import { api } from "@/lib/api"
 
 interface PropertyFormModalProps {
   isOpen: boolean
@@ -42,7 +43,7 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
     setStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault()
     console.log("Form submitted")
     // Get the complete form data
@@ -53,26 +54,24 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({ isOpen, onClose, 
     }
 
     // Create card-related data
-    const cardData = {
-      id: formData.id || String(Date.now()), // Use existing id or generate a new one
+    const cardData = { //@ts-ignore
+      id: formData.id || String(Date.now()),
       title: formData.propertyName || "",
       address: `${formData.addressLine}, ${formData.city}, ${formData.zipCode}`,
       price: Number.parseFloat(formData.price) || 0,
-      isVerified: false, // Assuming new properties are not verified by default
-      image: formData.images.length > 0 ? URL.createObjectURL(formData.images[0]) : undefined,
+      isVerified: false,
+      image: formData.images.length > 0 ? formData.images[0] : undefined,
       beds: Number.parseInt(formData.bedrooms) || 0,
       baths: Number.parseInt(formData.bathrooms) || 0,
       sqft: Number.parseInt(formData.sqft) || 0,
       parking: Number.parseInt(formData.parking) || 0,
-      agent: {
-        name: "Jenny Wilson", // You might want to replace this with actual agent data
-        image: "/placeholder.svg?height=32&width=32",
-      },
     }
 
-    // Console log both objects
-    console.log("Complete Form Data:", completeFormData)
-    console.log("Card Data:", cardData)
+    const response = await api.post(`/property`, {
+      cardData,
+      completeFormData
+    })
+    console.log(response)
 
     // Call the onSubmit prop with the card data
     onSubmit(cardData)

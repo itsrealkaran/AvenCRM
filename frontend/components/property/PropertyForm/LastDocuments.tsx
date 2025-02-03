@@ -5,15 +5,60 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { X, ExternalLink } from "lucide-react"
+import axios from 'axios';
 
 const LastDocuments: React.FC = () => {
   const { formData, updateFormData } = usePropertyForm()
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      updateFormData({ documents: Array.from(e.target.files) })
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      // Store files in form data for local state
+      updateFormData({ documents: Array.from(files) });
+
+      const uploadPromises = Array.from(files).map(async (file) => {
+        // First, get the presigned URL
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-file`,
+          formData,
+          {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+            },
+            withCredentials: true
+          }
+        );
+
+        // Now upload the file directly to S3 using the presigned URL
+        await axios.put(response.data.uploadUrl, file, {
+          headers: {
+            'Content-Type': file.type,
+          }
+        });
+
+        return response.data.downloadUrl;
+      });
+
+      const uploadedUrls = await Promise.all(uploadPromises);
+      const validUrls = uploadedUrls.filter(url => url);
+
+      // Update form with new document URLs
+      updateFormData({
+        documents: [...(formData.documents || []), ...validUrls]
+      });
+
+    } catch (error) {
+      console.error('Error uploading documents:', error);
+      // TODO: Add proper error handling UI here
+      // For now, reset the documents state
+      updateFormData({ documents: formData.documents || [] });
     }
-  }
+  };
 
   const removeDocument = (index: number) => {
     updateFormData({
@@ -22,8 +67,8 @@ const LastDocuments: React.FC = () => {
   }
 
   const openDocument = (file: File) => {
-    const url = URL.createObjectURL(file)
-    window.open(url, "_blank")
+    const url = file
+    window.open(url as any, "_blank")
   }
 
   return (
@@ -55,4 +100,3 @@ const LastDocuments: React.FC = () => {
 }
 
 export default LastDocuments
-

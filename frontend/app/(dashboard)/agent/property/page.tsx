@@ -152,6 +152,8 @@ const Page: React.FC = () => {
                 ? Array(3)
                     .fill(0)
                     .map((_, i) => <PropertySkeleton key={i} />)
+                : myProperties.length === 0
+                ? <p className="text-muted-foreground text-center w-full py-8">No properties found</p>
                 : myProperties.map((prop) => (
                     <PropertyCard
                       key={prop.id}
@@ -178,6 +180,8 @@ const Page: React.FC = () => {
                 ? Array(6)
                     .fill(0)
                     .map((_, i) => <PropertySkeleton key={i} />)
+                : allProperties.length === 0 
+                ? <p className="text-muted-foreground text-center w-full py-8">No properties found</p>
                 : allProperties.map((prop) => (
                     <PropertyCard
                       key={prop.id}
@@ -205,4 +209,3 @@ const Page: React.FC = () => {
 }
 
 export default Page
-

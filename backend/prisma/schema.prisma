@@ -517,26 +517,14 @@ model CompanyAuditLog {
 
 model Property {
   id              String   @id @default(cuid())
-  title           String
-  description     String   @db.Text
-  price           Int?
-  address         String
-  sqft            Int
-  bedrooms        Int?
-  bathrooms       Int?
-  
+  slug            String   @unique
+
   // Property Details
-  propertyType    PropertyType  @default(COMMERCIAL)     // e.g., Residential, Commercial, Industrial
-  buildingType    String?  // e.g., Single Family, Apartment, Office
-  yearBuilt       Int?
-  status          PropertyStatus  @default(ACTIVE) // ACTIVE, PENDING, SOLD, INACTIVE
-  
-  // Features as JSON for flexibility
-  amenities       Json?    // Basic amenities and features
-  specifications  Json?    // Detailed specifications
-  location        String?    // Geocoding data
-  rooms           Json[]   // Array of room details
-  images          String[] // URLs of property images
+  cardDetails     Json
+  features        Json
+
+  isVerified      Boolean  @default(false)
+  verifiedDate    DateTime?
 
   // Timestamps
   createdAt       DateTime @default(now())
@@ -548,11 +536,6 @@ model Property {
 
   company         Company  @relation(fields: [companyId], references: [id])
   companyId       String
-
-  // Indexes for better query performance
-  @@index([status])
-  @@index([propertyType])
-  @@index([createdById])
 }
 
 // Email Template

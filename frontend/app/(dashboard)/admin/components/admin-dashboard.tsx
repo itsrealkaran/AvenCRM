@@ -313,7 +313,6 @@ export function AdminDashboard() {
                 categories={['leads', 'deals']}
                 colors={['gray', 'blue']}
                 yAxisWidth={30}
-                xAxisLabel='month'
               />
             </ResponsiveContainer>
           </CardContent>

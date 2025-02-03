@@ -22,6 +22,52 @@ interface UploadResult {
   key: string;
 }
 
+interface PresignedUrlResult {
+  uploadUrl: string;
+  key: string;
+  downloadUrl: string;
+}
+
+export async function generatePresignedUrl(
+  fileName: string,
+  contentType: string,
+  expiresIn: number = 3600
+): Promise<PresignedUrlResult> {
+  if (!bucketName) {
+    throw new Error('AWS S3 Bucket name is not configured');
+  }
+
+  const key = `${Date.now()}-${fileName}`;
+  
+  try {
+    // Generate upload URL
+    const uploadCommand = new PutObjectCommand({
+      Bucket: bucketName,
+      Key: key,
+      ContentType: contentType
+    });
+    
+    const uploadUrl = await getSignedUrl(s3Client, uploadCommand, { expiresIn });
+    
+    // Generate download URL
+    const downloadCommand = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key
+    });
+    
+    const downloadUrl = await getSignedUrl(s3Client, downloadCommand, { expiresIn });
+
+    return {
+      uploadUrl,
+      key,
+      downloadUrl
+    };
+  } catch (error) {
+    console.error('Error generating presigned URL:', error);
+    throw error;
+  }
+}
+
 export async function uploadFile(fileBuffer: Buffer, fileName: string, mimetype: string): Promise<UploadResult> {
   if (!bucketName) {
     throw new Error('AWS S3 Bucket name is not configured');
@@ -46,6 +92,27 @@ export async function uploadFile(fileBuffer: Buffer, fileName: string, mimetype:
     };
   } catch (error) {
     console.error('S3 Upload Error:', error);
+    throw error;
+  }
+}
+
+export async function generatePresignedDownloadUrl(
+  key: string,
+  expiresIn: number = 3600
+): Promise<string> {
+  if (!bucketName) {
+    throw new Error('AWS S3 Bucket name is not configured');
+  }
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: key
+    });
+    
+    return await getSignedUrl(s3Client, command, { expiresIn });
+  } catch (error) {
+    console.error('Error generating presigned download URL:', error);
     throw error;
   }
 }
