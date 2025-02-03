@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
-import Link from 'next/link';
-import Image from 'next/image';
-import Logo from '@/components/logo';
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -36,7 +36,7 @@ export default function ForgotPassword() {
             <div className='space-y-2'>
               <h1 className='text-3xl font-bold tracking-tight text-gray-900'>Forgot Password</h1>
               <p className='text-gray-500'>
-                Enter your email address and we'll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you a link to reset your password.
               </p>
             </div>
 
@@ -91,4 +91,3 @@ export default function ForgotPassword() {
     </div>
   );
 }
-
