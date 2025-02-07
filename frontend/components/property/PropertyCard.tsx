@@ -12,18 +12,20 @@ import DeleteConfirmationModal from './DeleteConfirmationModal';
 
 interface PropertyCardProps {
   id: string;
-  title: string;
-  address: string;
-  price: number;
+  cardDetails: {
+    title: string;
+    address: string;
+    price: number;
+    image?: string;
+    beds: number;
+    baths: number;
+    sqft: number;
+    parking?: number;
+  };
   isVerified: boolean;
   onVerify?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
-  image?: string;
-  beds: number;
-  baths: number;
-  sqft: number;
-  parking?: number;
   agent: {
     name: string;
     image?: string;
@@ -32,18 +34,11 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({
   id,
-  title,
-  address,
-  price,
+  cardDetails,
   isVerified,
   onVerify,
   onDelete,
   onEdit,
-  image = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-2Ch4LV1lFtOMyKP31tCMdmxjiljjrr.png',
-  beds = 4,
-  baths = 4,
-  parking = 2,
-  sqft = 2096,
   agent = {
     name: 'Jenny Wilson',
     image: '/placeholder.svg?height=32&width=32',
@@ -68,8 +63,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       <Card className='w-full max-w-[260px] overflow-hidden bg-white hover:shadow-lg transition-shadow duration-200'>
         <div className='relative aspect-[4/3] overflow-hidden'>
           <img
-            src={image || '/placeholder.svg'}
-            alt={title}
+            src={cardDetails.image || '/placeholder.svg'}
+            alt={cardDetails.title}
             className='object-cover w-full h-full hover:scale-105 transition-transform duration-300'
           />
           {!isVerified && (
@@ -110,26 +105,26 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <CardContent className='p-3'>
           <div className='space-y-3'>
             <div>
-              <h3 className='font-medium text-sm text-gray-500'>{address}</h3>
-              <p className='text-xl font-bold text-[#4F46E5] mt-1'>{formatPrice(price)}</p>
+              <h3 className='font-medium text-sm text-gray-500'>{cardDetails.address}</h3>
+              <p className='text-xl font-bold text-[#4F46E5] mt-1'>{formatPrice(cardDetails.price)}</p>
             </div>
 
             <div className='flex items-center justify-between py-1 border-y border-gray-100'>
               <div className='flex items-center gap-1.5'>
                 <Bed className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{beds}</span>
+                <span className='text-xs text-gray-600'>{cardDetails.beds}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Bath className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{baths}</span>
+                <span className='text-xs text-gray-600'>{cardDetails.baths}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Car className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{parking}</span>
+                <span className='text-xs text-gray-600'>{cardDetails.parking}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Maximize2 className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{sqft.toLocaleString()} ft²</span>
+                <span className='text-xs text-gray-600'>{cardDetails.sqft || ''} ft²</span>
               </div>
             </div>
 
@@ -158,7 +153,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        propertyTitle={title}
+        propertyTitle={cardDetails.title}
       />
     </>
   );

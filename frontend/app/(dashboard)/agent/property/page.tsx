@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 interface Property {
   id: string;
@@ -44,14 +45,11 @@ const Page: React.FC = () => {
   const fetchProperties = async () => {
     try {
       setIsRefreshing(true);
-      const [myPropsRes, allPropsRes] = await Promise.all([
-        fetch('/api/properties?agentId=123'),
-        fetch('/api/properties'),
-      ]);
-      const myProps = await myPropsRes.json();
-      const allProps = await allPropsRes.json();
-      setMyProperties(myProps);
-      setAllProperties(allProps);
+      const response = await api.get("/property")
+
+      const { myProperty, allProperty } = response.data;
+      setMyProperties(myProperty);
+      setAllProperties(allProperty);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -189,10 +187,13 @@ const Page: React.FC = () => {
               ) : (
                 allProperties.map((prop) => (
                   <PropertyCard
-                    key={prop.id}
-                    {...prop}
-                    onDelete={() => handleDeleteProperty(prop.id)}
-                    onEdit={() => handleEditProperty(prop)}
+                  key={prop.id}
+                  id={prop.id}
+                  cardDetails={prop.cardDetails}
+                  agent={prop.createdBy}
+                  isVerified={prop.isVerified}
+                  onDelete={() => handleDeleteProperty(prop.id)}
+                  onEdit={() => handleEditProperty(prop)}
                   />
                 ))
               )}

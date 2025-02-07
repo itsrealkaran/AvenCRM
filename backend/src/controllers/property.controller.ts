@@ -11,10 +11,18 @@ import {
 } from "../schema/property.schema.js";
 import logger from "../utils/logger.js";
 import multer from "multer";
-import { generatePresignedUrl } from "../utils/s3.js";
-import { v4 as uuidv4 } from "uuid";
-import crypto from "crypto";
-import fs from "fs";
+import { generatePresignedUrl, generatePresignedDownloadUrl } from "../utils/s3.js";
+
+interface PropertyCardDetails {
+  title: string;
+  address: string;
+  price: number;
+  image?: string;
+  beds: number;
+  baths: number;
+  sqft: number;
+  parking?: number;
+}
 
 const upload = multer();
 
@@ -23,59 +31,25 @@ type Controller = {
 };
 
 export const propertiesController: Controller = {
-  getAllProperties: async (req: Request, res: Response) => {
+  getProperties: async (req: Request, res: Response) => {
     try {
       const user = req.user;
       if (!user) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Convert page and limit to numbers if they are present
-      const query: Record<string, any> = { ...req.query };
-      if (query.page) {
-        query.page = Number(query.page);
-      }
-      if (query.limit) {
-        query.limit = Number(query.limit);
-      }
-
-      const filterResult = propertyFilterSchema.safeParse(query);
-      if (!filterResult.success) {
-        logger.error("Error in getAllProperties:", filterResult.error);
-        return res.status(400).json({ errors: filterResult.error.flatten() });
-      }
-
-      const filters = filterResult.data;
-      const page = filters.page || 1;
-      const limit = filters.limit || 10;
-      const skip = (page - 1) * limit;
-
-      const startDate = filters.startDate
-        ? new Date(filters.startDate)
-        : subMonths(new Date(), 1);
-      const endDate = filters.endDate ? new Date(filters.endDate) : new Date();
-
-      const where: any = {
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      };
-
-      if (filters.createdById) where.createdById = filters.createdById;
-      if (filters.status) where.status = filters.status;
-      if (filters.propertyType) where.propertyType = filters.propertyType;
-      if (filters.minPrice) where.price = { gte: filters.minPrice };
-      if (filters.maxPrice)
-        where.price = { ...where.price, lte: filters.maxPrice };
-      if (filters.minSqft) where.sqft = { gte: filters.minSqft };
-      if (filters.maxSqft) where.sqft = { ...where.sqft, lte: filters.maxSqft };
-
-      const total = await prisma.property.count({ where });
-
       const properties = await prisma.property.findMany({
-        where,
-        include: {
+        where: {
+          isVerified: true
+        },
+        orderBy: {
+          createdAt: 'desc'
+        },
+        select: {
+          slug: true,
+          isVerified: true,
+          cardDetails: true,
+          createdAt: true,
           createdBy: {
             select: {
               id: true,
@@ -83,30 +57,100 @@ export const propertiesController: Controller = {
               email: true,
             },
           },
-        },
-        skip,
-        take: limit,
-        orderBy: filters.sortBy
-          ? {
-              [filters.sortBy]: filters.sortOrder || "desc",
-            }
-          : {
-              createdAt: "desc",
-            },
+        }
       });
 
-      const response = {
-        data: properties,
-        meta: {
-          total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit),
-        },
-      };
+      // Generate presigned URLs for property images
+      const propertiesWithUrls = await Promise.all(
+        properties.map(async (property) => {
+          const cardDetails = property.cardDetails as unknown as PropertyCardDetails;
+          if (cardDetails?.image) {
+            try {
+              const imageUrl = await generatePresignedDownloadUrl(cardDetails.image);
+              return {
+                ...property,
+                cardDetails: {
+                  ...cardDetails,
+                  image: imageUrl
+                }
+              };
+            } catch (error) {
+              console.error(`Failed to generate URL for property image: ${cardDetails.image}`, error);
+              return property;
+            }
+          }
+          return property;
+        })
+      );
 
-      const validatedResponse = propertiesResponseSchema.parse(response);
-      return res.json(validatedResponse);
+      const myProperty = propertiesWithUrls.filter(property => property.createdBy.id === user.id);
+      const allProperty = propertiesWithUrls.filter(property => property.createdBy.id !== user.id);
+
+      return res.json({ myProperty, allProperty });
+    } catch (error) {
+      logger.error("Error in getAllProperties:", error);
+      return res.status(500).json({ message: "Failed to fetch properties" });
+    }
+  },
+
+  getAllProperties: async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (user.role !== UserRole.ADMIN) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+
+      const properties = await prisma.property.findMany({
+        orderBy: {
+          createdAt: 'desc'
+        },
+        select: {
+          slug: true,
+          isVerified: true,
+          cardDetails: true,
+          createdAt: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        }
+      });
+
+      // Generate presigned URLs for property images
+      const propertiesWithUrls = await Promise.all(
+        properties.map(async (property) => {
+          const cardDetails = property.cardDetails as unknown as PropertyCardDetails;
+          if (cardDetails?.image) {
+            try {
+              const imageUrl = await generatePresignedDownloadUrl(cardDetails.image);
+              return {
+                ...property,
+                cardDetails: {
+                  ...cardDetails,
+                  image: imageUrl
+                }
+              };
+            } catch (error) {
+              console.error(`Failed to generate URL for property image: ${cardDetails.image}`, error);
+              return property;
+            }
+          }
+          return property;
+        })
+      );
+
+      //seperate the properties based on their 'isVerified' field
+      const verifiedProperties = propertiesWithUrls.filter(property => property.isVerified);
+      const unverifiedProperties = propertiesWithUrls.filter(property => !property.isVerified);
+
+      return res.json({ verifiedProperties, unverifiedProperties });
     } catch (error) {
       logger.error("Error in getAllProperties:", error);
       return res.status(500).json({ message: "Failed to fetch properties" });
