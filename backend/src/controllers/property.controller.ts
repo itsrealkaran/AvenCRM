@@ -31,6 +31,92 @@ type Controller = {
 };
 
 export const propertiesController: Controller = {
+  getAgentId: async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      const agentId = user.id;
+      return res.json({ agentId });
+    } catch (error) {
+      logger.error("Error in getAgentId:", error);
+      return res.status(500).json({ message: "Failed to fetch agent ID" });
+    }
+  },
+
+  setLeadFromProperty: async (req: Request, res: Response) => {
+    try {
+      const { agentId, propertyId, name, phone, email, message } = req.body;
+      if(!agentId) {
+        return res.status(400).json({ message: "Agent ID is required" });
+      }
+
+      const agent = await prisma.user.findUnique({
+        where: { id: agentId },
+      });
+      if(!agent) {
+        return res.status(404).json({ message: "Agent not found" });
+      }
+      const lead = await prisma.lead.create({
+        data: {
+          name,
+          phone,
+          email,
+          notes: message ? [message] : [],
+          agentId,
+          companyId: agent.companyId!
+        },
+      });
+      return res.json(lead);
+    } catch (error) {
+      logger.error("Error in setLeadFromProperty:", error);
+      return res
+        .status(500)
+        .json({ message: "Failed to set lead from property" });
+    }
+  },
+
+  getPublicProperty: async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { agentId } = req.query;
+
+      const property = await prisma.property.findUnique({
+        where: { id },
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              avatar: true,
+            }
+          }
+        }
+      });
+
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      const propertyDetails = {
+        ...JSON.parse(JSON.stringify(property.cardDetails)),
+        ...JSON.parse(JSON.stringify(property.features)),
+        id: property.id,
+        createdAt: property.createdAt,
+        updatedAt: property.updatedAt,
+        createdById: property.createdById
+      };
+
+      res.json(propertyDetails);
+    } catch (error) {
+      logger.error("Error in getPublicProperty:", error);
+      return res.status(500).json({ message: "Failed to fetch property details" });
+    }
+  },
+
   getProperties: async (req: Request, res: Response) => {
     try {
       const user = req.user;
@@ -46,6 +132,7 @@ export const propertiesController: Controller = {
           createdAt: 'desc'
         },
         select: {
+          id: true,
           slug: true,
           isVerified: true,
           cardDetails: true,
@@ -109,6 +196,7 @@ export const propertiesController: Controller = {
           createdAt: 'desc'
         },
         select: {
+          id: true,
           slug: true,
           isVerified: true,
           cardDetails: true,
@@ -176,8 +264,7 @@ export const propertiesController: Controller = {
         return res.status(404).json({ message: "Property not found" });
       }
 
-      const validatedResponse = propertyResponseSchema.parse(property);
-      return res.json(validatedResponse);
+      return res.json(property);
     } catch (error) {
       logger.error("Error in getPropertyById:", error);
       return res.status(500).json({ message: "Failed to fetch property" });
@@ -281,7 +368,7 @@ export const propertiesController: Controller = {
       const { isVerified } = req.body;
 
       // Validate the status
-      if (!isVerified || !Object.values(PropertyStatus).includes(isVerified)) {
+      if (!isVerified && typeof isVerified !== "boolean") {
         return res.status(400).json({ message: "Invalid status" });
       }
 
@@ -290,8 +377,7 @@ export const propertiesController: Controller = {
         data: { isVerified },
       });
 
-      const validatedResponse = propertyResponseSchema.parse(property);
-      return res.json(validatedResponse);
+      return res.json(property);
     } catch (error) {
       logger.error("Error in updatePropertyStatus:", error);
       return res

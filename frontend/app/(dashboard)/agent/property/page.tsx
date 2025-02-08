@@ -156,10 +156,13 @@ const Page: React.FC = () => {
               ) : myProperties.length === 0 ? (
                 <p className='text-muted-foreground text-center w-full py-8'>No properties found</p>
               ) : (
-                myProperties.map((prop) => (
+                myProperties.map((prop: any) => (
                   <PropertyCard
                     key={prop.id}
-                    {...prop}
+                    id={prop.id}
+                    cardDetails={prop.cardDetails}
+                    isVerified={prop.isVerified}
+                    agent={prop.createdBy}
                     onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop)}
                   />
@@ -185,15 +188,15 @@ const Page: React.FC = () => {
               ) : allProperties.length === 0 ? (
                 <p className='text-muted-foreground text-center w-full py-8'>No properties found</p>
               ) : (
-                allProperties.map((prop) => (
+                allProperties.map((prop: any) => (
                   <PropertyCard
-                  key={prop.id}
-                  id={prop.id}
-                  cardDetails={prop.cardDetails}
-                  agent={prop.createdBy}
-                  isVerified={prop.isVerified}
-                  onDelete={() => handleDeleteProperty(prop.id)}
-                  onEdit={() => handleEditProperty(prop)}
+                    key={prop.id}
+                    id={prop.id}
+                    cardDetails={prop.cardDetails}
+                    isVerified={prop.isVerified}
+                    agent={prop.createdBy}
+                    onDelete={() => handleDeleteProperty(prop.id)}
+                    onEdit={() => handleEditProperty(prop)}
                   />
                 ))
               )}

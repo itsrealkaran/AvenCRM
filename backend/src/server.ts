@@ -23,6 +23,7 @@ import cookieParser from 'cookie-parser';
 import { teamRoutes } from './routes/team.routes.js';
 import stripeRoutes from './routes/stripe.routes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
+import { publicRoutes } from './routes/public.routes.js';
 
 const app = express();
 
@@ -172,6 +173,7 @@ app.use("/getProperty", propertyView);
 app.use('/tasks', taskRoutes);
 app.use('/stripe', stripeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/public', publicRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

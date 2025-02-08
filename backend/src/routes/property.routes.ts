@@ -19,6 +19,8 @@ router.use(protect);
 // Property CRUD routes
 router.get('/', propertiesController.getProperties);
 router.get('/all', propertiesController.getAllProperties);
+router.get('/agent', propertiesController.getAgentId);
+router.get('/public/:id', propertiesController.getPublicProperty);
 router.get('/:id', propertiesController.getPropertyById);
 router.post('/', propertiesController.createProperty);
 router.post('/upload-file', upload.single('file'), propertiesController.uploadFile);
