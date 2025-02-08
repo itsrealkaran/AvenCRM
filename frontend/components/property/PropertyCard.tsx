@@ -9,21 +9,26 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 import DeleteConfirmationModal from './DeleteConfirmationModal';
+import ShareModal from './ShareModal';
+import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 interface PropertyCardProps {
   id: string;
-  title: string;
-  address: string;
-  price: number;
+  cardDetails: {
+    title: string;
+    address: string;
+    price: number;
+    image?: string;
+    beds: number;
+    baths: number;
+    sqft: number;
+    parking?: number;
+  };
   isVerified: boolean;
   onVerify?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
-  image?: string;
-  beds: number;
-  baths: number;
-  sqft: number;
-  parking?: number;
   agent: {
     name: string;
     image?: string;
@@ -32,18 +37,11 @@ interface PropertyCardProps {
 
 const PropertyCard: React.FC<PropertyCardProps> = ({
   id,
-  title,
-  address,
-  price,
+  cardDetails,
   isVerified,
   onVerify,
   onDelete,
   onEdit,
-  image = 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-2Ch4LV1lFtOMyKP31tCMdmxjiljjrr.png',
-  beds = 4,
-  baths = 4,
-  parking = 2,
-  sqft = 2096,
   agent = {
     name: 'Jenny Wilson',
     image: '/placeholder.svg?height=32&width=32',
@@ -51,6 +49,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 }) => {
   const { formatPrice } = useCurrency();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [agentId, setAgentId] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleDelete = () => {
     setIsDeleteModalOpen(true);
@@ -63,13 +64,27 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     setIsDeleteModalOpen(false);
   };
 
+  const handleShare = async() => {
+    try {
+      const response = await api.get('/property/agent')
+      const agentId = response.data.agentId
+      setIsShareModalOpen(true)
+      setAgentId(agentId)
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        description: 'Something went wrong. Please try again later.',
+      })
+    }
+  }
+
   return (
     <>
       <Card className='w-full max-w-[260px] overflow-hidden bg-white hover:shadow-lg transition-shadow duration-200'>
         <div className='relative aspect-[4/3] overflow-hidden'>
           <img
-            src={image || '/placeholder.svg'}
-            alt={title}
+            src={cardDetails.image || '/placeholder.svg'}
+            alt={cardDetails.title}
             className='object-cover w-full h-full hover:scale-105 transition-transform duration-300'
           />
           {!isVerified && (
@@ -93,6 +108,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               variant='outline'
               size='icon'
               className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
+              onClick={handleShare}
             >
               <Share2 className='w-4 h-4 text-gray-700' />
             </Button>
@@ -110,26 +126,26 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <CardContent className='p-3'>
           <div className='space-y-3'>
             <div>
-              <h3 className='font-medium text-sm text-gray-500'>{address}</h3>
-              <p className='text-xl font-bold text-[#4F46E5] mt-1'>{formatPrice(price)}</p>
+              <h3 className='font-medium text-sm text-gray-500 whitespace-nowrap truncate'>{cardDetails.address}</h3>
+              <p className='text-xl font-bold text-[#4F46E5] mt-1'>{formatPrice(cardDetails.price)}</p>
             </div>
 
             <div className='flex items-center justify-between py-1 border-y border-gray-100'>
               <div className='flex items-center gap-1.5'>
                 <Bed className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{beds}</span>
+                <span className='text-xs text-gray-600'>{cardDetails.beds}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Bath className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{baths}</span>
+                <span className='text-xs text-gray-600'>{cardDetails.baths}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Car className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{parking}</span>
+                <span className='text-xs text-gray-600'>{cardDetails.parking}</span>
               </div>
               <div className='flex items-center gap-1.5'>
                 <Maximize2 className='w-3 h-3 text-gray-400' />
-                <span className='text-xs text-gray-600'>{sqft.toLocaleString()} ft²</span>
+                <span className='text-xs text-gray-600'>{cardDetails.sqft || ''} ft²</span>
               </div>
             </div>
 
@@ -142,15 +158,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 <span className='text-xs font-medium text-gray-700'>{agent.name}</span>
               </div>
             </div>
-
-            {!isVerified && onVerify && (
-              <Button
-                onClick={onVerify}
-                className='w-full mt-2 text-xs bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
-              >
-                Verify Property
+            <div className='flex gap-2 mt-2'>
+              <Button onClick={onEdit} className='flex-1 text-xs bg-[#7C3AED] hover:bg-[#6D28D9] text-white'>
+                View Property
               </Button>
-            )}
+              {!isVerified && onVerify && (
+                <Button
+                  onClick={onVerify}
+                  className='w-10 text-xs bg-transparent hover:bg-[#e8e8e8] text-green-600'
+                >
+                  ✓
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -158,8 +178,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
-        propertyTitle={title}
+        propertyTitle={cardDetails.title}
       />
+      {isShareModalOpen && (
+        <ShareModal
+          isOpen={isShareModalOpen}
+          onClose={() => setIsShareModalOpen(false)}
+          propertyId={id}
+          agentId={agentId || ""}
+        />
+      )}
     </>
   );
 };

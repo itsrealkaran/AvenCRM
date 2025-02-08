@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { api } from '@/lib/api';
 
 interface Property {
   id: string;
@@ -44,14 +45,11 @@ const Page: React.FC = () => {
   const fetchProperties = async () => {
     try {
       setIsRefreshing(true);
-      const [unverifiedRes, verifiedRes] = await Promise.all([
-        fetch('/api/properties?isVerified=false'),
-        fetch('/api/properties?isVerified=true'),
-      ]);
-      const unverifiedProps = await unverifiedRes.json();
-      const verifiedProps = await verifiedRes.json();
-      setUnverifiedProperties(unverifiedProps);
-      setVerifiedProperties(verifiedProps);
+      const response = await api.get("/property/all")
+      const { verifiedProperties, unverifiedProperties } = response.data;
+
+      setUnverifiedProperties(unverifiedProperties);
+      setVerifiedProperties(verifiedProperties);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -62,7 +60,8 @@ const Page: React.FC = () => {
 
   const handleVerify = async (id: string) => {
     try {
-      // In a real scenario, you'd make an API call to verify the property
+      await api.patch(`/property/${id}/status`, { isVerified: true });
+
       setUnverifiedProperties((prev) => prev.filter((p) => p.id !== id));
       const verifiedProperty = unverifiedProperties.find((p) => p.id === id)!;
       setVerifiedProperties((prev) => [...prev, { ...verifiedProperty, isVerified: true }]);
@@ -159,10 +158,13 @@ const Page: React.FC = () => {
                   No properties pending verification
                 </p>
               ) : (
-                unverifiedProperties.map((prop) => (
+                unverifiedProperties.map((prop: any) => (
                   <PropertyCard
                     key={prop.id}
-                    {...prop}
+                    id={prop.id}
+                    cardDetails={prop.cardDetails}
+                    agent={prop.createdBy}
+                    isVerified={prop.isVerified}
                     onVerify={() => handleVerify(prop.id)}
                     onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop)}
@@ -186,12 +188,16 @@ const Page: React.FC = () => {
                 ? Array(6)
                     .fill(0)
                     .map((_, i) => <PropertySkeleton key={i} />)
-                : verifiedProperties.map((prop) => (
+                : verifiedProperties.map((prop: any) => (
                     <PropertyCard
-                      key={prop.id}
-                      {...prop}
-                      onDelete={() => handleDeleteProperty(prop.id)}
-                      onEdit={() => handleEditProperty(prop)}
+                    key={prop.id}
+                    id={prop.id}
+                    cardDetails={prop.cardDetails}
+                    agent={prop.createdBy}
+                    isVerified={prop.isVerified}
+                    onVerify={() => handleVerify(prop.id)}
+                    onDelete={() => handleDeleteProperty(prop.id)}
+                    onEdit={() => handleEditProperty(prop)}
                     />
                   ))}
             </div>

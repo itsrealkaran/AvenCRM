@@ -10,7 +10,7 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/sign-in', 'sign-up', 'forgot-password','/'];
+const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password', '/property', '/'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/teamleader', '/agent', '/admin', '/superadmin'];

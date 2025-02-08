@@ -118,8 +118,7 @@ export const leadsController: Controller  = {
         }
       };
 
-      const validatedResponse = leadsResponseSchema.parse(response);
-      return res.json(validatedResponse);
+      return res.json(response);
     } catch (error) {
       logger.error('Error in getAllLeads:', error);
       return res.status(500).json({ message: 'Failed to fetch leads' });

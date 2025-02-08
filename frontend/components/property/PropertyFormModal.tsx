@@ -42,11 +42,52 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({
   const [step, setStep] = useState(1);
   const { formData, updateFormData } = usePropertyForm();
 
+  // Only update form data when the modal opens with propertyToEdit
   useEffect(() => {
-    if (propertyToEdit) {
+    if (isOpen && propertyToEdit) {
       updateFormData(propertyToEdit);
     }
-  }, [propertyToEdit, updateFormData]);
+  }, [isOpen]); // Only depend on isOpen, we only want to update when the modal opens
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setStep(1);
+      updateFormData({
+        propertyType: '',
+        zoningType: '',
+        listingType: '',
+        propertyName: '',
+        price: '',
+        bedrooms: '',
+        bathrooms: '',
+        parking: '',
+        sqft: '',
+        description: '',
+        addressLine: '',
+        streetName: '',
+        city: '',
+        zipCode: '',
+        country: '',
+        longitude: '',
+        latitude: '',
+        rooms: [],
+        floors: [],
+        isMetric: true,
+        images: [],
+        documents: [],
+        utilities: [],
+        interiorFeatures: [],
+        exteriorFeatures: [],
+        exteriorTypes: [],
+        buildingDevelopmentFeatures: [],
+        locationFeatures: [],
+        generalFeatures: [],
+        views: [],
+        googleMapsLink: '',
+      });
+    }
+  }, [isOpen]);
 
   const handleNext = () => {
     setStep((prev) => Math.min(prev + 1, 13));

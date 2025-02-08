@@ -23,7 +23,7 @@ const currencies: Currency[] = [
 type CurrencyContextType = {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
-  formatPrice: (price: number) => string;
+  formatPrice: (price: number | null | undefined) => string;
   currencies: Currency[];
 };
 
@@ -32,7 +32,10 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>(currencies[0]);
 
-  const formatPrice = (price: number) => {
+  const formatPrice = (price: number | null | undefined) => {
+    if (price === null || price === undefined) {
+      return `${currency.symbol}0.00`;
+    }
     return `${currency.symbol}${price.toLocaleString(undefined, {
       maximumFractionDigits: 2,
       minimumFractionDigits: 2,
