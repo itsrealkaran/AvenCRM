@@ -5,6 +5,7 @@ import {
   Building2,
   Calendar,
   CheckSquare,
+  Facebook,
   FileText,
   Handshake,
   LayoutDashboard,
@@ -14,7 +15,7 @@ import {
   Store,
   Wallet,
 } from 'lucide-react';
-import { FaFacebook, FaWhatsapp } from 'react-icons/fa';
+import { FaWhatsapp } from 'react-icons/fa';
 
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
@@ -28,7 +29,7 @@ const menuItems = [
   },
   {
     heading: 'Meta Ads',
-    icon: FaFacebook,
+    icon: Facebook,
     path: '/agent/meta-ads',
     description: 'Manage Meta advertisements',
   },

@@ -14,10 +14,10 @@ const currencies: Currency[] = [
   { code: 'EUR', symbol: '€', name: 'Euro' },
   { code: 'GBP', symbol: '£', name: 'British Pound' },
   { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
-  { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'CAD', symbol: '$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: '$', name: 'Australian Dollar' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+  { code: 'AED', symbol: 'AED', name: 'UAE Dirham' },
 ];
 
 type CurrencyContextType = {

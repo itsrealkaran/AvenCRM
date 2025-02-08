@@ -33,7 +33,7 @@ const currencies = [
   { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
   { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
-  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+  { code: 'AED', symbol: 'AED', name: 'UAE Dirham' },
 ];
 
 const countries = [

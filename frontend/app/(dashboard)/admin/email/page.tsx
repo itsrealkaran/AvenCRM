@@ -10,7 +10,7 @@ import { EmailInbox } from "./components/email-inbox"
 import { ConnectEmailAccounts } from "./components/connect-email-accounts"
 import { FaEnvelope } from "react-icons/fa"
 import { fetchEmailAccounts } from "@/components/email/api"
-import type { EmailAccount } from "./email"
+import type { EmailAccount } from "@/types/email"
 import { EmailTemplatesList } from "./components/email-templates-list"
 
 export default function EmailCampaignsPage() {
