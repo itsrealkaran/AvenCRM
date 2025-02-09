@@ -2,16 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { EmailMetricsCards } from "./components/email-metrics-cards"
-import { ConnectedEmailAccounts } from "./components/connected-email-accounts"
-import { EmailRecipientsList } from "./components/email-recipients-list"
-import { EmailCampaignsList } from "./components/email-campaigns-list"
-import { EmailInbox } from "./components/email-inbox"
-import { ConnectEmailAccounts } from "./components/connect-email-accounts"
+import { EmailMetricsCards } from "@/components/emails/email-metrics-cards"
+import { ConnectedEmailAccounts } from "@/components/emails/connected-email-accounts"
+import { EmailRecipientsList } from "@/components/emails/email-recipients-list"
+import { EmailCampaignsList } from "@/components/emails/email-campaigns-list"
+import { EmailInbox } from "@/components/emails/email-inbox"
+import { ConnectEmailAccounts } from "@/components/emails/connect-email-accounts"
 import { FaEnvelope } from "react-icons/fa"
 import { fetchEmailAccounts } from "@/components/email/api"
 import type { EmailAccount } from "@/types/email"
-import { EmailTemplatesList } from "./components/email-templates-list"
+import { EmailTemplatesList } from "@/components/emails/email-templates-list"
+import { Card } from "@/components/ui/card"
 
 export default function EmailCampaignsPage() {
   const [connectedAccounts, setConnectedAccounts] = useState<EmailAccount[]>([])
@@ -36,7 +37,7 @@ export default function EmailCampaignsPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <Card className='p-6 space-y-6 min-h-full'>
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold">Email Management</h1>
@@ -44,9 +45,7 @@ export default function EmailCampaignsPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : connectedAccounts.length > 0 ? (
+      {connectedAccounts.length > 0 ? (
         <>
           <EmailMetricsCards />
           <Tabs defaultValue="campaigns" className="space-y-4">
@@ -76,15 +75,10 @@ export default function EmailCampaignsPage() {
         </>
       ) : (
         <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-          <FaEnvelope className="w-16 h-16 text-[#5932EA] mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Connect Your Email Account</h2>
-          <p className="text-muted-foreground mb-4">
-            Connect your email account to start managing your campaigns, inbox, and contacts
-          </p>
           <ConnectEmailAccounts onConnect={handleConnect} />
         </div>
       )}
-    </div>
+    </Card>
   )
 }
 

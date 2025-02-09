@@ -20,15 +20,7 @@ export function ConnectEmailAccounts({ onConnect }: ConnectEmailAccountsProps) {
     setSelectedProvider(provider)
     try {
       const redirectUrl = await connectEmailAccount(provider)
-      // In a real-world scenario, you'd redirect the user to this URL for OAuth
-      console.log(`Redirect to: ${redirectUrl}`)
-      // For demonstration purposes, we'll simulate a successful connection
-      const mockAccount: EmailAccount = {
-        id: Date.now().toString(),
-        email: `user@${provider.toLowerCase()}.com`,
-        provider: provider,
-      }
-      onConnect(mockAccount)
+      window.open(redirectUrl, '_blank')
     } catch (error) {
       console.error(`Failed to connect ${provider} account:`, error)
     } finally {
@@ -38,17 +30,20 @@ export function ConnectEmailAccounts({ onConnect }: ConnectEmailAccountsProps) {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full max-w-3xl mx-auto">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Connect Email Accounts</CardTitle>
-        <CardDescription>Add your email accounts to start managing campaigns</CardDescription>
+        <CardTitle className="text-2xl font-bold text-center">Connect Your Email Account</CardTitle>
+        <CardDescription className="text-center">
+          Choose your email provider to get started with email management
+        </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <ConnectButton
             provider="GMAIL"
             icon={FaGoogle}
             label="Connect Gmail"
+            description="Sync your Google workspace emails"
             onClick={() => handleConnect("GMAIL")}
             isLoading={isConnecting && selectedProvider === "GMAIL"}
           />
@@ -56,6 +51,7 @@ export function ConnectEmailAccounts({ onConnect }: ConnectEmailAccountsProps) {
             provider="OUTLOOK"
             icon={FaMicrosoft}
             label="Connect Outlook"
+            description="Sync your Microsoft 365 emails"
             onClick={() => handleConnect("OUTLOOK")}
             isLoading={isConnecting && selectedProvider === "OUTLOOK"}
           />
@@ -69,26 +65,39 @@ interface ConnectButtonProps {
   provider: EmailProvider
   icon: React.ElementType
   label: string
+  description: string
   onClick: () => void
   isLoading: boolean
 }
 
-function ConnectButton({ provider, icon: Icon, label, onClick, isLoading }: ConnectButtonProps) {
-  const colors = {
-    GMAIL: "bg-red-100 text-red-600 hover:bg-red-200",
-    OUTLOOK: "bg-blue-100 text-blue-600 hover:bg-blue-200",
+function ConnectButton({ provider, icon: Icon, label, description, onClick, isLoading }: ConnectButtonProps) {
+  const styles = {
+    GMAIL: {
+      button: "bg-white hover:bg-red-50 border-red-200 hover:border-red-300",
+      icon: "text-red-500",
+      text: "text-red-700"
+    },
+    OUTLOOK: {
+      button: "bg-white hover:bg-blue-50 border-blue-200 hover:border-blue-300",
+      icon: "text-blue-500", 
+      text: "text-blue-700"
+    }
   }
 
   return (
     <Button
       variant="outline"
-      className={`w-full h-20 text-left flex items-center space-x-4 ${colors[provider]}`}
+      className={`w-full h-32 p-6 flex flex-col items-center justify-center space-y-2 transition-all duration-200 ${styles[provider].button}`}
       onClick={onClick}
       disabled={isLoading}
     >
-      <Icon className="w-6 h-6" />
-      <span>{isLoading ? "Connecting..." : label}</span>
+      <Icon className={`w-8 h-8 ${styles[provider].icon}`} />
+      <div className="text-center">
+        <div className={`font-semibold ${styles[provider].text}`}>
+          {isLoading ? "Connecting..." : label}
+        </div>
+        <div className="text-sm text-gray-500 mt-1">{description}</div>
+      </div>
     </Button>
   )
 }
-
