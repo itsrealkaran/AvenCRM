@@ -42,6 +42,7 @@ interface PropertyFormData {
   floors: Floor[];
   isMetric: boolean;
   images: File[];
+  imageNames: string[];
   documents: File[];
   utilities: string[];
   interiorFeatures: string[];
@@ -100,6 +101,7 @@ export const PropertyFormProvider: React.FC<{ children: ReactNode }> = ({ childr
     floors: [],
     isMetric: true,
     images: [],
+    imageNames: [],
     documents: [],
     utilities: [],
     interiorFeatures: [],

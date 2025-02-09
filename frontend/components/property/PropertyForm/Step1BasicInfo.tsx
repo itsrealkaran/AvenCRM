@@ -62,12 +62,12 @@ const Step1BasicInfo = () => {
 
       const uploadPromises = Array.from(files).map(async (file) => {
         // First, get the presigned URL
-        const formData = new FormData();
-        formData.append('file', file);
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
 
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-file`,
-          formData,
+          uploadFormData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
@@ -83,6 +83,10 @@ const Step1BasicInfo = () => {
             'Content-Type': file.type,
           },
         });
+      updateFormData({ 
+        imageNames: [...(formData.imageNames || []), response.data.key] 
+      });
+        console.log(response.data.key, 'key');
 
         return response.data.downloadUrl;
       });

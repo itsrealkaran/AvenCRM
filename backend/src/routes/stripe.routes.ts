@@ -58,7 +58,7 @@ router.post(
 );
 
 // Protect all routes
-router.use(protect);
+// router.use(protect);
 // router.use(verifyAdmin);
 
 // Create a checkout session

@@ -9,6 +9,7 @@ import { AlertCircle, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { api } from '@/lib/api';
 
 interface StepProps {
   onNext: () => void;
@@ -72,8 +73,33 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
     setError(null);
 
     try {
-      // const data = await signUp({ ...formData, password })
-      // console.log("Sign-up successful:", data)
+      const personalData = {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        gender: formData.gender?.toUpperCase(),
+        password
+      };
+
+      const companyData = {
+        name: formData.companyName,
+        email: formData.companyEmail,
+        website: formData.companyWebsite || null,
+        logo: formData.companyLogo || null,
+        phone: formData.companyPhone,
+        address: formData.companyAddress,
+        city: formData.companyCity,
+        country: formData.companyCountry,
+        size: formData.companySize,
+        userCount: formData.userCount,
+        preferredCurrency: formData.preferredCurrency,
+        countriesOfOperation: formData.countriesOfOperation
+      };
+
+      const response = await api.post('/auth/sign-up', { personalData, companyData });
+      console.log(response);
+      console.log(personalData, companyData);
+      
       onNext(); // Move to the Success step
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');

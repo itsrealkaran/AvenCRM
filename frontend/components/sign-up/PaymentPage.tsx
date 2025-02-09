@@ -5,6 +5,7 @@ import { useSignUp } from '@/contexts/SignUpContext';
 import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
+import { api } from '@/lib/api';
 
 interface PaymentPageProps {
   onBack: () => void;
@@ -14,17 +15,32 @@ interface PaymentPageProps {
 export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
   const { plan, billingFrequency, userCount } = useSignUp();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [totalAmount, setTotalAmount] = useState<number | null>(null);
 
-  const handlePayment = () => {
+  const handlePayment = async () => {
     setIsProcessing(true);
-    // Simulating payment processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      onComplete();
-    }, 2000);
-  };
+    
+    let price;
+    if(billingFrequency === 'monthly') {
+      price = 99 * userCount;
+    } else if (billingFrequency === 'yearly') {
+      price = 500 * userCount;
+    }
+    setTotalAmount(price || 0);
 
-  const total = '99';
+    try {
+      const response = await api.post('/stripe/create-checkout-session', {
+        planId: plan,
+        planName: `${plan} Plan (${billingFrequency})`,
+        price: price
+      });
+
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      setIsProcessing(false);
+    }
+  };
 
   return (
     <motion.div
@@ -46,7 +62,7 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
         <p>Billing: {billingFrequency}</p>
         <p>Users: {userCount}</p>
         <p className='font-semibold mt-2'>
-          Total: ${total} / {billingFrequency === 'monthly' ? 'month' : 'year'}
+          Total: ${totalAmount} / {billingFrequency === 'monthly' ? 'month' : 'year'}
         </p>
       </div>
 
@@ -61,7 +77,7 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
         >
           {isProcessing
             ? 'Processing...'
-            : `Pay $${total} ${billingFrequency === 'monthly' ? 'per month' : 'per year'}`}
+            : `Pay $${totalAmount} ${billingFrequency === 'monthly' ? 'per month' : 'per year'}`}
         </Button>
         <Button
           variant='outline'
