@@ -194,13 +194,14 @@ model Company {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
-  size         Int?
+  size         String?
+  userCount    Int? @default(1)
   
   // Subscription details
-  plan         Plan     @relation(fields: [planId], references: [id])
-  planId       String
+  plan         Plan?     @relation(fields: [planId], references: [id])
+  planId       String?
   planStart    DateTime @default(now())
-  planEnd      DateTime
+  planEnd      DateTime @default(now())
   
   // Company Information
   address      String?

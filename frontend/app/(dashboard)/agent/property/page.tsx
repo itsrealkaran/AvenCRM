@@ -97,8 +97,8 @@ const Page: React.FC = () => {
     });
   };
 
-  const handleEditProperty = (property: Property) => {
-    setPropertyToEdit(property);
+  const handleEditProperty = (property: any) => {
+    setPropertyToEdit({...property.cardDetails, ...property.features});
     setIsPropertyFormModalOpen(true);
   };
 
