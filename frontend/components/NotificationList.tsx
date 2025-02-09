@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { Calendar, CheckSquare, Mail } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Activity {
   id: number;
@@ -103,6 +104,7 @@ const getIconBgColor = (type: Activity['type']) => {
 
 export function NotificationList() {
   const router = useRouter();
+  const { user } = useAuth();
 
   return (
     <div className='w-full'>
@@ -138,7 +140,7 @@ export function NotificationList() {
       </div>
       <div className='px-4 py-2 border-t'>
         <button
-          onClick={() => router.push('/admin/notification')}
+          onClick={() => router.push(`/${user?.role.toLowerCase()}/notification`)}
           className='w-full text-center text-sm text-blue-600 hover:text-blue-700 font-medium py-2'
         >
           View All Notifications

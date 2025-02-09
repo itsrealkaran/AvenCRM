@@ -52,16 +52,16 @@ const menuItems = [
     description: 'Transaction history',
   },
   {
-    heading: 'Settings',
-    icon: Settings,
-    path: '/superadmin/settings',
-    description: 'System preferences',
-  },
-  {
     heading: 'Notifications',
     icon: Bell,
     path: '/superadmin/notification',
     description: 'Notification management',
+  },
+  {
+    heading: 'Settings',
+    icon: Settings,
+    path: '/superadmin/settings',
+    description: 'System preferences',
   },
 ];
 

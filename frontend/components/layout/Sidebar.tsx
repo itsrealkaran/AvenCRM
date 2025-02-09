@@ -30,9 +30,10 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-      setIsCollapsed(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 1210);
+      setIsCollapsed(window.innerWidth < 1210);
     };
+
 
     checkMobile();
     window.addEventListener('resize', checkMobile);
@@ -49,7 +50,7 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
   return (
     <div
       className={`h-screen flex-shrink-0  z-50 sticky top-0 select-none overflow-x-hidden bg-white shadow-xl shadow-black/20 pt-6 transition-all duration-300 ease-in-out
-        ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-8'}
+        ${isCollapsed ? 'w-[60px] px-2' : 'w-[18%] px-6'}
         ${isMobile ? 'absolute' : 'relative'}`}
     >
       <div
@@ -82,7 +83,7 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
                   <div className={`flex flex-row gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
                     <item.icon className='h-5 w-5' />
                     {!isCollapsed && (
-                      <span className='whitespace-nowrap truncate'>{item.heading}</span>
+                      <span className='whitespace-nowrap truncate max-w-[120px] text-ellipsis'>{item.heading}</span>
                     )}
                   </div>
                   {!isCollapsed && (
