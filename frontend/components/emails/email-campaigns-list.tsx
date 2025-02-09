@@ -67,6 +67,8 @@ export function EmailCampaignsList() {
     }
   }
 
+  console.log(campaigns)
+
   const filteredCampaigns = campaigns.filter(
     (campaign) =>
       campaign.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -102,11 +104,7 @@ export function EmailCampaignsList() {
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : filteredCampaigns.length > 0 ? (
+        {filteredCampaigns.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -131,7 +129,7 @@ export function EmailCampaignsList() {
                   <TableCell>
                     {campaign.scheduledAt ? format(new Date(campaign.scheduledAt), "PPp") : "Not scheduled"}
                   </TableCell>
-                  <TableCell>{campaign.recipientCount}</TableCell>
+                  <TableCell>{campaign.totalRecipients}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -215,7 +213,7 @@ function getStatusColor(status: string) {
     case "Active":
       return "bg-green-100 text-green-800"
     case "Completed":
-      return "bg-gray-100 text-gray-800"
+      return "bg-green-100 text-green-800"
     case "Cancelled":
       return "bg-red-100 text-red-800"
     default:

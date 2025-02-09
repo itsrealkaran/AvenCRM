@@ -13,7 +13,6 @@ export function ConnectedEmailAccounts({ accounts }: ConnectedEmailAccountsProps
   const handleDisconnect = async (accountId: string) => {
     try {
       await disconnectEmailAccount(accountId)
-      // You might want to update the state or refetch the accounts after disconnecting
     } catch (error) {
       console.error("Failed to disconnect account:", error)
     }
