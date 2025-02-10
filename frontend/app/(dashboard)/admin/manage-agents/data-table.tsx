@@ -14,7 +14,7 @@ import {
   type Row,
   type SortingState,
 } from '@tanstack/react-table';
-import { Download, Plus, RefreshCw, Trash, Upload, UserPlus } from 'lucide-react';
+import { Download, PlusCircle, RefreshCw, Trash, Upload, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { read, utils } from 'xlsx';
 
@@ -211,14 +211,14 @@ export function DataTable<TData extends BaseData, TValue>({
             </Button>
           )}
           <DropdownMenu>
-            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-xs'>
+            <DropdownMenuTrigger className='border-[1px] hover:bg-muted/50 p-2 rounded-md flex items-center text-xs'>
               <Download className='size-4 mr-2' />
               Import
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <label className='flex w-full cursor-pointer'>
-                  CSV
+                  Import from CSV
                   <input
                     type='file'
                     ref={fileInputRef}
@@ -231,12 +231,13 @@ export function DataTable<TData extends BaseData, TValue>({
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                 <label className='flex w-full cursor-pointer'>
-                  XLSX
+                  Import from XLSX
                   <input
                     type='file'
                     accept='.xlsx'
                     className='hidden'
                     onChange={handleFileUpload}
+
                     onClick={(e) => e.stopPropagation()}
                   />
                 </label>
@@ -244,29 +245,32 @@ export function DataTable<TData extends BaseData, TValue>({
             </DropdownMenuContent>
           </DropdownMenu>
           <Button variant='outline' size='sm' onClick={onRefresh}>
-            <RefreshCw className='mr-2 h-4 w-4' />
+            <RefreshCw className='h-4 w-4' />
             Refresh
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='sm'>
-                <Upload className='mr-2 h-4 w-4' />
+                <Upload className='h-4 w-4' />
                 Export
               </Button>
             </DropdownMenuTrigger>
 
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => onDownload('csv')}>Download as CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDownload('csv')}>Export as CSV</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDownload('xlsx')}>
-                Download as XLSX
+                Export as XLSX
               </DropdownMenuItem>
+
             </DropdownMenuContent>
           </DropdownMenu>
+
           <Button size='sm' onClick={onCreateAgent}>
-            <Plus className='mr-2 h-4 w-4' /> Add New Agent
+            <PlusCircle className='h-4 w-4' /> Add New Agent
           </Button>
         </div>
       </div>
+
       <div className='border rounded-md'>
         <div className='h-[55vh] overflow-x-auto'>
             <Table>
