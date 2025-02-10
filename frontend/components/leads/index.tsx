@@ -145,7 +145,7 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <div className='space-4'>
+        <div className='space-4 h-[calc(100%-50px)] flex-1'>
           <DataTable
             columns={columns}
             data={leads}

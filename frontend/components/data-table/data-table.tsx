@@ -279,9 +279,9 @@ export function DataTable<TData extends BaseRecord, TValue>({
       {fileData && fileData.length > 0 && (
         <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
       )}
-      <div className='rounded-md border overflow-x-auto'>
+      <div className='rounded-md border flex-1 overflow-x-auto'>
         <Table>
-          <TableHeader className='bg-white sticky top-0'>
+          <TableHeader className='bg-gray-200 sticky top-0'>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -301,7 +301,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
                   <TableCell className='h-4 text-center'>
                     <div className='h-4 py-2 w-4 animate-pulse rounded bg-gray-200'></div>
                   </TableCell>
-                  {[...Array(columns.length)].map((_, j) => (
+                  {[...Array(columns.length - 1)].map((_, j) => (
                     <TableCell key={j} className='whitespace-nowrap'>
                       <div className='h-6 w-24 animate-pulse rounded bg-gray-200'></div>
                     </TableCell>
