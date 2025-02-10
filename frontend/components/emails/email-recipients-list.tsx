@@ -120,21 +120,31 @@ export function EmailRecipientsList() {
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : filteredRecipients.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRecipients.map((recipient) => (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="h-8 w-8 bg-gray-200 rounded float-right animate-pulse"></div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : filteredRecipients.length > 0 ? (
+              filteredRecipients.map((recipient) => (
                 <TableRow key={recipient.id}>
                   <TableCell>{recipient.name}</TableCell>
                   <TableCell>{recipient.email}</TableCell>
@@ -162,18 +172,20 @@ export function EmailRecipientsList() {
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <div className="text-center py-10">
-            <h3 className="text-lg font-semibold mb-2">No recipients found</h3>
-            <p className="text-muted-foreground mb-4">Add your first recipient to get started</p>
-            <Button onClick={() => setIsAddDialogOpen(true)} className="bg-[#5932EA] hover:bg-[#5932EA]/90">
-              <FaPlus className="mr-2 h-4 w-4" /> Add Recipient
-            </Button>
-          </div>
-        )}
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={3} className="text-center py-10">
+                  <h3 className="text-lg font-semibold mb-2">No recipients found</h3>
+                  <p className="text-muted-foreground mb-4">Add your first recipient to get started</p>
+                  <Button onClick={() => setIsAddDialogOpen(true)} className="bg-[#5932EA] hover:bg-[#5932EA]/90">
+                    <FaPlus className="mr-2 h-4 w-4" /> Add Recipient
+                  </Button>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </CardContent>
       <Dialog
         open={isAddDialogOpen || !!editingRecipient}
