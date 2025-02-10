@@ -29,7 +29,7 @@ const FreeTrial = () => (
 const planOptions = {
   individual: [
     {
-      name: "Basic",
+      name: 'Basic',
       price: {
         monthly: 14,
         annually: 9,
@@ -40,23 +40,25 @@ const planOptions = {
       },
     },
     {
-      name: "Premium",
+      name: 'Premium',
       price: {
         monthly: 26,
         annually: 19,
         cadMonthly: 37,
         cadAnnually: 27,
         aedMonthly: 95,
+
         aedAnnually: 70,
       },
     },
     {
-      name: "Enterprise",
+      name: 'Enterprise',
       price: {
         monthly: 41,
         annually: 29,
         cadMonthly: 59,
         cadAnnually: 42,
+
         aedMonthly: 150,
         aedAnnually: 105,
       },
@@ -64,34 +66,37 @@ const planOptions = {
   ],
   company: [
     {
-      name: "Basic",
+      name: 'Basic',
       price: {
         monthly: 14,
         annually: 9,
         cadMonthly: 20,
         cadAnnually: 13,
+
         aedMonthly: 51,
         aedAnnually: 33,
       },
     },
     {
-      name: "Premium",
+      name: 'Premium',
       price: {
         monthly: 26,
         annually: 19,
         cadMonthly: 37,
         cadAnnually: 27,
+
         aedMonthly: 95,
         aedAnnually: 70,
       },
     },
     {
-      name: "Enterprise",
+      name: 'Enterprise',
       price: {
         monthly: 41,
         annually: 29,
         cadMonthly: 59,
         cadAnnually: 42,
+
         aedMonthly: 150,
         aedAnnually: 105,
       },
@@ -267,12 +272,11 @@ export default function PlanSelection({ onNext }: StepProps) {
                           <span className='text-2xl font-bold'>
                             {currencySymbol}{getPriceForCurrency(option.price, currency, isYearly) * userCount}
                           </span>
-                          <span className='text-sm font-normal text-gray-500 ml-1'>
-                            /month
-                          </span>
+                          <span className='text-sm font-normal text-gray-500 ml-1'>/month</span>
                         </div>
                         <div className='text-sm text-gray-500 flex items-center mt-2'>
                           <Users className='inline-block mr-1 h-4 w-4' />
+
                           <span>
                             {userCount} user{userCount > 1 ? 's' : ''}
                           </span>
