@@ -259,7 +259,7 @@ export function EmailTemplatesList() {
                         <TabsContent value="preview" className="p-4">
                           <div
                             className="border rounded p-4 min-h-[150px]"
-                            dangerouslySetInnerHTML={{ __html: currentTemplate.content }}
+                            dangerouslySetInnerHTML={{ __html: currentTemplate.content! }}
                           />
                         </TabsContent>
                       </Tabs>

@@ -33,7 +33,7 @@ export default function WhatsAppCampaignsPage() {
       <div className='flex justify-between items-center'>
         <div>
           <h1 className='text-2xl font-bold'>WhatsApp Campaigns</h1>
-          <p className='text-muted-foreground'>Manage your WhatsApp business campaigns</p>
+          <p className='text-muted-foreground text-sm'>Manage your WhatsApp business campaigns</p>
         </div>
         {!isConnected ? (
           <Button
