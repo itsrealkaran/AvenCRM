@@ -41,8 +41,9 @@ export default function MetaAdsPage() {
       <div className='flex justify-between items-center'>
         <div>
           <h1 className='text-2xl font-bold'>Meta Ads</h1>
-          <p className='text-muted-foreground'>Manage your Facebook ad campaigns</p>
+          <p className='text-sm text-muted-foreground'>Manage your Facebook ad campaigns</p>
         </div>
+
         {!isConnected ? (
           <Button
             onClick={() => setShowFacebookModal(true)}

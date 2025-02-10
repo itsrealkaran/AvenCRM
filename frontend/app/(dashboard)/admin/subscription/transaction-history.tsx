@@ -50,7 +50,7 @@ const columns: ColumnDef<Payment>[] = [
     accessorKey: 'amount',
     header: 'Billing Amount',
     cell: ({ row }) => (
-      <div className='text-right'>₹{row.getValue<number>('amount').toFixed(2)}</div>
+      <div>{row.getValue<number>('amount').toFixed(2)}</div>
     ),
   },
   {
@@ -63,7 +63,7 @@ const columns: ColumnDef<Payment>[] = [
     header: 'Status',
     cell: ({ row }) => (
       <div
-        className={`text-center font-medium ${row.getValue('isSuccessfull') ? 'text-emerald-600' : 'text-red-600'}`}
+        className={`font-medium ${row.getValue('isSuccessfull') ? 'text-emerald-600' : 'text-red-600'}`}
       >
         {row.getValue('isSuccessfull') ? 'Paid' : 'Failed'}
       </div>
@@ -73,9 +73,10 @@ const columns: ColumnDef<Payment>[] = [
 
 interface TransactionHistoryTableProps {
   data: Payment[];
+  loading: boolean;
 }
 
-export function TransactionHistoryTable({ data }: TransactionHistoryTableProps) {
+export function TransactionHistoryTable({ data, loading }: TransactionHistoryTableProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
 
   const table = useReactTable({
@@ -108,7 +109,21 @@ export function TransactionHistoryTable({ data }: TransactionHistoryTableProps) 
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {loading ? (
+              [...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : data.length > 0 ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                   {row.getVisibleCells().map((cell) => (

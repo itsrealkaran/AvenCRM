@@ -82,8 +82,8 @@ const Page = () => {
   };
 
   return (
-    <section className='h-full'>
-      <Card className='container space-y-4 p-4 md:p-6'>
+    <section className='h-full w-full'>
+      <Card className='space-y-4 p-6'>
         <div className='flex justify-between items-center mb-6'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight'>Subscription</h1>
@@ -206,13 +206,7 @@ const Page = () => {
         {/* Transaction History */}
         <div className=''>
           <h3 className='mb-6 text-lg font-semibold text-gray-900'>Transaction History</h3>
-          {loading ? (
-            <div className='text-center py-4'>Loading...</div>
-          ) : payments.length === 0 ? (
-            <div className='text-center py-4'>No payment history found</div>
-          ) : (
-            <TransactionHistoryTable data={payments} />
-          )}
+          <TransactionHistoryTable data={payments} loading={loading} />
         </div>
 
         {/* Stripe Modal */}
