@@ -21,6 +21,7 @@ import { FaPlus, FaEdit, FaTrash } from "react-icons/fa"
 import { MoreHorizontal, RefreshCw } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AITextarea } from "../ui/ai-textarea"
 
 export function EmailTemplatesList() {
   const [templates, setTemplates] = useState<EmailTemplate[]>([])
@@ -215,7 +216,7 @@ export function EmailTemplatesList() {
                           <TabsTrigger value="preview">Preview</TabsTrigger>
                         </TabsList>
                         <TabsContent value="edit" className="p-4">
-                          <Textarea
+                          <AITextarea
                             id="content"
                             value={currentTemplate.content}
                             onChange={(e) => setCurrentTemplate({ ...currentTemplate, content: e.target.value })}
