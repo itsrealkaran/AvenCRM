@@ -281,7 +281,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
       )}
       <div className='rounded-md border flex-1 overflow-x-auto'>
         <Table>
-          <TableHeader className='bg-gray-200 sticky top-0'>
+          <TableHeader className='bg-gray-50 sticky top-0'>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

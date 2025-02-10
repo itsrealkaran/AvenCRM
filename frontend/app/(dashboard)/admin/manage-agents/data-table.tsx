@@ -274,7 +274,7 @@ export function DataTable<TData extends BaseData, TValue>({
       <div className='border rounded-md'>
         <div className='h-[55vh] overflow-x-auto'>
             <Table>
-              <TableHeader>
+              <TableHeader className='bg-gray-50 sticky top-0'>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
