@@ -41,7 +41,7 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [state, setState] = useState({
     accountType: 'company',
     plan: 'trial',
-    billingFrequency: 'monthly',
+    billingFrequency: 'yearly',
     companyName: '',
     companyEmail: '',
     companyWebsite: '',
