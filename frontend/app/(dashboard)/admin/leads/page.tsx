@@ -15,21 +15,27 @@ import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-async function getLeads() {
-  try {
-    return await leadsApi.getLeads();
-  } catch (error) {
-    throw new Error('Failed to fetch leads');
-  }
-}
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [lead, setLead] = useState<any | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
+  
+  async function getLeads() {
+    try {
+      const lead = await leadsApi.getLeads();
+      //@ts-ignore
+      setLead(lead.data);
+      console.log(lead);
+      return lead;
+    } catch (error) {
+      throw new Error('Failed to fetch leads');
+    }
+  }
 
   const {
     data: response,
@@ -144,7 +150,7 @@ export default function LeadsPage() {
         <div className='space-4 h-[calc(100%-50px)] flex-1'>
           <DataTable
             columns={adminColumns}
-            data={leads}
+            data={lead || []}
             onEdit={handleEdit}
 
             onBulkDelete={async (row: any[]) => {

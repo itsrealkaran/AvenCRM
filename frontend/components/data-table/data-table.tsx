@@ -7,7 +7,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable,
@@ -63,7 +62,6 @@ export function DataTable<TData extends BaseRecord, TValue>({
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
-  const [currentPage, setCurrentPage] = useState(0);
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -142,7 +140,6 @@ export function DataTable<TData extends BaseRecord, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnFiltersChange: setColumnFilters,
@@ -151,12 +148,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
       sorting,
       columnFilters,
       rowSelection,
-      pagination: {
-        pageIndex: currentPage,
-        pageSize: 10,
-      },
     },
-    pageCount: Math.ceil(data.length / 10),
     enableRowSelection: true,
     onRowSelectionChange: handleSelectionChange,
     meta: {

@@ -18,22 +18,26 @@ import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { CreateLeadDialog } from './create-lead-dialog';
 import { EditLeadDialog } from './edit-lead-dialog';
 
-async function getLeads() {
-  try {
-    return await leadsApi.getLeads();
-  } catch (error) {
-    throw new Error('Failed to fetch leads');
-  }
-}
-
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [lead, setLead] = useState<any | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  
+  async function getLeads() {
+    try {
+      const lead = await leadsApi.getLeads();
+      //@ts-ignore
+      setLead(lead.data);
+      return lead;
+    } catch (error) {
+      throw new Error('Failed to fetch leads');
+    }
+  }
 
   const {
     data: response,
@@ -43,8 +47,6 @@ export default function LeadsPage() {
     queryKey: ['leads'],
     queryFn: getLeads,
   });
-
-  const leads = response || [];
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
@@ -148,7 +150,7 @@ export default function LeadsPage() {
         <div className='space-4 h-[calc(100%-50px)] flex-1'>
           <DataTable
             columns={columns}
-            data={leads}
+            data={lead || []}
             onEdit={handleEdit}
             onBulkDelete={async (row: any[]) => {
               const leadIds = row.map((row: { original: { id: any } }) => row.original.id);

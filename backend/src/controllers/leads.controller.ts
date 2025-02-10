@@ -29,36 +29,7 @@ export const leadsController: Controller  = {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      // Convert page and limit to numbers if they are present
-      const query: Record<string, any> = { ...req.query }; 
-      if (query.page) {
-        query.page = Number(query.page);
-      }
-      if (query.limit) {
-        query.limit = Number(query.limit);
-      }
-
-      const filterResult = leadFilterSchema.safeParse(query);
-      if (!filterResult.success) {
-        logger.error('Error in getAllLeads:', filterResult.error);
-        return res.status(400).json({ errors: filterResult.error.flatten() });
-      }
-
-      const filters = filterResult.data;
-      const page = filters.page || 1;
-      const limit = filters.limit || 10;
-      const skip = (page - 1) * limit;
-
-      const startDate = filters.startDate ? new Date(filters.startDate) : subMonths(new Date(), 1);
-      const endDate = filters.endDate ? new Date(filters.endDate) : new Date();
-
-      const where: any = {
-        createdAt: {
-          gte: startDate,
-          lte: endDate
-        }
-      };
-
+      const where: any = {}
       if (user.role === UserRole.ADMIN) {
         where.companyId = user.companyId;
       } else if (user.role === UserRole.AGENT) {
@@ -82,10 +53,6 @@ export const leadsController: Controller  = {
         where.companyId = user.companyId;
       }
 
-      if (filters.createdById) where.agentId = filters.createdById;
-      if (filters.status) where.status = filters.status;
-      if (filters.source) where.source = filters.source;
-
       const total = await prisma.lead.count({ where });
 
       const leads = await prisma.lead.findMany({
@@ -99,22 +66,12 @@ export const leadsController: Controller  = {
             }
           }
         },
-        skip,
-        take: limit,
-        orderBy: filters.sortBy ? {
-          [filters.sortBy]: filters.sortOrder || 'desc'
-        } : {
-          createdAt: 'desc'
-        }
       });
 
       const response = {
         data: leads,
         meta: {
           total,
-          page,
-          limit,
-          totalPages: Math.ceil(total / limit)
         }
       };
 

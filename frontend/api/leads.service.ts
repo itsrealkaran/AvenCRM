@@ -2,7 +2,6 @@ import {
   CreateLead,
   LeadFilter,
   LeadResponse,
-  LeadsResponse,
   LeadStatus,
   UpdateLead,
 } from '@/types';
@@ -20,9 +19,9 @@ export interface ConvertToDealPayload {
  */
 export const leadsApi = {
   // Get all leads with optional filtering
-  getLeads: async (filters?: LeadFilter): Promise<LeadResponse[]> => {
-    const response = await api.get<LeadsResponse>('/leads', { params: filters });
-    return response.data.data;
+  getLeads: async (filters?: LeadFilter) => {
+    const response = await api.get<LeadResponse[]>('/leads', { params: filters });
+    return response.data;
   },
 
   // Get a single lead by ID
