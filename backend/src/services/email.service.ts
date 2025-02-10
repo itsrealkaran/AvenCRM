@@ -55,7 +55,7 @@ class EmailService {
     );
   }
 
-  async connectEmailAccount(userId: string, provider: EmailProviderEnum, code: string): Promise<void> {
+  async connectEmailAccount(userId: string, provider: EmailProviderEnum, code: string, codeVerifier?: string): Promise<void> {
     try {
       let tokens: OAuthTokens;
       let email = '';
@@ -66,7 +66,10 @@ class EmailService {
           email = await this.getGmailEmail(tokens.accessToken);
           break;
         case EmailProviderEnum.OUTLOOK:
-          tokens = await this.getOutlookTokens(code);
+          if (!codeVerifier) {
+            throw new Error('Code verifier is required for Outlook OAuth');
+          }
+          tokens = await this.getOutlookTokens(code, codeVerifier);
           email = await this.getOutlookEmail(tokens.accessToken);
           break;
         default:
@@ -238,14 +241,77 @@ class EmailService {
     }
   }
 
-  private async getOutlookTokens(code: string): Promise<OAuthTokens> {
-    // Implement Outlook token retrieval
-    throw new Error('Outlook integration not implemented yet');
+  private async getOutlookTokens(code: string, codeVerifier?: string): Promise<OAuthTokens> {
+    try {
+      // Validate environment variables first
+      if (!process.env.OUTLOOK_CLIENT_ID || !process.env.OUTLOOK_REDIRECT_URI) {
+        throw new Error('Missing required Outlook OAuth credentials in environment variables');
+      }
+
+      const tokenEndpoint = 'https://login.microsoftonline.com/common/oauth2/v2.0/token';
+      const params = new URLSearchParams({
+        client_id: process.env.OUTLOOK_CLIENT_ID,
+        code,
+        redirect_uri: process.env.OUTLOOK_REDIRECT_URI,
+        grant_type: 'authorization_code',
+        scope: 'offline_access https://graph.microsoft.com/mail.read https://graph.microsoft.com/mail.send https://graph.microsoft.com/user.read'
+      });
+
+      // Add code verifier for PKCE
+      if (codeVerifier) {
+        params.append('code_verifier', codeVerifier);
+      }
+
+      const response = await fetch(tokenEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString()
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        logger.error('Outlook token exchange error details:', {
+          status: response.status,
+          statusText: response.statusText,
+          errorData
+        });
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+
+      return {
+        accessToken: data.access_token,
+        refreshToken: data.refresh_token,
+        expiresAt: new Date(Date.now() + data.expires_in * 1000)
+      };
+    } catch (error) {
+      logger.error('Error getting Outlook tokens:', error);
+      throw new Error('Failed to get Outlook tokens');
+    }
   }
 
   private async getOutlookEmail(accessToken: string): Promise<string> {
-    // Implement Outlook email retrieval
-    throw new Error('Outlook integration not implemented yet');
+    try {
+      const response = await fetch('https://graph.microsoft.com/v1.0/me', {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: any = await response.json();
+
+      return data.mail || data.userPrincipalName;
+    } catch (error) {
+      logger.error('Error getting Outlook email:', error);
+      throw new Error('Failed to get Outlook email');
+    }
   }
 
   async createTransporter(emailAccountId: string) {
@@ -309,7 +375,23 @@ class EmailService {
           });
 
         case EmailProviderEnum.OUTLOOK:
-          throw new Error('Outlook integration not implemented yet');
+          if (!emailAccount.email || !emailAccount.accessToken || !emailAccount.refreshToken) {
+            throw new Error('Missing required Outlook credentials');
+          }
+
+          return nodemailer.createTransport({
+            host: 'smtp.office365.com',
+            port: 587,
+            secure: false,
+            auth: {
+              type: 'OAuth2',
+              user: emailAccount.email,
+              clientId: process.env.OUTLOOK_CLIENT_ID,
+              clientSecret: process.env.OUTLOOK_CLIENT_SECRET,
+              refreshToken: emailAccount.refreshToken,
+              accessToken: emailAccount.accessToken
+            }
+          });
 
         default:
           throw new Error('Unsupported email provider');

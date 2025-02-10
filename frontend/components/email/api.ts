@@ -1,6 +1,6 @@
 import { EmailAccount, EmailCampaign, EmailRecipient, EmailTemplate } from '@/types/email';
-
 import { api } from '@/lib/api';
+import { generateCodeVerifier, generateCodeChallenge } from '@/lib/pkce';
 
 // Email Account Management
 export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
@@ -10,6 +10,21 @@ export const fetchEmailAccounts = async (): Promise<EmailAccount[]> => {
 };
 
 export const connectEmailAccount = async (provider: 'GMAIL' | 'OUTLOOK'): Promise<string> => {
+  // Generate PKCE values for Outlook
+  if (provider === 'OUTLOOK') {
+    const codeVerifier = generateCodeVerifier();
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    
+    // Store code verifier in local storage to use it during callback
+    console.log('Code verifier:', codeVerifier);
+    localStorage.setItem('pkce_code_verifier', codeVerifier);
+    
+    const response = await api.get(`/email/redirect-url?provider=${provider}&code_challenge=${codeChallenge}`);
+    if (!response.data) throw new Error('Failed to get redirect URL');
+    return response.data.url;
+  }
+  
+  // For other providers, proceed as normal
   const response = await api.get(`/email/redirect-url?provider=${provider}`);
   if (!response.data) throw new Error('Failed to get redirect URL');
   return response.data.url;
