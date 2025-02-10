@@ -489,11 +489,20 @@ interface TaskCardProps {
   onUpdatePriority: (priority: TaskPriority) => void;
 }
 
-function TaskCard({ task, onEdit, onDelete, isSelected, onSelect, onUpdateStatus, onUpdatePriority }: TaskCardProps) {
+function TaskCard({
+  task,
+  onEdit,
+  onDelete,
+  isSelected,
+  onSelect,
+  onUpdateStatus,
+  onUpdatePriority,
+}: TaskCardProps) {
   const getPriorityBadgeStyle = (priority: TaskPriority) => {
     const styles = {
       [TaskPriority.LOW]: 'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
-      [TaskPriority.MEDIUM]: 'bg-yellow-100 text-yellow-800 border border-yellow-200 hover:bg-yellow-200',
+      [TaskPriority.MEDIUM]:
+        'bg-yellow-100 text-yellow-800 border border-yellow-200 hover:bg-yellow-200',
       [TaskPriority.HIGH]: 'bg-red-100 text-red-800 border border-red-200 hover:bg-red-200',
     };
     return styles[priority] || 'bg-gray-100 text-gray-800';
@@ -502,8 +511,10 @@ function TaskCard({ task, onEdit, onDelete, isSelected, onSelect, onUpdateStatus
   const getStatusBadgeStyle = (status: TaskStatus) => {
     const styles = {
       [TaskStatus.TODO]: 'bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200',
-      [TaskStatus.IN_PROGRESS]: 'bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200',
-      [TaskStatus.COMPLETED]: 'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
+      [TaskStatus.IN_PROGRESS]:
+        'bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200',
+      [TaskStatus.COMPLETED]:
+        'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
     };
     return styles[status] || 'bg-gray-100 text-gray-800';
   };
@@ -537,20 +548,21 @@ function TaskCard({ task, onEdit, onDelete, isSelected, onSelect, onUpdateStatus
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               {Object.values(TaskPriority).map((priority) => (
-                <DropdownMenuItem 
-                  key={priority} 
+                <DropdownMenuItem
+                  key={priority}
                   onClick={() => onUpdatePriority(priority)}
                   className={task.priority === priority ? 'bg-accent' : ''}
                 >
-                <Badge
-                className={`${getPriorityBadgeStyle(task.priority)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}>
-                  {priority}
+                  <Badge
+                    className={`${getPriorityBadgeStyle(task.priority)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}
+                  >
+                    {priority}
                   </Badge>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Badge
@@ -561,15 +573,16 @@ function TaskCard({ task, onEdit, onDelete, isSelected, onSelect, onUpdateStatus
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               {Object.values(TaskStatus).map((status) => (
-                <DropdownMenuItem 
-                  key={status} 
+                <DropdownMenuItem
+                  key={status}
                   onClick={() => onUpdateStatus(status)}
                   className={task.status === status ? 'bg-accent' : ''}
                 >
-                <Badge
-                className={`${getStatusBadgeStyle(task.status)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}>
-                  {status.replace('_', ' ')}
-                </Badge>
+                  <Badge
+                    className={`${getStatusBadgeStyle(task.status)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}
+                  >
+                    {status.replace('_', ' ')}
+                  </Badge>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

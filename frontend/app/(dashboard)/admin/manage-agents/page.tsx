@@ -192,28 +192,27 @@ export default function ManageAgentsPage() {
           <CardTitle className='text-2xl font-bold'>Team Manager</CardTitle>
           <CardDescription>Manage your team members and their roles</CardDescription>
         </CardHeader>
-          <div className='space-4 px-6 pb-4 h-[10%] flex-1'>
-            <DataTable
-              columns={columns}
-              data={agents}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onBulkDelete={async (rows) => {
-                const agentIds = rows.map((row) => row.original.id);
-                await handleBulkDelete(agentIds);
-              }}
-              onViewMetrics={handleViewMetrics}
-              onAddTeamMember={handleAddTeamMember}
-              showTeamActions={currentUser?.role === 'TEAM_LEADER'}
-              disabled={isLoading || isAgentsLoading}
-              isLoading={isLoading || isAgentsLoading}
-              onRefresh={handleRefresh}
-              onDownload={handleDownload}
-              onCreateAgent={() => setIsCreateDialogOpen(true)}
-            />
-          </div>
+        <div className='space-4 px-6 pb-4 h-[10%] flex-1'>
+          <DataTable
+            columns={columns}
+            data={agents}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onBulkDelete={async (rows) => {
+              const agentIds = rows.map((row) => row.original.id);
+              await handleBulkDelete(agentIds);
+            }}
+            onViewMetrics={handleViewMetrics}
+            onAddTeamMember={handleAddTeamMember}
+            showTeamActions={currentUser?.role === 'TEAM_LEADER'}
+            disabled={isLoading || isAgentsLoading}
+            isLoading={isLoading || isAgentsLoading}
+            onRefresh={handleRefresh}
+            onDownload={handleDownload}
+            onCreateAgent={() => setIsCreateDialogOpen(true)}
+          />
+        </div>
       </Card>
-
 
       <CreateAgentDialog
         open={isCreateDialogOpen || isEditDialogOpen}

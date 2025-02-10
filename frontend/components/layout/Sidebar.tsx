@@ -34,7 +34,6 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
       setIsCollapsed(window.innerWidth < 1210);
     };
 
-
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
@@ -83,7 +82,9 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
                   <div className={`flex flex-row gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
                     <item.icon className='h-5 w-5' />
                     {!isCollapsed && (
-                      <span className='whitespace-nowrap truncate max-w-[120px] text-ellipsis'>{item.heading}</span>
+                      <span className='whitespace-nowrap truncate max-w-[120px] text-ellipsis'>
+                        {item.heading}
+                      </span>
                     )}
                   </div>
                   {!isCollapsed && (

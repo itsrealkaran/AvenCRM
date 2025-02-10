@@ -13,7 +13,6 @@ interface JWTPayload {
 // List of public routes that don't require authentication
 const publicRoutes = ['/sign-in', '/sign-up', '/forgot-password', '/', '/property'];
 
-
 // List of protected routes that require authentication
 const protectedRoutes = ['/agent', '/admin', '/superadmin'];
 
@@ -39,7 +38,6 @@ export async function middleware(request: NextRequest) {
             redirectResponse.headers.set('x-middleware-cache', 'no-cache');
             return redirectResponse;
           }
-
         } catch (error) {
           toast.error('Invalid token');
           const redirectResponse = NextResponse.redirect(new URL('/sign-in', request.url));
@@ -103,7 +101,6 @@ export async function middleware(request: NextRequest) {
       const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
       redirectResponse.headers.set('x-middleware-cache', 'no-cache');
       return redirectResponse;
-
     } catch (error) {
       // Invalid token - redirect to sign-in
       const url = new URL('/sign-in', request.url);
@@ -133,7 +130,6 @@ export async function middleware(request: NextRequest) {
               const redirectResponse = NextResponse.redirect(new URL(`/${role}`, request.url));
               redirectResponse.headers.set('x-middleware-cache', 'no-cache');
               return redirectResponse;
-
             }
           }
         } catch (error) {

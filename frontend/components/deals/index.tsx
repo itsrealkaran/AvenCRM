@@ -121,7 +121,6 @@ export default function DealsPage() {
 
   const handleBulkDelete = async (dealIds: string[]) => {
     try {
-
       await bulkDeleteDeals.mutateAsync(dealIds);
       toast.success('Deals deleted successfully');
     } catch (error) {
@@ -162,7 +161,6 @@ export default function DealsPage() {
             onCreateDeal={() => setIsCreateDialogOpen(true)}
           />
         </div>
-
 
         <CreateDealDialog
           open={isCreateDialogOpen}

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
+
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 
@@ -22,7 +23,7 @@ export function ContactForm({ propertyId, agentId }: ContactFormProps) {
     name: '',
     email: '',
     phone: '',
-    notes: [] as Note[]
+    notes: [] as Note[],
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +33,7 @@ export function ContactForm({ propertyId, agentId }: ContactFormProps) {
       const currentTime = new Date().toISOString().slice(0, 16); // Format: "2025-02-06T22:19"
       const noteWithTime = {
         note: formData.notes[0]?.note || '',
-        time: currentTime
+        time: currentTime,
       };
 
       await api.post('/public/setLead', {
@@ -41,7 +42,7 @@ export function ContactForm({ propertyId, agentId }: ContactFormProps) {
         phone: formData.phone,
         propertyId,
         agentId,
-        notes: [noteWithTime]
+        notes: [noteWithTime],
       });
 
       // Reset form
@@ -49,7 +50,7 @@ export function ContactForm({ propertyId, agentId }: ContactFormProps) {
         name: '',
         email: '',
         phone: '',
-        notes: []
+        notes: [],
       });
       alert('Your inquiry has been sent successfully!');
     } catch (error) {
@@ -63,69 +64,67 @@ export function ContactForm({ propertyId, agentId }: ContactFormProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'note') {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        notes: [{
-          note: value,
-          time: new Date().toISOString().slice(0, 16)
-        }]
+        notes: [
+          {
+            note: value,
+            time: new Date().toISOString().slice(0, 16),
+          },
+        ],
       }));
     } else {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        [name]: value
+        [name]: value,
       }));
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className='space-y-4'>
       <div>
         <Input
-          placeholder="Your Name"
-          name="name"
+          placeholder='Your Name'
+          name='name'
           value={formData.name}
           onChange={handleChange}
           required
-          className="w-full"
+          className='w-full'
         />
       </div>
       <div>
         <Input
-          type="email"
-          placeholder="Email Address"
-          name="email"
+          type='email'
+          placeholder='Email Address'
+          name='email'
           value={formData.email}
           onChange={handleChange}
           required
-          className="w-full"
+          className='w-full'
         />
       </div>
       <div>
         <Input
-          type="tel"
-          placeholder="Phone Number"
-          name="phone"
+          type='tel'
+          placeholder='Phone Number'
+          name='phone'
           value={formData.phone}
           onChange={handleChange}
           required
-          className="w-full"
+          className='w-full'
         />
       </div>
       <div>
         <Textarea
-          placeholder="Your Message"
-          name="note"
+          placeholder='Your Message'
+          name='note'
           value={formData.notes[0]?.note || ''}
           onChange={handleChange}
-          className="w-full min-h-[100px]"
+          className='w-full min-h-[100px]'
         />
       </div>
-      <Button
-        type="submit"
-        className="w-full bg-[#7C3AED] hover:bg-[#6D28D9]"
-        disabled={isLoading}
-      >
+      <Button type='submit' className='w-full bg-[#7C3AED] hover:bg-[#6D28D9]' disabled={isLoading}>
         {isLoading ? 'Sending...' : 'Send Inquiry'}
       </Button>
     </form>

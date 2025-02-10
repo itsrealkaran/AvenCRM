@@ -1,6 +1,9 @@
 'use client';
 
+import { useState } from 'react';
+import { leadsApi } from '@/api/leads.service';
 import { Lead, LeadStatus } from '@/types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
@@ -12,7 +15,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,8 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { leadsApi } from '@/api/leads.service';
-import { useState } from 'react';
 
 const getStatusColor = (status: LeadStatus) => {
   const colors = {
@@ -245,9 +245,9 @@ export const columns: ColumnDef<Lead>[] = [
         const existingNotes = notes || [];
         const newNoteObj = {
           note: newNote,
-          time: new Date().toISOString()
+          time: new Date().toISOString(),
         };
-        
+
         addNoteMutation.mutate({
           leadId: row.original.id,
           note: [...existingNotes, newNoteObj],
@@ -288,16 +288,16 @@ export const columns: ColumnDef<Lead>[] = [
               ))}
             </div>
             {showTextArea ? (
-              <div className="mt-8 space-y-4">
+              <div className='mt-8 space-y-4'>
                 <textarea
-                  placeholder="Add a new note..."
-                  className="w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  placeholder='Add a new note...'
+                  className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}
                 />
-                <div className="flex gap-2 justify-end">
+                <div className='flex gap-2 justify-end'>
                   <Button
-                    variant="outline"
+                    variant='outline'
                     onClick={() => {
                       setShowTextArea(false);
                       setNewNote('');
@@ -305,26 +305,20 @@ export const columns: ColumnDef<Lead>[] = [
                   >
                     Cancel
                   </Button>
-                  <Button
-                    onClick={handleAddNote}
-                    disabled={addNoteMutation.isPending}
-                  >
+                  <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
                     {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
                   </Button>
                 </div>
               </div>
             ) : (
-              <div className="mt-8 flex justify-end">
-                <Button
-                  onClick={() => setShowTextArea(true)}
-                  variant="outline"
-                >
+              <div className='mt-8 flex justify-end'>
+                <Button onClick={() => setShowTextArea(true)} variant='outline'>
                   Add New Note
                 </Button>
               </div>
             )}
           </DialogContent>
-          <DialogFooter className="flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 pt-4" />
+          <DialogFooter className='flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 pt-4' />
         </Dialog>
       );
     },

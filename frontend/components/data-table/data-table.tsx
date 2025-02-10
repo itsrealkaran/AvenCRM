@@ -11,7 +11,16 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, CirclePlus, Download, RefreshCw, Trash, Upload, X } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  CirclePlus,
+  Download,
+  RefreshCw,
+  Trash,
+  Upload,
+  X,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { read, utils } from 'xlsx';
 
@@ -170,7 +179,6 @@ export function DataTable<TData extends BaseRecord, TValue>({
             onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
             className='max-w-sm'
           />
-          
         </div>
         <div className='ml-auto flex gap-2'>
           {buttons}
@@ -193,7 +201,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
               <Trash className='size-4 mr-2' />
               Delete({table.getFilteredSelectedRowModel().rows.length})
             </Button>
-          )}          
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-xs'>
               <Download className='size-4 mr-2' />
@@ -252,13 +260,12 @@ export function DataTable<TData extends BaseRecord, TValue>({
               <DropdownMenuItem onClick={() => onDownload?.('xlsx')}>
                 Export as XLSX
               </DropdownMenuItem>
-
             </DropdownMenuContent>
           </DropdownMenu>
           {onCreateLead && (
-          <Button onClick={onCreateLead} className='text-xs'>
-            <CirclePlus className='mr-2 h-4 w-4' /> Add New Lead
-          </Button>
+            <Button onClick={onCreateLead} className='text-xs'>
+              <CirclePlus className='mr-2 h-4 w-4' /> Add New Lead
+            </Button>
           )}
 
           {onCreateDeal && (
@@ -303,25 +310,25 @@ export function DataTable<TData extends BaseRecord, TValue>({
             </TableBody>
           ) : (
             <TableBody className='overflow-y-auto'>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className='whitespace-nowrap'>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
-                  ))}
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id} className='whitespace-nowrap'>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className='h-24 text-center'>
+                    No results.
+                  </TableCell>
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={columns.length} className='h-24 text-center'>
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        )}
+              )}
+            </TableBody>
+          )}
         </Table>
       </div>
     </div>

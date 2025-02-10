@@ -10,8 +10,8 @@ import PropertyFormModal from '@/components/property/PropertyFormModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface Property {
   id: string;
@@ -45,7 +45,7 @@ const Page: React.FC = () => {
   const fetchProperties = async () => {
     try {
       setIsRefreshing(true);
-      const response = await api.get("/property/all")
+      const response = await api.get('/property/all');
       const { verifiedProperties, unverifiedProperties } = response.data;
 
       setUnverifiedProperties(unverifiedProperties);
@@ -190,14 +190,14 @@ const Page: React.FC = () => {
                     .map((_, i) => <PropertySkeleton key={i} />)
                 : verifiedProperties.map((prop: any) => (
                     <PropertyCard
-                    key={prop.id}
-                    id={prop.id}
-                    cardDetails={prop.cardDetails}
-                    agent={prop.createdBy}
-                    isVerified={prop.isVerified}
-                    onVerify={() => handleVerify(prop.id)}
-                    onDelete={() => handleDeleteProperty(prop.id)}
-                    onEdit={() => handleEditProperty(prop)}
+                      key={prop.id}
+                      id={prop.id}
+                      cardDetails={prop.cardDetails}
+                      agent={prop.createdBy}
+                      isVerified={prop.isVerified}
+                      onVerify={() => handleVerify(prop.id)}
+                      onDelete={() => handleDeleteProperty(prop.id)}
+                      onEdit={() => handleEditProperty(prop)}
                     />
                   ))}
             </div>

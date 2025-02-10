@@ -10,8 +10,8 @@ import PropertyFormModal from '@/components/property/PropertyFormModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useToast } from '@/hooks/use-toast';
 import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface Property {
   id: string;
@@ -45,7 +45,7 @@ const Page: React.FC = () => {
   const fetchProperties = async () => {
     try {
       setIsRefreshing(true);
-      const response = await api.get("/property")
+      const response = await api.get('/property');
 
       const { myProperty, allProperty } = response.data;
       setMyProperties(myProperty);
@@ -98,7 +98,7 @@ const Page: React.FC = () => {
   };
 
   const handleEditProperty = (property: any) => {
-    setPropertyToEdit({...property.cardDetails, ...property.features});
+    setPropertyToEdit({ ...property.cardDetails, ...property.features });
     setIsPropertyFormModalOpen(true);
   };
 

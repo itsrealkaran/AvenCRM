@@ -11,10 +11,8 @@ import { adminColumns } from '@/components/leads/admin-columns';
 import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
-
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -24,7 +22,7 @@ export default function LeadsPage() {
   const [lead, setLead] = useState<any | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
-  
+
   async function getLeads() {
     try {
       const lead = await leadsApi.getLeads();
@@ -152,7 +150,6 @@ export default function LeadsPage() {
             columns={adminColumns}
             data={lead || []}
             onEdit={handleEdit}
-
             onBulkDelete={async (row: any[]) => {
               const leadIds = row.map((row: { original: { id: any } }) => row.original.id);
               await handleBulkDelete(leadIds);

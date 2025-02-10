@@ -27,7 +27,7 @@ export default function LeadsPage() {
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  
+
   async function getLeads() {
     try {
       const lead = await leadsApi.getLeads();
@@ -168,7 +168,6 @@ export default function LeadsPage() {
             onDownload={handleDownload}
           />
         </div>
-
 
         <CreateLeadDialog
           open={isCreateDialogOpen}

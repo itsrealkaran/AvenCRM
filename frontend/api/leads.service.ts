@@ -1,10 +1,4 @@
-import {
-  CreateLead,
-  LeadFilter,
-  LeadResponse,
-  LeadStatus,
-  UpdateLead,
-} from '@/types';
+import { CreateLead, LeadFilter, LeadResponse, LeadStatus, UpdateLead } from '@/types';
 
 import { api } from '@/lib/api';
 
@@ -115,7 +109,7 @@ export const leadsApi = {
 
   // Add a note to a lead
   addNote: async (id: string, note: string): Promise<LeadResponse> => {
-    const response = await api.post<LeadResponse>(`/leads/${id}/notes`, {note});
+    const response = await api.post<LeadResponse>(`/leads/${id}/notes`, { note });
     return response.data;
   },
 };

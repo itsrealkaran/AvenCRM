@@ -7,9 +7,9 @@ import { Check, Loader2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import api from '@/lib/axios';
+import { generateCodeVerifier } from '@/lib/pkce';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { generateCodeVerifier } from '@/lib/pkce';
 
 function OutlookAuthCallbackContent() {
   const router = useRouter();
@@ -25,10 +25,10 @@ function OutlookAuthCallbackContent() {
       try {
         // Log all search parameters to help debug
         console.log('Search params:', Array.from(searchParams.entries()));
-        
+
         const code = searchParams.get('code');
         console.log('Authorization code:', code);
-        
+
         if (!code) {
           console.error('URL:', window.location.href);
           throw new Error('Authorization code not found');
@@ -43,12 +43,12 @@ function OutlookAuthCallbackContent() {
         // Clear the code verifier from local storage
         localStorage.removeItem('pkce_code_verifier');
 
-        const response = await api.post('/email/connect', { 
-          code, 
+        const response = await api.post('/email/connect', {
+          code,
           provider: 'OUTLOOK',
-          code_verifier: codeVerifier 
+          code_verifier: codeVerifier,
         });
-        
+
         if (!response.data) throw new Error('Failed to connect account');
         setStatus('success');
         toast({
@@ -60,7 +60,6 @@ function OutlookAuthCallbackContent() {
         setTimeout(() => {
           router.push(`/${userRole}/email`);
         }, 1500);
-
       } catch (error) {
         console.error('Error connecting account:', error);
         setStatus('error');

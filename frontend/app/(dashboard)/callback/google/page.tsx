@@ -39,13 +39,11 @@ function GoogleAuthCallbackContent() {
         setTimeout(() => {
           router.push(`/${userRole}/email`);
         }, 1500);
-
       } catch (error) {
         console.error('Error connecting account:', error);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Failed to connect email account');
         toast({
-
           title: 'Error',
           description: 'Failed to connect email account',
           variant: 'destructive',

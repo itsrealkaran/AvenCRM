@@ -237,7 +237,6 @@ export function DataTable<TData extends BaseData, TValue>({
                     accept='.xlsx'
                     className='hidden'
                     onChange={handleFileUpload}
-
                     onClick={(e) => e.stopPropagation()}
                   />
                 </label>
@@ -258,10 +257,7 @@ export function DataTable<TData extends BaseData, TValue>({
 
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => onDownload('csv')}>Export as CSV</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDownload('xlsx')}>
-                Export as XLSX
-              </DropdownMenuItem>
-
+              <DropdownMenuItem onClick={() => onDownload('xlsx')}>Export as XLSX</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -273,7 +269,7 @@ export function DataTable<TData extends BaseData, TValue>({
 
       <div className='rounded-md border flex-1 overflow-x-auto'>
         <Table>
-            <TableHeader className='bg-gray-50 sticky top-0'>
+          <TableHeader className='bg-gray-50 sticky top-0'>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {

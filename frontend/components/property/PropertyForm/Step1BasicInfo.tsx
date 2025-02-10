@@ -83,9 +83,9 @@ const Step1BasicInfo = () => {
             'Content-Type': file.type,
           },
         });
-      updateFormData({ 
-        imageNames: [...(formData.imageNames || []), response.data.key] 
-      });
+        updateFormData({
+          imageNames: [...(formData.imageNames || []), response.data.key],
+        });
         console.log(response.data.key, 'key');
 
         return response.data.downloadUrl;

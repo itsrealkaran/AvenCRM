@@ -7,11 +7,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import ShareModal from './ShareModal';
-import { useToast } from '@/hooks/use-toast';
-import { api } from '@/lib/api';
 
 interface PropertyCardProps {
   id: string;
@@ -49,7 +49,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 }) => {
   const { formatPrice } = useCurrency();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [agentId, setAgentId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -64,19 +64,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     setIsDeleteModalOpen(false);
   };
 
-  const handleShare = async() => {
+  const handleShare = async () => {
     try {
-      const response = await api.get('/property/agent')
-      const agentId = response.data.agentId
-      setIsShareModalOpen(true)
-      setAgentId(agentId)
+      const response = await api.get('/property/agent');
+      const agentId = response.data.agentId;
+      setIsShareModalOpen(true);
+      setAgentId(agentId);
     } catch (error) {
       toast({
         variant: 'destructive',
         description: 'Something went wrong. Please try again later.',
-      })
+      });
     }
-  }
+  };
 
   return (
     <>
@@ -126,8 +126,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <CardContent className='p-3'>
           <div className='space-y-3'>
             <div>
-              <h3 className='font-medium text-sm text-gray-500 whitespace-nowrap truncate'>{cardDetails.address}</h3>
-              <p className='text-xl font-bold text-[#4F46E5] mt-1'>{formatPrice(cardDetails.price)}</p>
+              <h3 className='font-medium text-sm text-gray-500 whitespace-nowrap truncate'>
+                {cardDetails.address}
+              </h3>
+              <p className='text-xl font-bold text-[#4F46E5] mt-1'>
+                {formatPrice(cardDetails.price)}
+              </p>
             </div>
 
             <div className='flex items-center justify-between py-1 border-y border-gray-100'>
@@ -159,7 +163,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               </div>
             </div>
             <div className='flex gap-2 mt-2'>
-              <Button onClick={onEdit} className='flex-1 text-xs bg-[#7C3AED] hover:bg-[#6D28D9] text-white'>
+              <Button
+                onClick={onEdit}
+                className='flex-1 text-xs bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
+              >
                 View Property
               </Button>
               {!isVerified && onVerify && (
@@ -185,7 +192,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           isOpen={isShareModalOpen}
           onClose={() => setIsShareModalOpen(false)}
           propertyId={id}
-          agentId={agentId || ""}
+          agentId={agentId || ''}
         />
       )}
     </>

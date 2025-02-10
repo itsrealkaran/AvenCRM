@@ -1,5 +1,5 @@
-import { OpenAI } from "openai";
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { OpenAI } from 'openai';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -10,21 +10,18 @@ export async function POST(req: Request) {
     const { prompt } = await req.json();
 
     if (!prompt) {
-      return NextResponse.json(
-        { error: "Prompt is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: 'gpt-4o-mini',
       messages: [
         {
-          role: "system",
-          content: "You are a helpful assistant that generates high-quality content.",
+          role: 'system',
+          content: 'You are a helpful assistant that generates high-quality content.',
         },
         {
-          role: "user",
+          role: 'user',
           content: prompt,
         },
       ],
@@ -36,10 +33,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ result });
   } catch (error) {
-    console.error("Error generating content:", error);
-    return NextResponse.json(
-      { error: "Failed to generate content" },
-      { status: 500 }
-    );
+    console.error('Error generating content:', error);
+    return NextResponse.json({ error: 'Failed to generate content' }, { status: 500 });
   }
 }

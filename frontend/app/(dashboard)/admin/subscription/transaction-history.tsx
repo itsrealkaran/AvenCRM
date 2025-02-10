@@ -49,9 +49,7 @@ const columns: ColumnDef<Payment>[] = [
   {
     accessorKey: 'amount',
     header: 'Billing Amount',
-    cell: ({ row }) => (
-      <div>{row.getValue<number>('amount').toFixed(2)}</div>
-    ),
+    cell: ({ row }) => <div>{row.getValue<number>('amount').toFixed(2)}</div>,
   },
   {
     accessorKey: 'date',
@@ -113,13 +111,13 @@ export function TransactionHistoryTable({ data, loading }: TransactionHistoryTab
               [...Array(5)].map((_, i) => (
                 <TableRow key={i}>
                   <TableCell>
-                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                    <div className='h-4 w-32 bg-gray-200 rounded animate-pulse'></div>
                   </TableCell>
                   <TableCell>
-                    <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+                    <div className='h-4 w-48 bg-gray-200 rounded animate-pulse'></div>
                   </TableCell>
                   <TableCell>
-                    <div className="h-8 w-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className='h-8 w-8 bg-gray-200 rounded animate-pulse'></div>
                   </TableCell>
                 </TableRow>
               ))

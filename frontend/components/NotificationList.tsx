@@ -1,5 +1,6 @@
 import { useRouter } from 'next/navigation';
 import { Calendar, CheckSquare, Mail } from 'lucide-react';
+
 import { useAuth } from '@/hooks/useAuth';
 
 interface Activity {

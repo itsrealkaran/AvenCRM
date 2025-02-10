@@ -78,7 +78,7 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
         email: formData.email,
         phone: formData.phone,
         gender: formData.gender?.toUpperCase(),
-        password
+        password,
       };
 
       const companyData = {
@@ -93,13 +93,13 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
         size: formData.companySize,
         userCount: formData.userCount,
         preferredCurrency: formData.preferredCurrency,
-        countriesOfOperation: formData.countriesOfOperation
+        countriesOfOperation: formData.countriesOfOperation,
       };
 
       const response = await api.post('/auth/sign-up', { personalData, companyData });
       console.log(response);
       console.log(personalData, companyData);
-      
+
       onNext(); // Move to the Success step
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');

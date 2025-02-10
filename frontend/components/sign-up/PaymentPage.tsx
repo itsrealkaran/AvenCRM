@@ -19,9 +19,9 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
 
   const handlePayment = async () => {
     setIsProcessing(true);
-    
+
     let price;
-    if(billingFrequency === 'monthly') {
+    if (billingFrequency === 'monthly') {
       price = 99 * userCount;
     } else if (billingFrequency === 'yearly') {
       price = 500 * userCount;
@@ -32,10 +32,8 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
       const response = await api.post('/stripe/create-checkout-session', {
         planId: plan,
         planName: `${plan} Plan (${billingFrequency})`,
-        price: price
+        price: price,
       });
-
-      
     } catch (error) {
       console.error('Payment error:', error);
       setIsProcessing(false);
