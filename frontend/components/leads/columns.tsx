@@ -50,6 +50,120 @@ const getStatusColor = (status: LeadStatus) => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
+interface Note {
+  note: string;
+  time: string;
+}
+
+interface NotesCellProps {
+  row: any; // We'll properly type this later
+}
+
+function NotesCell({ row }: NotesCellProps) {
+  const notes = row.original.notes || [];
+  const noteCount = Array.isArray(notes) ? notes.length : 0;
+  const [showTextArea, setShowTextArea] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const queryClient = useQueryClient();
+
+  const addNoteMutation = useMutation({
+    mutationFn: async ({ leadId, note }: { leadId: string; note: Note[] }) => {
+      return leadsApi.addNote(leadId, note);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Note added successfully');
+      setNewNote('');
+      setShowTextArea(false);
+    },
+    onError: () => {
+      toast.error('Failed to add note');
+    },
+  });
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    const existingNotes = Array.isArray(notes) ? notes : [];
+    const newNoteObj = {
+      note: newNote,
+      time: new Date().toISOString(),
+    };
+
+    addNoteMutation.mutate({
+      leadId: row.original.id,
+      note: [...existingNotes, newNoteObj],
+    });
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
+        >
+          <span className='font-medium text-gray-700'>{noteCount}</span>
+          {noteCount === 1 ? 'Note' : 'Notes'}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
+        <DialogHeader>
+          <DialogTitle className='text-2xl font-semibold text-gray-800 mb-4'>
+            Notes Timeline
+          </DialogTitle>
+        </DialogHeader>
+        <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
+          {notes.map((note: Note, index: number) => (
+            <div key={index} className='relative pl-6'>
+              <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-gray-500'>
+                    {format(new Date(note.time), 'MMM d, yyyy')}
+                  </span>
+                </div>
+                <p className='text-gray-700'>{note.note}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {showTextArea ? (
+          <div className='mt-8 space-y-4'>
+            <textarea
+              placeholder='Add a new note...'
+              className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            />
+            <div className='flex gap-2 justify-end'>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  setShowTextArea(false);
+                  setNewNote('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
+                {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className='mt-8 flex justify-end'>
+            <Button onClick={() => setShowTextArea(true)} variant='outline'>
+              Add New Note
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+      <DialogFooter className='flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 pt-4' />
+    </Dialog>
+  );
+}
+
 export const columns: ColumnDef<Lead>[] = [
   {
     id: 'select',
@@ -219,108 +333,7 @@ export const columns: ColumnDef<Lead>[] = [
       );
     },
     cell: ({ row }) => {
-      const notes = row.original.notes || {};
-      const noteCount = Object.keys(notes).length;
-      const [showTextArea, setShowTextArea] = useState(false);
-      const [newNote, setNewNote] = useState('');
-      const queryClient = useQueryClient();
-
-      const addNoteMutation = useMutation({
-        mutationFn: async ({ leadId, note }: { leadId: string; note: any }) => {
-          return leadsApi.addNote(leadId, note);
-        },
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: ['leads'] });
-          toast.success('Note added successfully');
-          setNewNote('');
-          setShowTextArea(false);
-        },
-        onError: () => {
-          toast.error('Failed to add note');
-        },
-      });
-
-      const handleAddNote = () => {
-        if (!newNote.trim()) return;
-        const existingNotes = notes || [];
-        const newNoteObj = {
-          note: newNote,
-          time: new Date().toISOString(),
-        };
-
-        addNoteMutation.mutate({
-          leadId: row.original.id,
-          note: [...existingNotes, newNoteObj],
-        });
-      };
-
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
-            >
-              <span className='font-medium text-gray-700'>{noteCount}</span>
-              {noteCount === 1 ? 'Note' : 'Notes'}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
-            <DialogHeader>
-              <DialogTitle className='text-2xl font-semibold text-gray-800 mb-4'>
-                Notes Timeline
-              </DialogTitle>
-            </DialogHeader>
-            <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
-              {notes.map((note, index) => (
-                <div key={index} className='relative pl-6'>
-                  <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
-                  <div className='space-y-2'>
-                    <div className='flex items-center gap-2'>
-                      <span className='text-sm text-gray-500'>
-                        {format(new Date(note.time), 'MMM d, yyyy')}
-                      </span>
-                    </div>
-                    <p className='text-gray-700'>{note.note}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {showTextArea ? (
-              <div className='mt-8 space-y-4'>
-                <textarea
-                  placeholder='Add a new note...'
-                  className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                />
-                <div className='flex gap-2 justify-end'>
-                  <Button
-                    variant='outline'
-                    onClick={() => {
-                      setShowTextArea(false);
-                      setNewNote('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
-                    {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className='mt-8 flex justify-end'>
-                <Button onClick={() => setShowTextArea(true)} variant='outline'>
-                  Add New Note
-                </Button>
-              </div>
-            )}
-          </DialogContent>
-          <DialogFooter className='flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 pt-4' />
-        </Dialog>
-      );
+      return <NotesCell row={row} />;
     },
   },
   {

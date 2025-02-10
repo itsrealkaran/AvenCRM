@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { EmailCampaign } from '@/types/email';
+import { EmailCampaignStatus } from '@/types/enums';
 import { format } from 'date-fns';
 import { MoreHorizontal, RefreshCw } from 'lucide-react';
 import { FaBan, FaChartBar, FaPlus, FaTrash } from 'react-icons/fa';
@@ -67,7 +68,10 @@ export function EmailCampaignsList() {
   const handleCancelCampaign = async (id: string) => {
     try {
       await cancelEmailCampaign(id);
-      setCampaigns(campaigns.map((c) => (c.id === id ? { ...c, status: 'Cancelled' } : c)));
+      //@ts-ignore
+      setCampaigns(
+        campaigns.map((c) => (c.id === id ? { ...c, status: EmailCampaignStatus.CANCELLED } : c))
+      );
     } catch (error) {
       console.error('Failed to cancel campaign:', error);
     }
@@ -199,7 +203,7 @@ export function EmailCampaignsList() {
                         ? format(new Date(campaign.scheduledAt), 'PPp')
                         : 'Not scheduled'}
                     </TableCell>
-                    <TableCell>{campaign.totalRecipients}</TableCell>
+                    <TableCell>{campaign.recipientCount}</TableCell>
                     <TableCell className='text-right'>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -213,12 +217,13 @@ export function EmailCampaignsList() {
                             <FaChartBar className='mr-2 h-4 w-4' />
                             View Stats
                           </DropdownMenuItem>
-                          {campaign.status !== 'Sent' && campaign.status !== 'Cancelled' && (
-                            <DropdownMenuItem onClick={() => handleCancelCampaign(campaign.id)}>
-                              <FaBan className='mr-2 h-4 w-4' />
-                              Cancel
-                            </DropdownMenuItem>
-                          )}
+                          {campaign.status !== EmailCampaignStatus.COMPLETED &&
+                            campaign.status !== EmailCampaignStatus.CANCELLED && (
+                              <DropdownMenuItem onClick={() => handleCancelCampaign(campaign.id)}>
+                                <FaBan className='mr-2 h-4 w-4' />
+                                Cancel
+                              </DropdownMenuItem>
+                            )}
                           <DropdownMenuItem onClick={() => handleDeleteCampaign(campaign.id)}>
                             <FaTrash className='mr-2 h-4 w-4' />
                             Delete
@@ -285,17 +290,17 @@ export function EmailCampaignsList() {
   );
 }
 
-function getStatusColor(status: string) {
+function getStatusColor(status: EmailCampaignStatus) {
   switch (status) {
-    case 'DRAFT':
+    case EmailCampaignStatus.DRAFT:
       return 'bg-yellow-100 text-yellow-800';
-    case 'SCHEDULED':
+    case EmailCampaignStatus.SCHEDULED:
       return 'bg-blue-100 text-blue-800';
-    case 'ACTIVE':
+    case EmailCampaignStatus.ACTIVE:
       return 'bg-green-100 text-green-800';
-    case 'COMPLETED':
+    case EmailCampaignStatus.COMPLETED:
       return 'bg-green-100 text-green-800';
-    case 'CANCELLED':
+    case EmailCampaignStatus.CANCELLED:
       return 'bg-red-100 text-red-800';
     default:
       return 'bg-gray-100 text-gray-800';

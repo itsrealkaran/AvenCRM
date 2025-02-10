@@ -10,6 +10,7 @@ import PropertyFormModal from '@/components/property/PropertyFormModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface Property {
@@ -44,14 +45,11 @@ const Page: React.FC = () => {
   const fetchProperties = async () => {
     try {
       setIsRefreshing(true);
-      const [myPropsRes, allPropsRes] = await Promise.all([
-        fetch('/api/properties?agentId=123'),
-        fetch('/api/properties'),
-      ]);
-      const myProps = await myPropsRes.json();
-      const allProps = await allPropsRes.json();
-      setMyProperties(myProps);
-      setAllProperties(allProps);
+      const response = await api.get('/property');
+
+      const { myProperty, allProperty } = response.data;
+      setMyProperties(myProperty);
+      setAllProperties(allProperty);
     } catch (error) {
       console.error('Error fetching properties:', error);
     } finally {
@@ -99,8 +97,8 @@ const Page: React.FC = () => {
     });
   };
 
-  const handleEditProperty = (property: Property) => {
-    setPropertyToEdit(property);
+  const handleEditProperty = (property: any) => {
+    setPropertyToEdit({ ...property.cardDetails, ...property.features });
     setIsPropertyFormModalOpen(true);
   };
 
@@ -118,7 +116,7 @@ const Page: React.FC = () => {
   );
 
   return (
-    <div className='space-y-8 p-6'>
+    <Card className='p-6 space-y-6 min-h-full'>
       <div className='flex justify-between items-center'>
         <div>
           <h1 className='text-2xl font-bold'>Property Management</h1>
@@ -151,18 +149,25 @@ const Page: React.FC = () => {
         <CardContent>
           <div className='overflow-x-auto pb-4'>
             <div className='flex flex-nowrap gap-3' style={{ minWidth: 'max-content' }}>
-              {isLoading
-                ? Array(3)
-                    .fill(0)
-                    .map((_, i) => <PropertySkeleton key={i} />)
-                : myProperties.map((prop) => (
-                    <PropertyCard
-                      key={prop.id}
-                      {...prop}
-                      onDelete={() => handleDeleteProperty(prop.id)}
-                      onEdit={() => handleEditProperty(prop)}
-                    />
-                  ))}
+              {isLoading ? (
+                Array(3)
+                  .fill(0)
+                  .map((_, i) => <PropertySkeleton key={i} />)
+              ) : myProperties.length === 0 ? (
+                <p className='text-muted-foreground text-center w-full py-8'>No properties found</p>
+              ) : (
+                myProperties.map((prop: any) => (
+                  <PropertyCard
+                    key={prop.id}
+                    id={prop.id}
+                    cardDetails={prop.cardDetails}
+                    isVerified={prop.isVerified}
+                    agent={prop.createdBy}
+                    onDelete={() => handleDeleteProperty(prop.id)}
+                    onEdit={() => handleEditProperty(prop)}
+                  />
+                ))
+              )}
             </div>
           </div>
         </CardContent>
@@ -176,18 +181,25 @@ const Page: React.FC = () => {
         <CardContent>
           <div className='overflow-x-auto pb-4'>
             <div className='flex flex-wrap gap-3' style={{ minWidth: 'max-content' }}>
-              {isLoading
-                ? Array(6)
-                    .fill(0)
-                    .map((_, i) => <PropertySkeleton key={i} />)
-                : allProperties.map((prop) => (
-                    <PropertyCard
-                      key={prop.id}
-                      {...prop}
-                      onDelete={() => handleDeleteProperty(prop.id)}
-                      onEdit={() => handleEditProperty(prop)}
-                    />
-                  ))}
+              {isLoading ? (
+                Array(6)
+                  .fill(0)
+                  .map((_, i) => <PropertySkeleton key={i} />)
+              ) : allProperties.length === 0 ? (
+                <p className='text-muted-foreground text-center w-full py-8'>No properties found</p>
+              ) : (
+                allProperties.map((prop: any) => (
+                  <PropertyCard
+                    key={prop.id}
+                    id={prop.id}
+                    cardDetails={prop.cardDetails}
+                    isVerified={prop.isVerified}
+                    agent={prop.createdBy}
+                    onDelete={() => handleDeleteProperty(prop.id)}
+                    onEdit={() => handleEditProperty(prop)}
+                  />
+                ))
+              )}
             </div>
           </div>
         </CardContent>
@@ -201,7 +213,7 @@ const Page: React.FC = () => {
           propertyToEdit={propertyToEdit}
         />
       </PropertyFormProvider>
-    </div>
+    </Card>
   );
 };
 

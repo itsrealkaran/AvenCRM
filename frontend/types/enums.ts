@@ -82,9 +82,11 @@ export enum EmailAccountStatus {
 }
 
 export enum EmailCampaignStatus {
+  ACTIVE = 'ACTIVE',
   DRAFT = 'DRAFT',
   SCHEDULED = 'SCHEDULED',
   SENDING = 'SENDING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
+  CANCELLED = 'CANCELLED',
 }
