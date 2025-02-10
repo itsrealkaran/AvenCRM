@@ -108,16 +108,13 @@ const getUserLocation = async () => {
   try {
     const response = await fetch('https://ipapi.co/json/');
     const data = await response.json();
-    
     const middleEastCountries = ['AE', 'SA', 'BH', 'OM', 'QA', 'KW', 'IN'];
     const northAmericaCountries = ['CA'];
-    
     if (middleEastCountries.includes(data.country_code)) {
       return 'AED';
     } else if (northAmericaCountries.includes(data.country_code)) {
       return 'CAD';
     }
-    
     return 'USD';
   } catch (error) {
     console.error('Error fetching location:', error);
@@ -126,7 +123,7 @@ const getUserLocation = async () => {
 };
 
 const getCurrencySymbol = (currency: string) => {
-  switch(currency) {
+  switch (currency) {
     case 'CAD':
       return 'C$';
     case 'AED':
@@ -137,7 +134,7 @@ const getCurrencySymbol = (currency: string) => {
 };
 
 const getPriceForCurrency = (prices: any, currency: string, isAnnual: boolean) => {
-  switch(currency) {
+  switch (currency) {
     case 'CAD':
       return isAnnual ? prices.cadAnnually : prices.cadMonthly;
     case 'AED':
