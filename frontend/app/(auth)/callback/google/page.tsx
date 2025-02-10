@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import api from '@/lib/axios';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 function GoogleAuthCallbackContent() {
   const router = useRouter();
@@ -15,6 +16,7 @@ function GoogleAuthCallbackContent() {
   const { toast } = useToast();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [errorMessage, setErrorMessage] = useState('');
+  const { user } = useAuth();
 
   useEffect(() => {
     const connectAccount = async () => {
@@ -34,13 +36,14 @@ function GoogleAuthCallbackContent() {
 
         // Redirect after a short delay to show success state
         setTimeout(() => {
-          router.push('/agent/email');
+          router.push(`/${user?.role}/email`);
         }, 1500);
       } catch (error) {
         console.error('Error connecting account:', error);
         setStatus('error');
         setErrorMessage(error instanceof Error ? error.message : 'Failed to connect email account');
         toast({
+
           title: 'Error',
           description: 'Failed to connect email account',
           variant: 'destructive',
@@ -94,11 +97,12 @@ function GoogleAuthCallbackContent() {
                   <h3 className='text-lg font-medium'>Connection Failed</h3>
                   <p className='text-sm text-muted-foreground'>{errorMessage}</p>
                   <Button
-                    onClick={() => router.push('/agent/email')}
+                    onClick={() => router.push(`/${user?.role}/email`)}
                     className='mt-4'
                     variant='default'
                   >
                     <Mail className='mr-2 h-4 w-4' />
+
                     Try Again
                   </Button>
                 </div>
