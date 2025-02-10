@@ -165,7 +165,7 @@ export function DataTable<TData extends BaseData, TValue>({
   };
 
   return (
-    <div className='h-full w-full'>
+    <div className='flex flex-col h-full w-full'>
       <ConfirmDialog />
       <div className='flex items-center justify-between py-4'>
         <Input
@@ -271,81 +271,79 @@ export function DataTable<TData extends BaseData, TValue>({
         </div>
       </div>
 
-      <div className='border rounded-md'>
-        <div className='h-[55vh] overflow-x-auto'>
-            <Table>
-              <TableHeader className='bg-gray-50 sticky top-0'>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead key={header.id} className='whitespace-nowrap'>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [...Array(5)].map((_, index) => (
-                  <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-1/2'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                    </TableCell>
-                    <TableCell>
-                      <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className='whitespace-nowrap'>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className='h-24 text-center'>
-                    No agents found.
+      <div className='rounded-md border flex-1 overflow-x-auto'>
+        <Table>
+            <TableHeader className='bg-gray-50 sticky top-0'>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id} className='whitespace-nowrap'>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {isLoading ? (
+              [...Array(5)].map((_, index) => (
+                <TableRow key={index} className='hover:bg-muted/50 animate-pulse'>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-1/2'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-3/4'></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className='h-4 bg-gray-300 rounded w-3/4'></div>
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-          {fileData && <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />}
-        </div>
+              ))
+            ) : table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className='whitespace-nowrap'>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
+                  No agents found.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        {fileData && <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />}
       </div>
     </div>
   );
