@@ -105,19 +105,10 @@ export default function TaskPage() {
     }
   };
 
-  const handleUpdateTask = async () => {
-    if (!selectedTask) return;
-
+  const handleUpdateTask = async (taskId: string, updateData: Partial<UpdateTaskDTO>) => {
     try {
-      const updateData: UpdateTaskDTO = {
-        id: selectedTask.id,
-        ...formData,
-      };
-
-      const response = await api.put<Task>(`/tasks/${selectedTask.id}`, updateData);
-      setTasks(tasks.map((task) => (task.id === selectedTask.id ? response.data : task)));
-      setIsEditModalOpen(false);
-      resetForm();
+      const response = await api.put<Task>(`/tasks/${taskId}`, updateData);
+      setTasks(tasks.map((task) => (task.id === taskId ? response.data : task)));
       toast.success('Task updated successfully');
     } catch (error) {
       toast.error('Failed to update task');
@@ -207,7 +198,7 @@ export default function TaskPage() {
                 Create Task
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className='max-w-[800px] w-[90vw]'>
               <DialogHeader>
                 <DialogTitle>Create New Task</DialogTitle>
               </DialogHeader>
@@ -286,7 +277,6 @@ export default function TaskPage() {
               <div
                 key={index}
                 className='p-4 rounded-lg shadow-md relative animate-pulse bg-gray-200'
-                style={{ borderLeft: '4px solid #666666' }}
               >
                 <div className='flex justify-between items-start mb-2'>
                   <div className='h-4 bg-gray-300 rounded w-3/4'></div>
@@ -330,18 +320,21 @@ export default function TaskPage() {
                 }}
                 isSelected={selectedTasks.has(task.id)}
                 onSelect={() => toggleTaskSelection(task.id)}
+                onUpdateStatus={(status) => handleUpdateTask(task.id, { status })}
+                onUpdatePriority={(priority) => handleUpdateTask(task.id, { priority })}
               />
             ))}
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent>
+        <DialogContent className='max-w-[800px] w-[90vw]'>
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>
           <TaskForm
             formData={formData}
             setFormData={setFormData}
+            //@ts-ignore
             onSubmit={handleUpdateTask}
             onCancel={() => setIsEditModalOpen(false)}
             isEdit
@@ -401,76 +394,82 @@ function TaskForm({ formData, setFormData, onSubmit, onCancel, isEdit = false }:
   ];
 
   return (
-    <div className='space-y-4'>
-      <Input
-        placeholder='Task Title'
-        value={formData.title}
-        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-      />
-      <Textarea
-        placeholder='Description'
-        value={formData.description}
-        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-      />
-      <Select
-        value={formData.priority}
-        onValueChange={(value) => setFormData({ ...formData, priority: value as TaskPriority })}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder='Select Priority' />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.values(TaskPriority).map((priority) => (
-            <SelectItem key={priority} value={priority}>
-              {priority}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      {isEdit && (
+    <div className='grid grid-cols-2 gap-6'>
+      <div className='space-y-4'>
+        <Input
+          placeholder='Task Title'
+          value={formData.title}
+          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+        />
+        <Textarea
+          placeholder='Description'
+          value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+        />
         <Select
-          value={formData.status}
-          onValueChange={(value) => setFormData({ ...formData, status: value as TaskStatus })}
+          value={formData.priority}
+          onValueChange={(value) => setFormData({ ...formData, priority: value as TaskPriority })}
         >
           <SelectTrigger>
-            <SelectValue placeholder='Select Status' />
+            <SelectValue placeholder='Select Priority' />
           </SelectTrigger>
           <SelectContent>
-            {Object.values(TaskStatus).map((status) => (
-              <SelectItem key={status} value={status}>
-                {status}
+            {Object.values(TaskPriority).map((priority) => (
+              <SelectItem key={priority} value={priority}>
+                {priority}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
-      )}
-      <div>
-        <label className='block text-sm font-medium mb-2'>Due Date</label>
-        <Calendar
-          mode='single'
-          selected={formData.dueDate}
-          onSelect={(date) => setFormData({ ...formData, dueDate: date })}
-        />
-      </div>
-      <div>
-        <label className='block text-sm font-medium mb-2'>Color Tag</label>
-        <div className='flex space-x-2'>
-          {colorOptions.map((color) => (
-            <button
-              key={color}
-              type='button'
-              className={`w-8 h-8 rounded-full border-2 ${
-                formData.colorTag === color
-                  ? 'border-primary ring-2 ring-primary/50'
-                  : 'border-gray-300 hover:border-primary'
-              }`}
-              style={{ backgroundColor: color }}
-              onClick={() => setFormData({ ...formData, colorTag: color })}
-            />
-          ))}
+        {isEdit && (
+          <Select
+            value={formData.status}
+            onValueChange={(value) => setFormData({ ...formData, status: value as TaskStatus })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder='Select Status' />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.values(TaskStatus).map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+        <div>
+          <label className='block text-sm font-medium mb-2'>Color Tag</label>
+          <div className='flex flex-wrap gap-2'>
+            {colorOptions.map((color) => (
+              <button
+                key={color}
+                type='button'
+                className={`w-8 h-8 rounded-full border-2 ${
+                  formData.colorTag === color
+                    ? 'border-primary ring-2 ring-primary/50'
+                    : 'border-gray-300 hover:border-primary'
+                }`}
+                style={{ backgroundColor: color }}
+                onClick={() => setFormData({ ...formData, colorTag: color })}
+              />
+            ))}
+          </div>
         </div>
       </div>
-      <div className='flex justify-end space-x-2'>
+
+      <div className='space-y-6'>
+        <div>
+          <label className='block text-sm font-medium mb-2'>Due Date</label>
+          <Calendar
+            mode='single'
+            selected={formData.dueDate}
+            onSelect={(date) => setFormData({ ...formData, dueDate: date })}
+          />
+        </div>
+      </div>
+
+      <div className='col-span-2 flex justify-end space-x-2 mt-4'>
         <Button variant='outline' onClick={onCancel}>
           Cancel
         </Button>
@@ -486,23 +485,25 @@ interface TaskCardProps {
   onDelete: () => void;
   isSelected: boolean;
   onSelect: () => void;
+  onUpdateStatus: (status: TaskStatus) => void;
+  onUpdatePriority: (priority: TaskPriority) => void;
 }
 
-function TaskCard({ task, onEdit, onDelete, isSelected, onSelect }: TaskCardProps) {
+function TaskCard({ task, onEdit, onDelete, isSelected, onSelect, onUpdateStatus, onUpdatePriority }: TaskCardProps) {
   const getPriorityBadgeStyle = (priority: TaskPriority) => {
     const styles = {
-      [TaskPriority.LOW]: 'bg-green-100 text-green-800 border border-green-200',
-      [TaskPriority.MEDIUM]: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
-      [TaskPriority.HIGH]: 'bg-red-100 text-red-800 border border-red-200',
+      [TaskPriority.LOW]: 'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
+      [TaskPriority.MEDIUM]: 'bg-yellow-100 text-yellow-800 border border-yellow-200 hover:bg-yellow-200',
+      [TaskPriority.HIGH]: 'bg-red-100 text-red-800 border border-red-200 hover:bg-red-200',
     };
     return styles[priority] || 'bg-gray-100 text-gray-800';
   };
 
   const getStatusBadgeStyle = (status: TaskStatus) => {
     const styles = {
-      [TaskStatus.TODO]: 'bg-blue-100 text-blue-800 border border-blue-200',
-      [TaskStatus.IN_PROGRESS]: 'bg-indigo-100 text-indigo-800 border border-indigo-200',
-      [TaskStatus.COMPLETED]: 'bg-green-100 text-green-800 border border-green-200',
+      [TaskStatus.TODO]: 'bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200',
+      [TaskStatus.IN_PROGRESS]: 'bg-indigo-100 text-indigo-800 border border-indigo-200 hover:bg-indigo-200',
+      [TaskStatus.COMPLETED]: 'bg-green-100 text-green-800 border border-green-200 hover:bg-green-200',
     };
     return styles[status] || 'bg-gray-100 text-gray-800';
   };
@@ -510,7 +511,7 @@ function TaskCard({ task, onEdit, onDelete, isSelected, onSelect }: TaskCardProp
   return (
     <div
       className='p-4 rounded-lg shadow-md relative'
-      style={{ borderLeft: `4px solid ${task.colorTag || '#000000'}` }}
+      style={{ backgroundColor: `${task.colorTag || '#000000'}50` }}
     >
       <div className='flex justify-between items-start mb-2'>
         <h3 className='font-semibold flex-grow pr-2'>{task.title}</h3>
@@ -521,22 +522,58 @@ function TaskCard({ task, onEdit, onDelete, isSelected, onSelect }: TaskCardProp
           <Button variant='ghost' size='icon' onClick={onDelete}>
             <Trash className='w-4 h-4' />
           </Button>
-          <Checkbox checked={isSelected} onChange={onSelect} />
         </div>
       </div>
       <p className='text-sm text-gray-600 mb-3'>{task.description}</p>
       <div className='flex justify-between items-center'>
         <div className='flex items-center space-x-2'>
-          <Badge
-            className={`${getPriorityBadgeStyle(task.priority)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider`}
-          >
-            {task.priority}
-          </Badge>
-          <Badge
-            className={`${getStatusBadgeStyle(task.status)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider`}
-          >
-            {task.status}
-          </Badge>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Badge
+                className={`${getPriorityBadgeStyle(task.priority)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}
+              >
+                {task.priority}
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {Object.values(TaskPriority).map((priority) => (
+                <DropdownMenuItem 
+                  key={priority} 
+                  onClick={() => onUpdatePriority(priority)}
+                  className={task.priority === priority ? 'bg-accent' : ''}
+                >
+                <Badge
+                className={`${getPriorityBadgeStyle(task.priority)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}>
+                  {priority}
+                  </Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Badge
+                className={`${getStatusBadgeStyle(task.status)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}
+              >
+                {task.status.replace('_', ' ')}
+              </Badge>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              {Object.values(TaskStatus).map((status) => (
+                <DropdownMenuItem 
+                  key={status} 
+                  onClick={() => onUpdateStatus(status)}
+                  className={task.status === status ? 'bg-accent' : ''}
+                >
+                <Badge
+                className={`${getStatusBadgeStyle(task.status)} px-2 py-1 rounded-full text-xs font-medium uppercase tracking-wider cursor-pointer`}>
+                  {status.replace('_', ' ')}
+                </Badge>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         {task.dueDate && (
           <div className='text-xs text-gray-500 flex items-center'>
