@@ -105,10 +105,6 @@ export function EmailCampaignsList() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : filteredCampaigns.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -121,54 +117,95 @@ export function EmailCampaignsList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredCampaigns.map((campaign) => (
-                <TableRow key={campaign.id}>
-                  <TableCell>{campaign.title}</TableCell>
-                  <TableCell>{campaign.subject}</TableCell>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(campaign.status)}`}>
-                      {campaign.status}
-                    </span>
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
                   </TableCell>
                   <TableCell>
-                    {campaign.scheduledAt ? format(new Date(campaign.scheduledAt), "PPp") : "Not scheduled"}
+                    <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
                   </TableCell>
-                  <TableCell>{campaign.totalRecipients}</TableCell>
+                  <TableCell>
+                    <div className="h-6 w-20 bg-gray-200 rounded-full animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-36 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-16 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleViewStats(campaign.id)}>
-                          <FaChartBar className="mr-2 h-4 w-4" />
-                          View Stats
-                        </DropdownMenuItem>
-                        {campaign.status !== "Sent" && campaign.status !== "Cancelled" && (
-                          <DropdownMenuItem onClick={() => handleCancelCampaign(campaign.id)}>
-                            <FaBan className="mr-2 h-4 w-4" />
-                            Cancel
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem onClick={() => handleDeleteCampaign(campaign.id)}>
-                          <FaTrash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="h-8 w-8 bg-gray-200 rounded float-right animate-pulse"></div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         ) : (
-          <div className="text-center py-10">
-            <h3 className="text-lg font-semibold mb-2">No campaigns found</h3>
-            <p className="text-muted-foreground mb-4">Create your first email campaign to get started</p>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Title</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Scheduled At</TableHead>
+                <TableHead>Recipients</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCampaigns.length > 0 ? (
+                filteredCampaigns.map((campaign) => (
+                  <TableRow key={campaign.id}>
+                    <TableCell>{campaign.title}</TableCell>
+                    <TableCell>{campaign.subject}</TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(campaign.status)}`}>
+                        {campaign.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {campaign.scheduledAt ? format(new Date(campaign.scheduledAt), "PPp") : "Not scheduled"}
+                    </TableCell>
+                    <TableCell>{campaign.totalRecipients}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewStats(campaign.id)}>
+                            <FaChartBar className="mr-2 h-4 w-4" />
+                            View Stats
+                          </DropdownMenuItem>
+                          {campaign.status !== "Sent" && campaign.status !== "Cancelled" && (
+                            <DropdownMenuItem onClick={() => handleCancelCampaign(campaign.id)}>
+                              <FaBan className="mr-2 h-4 w-4" />
+                              Cancel
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuItem onClick={() => handleDeleteCampaign(campaign.id)}>
+                            <FaTrash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10">
+                    <h3 className="text-lg font-semibold mb-2">No campaigns found</h3>
+                    <p className="text-muted-foreground mb-4">Create your first email campaign to get started</p>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
 
@@ -210,15 +247,15 @@ export function EmailCampaignsList() {
 
 function getStatusColor(status: string) {
   switch (status) {
-    case "Draft":
+    case "DRAFT":
       return "bg-yellow-100 text-yellow-800"
-    case "Scheduled":
+    case "SCHEDULED":
       return "bg-blue-100 text-blue-800"
-    case "Active":
+    case "ACTIVE":
       return "bg-green-100 text-green-800"
-    case "Completed":
+    case "COMPLETED":
       return "bg-green-100 text-green-800"
-    case "Cancelled":
+    case "CANCELLED":
       return "bg-red-100 text-red-800"
     default:
       return "bg-gray-100 text-gray-800"
