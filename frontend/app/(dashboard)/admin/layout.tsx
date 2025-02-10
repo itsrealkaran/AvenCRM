@@ -30,7 +30,7 @@ const menuItems = [
     description: 'Overview of your CRM',
   },
   {
-    heading: 'Manage Agents',
+    heading: 'Team Manager',
     icon: Users,
     path: '/admin/manage-agents',
     description: 'User management',

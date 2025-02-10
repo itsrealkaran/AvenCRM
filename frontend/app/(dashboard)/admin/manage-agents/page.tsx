@@ -175,31 +175,24 @@ export default function ManageAgentsPage() {
     }
   };
 
-  const handleRefresh = () => {
-    refetch();
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await refetch();
+    setIsLoading(false);
   };
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
-    // Implement download logic here
     toast.success(`Downloading ${format.toUpperCase()} file...`);
   };
 
   return (
-    <div className='container h-full mx-auto'>
+    <div className='h-full w-full'>
       <Card className='h-full'>
-        <CardHeader className='pb-4'>
-          <CardTitle className='text-2xl font-bold'>Agent Management</CardTitle>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-2xl font-bold'>Team Manager</CardTitle>
           <CardDescription>Manage your team members and their roles</CardDescription>
         </CardHeader>
         <CardContent>
-          {/*<div className="flex justify-between items-center mb-4">
-            <Input
-              placeholder="Search agents..."
-              className="max-w-sm"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>*/}
           <DataTable
             columns={columns}
             data={agents}
@@ -213,7 +206,7 @@ export default function ManageAgentsPage() {
             onAddTeamMember={handleAddTeamMember}
             showTeamActions={currentUser?.role === 'TEAM_LEADER'}
             disabled={isLoading || isAgentsLoading}
-            isLoading={isAgentsLoading}
+            isLoading={isLoading || isAgentsLoading}
             onRefresh={handleRefresh}
             onDownload={handleDownload}
             onCreateAgent={() => setIsCreateDialogOpen(true)}

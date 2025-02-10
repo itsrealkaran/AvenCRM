@@ -165,11 +165,11 @@ export function DataTable<TData extends BaseData, TValue>({
   };
 
   return (
-    <div>
+    <div className='h-full w-full'>
       <ConfirmDialog />
       <div className='flex items-center justify-between py-4'>
         <Input
-          placeholder='Filter agents...'
+          placeholder='Search agents...'
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className='max-w-sm'
@@ -211,9 +211,9 @@ export function DataTable<TData extends BaseData, TValue>({
             </Button>
           )}
           <DropdownMenu>
-            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'>
-              <Upload className='size-4 mr-2' />
-              Upload
+            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-xs'>
+              <Download className='size-4 mr-2' />
+              Import
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
@@ -250,10 +250,11 @@ export function DataTable<TData extends BaseData, TValue>({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='sm'>
-                <Download className='mr-2 h-4 w-4' />
-                Download
+                <Upload className='mr-2 h-4 w-4' />
+                Export
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => onDownload('csv')}>Download as CSV</DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDownload('xlsx')}>
@@ -267,9 +268,9 @@ export function DataTable<TData extends BaseData, TValue>({
         </div>
       </div>
       <div className='border rounded-md'>
-        <div className='overflow-x-auto'>
-          <Table>
-            <TableHeader>
+        <div className='h-[55vh] overflow-x-auto'>
+            <Table>
+              <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {headerGroup.headers.map((header) => {
