@@ -34,11 +34,12 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const statusColorMap: Record<DealStatus, string> = {
-  NEW: 'bg-gray-100 text-gray-800',
-  DISCOVERY: 'bg-blue-100 text-blue-800',
+  NEW: 'bg-blue-100 text-blue-800',
+  DISCOVERY: 'bg-yellow-100 text-yellow-800',
   PROPOSAL: 'bg-purple-100 text-purple-800',
   UNDER_CONTRACT: 'bg-indigo-100 text-indigo-800',
   NEGOTIATION: 'bg-orange-100 text-orange-800',
+
   WON: 'bg-emerald-100 text-emerald-800',
 };
 
@@ -47,32 +48,6 @@ const getStatusColor = (status: DealStatus): string => {
 };
 
 export const adminColumns: ColumnDef<Deal>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -266,46 +241,6 @@ export const adminColumns: ColumnDef<Deal>[] = [
     },
     cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
-    },
-  },
-  {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row, table }) => {
-      const deal = row.original as Deal;
-      const meta = table.options.meta as {
-        onEdit?: (deal: Deal) => void;
-        onDelete?: (dealId: string) => void;
-      };
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[160px]'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(deal)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit deal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(deal.id)} className='text-red-600'>
-              <Trash2 className='mr-2 h-4 w-4' /> Delete deal
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                navigator.clipboard.writeText(deal.id);
-                toast.success('Deal ID copied to clipboard');
-              }}
-            >
-              <CopyIcon className='mr-2 h-4 w-4' /> Copy deal ID
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
     },
   },
 ];

@@ -12,7 +12,7 @@ import {
   SortingState,
   useReactTable,
 } from '@tanstack/react-table';
-import { ChevronLeft, ChevronRight, Trash, Upload, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CirclePlus, Download, RefreshCw, Trash, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { read, utils } from 'xlsx';
 
@@ -47,11 +47,13 @@ export function DataTable<TData extends BaseRecord, TValue>({
   onStatusChange,
   onSelectionChange,
   onConvertToDeal,
-  filterPlaceholder = 'Filter...',
+  onCreateLead,
+  onCreateDeal,
   disabled = false,
   additionalActions,
   buttons,
   refetch,
+  onDownload,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -63,6 +65,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
   const [rowSelection, setRowSelection] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSelectionChange = useCallback(
@@ -165,60 +168,17 @@ export function DataTable<TData extends BaseRecord, TValue>({
   });
 
   return (
-    <div>
+    <div className='flex flex-col h-full w-full'>
       <ConfirmDialog />
       <div className='flex items-center py-4'>
         <div className='flex items-center gap-2'>
           <Input
-            placeholder={filterPlaceholder}
+            placeholder={onCreateLead ? 'Search leads...' : 'Search deals...'}
             value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
             onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
             className='max-w-sm'
           />
-          <Button
-            variant='ghost'
-            className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'
-            onClick={() => {
-              table.reset();
-              refetch?.();
-            }}
-          >
-            <ReloadIcon className='size-4 mr-2' />
-            Reload
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-sm'>
-              <Upload className='size-4 mr-2' />
-              Upload
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <label className='flex w-full cursor-pointer'>
-                  CSV
-                  <input
-                    type='file'
-                    ref={fileInputRef}
-                    accept='.csv'
-                    className='hidden'
-                    onChange={handleFileUpload}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </label>
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                <label className='flex w-full cursor-pointer'>
-                  XLSX
-                  <input
-                    type='file'
-                    accept='.xlsx'
-                    className='hidden'
-                    onChange={handleFileUpload}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                </label>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          
         </div>
         <div className='ml-auto flex gap-2'>
           {buttons}
@@ -241,49 +201,136 @@ export function DataTable<TData extends BaseRecord, TValue>({
               <Trash className='size-4 mr-2' />
               Delete({table.getFilteredSelectedRowModel().rows.length})
             </Button>
+          )}          
+          <DropdownMenu>
+            <DropdownMenuTrigger className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-xs'>
+              <Download className='size-4 mr-2' />
+              Import
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  Import as CSV
+                  <input
+                    type='file'
+                    ref={fileInputRef}
+                    accept='.csv'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  Import as XLSX
+                  <input
+                    type='file'
+                    accept='.xlsx'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant='ghost'
+            className='p-1 border-[1px] hover:bg-muted/50 px-2 rounded-md flex items-center text-xs'
+            onClick={async () => {
+              setIsLoading(true);
+              await refetch?.();
+              setIsLoading(false);
+            }}
+          >
+            <RefreshCw className='size-4 mr-2' />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='default' className='text-xs'>
+                <Upload className='h-4 w-4' />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => onDownload?.('csv')}>Export as CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onDownload?.('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
+
+            </DropdownMenuContent>
+          </DropdownMenu>
+          {onCreateLead && (
+          <Button onClick={onCreateLead} className='text-xs'>
+            <CirclePlus className='mr-2 h-4 w-4' /> Add New Lead
+          </Button>
+          )}
+
+          {onCreateDeal && (
+            <Button onClick={onCreateDeal}>
+              <CirclePlus className='mr-2 h-4 w-4' /> Add New Deal
+            </Button>
           )}
         </div>
       </div>
       {fileData && fileData.length > 0 && (
         <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
       )}
-      <div className='rounded-md border overflow-hidden'>
-        <div className='overflow-x-auto h-[500px]'>
-          <Table>
-            <TableHeader className='bg-white sticky top-0'>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id} className='whitespace-nowrap'>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
+      <div className='rounded-md border flex-1 overflow-x-auto'>
+        <Table>
+          <TableHeader className='bg-gray-50 sticky top-0'>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className='whitespace-nowrap'>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(header.column.columnDef.header, header.getContext())}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          {isLoading ? (
+            <TableBody className='overflow-y-auto'>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell className='h-4 text-center'>
+                    <div className='h-4 py-2 w-4 animate-pulse rounded bg-gray-200'></div>
+                  </TableCell>
+                  {[...Array(columns.length - 1)].map((_, j) => (
+                    <TableCell key={j} className='whitespace-nowrap'>
+                      <div className='h-6 w-24 animate-pulse rounded bg-gray-200'></div>
+                    </TableCell>
                   ))}
                 </TableRow>
               ))}
-            </TableHeader>
-            <TableBody className='max-h-[500px] overflow-y-auto'>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className='whitespace-nowrap'>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className='h-24 text-center'>
-                    No results.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
-          </Table>
-        </div>
+          ) : (
+            <TableBody className='overflow-y-auto'>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id} className='whitespace-nowrap'>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className='h-24 text-center'>
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        )}
+        </Table>
       </div>
     </div>
   );

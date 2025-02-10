@@ -2,9 +2,8 @@
 
 import { SetStateAction, useCallback, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
-import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types';
+import { DealStatus, LeadResponse as Lead, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { DataTable } from '@/components/data-table';
@@ -12,7 +11,7 @@ import { adminColumns } from '@/components/leads/admin-columns';
 import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
-import { Button } from '@/components/ui/button';
+
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -113,6 +112,10 @@ export default function LeadsPage() {
     }
   };
 
+  const handleDownload = (format: 'csv' | 'xlsx') => {
+    toast.success(`Downloading ${format.toUpperCase()} file...`);
+  };
+
   const handleBulkDelete = async (leadIds: string[]) => {
     try {
       await bulkDeleteLeads.mutateAsync(leadIds);
@@ -126,29 +129,6 @@ export default function LeadsPage() {
     setSelectedRows(leads);
   }, []);
 
-  if (isLoading) {
-    return (
-      <section className='p-4'>
-        <Card className='h-full w-full p-4'>
-          <div className='flex justify-between items-center '>
-            <div>
-              <Skeleton className='h-10 w-60 mb-2' />
-              <Skeleton className='h-6 w-96 bg-black/20' />
-            </div>
-            <div className='flex gap-2'>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className='mr-2 h-4 w-4' /> Add New Lead
-              </Button>
-            </div>
-          </div>
-          <div className='w-full items-center justify-center p-3'>
-            <Skeleton className='w-[95%] h-[400px]' />
-          </div>
-        </Card>
-      </section>
-    );
-  }
-
   return (
     <section className='h-full'>
       <Card className='h-full w-full p-6'>
@@ -159,18 +139,14 @@ export default function LeadsPage() {
               Manage and track your leads in one place
             </p>
           </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Lead
-            </Button>
-          </div>
         </div>
 
-        <div className='space-4'>
+        <div className='space-4 h-[calc(100%-50px)] flex-1'>
           <DataTable
             columns={adminColumns}
             data={leads}
             onEdit={handleEdit}
+
             onBulkDelete={async (row: any[]) => {
               const leadIds = row.map((row: { original: { id: any } }) => row.original.id);
               await handleBulkDelete(leadIds);
@@ -178,11 +154,13 @@ export default function LeadsPage() {
             onDelete={handleDelete}
             onSelectionChange={handleSelectionChange}
             onStatusChange={handleStatusChange}
+            onDownload={handleDownload}
             onConvertToDeal={(lead: SetStateAction<Lead | null>) => {
               setSelectedLead(lead);
               setIsConvertDialogOpen(true);
             }}
             refetch={refetch}
+            onCreateLead={() => setIsCreateDialogOpen(true)}
           />
         </div>
 

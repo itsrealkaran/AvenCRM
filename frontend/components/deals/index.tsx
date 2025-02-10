@@ -115,8 +115,13 @@ export default function DealsPage() {
     }
   };
 
+  const handleDownload = (format: 'csv' | 'xlsx') => {
+    toast.success(`Downloading ${format.toUpperCase()} file...`);
+  };
+
   const handleBulkDelete = async (dealIds: string[]) => {
     try {
+
       await bulkDeleteDeals.mutateAsync(dealIds);
       toast.success('Deals deleted successfully');
     } catch (error) {
@@ -128,29 +133,6 @@ export default function DealsPage() {
     setSelectedRows(deals);
   }, []);
 
-  if (isLoading) {
-    return (
-      <section className='flex-1 h-full'>
-        <Card className='h-full w-full p-6'>
-          <div className='flex justify-between items-center '>
-            <div>
-              <Skeleton className='h-10 w-60 mb-2' />
-              <Skeleton className='h-6 w-96 bg-black/20' />
-            </div>
-            <div className='flex gap-2'>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className='mr-2 h-4 w-4' /> Add New Deal
-              </Button>
-            </div>
-          </div>
-          <div className='w-full items-center justify-center p-3'>
-            <Skeleton className='w-[95%] h-[400px]' />
-          </div>
-        </Card>
-      </section>
-    );
-  }
-
   return (
     <section className='flex-1 h-full'>
       <Card className='h-full w-full p-6'>
@@ -161,14 +143,9 @@ export default function DealsPage() {
               Manage and track your deals in one place
             </p>
           </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Deal
-            </Button>
-          </div>
         </div>
 
-        <div className='space-4'>
+        <div className='space-4 h-[calc(100%-50px)] flex-1'>
           <DataTable
             columns={user?.role === UserRole.ADMIN ? adminColumns : columns}
             data={deals}
@@ -181,8 +158,11 @@ export default function DealsPage() {
             onSelectionChange={handleSelectionChange}
             onStatusChange={handleStatusChange}
             refetch={refetch}
+            onDownload={handleDownload}
+            onCreateDeal={() => setIsCreateDialogOpen(true)}
           />
         </div>
+
 
         <CreateDealDialog
           open={isCreateDialogOpen}

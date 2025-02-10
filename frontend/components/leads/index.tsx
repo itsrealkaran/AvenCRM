@@ -13,7 +13,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 
 import { DataTable } from '../data-table';
-import { adminColumns } from './admin-columns';
 import { columns } from './columns';
 import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -117,6 +116,10 @@ export default function LeadsPage() {
     }
   };
 
+  const handleDownload = (format: 'csv' | 'xlsx') => {
+    toast.success(`Downloading ${format.toUpperCase()} file...`);
+  };
+
   const handleBulkDelete = async (leadIds: string[]) => {
     try {
       await bulkDeleteLeads.mutateAsync(leadIds);
@@ -130,29 +133,6 @@ export default function LeadsPage() {
     setSelectedRows(leads);
   }, []);
 
-  if (isLoading) {
-    return (
-      <section className='p-4'>
-        <Card className='h-full w-full p-4'>
-          <div className='flex justify-between items-center '>
-            <div>
-              <Skeleton className='h-10 w-60 mb-2' />
-              <Skeleton className='h-6 w-96 bg-black/20' />
-            </div>
-            <div className='flex gap-2'>
-              <Button onClick={() => setIsCreateDialogOpen(true)}>
-                <Plus className='mr-2 h-4 w-4' /> Add New Lead
-              </Button>
-            </div>
-          </div>
-          <div className='w-full items-center justify-center p-3'>
-            <Skeleton className='w-[95%] h-[400px]' />
-          </div>
-        </Card>
-      </section>
-    );
-  }
-
   return (
     <section className='h-full'>
       <Card className='h-full w-full p-6'>
@@ -163,14 +143,9 @@ export default function LeadsPage() {
               Manage and track your leads in one place
             </p>
           </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Lead
-            </Button>
-          </div>
         </div>
 
-        <div className='space-4'>
+        <div className='space-4 h-[calc(100%-50px)] flex-1'>
           <DataTable
             columns={columns}
             data={leads}
@@ -187,8 +162,11 @@ export default function LeadsPage() {
               setIsConvertDialogOpen(true);
             }}
             refetch={refetch}
+            onCreateLead={() => setIsCreateDialogOpen(true)}
+            onDownload={handleDownload}
           />
         </div>
+
 
         <CreateLeadDialog
           open={isCreateDialogOpen}

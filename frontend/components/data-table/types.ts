@@ -21,4 +21,7 @@ export interface DataTableProps<TData extends BaseRecord, TValue> {
   additionalActions?: React.ReactNode;
   buttons?: React.ReactNode;
   refetch?: () => void;
+  onCreateLead?: () => void;
+  onCreateDeal?: () => void;
+  onDownload?: (format: 'csv' | 'xlsx') => void;
 }
