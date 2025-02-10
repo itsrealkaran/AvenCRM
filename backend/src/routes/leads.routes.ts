@@ -19,6 +19,9 @@ router.post('/', leadsController.createLead);
 // Create multiple leads
 router.post('/bulk', leadsController.createManyLeads);
 
+// Update notes
+router.post('/:id/notes', leadsController.updateNotes);
+
 // Update lead
 router.put('/:id', leadsController.updateLead);
 

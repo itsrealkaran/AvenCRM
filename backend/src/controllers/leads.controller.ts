@@ -351,6 +351,23 @@ export const leadsController: Controller  = {
     }
   },
 
+  updateNotes: async (req: Request, res: Response) => {
+    try {
+      const { note } = req.body;
+      const { id } = req.params;
+  
+      const lead = await prisma.lead.update({
+        where: { id },
+        data: { notes: note },
+      });
+
+      return res.json(lead);
+    } catch (error) {
+      console.error('Error in updateNotes:', error);
+      return res.status(500).json({ message: 'Failed to update notes' });
+    }
+  },
+
   deleteLead: async (req: Request, res: Response) => {
     try {
       const lead = await prisma.lead.delete({

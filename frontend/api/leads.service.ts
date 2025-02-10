@@ -112,4 +112,10 @@ export const leadsApi = {
     });
     return response.data;
   },
+
+  // Add a note to a lead
+  addNote: async (id: string, note: string): Promise<LeadResponse> => {
+    const response = await api.post<LeadResponse>(`/leads/${id}/notes`, {note});
+    return response.data;
+  },
 };
