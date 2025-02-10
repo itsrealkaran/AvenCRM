@@ -122,10 +122,6 @@ export function EmailTemplatesList() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          </div>
-        ) : filteredTemplates.length > 0 ? (
           <Table>
             <TableHeader>
               <TableRow>
@@ -136,43 +132,76 @@ export function EmailTemplatesList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTemplates.map((template) => (
-                <TableRow key={template.id}>
-                  <TableCell>{template.name}</TableCell>
-                  <TableCell>{template.subject}</TableCell>
-                  <TableCell>{template.variables?.join(", ")}</TableCell>
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="h-4 w-32 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="h-4 w-36 bg-gray-200 rounded animate-pulse"></div>
+                  </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditTemplate(template)}>
-                          <FaEdit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDeleteTemplate(template.id)}>
-                          <FaTrash className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="h-8 w-8 bg-gray-200 rounded float-right animate-pulse"></div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         ) : (
-          <div className="text-center py-10">
-            <h3 className="text-lg font-semibold mb-2">No templates found</h3>
-            <p className="text-muted-foreground mb-4">Create your first email template to get started</p>
-            <Button onClick={() => setIsDialogOpen(true)} className="bg-[#5932EA] hover:bg-[#5932EA]/90">
-              <FaPlus className="mr-2 h-4 w-4" /> Create Template
-            </Button>
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Variables</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTemplates.length > 0 ? (
+                filteredTemplates.map((template) => (
+                  <TableRow key={template.id}>
+                    <TableCell>{template.name}</TableCell>
+                    <TableCell>{template.subject}</TableCell>
+                    <TableCell>{template.variables?.join(", ")}</TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditTemplate(template)}>
+                            <FaEdit className="mr-2 h-4 w-4" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteTemplate(template.id)}>
+                            <FaTrash className="mr-2 h-4 w-4" />
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-10">
+                    <h3 className="text-lg font-semibold mb-2">No templates found</h3>
+                    <p className="text-muted-foreground mb-4">Create your first email template to get started</p>
+                    <Button onClick={() => setIsDialogOpen(true)} className="bg-[#5932EA] hover:bg-[#5932EA]/90">
+                      <FaPlus className="mr-2 h-4 w-4" /> Create Template
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         )}
       </CardContent>
 
