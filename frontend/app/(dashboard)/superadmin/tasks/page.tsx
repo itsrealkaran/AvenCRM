@@ -511,7 +511,7 @@ function TaskCard({ task, onEdit, onDelete, isSelected, onSelect, onUpdateStatus
   return (
     <div
       className='p-4 rounded-lg shadow-md relative'
-      style={{ backgroundColor: `${task.colorTag || '#000000'}50` }}
+      style={{ backgroundColor: `${task.colorTag || '#000000'}20` }}
     >
       <div className='flex justify-between items-start mb-2'>
         <h3 className='font-semibold flex-grow pr-2'>{task.title}</h3>
