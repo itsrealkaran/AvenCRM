@@ -20,7 +20,8 @@ export function ConnectEmailAccounts({ onConnect }: ConnectEmailAccountsProps) {
     setSelectedProvider(provider)
     try {
       const redirectUrl = await connectEmailAccount(provider)
-      window.open(redirectUrl, '_blank')
+      // Open in same window to properly handle the OAuth callback
+      window.location.href = redirectUrl
     } catch (error) {
       console.error(`Failed to connect ${provider} account:`, error)
     } finally {

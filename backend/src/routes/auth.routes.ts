@@ -43,7 +43,7 @@ const setTokenCookies = (
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    maxAge: 30 * 60 * 1000, // 30 minutes
+    maxAge: 300 * 60 * 1000, // 5 hours
   });
 
   res.cookie("RefreshToken", refreshToken, {

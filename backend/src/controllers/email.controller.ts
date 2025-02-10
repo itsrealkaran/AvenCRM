@@ -50,13 +50,26 @@ export class EmailController {
               return res.json({ url: redirectUrl });
           }
           if (provider === EmailProvider.OUTLOOK) {
-              let redirectUrl = 'https://login.microsoft.com/oauth2/v2.0/authorize?';
+              const { code_challenge } = req.query;
+              if (!code_challenge) {
+                  return res.status(400).json({ error: 'Missing code_challenge parameter for PKCE' });
+              }
+
+              let redirectUrl = 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize?';
               redirectUrl += `response_type=code`;
               redirectUrl += `&client_id=${process.env.OUTLOOK_CLIENT_ID}`;
-              redirectUrl += `&redirect_uri=${process.env.OUTLOOK_REDIRECT_URI}`;
-              redirectUrl += `&scope=openid`;
-              redirectUrl += `&response_mode=query`;
-              redirectUrl += `&state=12345`;
+              redirectUrl += `&redirect_uri=${encodeURIComponent(process.env.OUTLOOK_REDIRECT_URI!)}`;
+              redirectUrl += `&scope=${encodeURIComponent(
+                'offline_access ' +
+                'https://graph.microsoft.com/mail.read ' +
+                'https://graph.microsoft.com/mail.send ' +
+                'https://graph.microsoft.com/user.read'
+              )}`;
+              // Add PKCE parameters
+              redirectUrl += `&code_challenge_method=S256`;
+              redirectUrl += `&code_challenge=${code_challenge}`;
+              
+              logger.info('Generated Outlook OAuth URL:', { redirectUrl });
               return res.json({ url: redirectUrl });
           }
   
@@ -72,28 +85,27 @@ export class EmailController {
 
   async connectEmailAccount(req: Request, res: Response) {
     try {
-      const { provider, code } = req.body;
+      const { code, provider, code_verifier } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      if (!provider || !code) {
+      if (!code || !provider) {
         return res.status(400).json({ error: 'Missing required parameters' });
       }
 
-      if (!Object.values(EmailProvider).includes(provider)) {
-        return res.status(400).json({ error: 'Invalid email provider' });
+      // For Outlook, require code_verifier
+      if (provider === EmailProvider.OUTLOOK && !code_verifier) {
+        return res.status(400).json({ error: 'Missing code_verifier for Outlook OAuth' });
       }
 
-      await emailService.connectEmailAccount(userId, provider, code);
-      res.json({ message: 'Email account connected successfully' });
+      await emailService.connectEmailAccount(userId, provider, code, code_verifier);
+      res.json({ success: true });
     } catch (error) {
       logger.error('Connect email account error:', error);
-      res.status(500).json({ 
-        error: error instanceof Error ? error.message : 'Failed to connect email account' 
-      });
+      res.status(500).json({ error: error instanceof Error ? error.message : 'Failed to connect email account' });
     }
   }
 
