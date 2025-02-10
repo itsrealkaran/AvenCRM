@@ -267,6 +267,7 @@ export default function PlanSelection({ onNext }: StepProps) {
                       <div>
                         <div className='flex items-baseline'>
                           <span className='text-2xl font-bold'>
+                          
                             {currencySymbol}{getPriceForCurrency(option.price, currency, isYearly) * userCount}
                           </span>
                           <span className='text-sm font-normal text-gray-500 ml-1'>/month</span>
