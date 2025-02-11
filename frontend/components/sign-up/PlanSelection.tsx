@@ -28,15 +28,120 @@ const FreeTrial = () => (
 
 const planOptions = {
   individual: [
-    { name: 'Basic', price: { monthly: 19, yearly: 190 } },
-    { name: 'Premium', price: { monthly: 39, yearly: 390 } },
-    { name: 'Enterprise', price: { monthly: 79, yearly: 790 } },
+    {
+      name: 'Basic',
+      price: {
+        monthly: 14,
+        annually: 9,
+        cadMonthly: 20,
+        cadAnnually: 13,
+        aedMonthly: 51,
+        aedAnnually: 33,
+      },
+    },
+    {
+      name: 'Premium',
+      price: {
+        monthly: 26,
+        annually: 19,
+        cadMonthly: 37,
+        cadAnnually: 27,
+        aedMonthly: 95,
+
+        aedAnnually: 70,
+      },
+    },
+    {
+      name: 'Enterprise',
+      price: {
+        monthly: 41,
+        annually: 29,
+        cadMonthly: 59,
+        cadAnnually: 42,
+
+        aedMonthly: 150,
+        aedAnnually: 105,
+      },
+    },
   ],
   company: [
-    { name: 'Basic', price: { monthly: 29, yearly: 290 } },
-    { name: 'Premium', price: { monthly: 59, yearly: 590 } },
-    { name: 'Enterprise', price: { monthly: 99, yearly: 990 } },
+    {
+      name: 'Basic',
+      price: {
+        monthly: 14,
+        annually: 9,
+        cadMonthly: 20,
+        cadAnnually: 13,
+
+        aedMonthly: 51,
+        aedAnnually: 33,
+      },
+    },
+    {
+      name: 'Premium',
+      price: {
+        monthly: 26,
+        annually: 19,
+        cadMonthly: 37,
+        cadAnnually: 27,
+
+        aedMonthly: 95,
+        aedAnnually: 70,
+      },
+    },
+    {
+      name: 'Enterprise',
+      price: {
+        monthly: 41,
+        annually: 29,
+        cadMonthly: 59,
+        cadAnnually: 42,
+
+        aedMonthly: 150,
+        aedAnnually: 105,
+      },
+    },
   ],
+};
+
+const getUserLocation = async () => {
+  try {
+    const response = await fetch('https://ipapi.co/json/');
+    const data = await response.json();
+    const middleEastCountries = ['AE', 'SA', 'BH', 'OM', 'QA', 'KW', 'IN'];
+    const northAmericaCountries = ['CA'];
+    if (middleEastCountries.includes(data.country_code)) {
+      return 'AED';
+    } else if (northAmericaCountries.includes(data.country_code)) {
+      return 'CAD';
+    }
+    return 'USD';
+  } catch (error) {
+    console.error('Error fetching location:', error);
+    return 'USD';
+  }
+};
+
+const getCurrencySymbol = (currency: string) => {
+  switch (currency) {
+    case 'CAD':
+      return 'C$';
+    case 'AED':
+      return 'AED';
+    default:
+      return '$';
+  }
+};
+
+const getPriceForCurrency = (prices: any, currency: string, isAnnual: boolean) => {
+  switch (currency) {
+    case 'CAD':
+      return isAnnual ? prices.cadAnnually : prices.cadMonthly;
+    case 'AED':
+      return isAnnual ? prices.aedAnnually : prices.aedMonthly;
+    default:
+      return isAnnual ? prices.annually : prices.monthly;
+  }
 };
 
 export default function PlanSelection({ onNext }: StepProps) {
@@ -45,8 +150,34 @@ export default function PlanSelection({ onNext }: StepProps) {
   const [userCount, setUserCount] = useState(1);
   const [showFreeTrial, setShowFreeTrial] = useState(false);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [currency, setCurrency] = useState('USD');
+  const [currencySymbol, setCurrencySymbol] = useState('$');
 
   const isYearly = billingFrequency === 'yearly';
+
+  useEffect(() => {
+    const detectLocation = async () => {
+      const detectedCurrency = await getUserLocation();
+      setCurrency(detectedCurrency);
+      setCurrencySymbol(getCurrencySymbol(detectedCurrency));
+      updateField('currency', detectedCurrency);
+    };
+
+    detectLocation();
+  }, []);
+
+  useEffect(() => {
+    if (!showFreeTrial) {
+      const accountType = 'company';
+      const selectedPlan = planOptions[accountType].find((p) => p.name.toLowerCase() === plan);
+      if (selectedPlan) {
+        const price = getPriceForCurrency(selectedPlan.price, currency, isYearly);
+        setTotalPrice(price * userCount);
+      }
+    } else {
+      setTotalPrice(0);
+    }
+  }, [plan, billingFrequency, userCount, showFreeTrial, isYearly, currency]);
 
   const handlePlanChange = (value: string) => {
     if (value === plan) {
@@ -69,19 +200,6 @@ export default function PlanSelection({ onNext }: StepProps) {
       updateField('plan', '');
     }
   };
-
-  useEffect(() => {
-    if (!showFreeTrial) {
-      const accountType = 'company';
-      const selectedPlan = planOptions[accountType].find((p) => p.name.toLowerCase() === plan);
-      if (selectedPlan) {
-        const price = isYearly ? selectedPlan.price.yearly : selectedPlan.price.monthly;
-        setTotalPrice(price * userCount);
-      }
-    } else {
-      setTotalPrice(0);
-    }
-  }, [plan, billingFrequency, userCount, showFreeTrial, isYearly]);
 
   return (
     <motion.div
@@ -149,14 +267,14 @@ export default function PlanSelection({ onNext }: StepProps) {
                       <div>
                         <div className='flex items-baseline'>
                           <span className='text-2xl font-bold'>
-                            ${(isYearly ? option.price.yearly : option.price.monthly) * userCount}
+                            {currencySymbol}{' '}
+                            {getPriceForCurrency(option.price, currency, isYearly) * userCount}
                           </span>
-                          <span className='text-sm font-normal text-gray-500 ml-1'>
-                            /{isYearly ? 'year' : 'month'}
-                          </span>
+                          <span className='text-sm font-normal text-gray-500 ml-1'>/month</span>
                         </div>
                         <div className='text-sm text-gray-500 flex items-center mt-2'>
                           <Users className='inline-block mr-1 h-4 w-4' />
+
                           <span>
                             {userCount} user{userCount > 1 ? 's' : ''}
                           </span>
