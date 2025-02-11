@@ -11,8 +11,8 @@ import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 import DeleteConfirmationModal from './DeleteConfirmationModal';
-import ShareModal from './ShareModal';
 import PropertyDetailsModal from './PropertyDetailsModal';
+import ShareModal from './ShareModal';
 
 interface PropertyCardProps {
   id: string;

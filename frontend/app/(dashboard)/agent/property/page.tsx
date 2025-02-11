@@ -86,7 +86,7 @@ const Page: React.FC = () => {
     setIsPropertyFormModalOpen(false);
   };
 
-  const handleDeleteProperty = async(propertyId: string) => {
+  const handleDeleteProperty = async (propertyId: string) => {
     try {
       await api.delete(`/property/${propertyId}`);
       toast({
@@ -98,8 +98,8 @@ const Page: React.FC = () => {
       toast({
         title: 'Error',
         description: 'Failed to delete the property.',
-        variant: 'destructive'
-      })
+        variant: 'destructive',
+      });
     }
   };
 

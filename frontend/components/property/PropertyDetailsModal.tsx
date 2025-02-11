@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Bath, Bed, Car, Maximize2, MapPin, Loader2, Building2, Globe, Home } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import { useCurrency } from '@/contexts/CurrencyContext';
+import { Bath, Bed, Building2, Car, Globe, Home, Loader2, MapPin, Maximize2 } from 'lucide-react';
+
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Room {
   id: string;
@@ -126,7 +122,7 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
   useEffect(() => {
     const fetchPropertyDetails = async () => {
       if (!isOpen) return;
-      
+
       try {
         setLoading(true);
         const response = await api.get(`/property/${id}`);
@@ -148,9 +144,9 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
   const renderFeatureList = (features: string[]) => {
     if (!features || features.length === 0) return null;
     return (
-      <div className="flex flex-wrap gap-2">
+      <div className='flex flex-wrap gap-2'>
         {features.map((feature, index) => (
-          <Badge key={index} variant="secondary" className="text-xs">
+          <Badge key={index} variant='secondary' className='text-xs'>
             {feature}
           </Badge>
         ))}
@@ -160,99 +156,111 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
         {loading ? (
-          <div className="flex items-center justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin text-[#4F46E5]" />
+          <div className='flex items-center justify-center p-8'>
+            <Loader2 className='w-8 h-8 animate-spin text-[#4F46E5]' />
           </div>
         ) : propertyDetails ? (
           <>
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold">{propertyDetails.features.propertyName}</DialogTitle>
-              <div className="flex items-center gap-2 mt-2">
-                <MapPin className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-700">
-                  {propertyDetails.features.addressLine}, {propertyDetails.features.city}, {propertyDetails.features.country} {propertyDetails.features.zipCode}
+              <DialogTitle className='text-2xl font-bold'>
+                {propertyDetails.features.propertyName}
+              </DialogTitle>
+              <div className='flex items-center gap-2 mt-2'>
+                <MapPin className='w-4 h-4 text-gray-500' />
+                <span className='text-gray-700'>
+                  {propertyDetails.features.addressLine}, {propertyDetails.features.city},{' '}
+                  {propertyDetails.features.country} {propertyDetails.features.zipCode}
                 </span>
               </div>
             </DialogHeader>
-            
-            <Tabs defaultValue="details" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="features">Features</TabsTrigger>
-                <TabsTrigger value="utilities">Utilities</TabsTrigger>
-                <TabsTrigger value="floors">Floors & Rooms</TabsTrigger>
+
+            <Tabs defaultValue='details' className='w-full'>
+              <TabsList className='grid w-full grid-cols-4'>
+                <TabsTrigger value='details'>Details</TabsTrigger>
+                <TabsTrigger value='features'>Features</TabsTrigger>
+                <TabsTrigger value='utilities'>Utilities</TabsTrigger>
+                <TabsTrigger value='floors'>Floors & Rooms</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="details" className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div className="aspect-[4/3] overflow-hidden rounded-lg">
+              <TabsContent value='details' className='space-y-6'>
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                  <div className='space-y-4'>
+                    <div className='aspect-[4/3] overflow-hidden rounded-lg'>
                       <img
                         src={propertyDetails.cardDetails.image || '/placeholder.svg'}
                         alt={propertyDetails.features.propertyName}
-                        className="w-full h-full object-cover"
+                        className='w-full h-full object-cover'
                       />
                     </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Description</h4>
-                      <p className="text-sm text-gray-600">{propertyDetails.features.description}</p>
+                    <div className='bg-gray-50 p-4 rounded-lg'>
+                      <h4 className='font-medium mb-2'>Description</h4>
+                      <p className='text-sm text-gray-600'>
+                        {propertyDetails.features.description}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="space-y-6">
+                  <div className='space-y-6'>
                     <div>
-                      <h3 className="text-3xl font-bold text-[#4F46E5]">
+                      <h3 className='text-3xl font-bold text-[#4F46E5]'>
                         {formatPrice(propertyDetails.cardDetails.price)}
                       </h3>
-                      <div className="flex gap-2 mt-2">
-                        <Badge variant="outline">{propertyDetails.features.propertyType}</Badge>
-                        <Badge variant="outline">{propertyDetails.features.listingType}</Badge>
-                        <Badge variant="outline">{propertyDetails.features.zoningType}</Badge>
+                      <div className='flex gap-2 mt-2'>
+                        <Badge variant='outline'>{propertyDetails.features.propertyType}</Badge>
+                        <Badge variant='outline'>{propertyDetails.features.listingType}</Badge>
+                        <Badge variant='outline'>{propertyDetails.features.zoningType}</Badge>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Bed className="w-5 h-5 text-gray-500" />
+                    <div className='grid grid-cols-2 gap-4'>
+                      <div className='p-4 bg-gray-50 rounded-lg'>
+                        <div className='flex items-center gap-2'>
+                          <Bed className='w-5 h-5 text-gray-500' />
                           <div>
-                            <p className="text-sm font-medium">{propertyDetails.cardDetails.beds}</p>
-                            <p className="text-xs text-gray-500">Bedrooms</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Bath className="w-5 h-5 text-gray-500" />
-                          <div>
-                            <p className="text-sm font-medium">{propertyDetails.cardDetails.baths}</p>
-                            <p className="text-xs text-gray-500">Bathrooms</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Car className="w-5 h-5 text-gray-500" />
-                          <div>
-                            <p className="text-sm font-medium">{propertyDetails.cardDetails.parking}</p>
-                            <p className="text-xs text-gray-500">Parking</p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="p-4 bg-gray-50 rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Maximize2 className="w-5 h-5 text-gray-500" />
-                          <div>
-                            <p className="text-sm font-medium">
-                              {propertyDetails.cardDetails.sqft} {propertyDetails.features.isMetric ? 'm²' : 'ft²'}
+                            <p className='text-sm font-medium'>
+                              {propertyDetails.cardDetails.beds}
                             </p>
-                            <p className="text-xs text-gray-500">Area</p>
+                            <p className='text-xs text-gray-500'>Bedrooms</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='p-4 bg-gray-50 rounded-lg'>
+                        <div className='flex items-center gap-2'>
+                          <Bath className='w-5 h-5 text-gray-500' />
+                          <div>
+                            <p className='text-sm font-medium'>
+                              {propertyDetails.cardDetails.baths}
+                            </p>
+                            <p className='text-xs text-gray-500'>Bathrooms</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='p-4 bg-gray-50 rounded-lg'>
+                        <div className='flex items-center gap-2'>
+                          <Car className='w-5 h-5 text-gray-500' />
+                          <div>
+                            <p className='text-sm font-medium'>
+                              {propertyDetails.cardDetails.parking}
+                            </p>
+                            <p className='text-xs text-gray-500'>Parking</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className='p-4 bg-gray-50 rounded-lg'>
+                        <div className='flex items-center gap-2'>
+                          <Maximize2 className='w-5 h-5 text-gray-500' />
+                          <div>
+                            <p className='text-sm font-medium'>
+                              {propertyDetails.cardDetails.sqft}{' '}
+                              {propertyDetails.features.isMetric ? 'm²' : 'ft²'}
+                            </p>
+                            <p className='text-xs text-gray-500'>Area</p>
                           </div>
                         </div>
                       </div>
@@ -261,24 +269,24 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                     {propertyDetails.features.googleMapsLink && (
                       <a
                         href={propertyDetails.features.googleMapsLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-[#4F46E5] hover:underline"
+                        target='_blank'
+                        rel='noopener noreferrer'
+                        className='inline-flex items-center gap-2 text-[#4F46E5] hover:underline'
                       >
-                        <Globe className="w-4 h-4" />
+                        <Globe className='w-4 h-4' />
                         View on Google Maps
                       </a>
                     )}
 
-                    <div className="border-t pt-4">
-                      <h4 className="font-medium mb-3">Listed By</h4>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-10 h-10">
+                    <div className='border-t pt-4'>
+                      <h4 className='font-medium mb-3'>Listed By</h4>
+                      <div className='flex items-center gap-3'>
+                        <Avatar className='w-10 h-10'>
                           <AvatarFallback>{propertyDetails.createdBy.name[0]}</AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{propertyDetails.createdBy.name}</p>
-                          <p className="text-sm text-gray-500">{propertyDetails.createdBy.email}</p>
+                          <p className='font-medium'>{propertyDetails.createdBy.name}</p>
+                          <p className='text-sm text-gray-500'>{propertyDetails.createdBy.email}</p>
                         </div>
                       </div>
                     </div>
@@ -286,66 +294,66 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                 </div>
               </TabsContent>
 
-              <TabsContent value="features" className="space-y-6">
+              <TabsContent value='features' className='space-y-6'>
                 {propertyDetails.features.generalFeatures?.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">General Features</h4>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>General Features</h4>
                     {renderFeatureList(propertyDetails.features.generalFeatures)}
                   </div>
                 )}
-                
+
                 {propertyDetails.features.exteriorFeatures?.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Exterior Features</h4>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>Exterior Features</h4>
                     {renderFeatureList(propertyDetails.features.exteriorFeatures)}
                   </div>
                 )}
-                
+
                 {propertyDetails.features.interiorFeatures?.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Interior Features</h4>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>Interior Features</h4>
                     {renderFeatureList(propertyDetails.features.interiorFeatures)}
                   </div>
                 )}
-                
+
                 {propertyDetails.features.locationFeatures?.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Location Features</h4>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>Location Features</h4>
                     {renderFeatureList(propertyDetails.features.locationFeatures)}
                   </div>
                 )}
-                
+
                 {propertyDetails.features.buildingDevelopmentFeatures?.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Building & Development Features</h4>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>Building & Development Features</h4>
                     {renderFeatureList(propertyDetails.features.buildingDevelopmentFeatures)}
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="utilities" className="space-y-6">
+              <TabsContent value='utilities' className='space-y-6'>
                 {propertyDetails.features.utilities?.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="font-medium">Available Utilities</h4>
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>Available Utilities</h4>
                     {renderFeatureList(propertyDetails.features.utilities)}
                   </div>
                 )}
               </TabsContent>
 
-              <TabsContent value="floors" className="space-y-6">
+              <TabsContent value='floors' className='space-y-6'>
                 {propertyDetails.features.floors?.length > 0 ? (
                   propertyDetails.features.floors.map((floor) => (
-                    <div key={floor.id} className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-3">{floor.name}</h4>
+                    <div key={floor.id} className='bg-gray-50 p-4 rounded-lg'>
+                      <h4 className='font-medium mb-3'>{floor.name}</h4>
                       {floor.rooms?.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
                           {floor.rooms.map((room) => (
-                            <div key={room.id} className="bg-white p-3 rounded border">
-                              <div className="flex items-center gap-2">
-                                <Home className="w-4 h-4 text-gray-500" />
-                                <span className="font-medium">{room.name}</span>
+                            <div key={room.id} className='bg-white p-3 rounded border'>
+                              <div className='flex items-center gap-2'>
+                                <Home className='w-4 h-4 text-gray-500' />
+                                <span className='font-medium'>{room.name}</span>
                               </div>
-                              <div className="mt-2 text-sm text-gray-600">
+                              <div className='mt-2 text-sm text-gray-600'>
                                 <p>Type: {room.type}</p>
                                 <p>
                                   Size: {room.width} × {room.length}
@@ -356,29 +364,27 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                           ))}
                         </div>
                       ) : (
-                        <p className="text-sm text-gray-500">No rooms added</p>
+                        <p className='text-sm text-gray-500'>No rooms added</p>
                       )}
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-gray-500">No floor plans available</p>
+                  <p className='text-center text-gray-500'>No floor plans available</p>
                 )}
               </TabsContent>
             </Tabs>
 
             {!propertyDetails.isVerified && (
-              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800 flex items-center gap-2">
-                  <span className="w-2 h-2 bg-yellow-400 rounded-full"></span>
+              <div className='mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg'>
+                <p className='text-sm text-yellow-800 flex items-center gap-2'>
+                  <span className='w-2 h-2 bg-yellow-400 rounded-full'></span>
                   This property is pending verification
                 </p>
               </div>
             )}
           </>
         ) : (
-          <div className="p-4 text-center text-gray-500">
-            Failed to load property details
-          </div>
+          <div className='p-4 text-center text-gray-500'>Failed to load property details</div>
         )}
       </DialogContent>
     </Dialog>
