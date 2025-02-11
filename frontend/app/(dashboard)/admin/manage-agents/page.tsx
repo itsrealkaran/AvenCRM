@@ -5,6 +5,7 @@ import { UserRole, type User } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -182,7 +183,64 @@ export default function ManageAgentsPage() {
   };
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
-    toast.success(`Downloading ${format.toUpperCase()} file...`);
+    if (!agents || agents.length === 0) {
+      toast.error('No data to download');
+      return;
+    }
+
+    // Define common data structure
+    const headers = ['Name', 'Email', 'Phone', 'Gender', 'Role', 'Commission Rate', 'Commission Threshold', 'Commission After Threshold'];
+    const data = agents.map(agent => [
+      agent.name || '',
+      agent.email || '',
+      agent.phone || '',
+      agent.gender || '',
+      agent.role || '',
+      agent.commissionRate || '0',
+      agent.commissionThreshhold || '0',
+      agent.commissionAfterThreshhold || '0'
+    ]);
+
+    if (format === 'csv') {
+      const csvRows = [
+        headers.join(','),
+        ...data.map(row => row.map(field => `"${field}"`).join(','))
+      ];
+
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `agents_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      toast.success('CSV file downloaded successfully');
+    } else if (format === 'xlsx') {
+      try {
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Agents');
+
+        // Generate filename
+        const fileName = `agents_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Write and download
+        XLSX.writeFile(wb, fileName);
+        
+        toast.success('XLSX file downloaded successfully');
+      } catch (error) {
+        console.error('Error generating XLSX:', error);
+        toast.error('Failed to generate XLSX file');
+      }
+    }
   };
 
   return (
@@ -224,7 +282,7 @@ export default function ManageAgentsPage() {
           }
         }}
         // @ts-ignore
-        user={selectedAgent}
+        user={isCreateDialogOpen ? undefined : selectedAgent}
       />
       <AgentMetricsDialog
         open={isMetricsDialogOpen}

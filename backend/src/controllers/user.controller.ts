@@ -252,26 +252,90 @@ export const userController = {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
-      const updatedUser = await db.user.update({
-        where: { id },
-        data: {
-          name,
-          email,
-          gender: gender === "" ? null : gender,
-          phone,
-          dob: new Date(dob),
-          role: agentRole,
-          teamId: teamId || null,
-          commissionRate,
-          commissionThreshhold,
-          commissionAfterThreshhold,
-        },
-      });
+      if (agentRole === UserRole.TEAM_LEADER) {
+        const teamName = name + Math.floor(Math.random() * 1000);
 
-      res.json({
-        message: "User updated successfully",
-        user: updatedUser,
-      });
+        await db.$transaction(async (tx) => {
+          const user = await tx.user.update({
+            where: { id },
+            data: {
+              name,
+              email,
+              gender,
+              phone,
+              dob: new Date(dob),
+              commissionRate,
+              commissionThreshhold,
+              commissionAfterThreshhold,
+              role: agentRole,
+            },
+          });
+
+          await tx.team.create({
+            data: {
+              name: teamName,
+              companyId: user.companyId!,
+              teamLeaderId: user.id,
+              members: {
+                connect: {
+                  id: user.id,
+                },
+              },
+            },
+          });
+
+          return user;
+        });
+
+        return res
+          .status(201)
+          .json({ message: "Team Leader created successfully" });
+      } else {
+
+        const user = await db.$transaction(async (tx) => {
+          const user = await tx.user.update({
+            where: { id },
+            data: {
+              name,
+              email,
+              gender,
+              phone,
+              dob: new Date(dob),
+              role: agentRole,
+              teamId: teamId || null,
+              commissionRate,
+              commissionThreshhold,
+              commissionAfterThreshhold,
+            },
+          });
+          if (user.teamId) {
+            await tx.team.update({
+              where: {
+                id: teamId,
+              },
+              data: {
+                members: {
+                  connect: {
+                    id: user.id,
+                  },
+                },
+              },
+            });
+          }
+          return user;
+        });
+
+        res.status(201).json({
+          message: "User created successfully",
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            teamId: user.teamId,
+          },
+        });
+      }
     } catch (error) {
       res.status(500).json({ message: "Error updating user", error });
     }
@@ -315,9 +379,13 @@ export const userController = {
           email: true,
           phone: true,
           role: true,
+          gender: true,
           designation: true,
           isActive: true,
           dob: true,
+          commissionRate: true,
+          commissionThreshhold: true,
+          commissionAfterThreshhold: true,
           company: {
             select: {
               id: true,

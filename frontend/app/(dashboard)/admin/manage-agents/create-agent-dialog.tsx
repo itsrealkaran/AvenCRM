@@ -82,8 +82,6 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
         const date = new Date(dateString);
         return date.toISOString().split('T')[0];
       };
-      console.log(user.gender, 'user');
-      console.log('User Role:', user.role, 'TeamId:', user.teamId);
       setFormData({
         name: user.name || '',
         email: user.email || '',
@@ -97,8 +95,41 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
         teamId: user.teamId || '',
       });
       setShowThreshold(!!user.commissionThreshhold);
+    } else {
+      // Reset form when opening in create mode
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        gender: '',
+        dob: '',
+        agentRole: UserRole.AGENT,
+        commissionRate: 0,
+        commissionThreshhold: 0,
+        commissionAfterThreshhold: 0,
+        teamId: '',
+      });
+      setShowThreshold(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user && open) {
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        gender: '',
+        dob: '',
+        agentRole: UserRole.AGENT,
+        commissionRate: 0,
+        commissionThreshhold: 0,
+        commissionAfterThreshhold: 0,
+        teamId: '',
+      });
+      setShowThreshold(false);
+    }
+  }, [open, user]);
 
   const queryClient = useQueryClient();
   const { data: teams = [] } = useQuery<Team[]>({
@@ -122,7 +153,7 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
         });
       }
 
-      queryClient.invalidateQueries({ queryKey: ['agents'] });
+      queryClient.invalidateQueries({ queryKey: ['users', 'teams'] });
       onOpenChange(false);
       toast.success(`Agent ${user ? 'updated' : 'created'} successfully`);
 

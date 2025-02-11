@@ -18,6 +18,9 @@ export interface User {
   createdAt: Date;
   updatedAt: Date;
   avatar?: string;
+  commissionRate?: string;
+  commissionThreshhold?: string;
+  commissionAfterThreshhold?: string;
 }
 
 export interface AuthResponse {
