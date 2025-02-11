@@ -59,42 +59,48 @@ const Page: React.FC = () => {
   };
 
   const handleSubmitProperty = (property: any) => {
-    console.log('Property submitted in AgentView:', property);
-    if (propertyToEdit) {
-      // Update existing property
-      setMyProperties(
-        myProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p))
-      );
-      setAllProperties(
-        allProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p))
-      );
-      toast({
-        title: 'Property Updated',
-        description: 'The property has been successfully updated.',
-      });
-    } else {
-      // Add new property
-      const newProperty = { id: String(Date.now()), ...property };
-      setMyProperties([...myProperties, newProperty]);
-      setAllProperties([...allProperties, newProperty]);
-      toast({
-        title: 'Property Added',
-        description: 'The new property has been successfully added.',
-      });
-    }
+    // console.log('Property submitted in AgentView:', property);
+    // if (propertyToEdit) {
+    //   // Update existing property
+    //   setMyProperties(
+    //     myProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p))
+    //   );
+    //   setAllProperties(
+    //     allProperties.map((p) => (p.id === propertyToEdit.id ? { ...p, ...property } : p))
+    //   );
+    //   toast({
+    //     title: 'Property Updated',
+    //     description: 'The property has been successfully updated.',
+    //   });
+    // } else {
+    //   // Add new property
+    //   const newProperty = { id: String(Date.now()), ...property };
+    //   setMyProperties([...myProperties, newProperty]);
+    //   setAllProperties([...allProperties, newProperty]);
+    //   toast({
+    //     title: 'Property Added',
+    //     description: 'The new property has been successfully added.',
+    //   });
+    // }
     setPropertyToEdit(null);
     setIsPropertyFormModalOpen(false);
   };
 
-  const handleDeleteProperty = (propertyId: string) => {
-    // In a real application, you would send a delete request to your API
-    // Here we're just updating the local state
-    setMyProperties(myProperties.filter((prop) => prop.id !== propertyId));
-    setAllProperties(allProperties.filter((prop) => prop.id !== propertyId));
-    toast({
-      title: 'Property Deleted',
-      description: 'The property has been successfully deleted.',
-    });
+  const handleDeleteProperty = async(propertyId: string) => {
+    try {
+      await api.delete(`/property/${propertyId}`);
+      toast({
+        title: 'Property Deleted',
+        description: 'The property has been successfully deleted.',
+      });
+    } catch (error) {
+      console.error('Error deleting property:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete the property.',
+        variant: 'destructive'
+      })
+    }
   };
 
   const handleEditProperty = (property: any) => {

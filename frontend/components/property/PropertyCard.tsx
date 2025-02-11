@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 
 import DeleteConfirmationModal from './DeleteConfirmationModal';
 import ShareModal from './ShareModal';
+import PropertyDetailsModal from './PropertyDetailsModal';
 
 interface PropertyCardProps {
   id: string;
@@ -50,6 +51,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const { formatPrice } = useCurrency();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [agentId, setAgentId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -83,7 +85,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       <Card className='w-full max-w-[260px] overflow-hidden bg-white hover:shadow-lg transition-shadow duration-200'>
         <div className='relative aspect-[4/3] overflow-hidden'>
           <img
-            src={cardDetails.image || '/placeholder.svg'}
+            src={cardDetails.image || '/plaeholder.svgc'}
             alt={cardDetails.title}
             className='object-cover w-full h-full hover:scale-105 transition-transform duration-300'
           />
@@ -164,7 +166,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             </div>
             <div className='flex gap-2 mt-2'>
               <Button
-                onClick={onEdit}
+                onClick={() => setIsDetailsModalOpen(true)}
                 className='flex-1 text-xs bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
               >
                 View Property
@@ -195,6 +197,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           agentId={agentId || ''}
         />
       )}
+      <PropertyDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        property={{ cardDetails, agent, id }}
+      />
     </>
   );
 };

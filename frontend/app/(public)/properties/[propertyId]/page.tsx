@@ -33,6 +33,7 @@ interface PropertyDetails {
   longitude: string;
   latitude: string;
   images: string[];
+  imageUrls: string[];
   utilities: string[];
   interiorFeatures: string[];
   exteriorFeatures: string[];
@@ -127,15 +128,15 @@ const Page = () => {
           {/* Main Image Gallery */}
           <div className='relative h-[500px] rounded-lg overflow-hidden'>
             <Image
-              src={property?.images?.[activeImage] || '/placeholder.jpg'}
+              src={property?.imageUrls?.[activeImage] || '/placeholder.jpg'}
               alt={property?.propertyName || 'Property Image'}
               fill
               className='object-cover'
             />
           </div>
-          {property?.images && property.images.length > 1 && (
+          {property?.imageUrls && property.imageUrls.length > 1 && (
             <div className='flex gap-2 mt-4 overflow-x-auto pb-2'>
-              {property.images.map((image, index) => (
+              {property.imageUrls.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setActiveImage(index)}

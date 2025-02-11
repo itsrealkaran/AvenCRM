@@ -75,8 +75,6 @@ const Step1BasicInfo = () => {
             withCredentials: true,
           }
         );
-        console.log(file, 'file');
-        console.log(file.type, 'file');
         // Now upload the file directly to S3 using the presigned URL
         await axios.put(response.data.uploadUrl, file, {
           headers: {
@@ -86,7 +84,6 @@ const Step1BasicInfo = () => {
         updateFormData({
           imageNames: [...(formData.imageNames || []), response.data.key],
         });
-        console.log(response.data.key, 'key');
 
         return response.data.downloadUrl;
       });

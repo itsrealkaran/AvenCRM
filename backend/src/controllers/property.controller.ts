@@ -11,7 +11,10 @@ import {
 } from "../schema/property.schema.js";
 import logger from "../utils/logger.js";
 import multer from "multer";
-import { generatePresignedUrl, generatePresignedDownloadUrl } from "../utils/s3.js";
+import {
+  generatePresignedUrl,
+  generatePresignedDownloadUrl,
+} from "../utils/s3.js";
 
 interface PropertyCardDetails {
   title: string;
@@ -48,14 +51,14 @@ export const propertiesController: Controller = {
   setLeadFromProperty: async (req: Request, res: Response) => {
     try {
       const { agentId, propertyId, name, phone, email, message } = req.body;
-      if(!agentId) {
+      if (!agentId) {
         return res.status(400).json({ message: "Agent ID is required" });
       }
 
       const agent = await prisma.user.findUnique({
         where: { id: agentId },
       });
-      if(!agent) {
+      if (!agent) {
         return res.status(404).json({ message: "Agent not found" });
       }
       const lead = await prisma.lead.create({
@@ -65,7 +68,7 @@ export const propertiesController: Controller = {
           email,
           notes: message ? [message] : [],
           agentId,
-          companyId: agent.companyId!
+          companyId: agent.companyId!,
         },
       });
       return res.json(lead);
@@ -92,28 +95,61 @@ export const propertiesController: Controller = {
               email: true,
               phone: true,
               avatar: true,
-            }
-          }
-        }
+            },
+          },
+        },
       });
 
       if (!property) {
         return res.status(404).json({ message: "Property not found" });
       }
 
+      // Parse card details and features
+      const cardDetails = JSON.parse(JSON.stringify(property.cardDetails));
+      const features = JSON.parse(JSON.stringify(property.features));
+
+      // Get presigned URLs for images if they exist
+      let imageUrls: string[] = [];
+      const propertyImages = features.imageNames || features.images || [];
+
+      if (propertyImages.length > 0) {
+        try {
+          imageUrls = await Promise.all(
+            propertyImages.map(async (image: string) => {
+              try {
+                return await generatePresignedDownloadUrl(image, 3600); // 1 hour expiry
+              } catch (error) {
+                console.error(
+                  `Error generating presigned URL for image ${image}:`,
+                  error
+                );
+                return ""; // Return empty string for failed URLs
+              }
+            })
+          );
+          // Filter out any empty strings (failed URLs)
+          imageUrls = imageUrls.filter((url) => url);
+        } catch (error) {
+          console.error("Error generating presigned URLs:", error);
+        }
+      }
+
       const propertyDetails = {
-        ...JSON.parse(JSON.stringify(property.cardDetails)),
-        ...JSON.parse(JSON.stringify(property.features)),
+        ...cardDetails,
+        ...features,
         id: property.id,
         createdAt: property.createdAt,
         updatedAt: property.updatedAt,
-        createdById: property.createdById
+        createdById: property.createdById,
+        imageUrls, // Add the presigned URLs to the response
       };
 
       res.json(propertyDetails);
     } catch (error) {
       logger.error("Error in getPublicProperty:", error);
-      return res.status(500).json({ message: "Failed to fetch property details" });
+      return res
+        .status(500)
+        .json({ message: "Failed to fetch property details" });
     }
   },
 
@@ -124,12 +160,12 @@ export const propertiesController: Controller = {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const properties = await prisma.property.findMany({
+      const myProperties = await prisma.property.findMany({
         where: {
-          isVerified: true
+          createdById: user.id,
         },
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
         select: {
           id: true,
@@ -144,25 +180,57 @@ export const propertiesController: Controller = {
               email: true,
             },
           },
-        }
+        },
       });
+
+      let properties = await prisma.property.findMany({
+        where: {
+          isVerified: true,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+          slug: true,
+          isVerified: true,
+          cardDetails: true,
+          createdAt: true,
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
+        },
+      });
+
+      properties = properties.filter((property) => !myProperties.some(myProp => myProp.id === property.id));
+      properties.push(...myProperties);
 
       // Generate presigned URLs for property images
       const propertiesWithUrls = await Promise.all(
         properties.map(async (property) => {
-          const cardDetails = property.cardDetails as unknown as PropertyCardDetails;
+          const cardDetails =
+            property.cardDetails as unknown as PropertyCardDetails;
           if (cardDetails?.image) {
             try {
-              const imageUrl = await generatePresignedDownloadUrl(cardDetails.image);
+              const imageUrl = await generatePresignedDownloadUrl(
+                cardDetails.image
+              );
               return {
                 ...property,
                 cardDetails: {
                   ...cardDetails,
-                  image: imageUrl
-                }
+                  image: imageUrl,
+                },
               };
             } catch (error) {
-              console.error(`Failed to generate URL for property image: ${cardDetails.image}`, error);
+              console.error(
+                `Failed to generate URL for property image: ${cardDetails.image}`,
+                error
+              );
               return property;
             }
           }
@@ -170,8 +238,12 @@ export const propertiesController: Controller = {
         })
       );
 
-      const myProperty = propertiesWithUrls.filter(property => property.createdBy.id === user.id);
-      const allProperty = propertiesWithUrls.filter(property => property.createdBy.id !== user.id);
+      const myProperty = propertiesWithUrls.filter(
+        (property) => property.createdBy.id === user.id
+      );
+      const allProperty = propertiesWithUrls.filter(
+        (property) => property.createdBy.id !== user.id
+      );
 
       return res.json({ myProperty, allProperty });
     } catch (error) {
@@ -193,7 +265,7 @@ export const propertiesController: Controller = {
 
       const properties = await prisma.property.findMany({
         orderBy: {
-          createdAt: 'desc'
+          createdAt: "desc",
         },
         select: {
           id: true,
@@ -208,25 +280,31 @@ export const propertiesController: Controller = {
               email: true,
             },
           },
-        }
+        },
       });
 
       // Generate presigned URLs for property images
       const propertiesWithUrls = await Promise.all(
         properties.map(async (property) => {
-          const cardDetails = property.cardDetails as unknown as PropertyCardDetails;
+          const cardDetails =
+            property.cardDetails as unknown as PropertyCardDetails;
           if (cardDetails?.image) {
             try {
-              const imageUrl = await generatePresignedDownloadUrl(cardDetails.image);
+              const imageUrl = await generatePresignedDownloadUrl(
+                cardDetails.image
+              );
               return {
                 ...property,
                 cardDetails: {
                   ...cardDetails,
-                  image: imageUrl
-                }
+                  image: imageUrl,
+                },
               };
             } catch (error) {
-              console.error(`Failed to generate URL for property image: ${cardDetails.image}`, error);
+              console.error(
+                `Failed to generate URL for property image: ${cardDetails.image}`,
+                error
+              );
               return property;
             }
           }
@@ -235,8 +313,12 @@ export const propertiesController: Controller = {
       );
 
       //seperate the properties based on their 'isVerified' field
-      const verifiedProperties = propertiesWithUrls.filter(property => property.isVerified);
-      const unverifiedProperties = propertiesWithUrls.filter(property => !property.isVerified);
+      const verifiedProperties = propertiesWithUrls.filter(
+        (property) => property.isVerified
+      );
+      const unverifiedProperties = propertiesWithUrls.filter(
+        (property) => !property.isVerified
+      );
 
       return res.json({ verifiedProperties, unverifiedProperties });
     } catch (error) {
@@ -259,6 +341,20 @@ export const propertiesController: Controller = {
           },
         },
       });
+
+      // take the image from the property object and generate a presigned URL
+      //@ts-ignore
+      if (property && property?.cardDetails?.image) {
+        try { //@ts-ignore
+          const imageUrl = await generatePresignedDownloadUrl(property.cardDetails.image); //@ts-ignore
+          property.cardDetails.image = imageUrl;
+        } catch (error) {
+          console.error( 
+            `Failed to generate URL for property image: `,
+            error
+          );
+        }
+      }
 
       if (!property) {
         return res.status(404).json({ message: "Property not found" });
@@ -306,7 +402,7 @@ export const propertiesController: Controller = {
             .status(400)
             .json({ message: "Invalid request: Missing data field." });
         }
-        if(!req.user?.id || !req.user?.companyId){
+        if (!req.user?.id || !req.user?.companyId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
 
@@ -344,7 +440,7 @@ export const propertiesController: Controller = {
             .status(400)
             .json({ message: "Invalid request: Missing data field." });
         }
-        if(!req.user?.id || !req.user?.companyId){
+        if (!req.user?.id || !req.user?.companyId) {
           return res.status(401).json({ message: "Unauthorized" });
         }
 
@@ -388,10 +484,41 @@ export const propertiesController: Controller = {
 
   deleteProperty: async (req: Request, res: Response) => {
     try {
-      const property = await prisma.property.delete({
-        where: { id: req.params.id },
-      });
-      return res.json({ message: "Property deleted successfully", property });
+      if (!req.user?.id || !req.user?.companyId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      const { id } = req.params;
+
+      if (req.user.role === "AGENT" || req.user.role === "TEAM_LEADER") {
+        const doesPropertyExist = await prisma.property.findUnique({
+          where: { id },
+        });
+        if (!doesPropertyExist) {
+          return res.status(404).json({ message: "Property not found" });
+        }
+        if (doesPropertyExist.createdById === req.user.id) {
+          const property = await prisma.property.delete({
+            where: { id: req.params.id },
+          });
+          return res.json({ message: "Property deleted successfully", property });
+        } else {
+          return res
+            .status(403)
+            .json({
+              message: "You are not authorized to delete this property",
+            });
+        }
+      } else if (req.user.role === "ADMIN") {
+        const property = await prisma.property.delete({
+          where: { id: req.params.id },
+        });
+        return res.json({ message: "Property deleted successfully", property });
+      } else {
+        return res.status(403).json({
+          message: "You are not authorized to delete this property",
+        });
+      }
     } catch (error) {
       logger.error("Error in deleteProperty:", error);
       return res.status(500).json({ message: "Failed to delete property" });
