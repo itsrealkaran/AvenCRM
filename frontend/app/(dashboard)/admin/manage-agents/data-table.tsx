@@ -82,6 +82,7 @@ export function DataTable<TData extends BaseData, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const [headers, setHeaders] = useState<string[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const table = useReactTable({
@@ -123,6 +124,8 @@ export function DataTable<TData extends BaseData, TValue>({
         const text = await file.text();
         const rows = text.split('\n');
         const headers = rows[0].split(',').map((header) => header.trim());
+        setHeaders(headers);
+        console.log(headers, "headers");
 
         jsonData = rows.slice(1).map((row) => {
           const values = row.split(',').map((value) => value.trim());
@@ -138,6 +141,11 @@ export function DataTable<TData extends BaseData, TValue>({
         const buffer = await file.arrayBuffer();
         const workbook = read(buffer);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        // Get headers from the first row
+        const headers = utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+        setHeaders(headers);
+        
         jsonData = utils.sheet_to_json(worksheet);
       } else {
         throw new Error('Unsupported file format');
@@ -339,7 +347,7 @@ export function DataTable<TData extends BaseData, TValue>({
             )}
           </TableBody>
         </Table>
-        {fileData && <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />}
+        {fileData && <FileImportModal jsonData={fileData} headers={headers || []} onClose={() => setFileData(null)} />}
       </div>
     </div>
   );

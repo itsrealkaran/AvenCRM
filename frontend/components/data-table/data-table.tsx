@@ -72,6 +72,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [rowSelection, setRowSelection] = useState({});
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const [headers, setHeaders] = useState<string[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,9 +102,11 @@ export function DataTable<TData extends BaseRecord, TValue>({
       const fileType = file.name.split('.').pop()?.toLowerCase();
 
       if (fileType === 'csv') {
+        setHeaders(null)
         const text = await file.text();
         const rows = text.split('\n');
         const headers = rows[0].split(',').map((header) => header.trim());
+        setHeaders(headers);
 
         jsonData = rows.slice(1).map((row) => {
           const values = row.split(',').map((value) => value.trim());
@@ -116,9 +119,17 @@ export function DataTable<TData extends BaseRecord, TValue>({
           );
         });
       } else if (fileType === 'xlsx') {
+        setHeaders(null)
         const buffer = await file.arrayBuffer();
         const workbook = read(buffer);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+        // Get headers from the first row
+        const headers = utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+
+        setHeaders(headers);
+        
+        // Get data excluding the header row
         jsonData = utils.sheet_to_json(worksheet);
       } else {
         throw new Error('Unsupported file format');
@@ -276,7 +287,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
         </div>
       </div>
       {fileData && fileData.length > 0 && (
-        <FileImportModal jsonData={fileData} onClose={() => setFileData(null)} />
+        <FileImportModal jsonData={fileData} headers={headers || []} onClose={() => setFileData(null)} />
       )}
       <div className='rounded-md border flex-1 overflow-x-auto'>
         <Table>

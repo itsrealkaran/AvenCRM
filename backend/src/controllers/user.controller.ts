@@ -396,7 +396,9 @@ export const userController = {
         },
       });
 
-      res.json(users);
+      const usersList = users.filter((user) => user.id !== authUser.id)
+
+      res.json(usersList);
     } catch (error) {
       res.status(500).json({ message: "Error fetching users", error });
     }
