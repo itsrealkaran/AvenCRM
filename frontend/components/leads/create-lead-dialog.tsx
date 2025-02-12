@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { createLeadSchema } from '@/schema';
 import { CreateLead, LeadStatus, PropertyType } from '@/types';
@@ -73,134 +74,143 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       }}
       isLoading={isLoading}
     >
-      {(form) => (
-        <>
-          <CommonFormFields form={form} isLoading={isLoading} />
-          <div className='grid grid-cols-2 gap-4'>
-            <FormField
-              control={form.control}
-              name='status'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select status' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(LeadStatus).map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+      {(form) => {
+        // Reset form when dialog is closed
+        useEffect(() => {
+          if (!open) {
+            form.reset(defaultValues);
+          }
+        }, [open, form]);
 
-            <FormField
-              control={form.control}
-              name='propertyType'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Property Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isLoading}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select property type' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(PropertyType).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='budget'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget</FormLabel>
-                  <FormControl>
-                    <Input
-                      type='number'
-                      placeholder='Enter budget'
+        return (
+          <>
+            <CommonFormFields form={form} isLoading={isLoading} />
+            <div className='grid grid-cols-2 gap-4'>
+              <FormField
+                control={form.control}
+                name='status'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
                       disabled={isLoading}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select status' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(LeadStatus).map((status) => (
+                          <SelectItem key={status} value={status}>
+                            {status}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name='location'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Enter location' disabled={isLoading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select property type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {Object.values(PropertyType).map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name='source'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Source</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Enter source' disabled={isLoading} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+              <FormField
+                control={form.control}
+                name='budget'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Budget</FormLabel>
+                    <FormControl>
+                      <Input
+                        type='number'
+                        placeholder='Enter budget'
+                        disabled={isLoading}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <NotesField form={form} isLoading={isLoading} />
+              <FormField
+                control={form.control}
+                name='location'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Enter location' disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <div className='flex justify-end space-x-4'>
-            <Button
-              type='button'
-              variant='outline'
-              disabled={isLoading}
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type='submit' disabled={isLoading}>
-              {isLoading ? 'Creating...' : 'Create Lead'}
-            </Button>
-          </div>
-        </>
-      )}
+              <FormField
+                control={form.control}
+                name='source'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Source</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Enter source' disabled={isLoading} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <NotesField form={form} isLoading={isLoading} />
+
+            <div className='flex justify-end space-x-4'>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={createLead.isPending}
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+              <Button type='submit' disabled={createLead.isPending}>
+                {createLead.isPending ? 'Creating...' : 'Create Lead'}
+              </Button>
+            </div>
+          </>
+        );
+      }}
     </BaseEntityDialog>
   );
 }
