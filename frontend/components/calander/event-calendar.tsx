@@ -63,7 +63,6 @@ export default function CalendarView() {
           });
         }
       }
-      console.log('isMicrosoftConnected', isMicrosoftConnected);
       if (isMicrosoftConnected) {
         try {
           const microsoftEvents = await microsoftCalendar.listEvents();

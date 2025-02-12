@@ -81,10 +81,14 @@ export default function EventModal({ isOpen, onClose, event, onSave, onDelete }:
           id: event.id,
           source: event.source,
           googleEventId: event.googleEventId,
+          color: data.color,
         });
       } else {
         // New event
-        onSave(eventData);
+        onSave({
+          ...eventData,
+          color: data.color,
+        });
       }
     } catch (error) {
       console.error('Error saving event:', error);
