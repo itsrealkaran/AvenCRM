@@ -6,6 +6,7 @@ import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,7 +24,7 @@ export default function LeadsPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
-  const [lead, setLead] = useState<any | null>(null);
+  const [lead, setLead] = useState<Lead[] | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -119,7 +120,71 @@ export default function LeadsPage() {
   };
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
-    toast.success(`Downloading ${format.toUpperCase()} file...`);
+    if (!lead || lead.length === 0) {
+      toast.error('No data to download');
+      return;
+    }
+
+    // Define common data structure
+    const headers = [
+      'Name',
+      'Email',
+      'Phone',
+      'Source',
+      'Status',
+      'Agent',
+      'Created At'
+    ];
+    const data = lead.map((lead) => [
+      lead.name || '',
+      lead.email || '',
+      lead.phone || '',
+      lead.source || '',
+      lead.status || '',
+      lead.agent?.name || '',
+      new Date(lead.createdAt).toLocaleDateString() || '',
+    ]);
+
+    if (format === 'csv') {
+      const csvRows = [
+        headers.join(','),
+        ...data.map((row) => row.map((field) => `"${field}"`).join(',')),
+      ];
+
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `leads_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('CSV file downloaded successfully');
+    } else if (format === 'xlsx') {
+      try {
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+
+        // Generate filename
+        const fileName = `leads_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Write and download
+        XLSX.writeFile(wb, fileName);
+
+        toast.success('XLSX file downloaded successfully');
+      } catch (error) {
+        console.error('Error generating XLSX:', error);
+        toast.error('Failed to generate XLSX file');
+      }
+    }
   };
 
   const handleBulkDelete = async (leadIds: string[]) => {
