@@ -197,6 +197,7 @@ export const leadsController: Controller  = {
         // Validate each lead in the array
         const validatedLeads = [];
         const errors = [];
+        const erroredData = [];
 
         for (let i = 0; i < leadsData.length; i++) {
           const leadData = {
@@ -204,6 +205,7 @@ export const leadsController: Controller  = {
             // Convert numeric fields
             budget: leadsData[i].budget ? Number(leadsData[i].budget) : null,
             leadAmount: leadsData[i].leadAmount ? Number(leadsData[i].leadAmount) : null,
+            phone: leadsData[i].phone ? String(leadsData[i].phone) : null,
             // Ensure required fields
             agentId: user.id,
             companyId: user.companyId,
@@ -214,6 +216,7 @@ export const leadsController: Controller  = {
           if (validationResult.success) {
             validatedLeads.push({
               ...validationResult.data,
+              phone: validationResult.data.phone ? String(validationResult.data.phone) : null,
               notes: validationResult.data.notes
                 ? validationResult.data.notes
                     .filter((note: any) => note !== null)
@@ -228,7 +231,8 @@ export const leadsController: Controller  = {
               propertyType: validationResult.data.propertyType || 'COMMERCIAL'
             });
           } else {
-            errors.push(validationResult.data);
+            errors.push(validationResult.error);
+            erroredData.push(leadsData[i]);
           }
         }
         
@@ -268,7 +272,8 @@ export const leadsController: Controller  = {
         
         return res.status(201).json({
           message: `Successfully created ${createdLeads.length} leads`,
-          erroredData: errors
+          errors,
+          erroredData
         });
 
       } catch (error) {

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { fieldMatcher } from '@/utils/field-matcher';
-import { Download, X } from 'lucide-react';
+import { Download, X, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import apiClient from '@/lib/axios';
@@ -19,13 +19,14 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 
-const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => void }) => {
+const FileImportModal = ({ jsonData, headers, onClose }: { jsonData: any; headers: string[]; onClose: () => void }) => {
   const pathname = usePathname();
   const route = pathname.split('/')[2];
-  const isAdmin = pathname.split('/')[1] === 'admin';
   const [isImporting, setIsImporting] = useState(false);
   const [erroredData, setErroredData] = useState<any>([]);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [totalBatches, setTotalBatches] = useState(0);
 
   type LeadFields = {
     name: string;
@@ -100,6 +101,7 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
   const handleImport = async () => {
     try {
       setIsImporting(true);
+      setErroredData([]);
 
       // Create a reverse mapping of field names
       const fieldMapping = Object.entries(mappedFields).reduce(
@@ -122,8 +124,6 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
               if (value) {
                 try {
                   const [day, month, year] = (value as string).split('-').map(Number);
-                  console.log('value', value, day, month, year);
-                  // Validate date parts
                   if (
                     isNaN(day) ||
                     isNaN(month) ||
@@ -138,7 +138,6 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
                     mappedItem[mappedKey] = null;
                   } else {
                     const date = new Date(year, month - 1, day, 12, 0, 0);
-                    console.log('date', date);
                     if (date.toString() === 'Invalid Date') {
                       mappedItem[mappedKey] = null;
                     } else {
@@ -159,24 +158,61 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
         return mappedItem;
       });
 
-      // Send the mapped data to the server based on route
-      const endpoint = route === 'leads' ? '/leads/bulk' : '/user/bulk';
-      const { data } = await apiClient.post(endpoint, mappedData);
+      // Process data in batches if it's the leads route
+      if (route === 'leads' || route === 'manage-agents') {
+        const BATCH_SIZE = 10;
+        const batches = [];
+        for (let i = 0; i < mappedData.length; i += BATCH_SIZE) {
+          batches.push(mappedData.slice(i, i + BATCH_SIZE));
+        }
+        setTotalBatches(batches.length);
 
-      if (data.erroredData?.length > 0 && data.erroredData[0] !== null) {
-        toast.warning(`${data.message}. Some records could not be imported.`);
-        setErroredData(data.erroredData);
-        setShowErrorDialog(true);
-        return;
+        const allErroredData = [];
+        for (let i = 0; i < batches.length; i++) {
+          setImportProgress(i + 1);
+          const batch = batches[i];
+          try {
+            const endpoint = route === 'leads' ? '/leads/bulk' : '/user/bulk';
+            const { data } = await apiClient.post(endpoint, batch);
+            if (data.erroredData?.length > 0 && data.erroredData[0] !== null) {
+              allErroredData.push(...data.erroredData);
+            }
+          } catch (error) {
+            console.error('Batch import error:', error);
+            toast.error(`Failed to import batch ${i + 1}. Continuing with remaining batches.`);
+          }
+        }
+
+        if (allErroredData.length > 0) {
+          toast.warning('Import completed with some errors.');
+          setErroredData(allErroredData);
+          setShowErrorDialog(true);
+        } else {
+          toast.success(`All ${route === 'leads' ? 'leads' : 'agents'} imported successfully!`);
+          onClose();
+        }
+      } else {
+        // For other routes, process normally
+        const endpoint = '/user/bulk';
+        const { data } = await apiClient.post(endpoint, mappedData);
+
+        if (data.erroredData?.length > 0 && data.erroredData[0] !== null) {
+          toast.warning(`${data.message}. Some records could not be imported.`);
+          setErroredData(data.erroredData);
+          setShowErrorDialog(true);
+          return;
+        }
+
+        toast.success(data.message);
+        onClose();
       }
-
-      toast.success(data.message);
-      onClose();
     } catch (error) {
       console.error('Import error:', error);
       toast.error('Failed to import data. Please try again.');
     } finally {
       setIsImporting(false);
+      setImportProgress(0);
+      setTotalBatches(0);
     }
   };
 
@@ -222,67 +258,96 @@ const FileImportModal = ({ jsonData, onClose }: { jsonData: any; onClose: () => 
       </Dialog>
 
       <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50'>
-        <Card className='shadow-xl w-[50%] max-h-[85%] h-fit overflow-hidden z-50'>
-          <CardHeader className='flex flex-row items-center justify-between border-b pb-4'>
-            <div>
-              <CardTitle className='text-xl font-semibold'>
-                Import {route.charAt(0).toUpperCase() + route.slice(1)}
-              </CardTitle>
-              <CardDescription className='text-gray-500'>
-                Map your file fields to our system fields
+        {isImporting && (route === 'leads' || route === 'manage-agents') ? (
+          <Card className='shadow-xl w-[400px] p-6'>
+            <CardHeader className='text-center'>
+              <CardTitle>Importing {route === 'leads' ? 'Leads' : 'Agents'}</CardTitle>
+              <CardDescription>
+                Processing batch {importProgress} of {totalBatches}
               </CardDescription>
-            </div>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='rounded-full hover:bg-gray-100'
-              onClick={onClose}
-            >
-              <X className='h-5 w-5' />
-            </Button>
-          </CardHeader>
-          <CardContent className='p-6'>
-            <div className='flex flex-col space-y-6'>
-              <div className='grid grid-cols-2 gap-x-8'>
-                <div className='text-sm font-medium text-gray-700 text-center'>System Fields</div>
-                <div className='text-sm font-medium text-gray-700 text-center'>
-                  Your File Fields
+            </CardHeader>
+            <CardContent className='flex flex-col items-center justify-center py-6'>
+              <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
+              <div className='mt-4 text-sm text-gray-500'>
+                {Math.round((importProgress / totalBatches) * 100)}% Complete
+              </div>
+              <div className='w-full mt-4 h-2 bg-gray-200 rounded-full overflow-hidden'>
+                <div 
+                  className='h-full bg-blue-600 transition-all duration-300'
+                  style={{ width: `${(importProgress / totalBatches) * 100}%` }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className='shadow-xl w-[50%] max-h-[85%] h-fit overflow-hidden z-50'>
+            <CardHeader className='flex flex-row items-center justify-between border-b pb-4'>
+              <div>
+                <CardTitle className='text-xl font-semibold'>
+                  Import {route.charAt(0).toUpperCase() + route.slice(1)}
+                </CardTitle>
+                <CardDescription className='text-gray-500'>
+                  Map your file fields to our system fields
+                </CardDescription>
+              </div>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='rounded-full hover:bg-gray-100'
+                onClick={onClose}
+              >
+                <X className='h-5 w-5' />
+              </Button>
+            </CardHeader>
+            <CardContent className='p-6'>
+              <div className='flex flex-col space-y-6'>
+                <div className='grid grid-cols-2 gap-x-8'>
+                  <div className='text-sm font-medium text-gray-700 text-center'>System Fields</div>
+                  <div className='text-sm font-medium text-gray-700 text-center'>
+                    Your File Fields
+                  </div>
+                </div>
+                <div className='space-y-3'>
+                  {Object.entries(mappedFields).map(([key, value]) => (
+                    <div key={key} className='grid grid-cols-2 gap-x-8 items-center'>
+                      <div className='bg-gray-50 px-4 py-2.5 rounded-md text-gray-700 font-medium border border-gray-200'>
+                        {key.charAt(0).toUpperCase() +
+                          key
+                            .slice(1)
+                            .replace(/([A-Z])/g, ' $1')
+                            .trim()}
+                      </div>
+                      <select
+                        value={value}
+                        onChange={(e) => handleFieldChange(key, e.target.value)}
+                        className='px-4 py-2.5 rounded-md border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors'
+                      >
+                        <option value="">Select matching field...</option>
+                        {headers.map((header) => (
+                          <option key={header} value={header}>
+                            {header}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
                 </div>
               </div>
-              <div className='space-y-3'>
-                {Object.entries(mappedFields).map(([key, value]) => (
-                  <div key={key} className='grid grid-cols-2 gap-x-8 items-center'>
-                    <div className='bg-gray-50 px-4 py-2.5 rounded-md text-gray-700 font-medium border border-gray-200'>
-                      {key.charAt(0).toUpperCase() +
-                        key
-                          .slice(1)
-                          .replace(/([A-Z])/g, ' $1')
-                          .trim()}
-                    </div>
-                    <input
-                      value={value}
-                      onChange={(e) => handleFieldChange(key, e.target.value)}
-                      className='px-4 py-2.5 rounded-md border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors'
-                      placeholder='Select matching field...'
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className='flex justify-end space-x-3 border-t p-4 bg-gray-50'>
-            <Button variant='outline' onClick={onClose} className='px-4'>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleImport}
-              disabled={isImporting}
-              className='px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400'
-            >
-              {isImporting ? 'Importing...' : 'Import Data'}
-            </Button>
-          </CardFooter>
-        </Card>
+            </CardContent>
+            <CardFooter className='flex justify-end space-x-3 border-t p-4 bg-gray-50'>
+              <Button variant='outline' onClick={onClose} className='px-4'>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleImport}
+                disabled={isImporting}
+                className='px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400'
+              >
+                {isImporting ? 'Importing...' : 'Import Data'}
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
       </div>
     </>
   );

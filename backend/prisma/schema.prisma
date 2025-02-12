@@ -489,6 +489,7 @@ model CalendarEvent {
   description        String?
   start             DateTime
   end               DateTime
+  color              String @default("blue")
   
   setterId           String
   
