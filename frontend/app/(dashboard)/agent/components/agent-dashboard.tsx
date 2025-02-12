@@ -58,7 +58,7 @@ export function AgentDashboard() {
 
   if (loading) {
     return (
-      <div className='space-y-4 p-3'>
+      <div className='space-y-4'>
         <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
           {[...Array(4)].map((_, index) => (
             <Card key={index} className='bg-gray-200 animate-pulse'>
@@ -72,6 +72,27 @@ export function AgentDashboard() {
               </CardContent>
             </Card>
           ))}
+        </div>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-7'>
+          <Card className='col-span-4 bg-gray-200 animate-pulse'>
+            <CardHeader>
+              <CardTitle>Loading...</CardTitle>
+              <CardDescription>Loading...</CardDescription>
+            </CardHeader>
+            <CardContent className='pl-2'>
+              <div className='h-64 bg-gray-300 animate-pulse'></div>
+            </CardContent>
+          </Card>
+
+          <Card className='col-span-3 bg-gray-200 animate-pulse'>
+            <CardHeader>
+              <CardTitle>Loading...</CardTitle>
+              <CardDescription>Loading...</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className='h-64 bg-gray-300 animate-pulse'></div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );

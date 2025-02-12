@@ -23,27 +23,27 @@ export default function DashboardPage() {
   });
 
   // Handle error with useEffect
-  if (isError) {
-    toast.error('Failed to fetch user data');
-    return (
-      <div className='flex h-full items-center justify-center'>
-        <p className='text-red-500'>Error loading user data. Please refresh the page.</p>
-      </div>
-    );
-  }
+  // if (isError) {
+  //   toast.error('Failed to fetch user data');
+  //   return (
+  //     <div className='flex h-full items-center justify-center'>
+  //       <p className='text-red-500'>Error loading user data. Please refresh the page.</p>
+  //     </div>
+  //   );
+  // }
 
-  if (isLoading || !user) {
-    return (
-      <div className='flex h-full items-center justify-center'>
-        <p>Loading user data...</p>
-      </div>
-    );
-  }
+  // if (isLoading || !user) {
+  //   return (
+  //     <div className='flex h-full items-center justify-center'>
+  //       <p>Loading user data...</p>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className='flex-1 space-y-4 p-4 md:p-6 rounded-xl z-20 shadow-lg bg-white'>
       <div className='flex items-center justify-between space-y-2'>
-        <h1 className='text-3xl font-bold tracking-tight'>Welcome back, {user.name}!</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>Welcome {user?.name ? `${user.name} !` : ''}</h1>
       </div>
       <AdminDashboard />
     </div>
