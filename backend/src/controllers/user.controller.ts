@@ -365,14 +365,7 @@ export const userController = {
         whereClause.companyId = companyId;
 
       const users = await db.user.findMany({
-        where:
-          authUser.role === UserRole.ADMIN
-            ? {
-                role: {
-                  in: [UserRole.AGENT, UserRole.TEAM_LEADER],
-                },
-              }
-            : whereClause,
+        where: whereClause,
         select: {
           id: true,
           name: true,

@@ -26,7 +26,7 @@ router.get("/getEvents", async (req, res) => {
 
 router.put("/update/:id", async (req, res) => {
   try {
-    const { title, description, start, end } = req.body;
+    const { title, description, start, end, color } = req.body;
     const eventId = req.params.id
     
     if (!req.user || !req.user.id) {
@@ -57,7 +57,8 @@ router.put("/update/:id", async (req, res) => {
         title,
         description,
         start: startTimeDate,
-        end: endTimeDate
+        end: endTimeDate,
+        color,
       },
     });
 
@@ -70,7 +71,7 @@ router.put("/update/:id", async (req, res) => {
 
 router.post("/createEvent", async (req, res) => {
   try {
-    const { title, description, start, end } =
+    const { title, description, start, end, color } =
       req.body;
       console.log(req.body);
     if (!req.user || !req.user.id) {
@@ -98,6 +99,7 @@ router.post("/createEvent", async (req, res) => {
           start: startTimeDate,
           end: endTimeDate,
           setterId: id,
+          color,
         },
       });
 
