@@ -133,35 +133,7 @@ export const columns: ColumnDef<User>[] = [
       };
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[160px]'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(user)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit agent
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onViewMetrics?.(user.id)}>
-              <UserCog className='mr-2 h-4 w-4' /> View Metrics
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(user.id)} className='text-red-600'>
-              <Trash2 className='mr-2 h-4 w-4' /> Delete agent
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                navigator.clipboard.writeText(user.id);
-                toast.success('Agent ID copied to clipboard');
-              }}
-            >
-              <CopyIcon className='mr-2 h-4 w-4' /> Copy ID
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        
       );
     },
   },

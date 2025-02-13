@@ -341,7 +341,7 @@ const FileImportModal = ({ jsonData, headers, onClose }: { jsonData: any; header
               <Button
                 onClick={handleImport}
                 disabled={isImporting}
-                className='px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400'
+                className='px-4 bg-primary hover:bg-primary/80 disabled:bg-primary/40'
               >
                 {isImporting ? 'Importing...' : 'Import Data'}
               </Button>

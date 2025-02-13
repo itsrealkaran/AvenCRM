@@ -181,9 +181,13 @@ export default function TaskPage() {
     });
 
   return (
-    <Card className='p-6 h-full'>
+    <Card className='p-6 h-full flex flex-col'>
       <div className='flex justify-between items-center mb-6'>
-        <h1 className='text-2xl font-bold'>Tasks</h1>
+        <div>
+          <h1 className='text-2xl font-bold'>Tasks</h1>
+          <p className='text-sm text-gray-500'>{tasks.length} tasks found</p>
+        </div>
+        
         <div className='flex gap-2'>
           {selectedTasks.size > 0 && (
             <Button variant='destructive' onClick={() => setIsDeleteDialogOpen(true)}>
@@ -191,25 +195,7 @@ export default function TaskPage() {
               Delete Selected ({selectedTasks.size})
             </Button>
           )}
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className='w-4 h-4 mr-2' />
-                Create Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='max-w-[800px] w-[90vw]'>
-              <DialogHeader>
-                <DialogTitle>Create New Task</DialogTitle>
-              </DialogHeader>
-              <TaskForm
-                formData={formData}
-                setFormData={setFormData}
-                onSubmit={handleCreateTask}
-                onCancel={() => setIsCreateModalOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          
         </div>
       </div>
 
@@ -256,74 +242,94 @@ export default function TaskPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => setSortBy('dueDate')}>
-              {sortBy === 'dueDate' && <Check className='w-4 h-4 mr-2' />}
-              Due Date
+              Due Date{sortBy === 'dueDate' && <Check className='w-4 h-4 mr-2' />}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSortBy('priority')}>
-              {sortBy === 'priority' && <Check className='w-4 h-4 mr-2' />}
-              Priority
+              Priority{sortBy === 'priority' && <Check className='w-4 h-4 mr-2' />}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setSortBy('status')}>
-              {sortBy === 'status' && <Check className='w-4 h-4 mr-2' />}
-              Status
+              Status{sortBy === 'status' && <Check className='w-4 h-4 mr-2' />}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className='w-4 h-4 mr-2' />
+                Create Task
+              </Button>
+            </DialogTrigger>
+            <DialogContent className='max-w-[800px] w-[90vw]'>
+              <DialogHeader>
+                <DialogTitle>Create New Task</DialogTitle>
+              </DialogHeader>
+              <TaskForm
+                formData={formData}
+                setFormData={setFormData}
+                onSubmit={handleCreateTask}
+                onCancel={() => setIsCreateModalOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
       </div>
 
-      <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        {loading
-          ? Array.from({ length: 6 }).map((_, index) => (
-              <div
-                key={index}
-                className='p-4 rounded-lg shadow-md relative animate-pulse bg-gray-200'
-              >
-                <div className='flex justify-between items-start mb-2'>
-                  <div className='h-4 bg-gray-300 rounded w-3/4'></div>
-                  <div className='flex space-x-2'>
-                    <div className='h-4 w-4 bg-gray-300 rounded-full'></div>
-                    <div className='h-4 w-4 bg-gray-300 rounded-full'></div>
-                    <div className='h-4 w-4 bg-gray-300 rounded-full'></div>
+      <div className='overflow-y-auto h-full'>
+        <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
+          {loading
+            ? Array.from({ length: 6 }).map((_, index) => (
+                <div
+                  key={index}
+                  className='p-4 rounded-lg shadow-md relative animate-pulse bg-gray-200'
+                >
+                  <div className='flex justify-between items-start mb-2'>
+                    <div className='h-6 bg-gray-300 rounded w-3/4'></div>
+                    <div className='flex space-x-2'>
+                      <div className='h-8 w-8 bg-gray-300 rounded'></div>
+                      <div className='h-8 w-8 bg-gray-300 rounded'></div>
+                    </div>
+                  </div>
+                  <div className='h-4 bg-gray-300 rounded w-full mb-3'></div>
+                  <div className='flex justify-between items-center'>
+                    <div className='flex items-center space-x-2'>
+                      <div className='h-5 w-20 bg-gray-300 rounded-full'></div>
+                      <div className='h-5 w-24 bg-gray-300 rounded-full'></div>
+                    </div>
+                    <div className='flex items-center'>
+                      <div className='h-4 w-4 bg-gray-300 rounded-full mr-1'></div>
+                      <div className='h-4 w-24 bg-gray-300 rounded'></div>
+                    </div>
                   </div>
                 </div>
-                <div className='h-3 bg-gray-300 rounded w-full mb-3'></div>
-                <div className='flex justify-between items-center'>
-                  <div className='flex items-center space-x-2'>
-                    <div className='h-3 w-12 bg-gray-300 rounded-full'></div>
-                    <div className='h-3 w-12 bg-gray-300 rounded-full'></div>
-                  </div>
-                  <div className='h-3 w-20 bg-gray-300 rounded-full'></div>
-                </div>
-              </div>
-            ))
-          : filteredTasks.map((task: Task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onEdit={() => {
-                  setSelectedTask(task);
-                  setFormData({
-                    title: task.title,
-                    description: task.description || '',
-                    priority: task.priority,
-                    status: task.status,
-                    dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
-                    colorTag: task.colorTag || '#000000',
-                    tags: task.tags || [],
-                    category: '',
-                  });
-                  setIsEditModalOpen(true);
-                }}
-                onDelete={() => {
-                  setSelectedTask(task);
-                  setIsDeleteDialogOpen(true);
-                }}
-                isSelected={selectedTasks.has(task.id)}
-                onSelect={() => toggleTaskSelection(task.id)}
-                onUpdateStatus={(status) => handleUpdateTask(task.id, { status })}
-                onUpdatePriority={(priority) => handleUpdateTask(task.id, { priority })}
-              />
-            ))}
+              ))
+            : filteredTasks.map((task: Task) => (
+                <TaskCard
+                  key={task.id}
+                  task={task}
+                  onEdit={() => {
+                    setSelectedTask(task);
+                    setFormData({
+                      title: task.title,
+                      description: task.description || '',
+                      priority: task.priority,
+                      status: task.status,
+                      dueDate: task.dueDate ? new Date(task.dueDate) : undefined,
+                      colorTag: task.colorTag || '#000000',
+                      tags: task.tags || [],
+                      category: '',
+                    });
+                    setIsEditModalOpen(true);
+                  }}
+                  onDelete={() => {
+                    setSelectedTask(task);
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  isSelected={selectedTasks.has(task.id)}
+                  onSelect={() => toggleTaskSelection(task.id)}
+                  onUpdateStatus={(status) => handleUpdateTask(task.id, { status })}
+                  onUpdatePriority={(priority) => handleUpdateTask(task.id, { priority })}
+                />
+              ))}
+        </div>
       </div>
 
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
