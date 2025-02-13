@@ -354,6 +354,23 @@ export const dealsController: Controller = {
     }
   },
 
+  updateNotes: async (req: Request, res: Response) => {
+    try {
+      const { note } = req.body;
+      const { id } = req.params;
+  
+      const deal = await prisma.deal.update({
+        where: { id },
+        data: { notes: note },
+      });
+
+      return res.json(deal);
+    } catch (error) {
+      console.error('Error in updateNotes:', error);
+      return res.status(500).json({ message: 'Failed to update notes' });
+    }
+  },
+
   deleteDeal: async (req: Request, res: Response) => {
     try {
       const deal = await prisma.deal.delete({

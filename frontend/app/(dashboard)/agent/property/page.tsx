@@ -201,7 +201,6 @@ const Page: React.FC = () => {
                     cardDetails={prop.cardDetails}
                     isVerified={prop.isVerified}
                     agent={prop.createdBy}
-                    onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop)}
                   />
                 ))

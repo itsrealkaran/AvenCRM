@@ -6,10 +6,9 @@ import { Deal, DealStatus, LeadStatus, UserRole } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth } from '@/hooks/useAuth';
 
 import { DataTable } from '../data-table';
@@ -116,7 +115,62 @@ export default function DealsPage() {
   };
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
-    toast.success(`Downloading ${format.toUpperCase()} file...`);
+    const headers = [
+      'Name',
+      'Amount',
+      'Status',
+      'Agent',
+      'Client',
+      'Created At'
+    ];
+    const data = deals.map((deal) => [
+      deal.name || '',
+      deal.dealAmount?.toString() || '',
+      deal.status || '',
+      deal.agent?.name || '',
+      new Date(deal.createdAt).toLocaleDateString() || '',
+    ]);
+
+    if (format === 'csv') {
+      const csvRows = [
+        headers.join(','),
+        ...data.map((row) => row.map((field) => `"${field}"`).join(',')),
+      ];
+
+      const csvContent = csvRows.join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `deals_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast.success('CSV file downloaded successfully');
+    } else if (format === 'xlsx') {
+      try {
+        // Create worksheet
+        const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Deals');
+
+        // Generate filename
+        const fileName = `deals_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Write and download
+        XLSX.writeFile(wb, fileName);
+
+        toast.success('XLSX file downloaded successfully');
+      } catch (error) {
+        console.error('Error generating XLSX:', error);
+        toast.error('Failed to generate XLSX file');
+      }
+    }
   };
 
   const handleBulkDelete = async (dealIds: string[]) => {

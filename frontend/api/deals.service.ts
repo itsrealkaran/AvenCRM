@@ -96,4 +96,10 @@ export const dealsApi = {
     const response = await api.patch<DealsResponse>(`/deals/${id}/status`, { status });
     return response.data;
   },
+
+   // Add a note to a lead
+   addNote: async (id: string, note: any) => {
+    const response = await api.post(`/deals/${id}/notes`, { note });
+    return response.data;
+  },
 };

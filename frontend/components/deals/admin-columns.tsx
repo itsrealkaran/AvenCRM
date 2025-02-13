@@ -192,25 +192,10 @@ export const adminColumns: ColumnDef<Deal>[] = [
               </DialogTitle>
             </DialogHeader>
             <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
-              {notes.map(
-                (
-                  note: {
-                    time: string | number | Date;
-                    note:
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | ReactElement<any, string | JSXElementConstructor<any>>
-                      | Iterable<ReactNode>
-                      | ReactPortal
-                      | Promise<AwaitedReactNode>
-                      | null
-                      | undefined;
-                  },
-                  index: Key | null | undefined
-                ) => (
-                  <div key={index} className='space-y-2'>
+              {notes.map((note, index) => (
+                <div key={index} className='relative pl-6'>
+                  <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
+                  <div className='space-y-2'>
                     <div className='flex items-center gap-2'>
                       <span className='text-sm text-gray-500'>
                         {format(new Date(note.time), 'MMM d, yyyy')}
@@ -218,8 +203,8 @@ export const adminColumns: ColumnDef<Deal>[] = [
                     </div>
                     <p className='text-gray-700'>{note.note}</p>
                   </div>
-                )
-              )}
+                </div>
+              ))}
             </div>
           </DialogContent>
         </Dialog>

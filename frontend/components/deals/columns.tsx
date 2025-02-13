@@ -7,6 +7,7 @@ import {
   ReactElement,
   ReactNode,
   ReactPortal,
+  useState,
 } from 'react';
 import { Deal, DealStatus } from '@/types';
 import { ColumnDef } from '@tanstack/react-table';
@@ -20,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -32,6 +34,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { dealsApi } from '@/api/deals.service';
 
 const colors: Record<DealStatus, string> = {
   NEW: 'bg-purple-100 text-purple-800',
@@ -45,6 +49,120 @@ const colors: Record<DealStatus, string> = {
 const getStatusColor = (status: DealStatus): string => {
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
+
+interface Note {
+  note: string;
+  time: string;
+}
+
+interface NotesCellProps {
+  row: any; // We'll properly type this later
+}
+
+function NotesCell({ row }: NotesCellProps) {
+  const notes = row.original.notes || [];
+  const noteCount = Array.isArray(notes) ? notes.length : 0;
+  const [showTextArea, setShowTextArea] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const queryClient = useQueryClient();
+
+  const addNoteMutation = useMutation({
+    mutationFn: async ({ leadId, note }: { leadId: string; note: Note[] }) => {
+      return dealsApi.addNote(leadId, note);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      toast.success('Note added successfully');
+      setNewNote('');
+      setShowTextArea(false);
+    },
+    onError: () => {
+      toast.error('Failed to add note');
+    },
+  });
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    const existingNotes = Array.isArray(notes) ? notes : [];
+    const newNoteObj = {
+      note: newNote,
+      time: new Date().toISOString(),
+    };
+
+    addNoteMutation.mutate({
+      leadId: row.original.id,
+      note: [...existingNotes, newNoteObj],
+    });
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button
+          variant='ghost'
+          size='sm'
+          className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
+        >
+          <span className='font-medium text-gray-700'>{noteCount}</span>
+          {noteCount === 1 ? 'Note' : 'Notes'}
+        </Button>
+      </DialogTrigger>
+      <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
+        <DialogHeader>
+          <DialogTitle className='text-2xl font-semibold text-gray-800 mb-4'>
+            Notes Timeline
+          </DialogTitle>
+        </DialogHeader>
+        <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
+          {notes.map((note: Note, index: number) => (
+            <div key={index} className='relative pl-6'>
+              <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
+              <div className='space-y-2'>
+                <div className='flex items-center gap-2'>
+                  <span className='text-sm text-gray-500'>
+                    {format(new Date(note.time), 'MMM d, yyyy')}
+                  </span>
+                </div>
+                <p className='text-gray-700'>{note.note}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        {showTextArea ? (
+          <div className='mt-8 space-y-4'>
+            <textarea
+              placeholder='Add a new note...'
+              className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+            />
+            <div className='flex gap-2 justify-end'>
+              <Button
+                variant='outline'
+                onClick={() => {
+                  setShowTextArea(false);
+                  setNewNote('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
+                {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className='mt-8 flex justify-end'>
+            <Button onClick={() => setShowTextArea(true)} variant='outline'>
+              Add New Note
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+      <DialogFooter className='flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 pt-4' />
+    </Dialog>
+  );
+}
 
 export const columns: ColumnDef<Deal>[] = [
   {
@@ -250,61 +368,7 @@ export const columns: ColumnDef<Deal>[] = [
     accessorKey: 'notes',
     header: 'Notes',
     cell: ({ row }) => {
-      const notes = row.original.notes || [];
-      const noteCount = notes.length;
-
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
-            >
-              <span className='font-medium text-gray-700'>{noteCount}</span>
-              {noteCount === 1 ? 'Note' : 'Notes'}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
-            <DialogHeader>
-              <DialogTitle className='text-2xl font-semibold text-gray-800 mb-4'>
-                Notes Timeline
-              </DialogTitle>
-            </DialogHeader>
-            <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
-              {notes.map(
-                (
-                  note: {
-                    time: string | number | Date;
-                    note:
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | ReactElement<any, string | JSXElementConstructor<any>>
-                      | Iterable<ReactNode>
-                      | ReactPortal
-                      | Promise<AwaitedReactNode>
-                      | null
-                      | undefined;
-                  },
-                  index: Key | null | undefined
-                ) => (
-                  <div key={index} className='relative pl-6'>
-                    <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
-                    <div className='space-y-1'>
-                      <span className='block text-sm text-gray-500'>
-                        {format(new Date(note.time), 'MMM d, yyyy')}
-                      </span>
-                      <p className='text-gray-700'>{note.note}</p>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      );
+      return <NotesCell row={row} />;
     },
   },
   {

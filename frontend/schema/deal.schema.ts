@@ -54,9 +54,11 @@ const dealAgentSchema = z.object({
 // Response schemas
 export const dealResponseSchema = dealBaseSchema.extend({
   id: z.string().cuid(),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
   companyId: z.string().cuid(),
   agentId: z.string().cuid(),
   agent: dealAgentSchema,
+  dealAmount: z.number(),
   createdAt: z.date(),
   updatedAt: z.date().nullish(),
 });
