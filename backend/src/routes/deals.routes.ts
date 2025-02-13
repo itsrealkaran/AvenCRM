@@ -16,6 +16,9 @@ router.get('/:id', dealsController.getDealById);
 // Create new deal
 router.post('/', dealsController.createDeal);
 
+// Update notes
+router.post('/:id/notes', dealsController.updateNotes);
+
 // Update deal
 router.put('/:id', dealsController.updateDeal);
 

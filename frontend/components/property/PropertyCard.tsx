@@ -97,14 +97,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               Pending Verification
             </Badge>
           )}
-          <Button
+          {onDelete && (<Button
             variant='destructive'
             size='icon'
             className='absolute top-3 left-3 rounded-full'
             onClick={handleDelete}
           >
             <Trash2 className='w-4 h-4' />
-          </Button>
+          </Button>)}
           <div className='absolute bottom-3 right-3 flex gap-2'>
             <Button
               variant='outline'
