@@ -51,9 +51,7 @@ import { format, isValid } from 'date-fns';
 import { useRef } from 'react';
 
 import { AgentMetricsDialog } from './agent-metrics-dialog';
-import { columns } from './columns';
 import { CreateAgentDialog } from './create-agent-dialog';
-import { DataTable } from './data-table';
 import { read } from 'xlsx';
 import { utils } from 'xlsx';
 import { Input } from '@/components/ui/input';
@@ -460,15 +458,11 @@ export default function ManageAgentsPage() {
       },
     },
     muiTablePaperProps: {
-      classes: {
-        root: 'bg-white',
-        
-      },
       sx: {
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
-        '--Paper-shadow': 'none',
+        '--Paper-shadow': '0px 0px 0px 0px red',
       },
     },
     muiTableContainerProps: { 
