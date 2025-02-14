@@ -1,13 +1,11 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, Plus, Search } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, CirclePlus } from 'lucide-react';
 import moment from 'moment';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { GoogleCalendarService } from '@/lib/google-calendar';
 import { MicrosoftCalendarService } from '@/lib/microsoft-calendar';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +14,8 @@ import { createEvent, deleteEvent, fetchEvents, updateEvent } from './api';
 import EventCard from './event-card';
 import EventModal from './event-modal';
 import { getEventStyle } from './event-utils';
+import { PiMicrosoftOutlookLogoBold } from 'react-icons/pi';
+import { SiGooglecalendar } from 'react-icons/si';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -92,15 +92,6 @@ export default function CalendarView() {
 
   useEffect(() => {
     loadEvents();
-    const checkMicrosoftConnection = async () => {
-      try {
-        await microsoftCalendar.login();
-        await loadEvents();
-      } catch (error) {
-        console.error('Error checking Microsoft connection:', error);
-      }
-    };
-    checkMicrosoftConnection();
   }, [loadEvents]);
 
   useEffect(() => {
@@ -337,8 +328,10 @@ export default function CalendarView() {
           key={day.format('YYYY-MM-DD')}
           onClick={() => handleSelectDate(day)}
           className={`flex flex-col items-start justify-start p-1 sm:p-2 h-16 sm:h-24 w-full border border-gray-200 transition-all duration-200 ease-in-out ${
+            isToday ? 'font-bold bg-blue-100' : 
+            isSelected ? 'bg-purple-100' :
             isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
-          } ${isToday ? 'font-bold bg-blue-100' : ''} ${isSelected ? 'bg-purple-100' : ''}`}
+          }`}
         >
           <span
             className={`text-xs sm:text-sm ${isCurrentMonth ? 'text-gray-900' : 'text-gray-400'}`}
@@ -354,26 +347,12 @@ export default function CalendarView() {
                   backgroundColor: getEventStyle(event).backgroundColor,
                   color: getEventStyle(event).textColor,
                 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSelectEvent(event);
-                }}
               >
                 {event.title}
               </div>
             ))}
             {dayEvents.length > 2 && (
-              <div
-                className='text-xs text-gray-500 cursor-pointer hover:text-gray-700'
-                onClick={(e) => {
-                  e.stopPropagation();
-                  // TODO: Implement a modal to show all events for this day
-                  toast({
-                    title: 'Coming soon',
-                    description: 'View all events for this day',
-                  });
-                }}
-              >
+              <div className='text-xs text-gray-500 cursor-pointer hover:text-gray-700'>
                 +{dayEvents.length - 2} more
               </div>
             )}
@@ -416,16 +395,16 @@ export default function CalendarView() {
         <div className='flex flex-wrap items-center gap-3'>
           <Button
             variant='outline'
-            className='bg-white hover:bg-gray-50 text-xs sm:text-sm'
+            className='bg-white hover:bg-gray-50 text-xs'
             onClick={handleConnectGoogle}
             disabled={loading || isGoogleConnected}
           >
-            <Calendar className='w-4 h-4 mr-2' />
+            <SiGooglecalendar className='w-4 h-4' />
             {isGoogleConnected ? 'Connected to Google' : 'Connect Google Calendar'}
           </Button>
           <Button
             variant='outline'
-            className='bg-white hover:bg-gray-50 text-xs sm:text-sm'
+            className='bg-white hover:bg-gray-50 text-xs'
             onClick={async () => {
               try {
                 await microsoftCalendar.login();
@@ -444,15 +423,15 @@ export default function CalendarView() {
             }}
             disabled={loading || isMicrosoftConnected}
           >
-            <Calendar className='w-4 h-4 mr-2' />
-            Sync with Outlook
+            <PiMicrosoftOutlookLogoBold className='w-4 h-4' />
+            {isMicrosoftConnected ? 'Connected to Outlook' : 'Connect Outlook Calendar'}
           </Button>
           <Button
             onClick={handleSelectSlot}
-            className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium text-xs sm:text-sm'
+            className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white font-medium text-xs'
           >
-            <Plus className='w-4 h-4 mr-2' />
-            Add Event
+            <CirclePlus className='w-4 h-4' />
+            Add New Event
           </Button>
         </div>
       </div>

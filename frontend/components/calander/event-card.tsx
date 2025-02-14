@@ -16,12 +16,12 @@ export default function EventCard({ event, onClick }: EventCardProps) {
 
   return (
     <div
-      className='p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer bg-white'
+      className={`p-3 rounded-lg border border-gray-200 hover:shadow-md transition-shadow cursor-pointer`}
+      style={{ backgroundColor: `${backgroundColor}55` }}
       onClick={onClick}
     >
       <div className='flex items-start gap-3'>
-        <div className='w-1 h-full rounded-full self-stretch' style={{ backgroundColor }} />
-        <div className='flex-1 space-y-1'>
+        <div className='flex-1 space-y-1 ml-2'>
           <h3 className='font-medium text-sm text-gray-900 line-clamp-2'>{event.title}</h3>
           <div className='flex items-center text-xs text-gray-500'>
             <Clock className='h-3 w-3 mr-1' />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,20 @@ export default function EventModal({ isOpen, onClose, event, onSave, onDelete }:
           color: 'blue',
         },
   });
+
+  // Update form when event changes
+  useEffect(() => {
+    if (event) {
+      reset({
+        title: event.title || '',
+        description: event.description || '',
+        location: event.location || '',
+        start: formatDateForInput(new Date(event.start)),
+        end: formatDateForInput(new Date(event.end)),
+        color: event.color || 'blue',
+      });
+    }
+  }, [event, reset]);
 
   const onSubmit = async (data: EventFormData) => {
     try {
