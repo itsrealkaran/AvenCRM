@@ -31,21 +31,13 @@ import {
   UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { 
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Analytics as AnalyticsIcon,
-  PersonAdd as PersonAddIcon,
-  Refresh as RefreshIcon,
-  Download as DownloadIcon,
-} from '@mui/icons-material';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { format, isValid } from 'date-fns';
 import { useRef } from 'react';
@@ -462,16 +454,22 @@ export default function ManageAgentsPage() {
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
-        '--Paper-shadow': '0px 0px 0px 0px red',
+        boxShadow: 'none',
       },
     },
     muiTableContainerProps: { 
-      sx: { maxHeight: '600px', border: '1px solid rgb(201, 201, 201)', borderRadius: '8px' } 
+      sx: { 
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '600px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px' 
+      } 
     },
     renderTopToolbar: ({ table }) => (
       <Box
         sx={(theme) => ({
-          backgroundColor: lighten(theme.palette.background.default, 0.05),
           display: 'flex',
           gap: '0.5rem',
           py: '12px',
@@ -554,7 +552,6 @@ export default function ManageAgentsPage() {
                 Export
               </Button>
             </DropdownMenuTrigger>
-
             <DropdownMenuContent>
               <DropdownMenuItem onClick={() => handleDownload('csv')}>Export as CSV</DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleDownload('xlsx')}>Export as XLSX</DropdownMenuItem>
@@ -615,12 +612,12 @@ export default function ManageAgentsPage() {
 
   return (
     <div className='min-h-full w-full'>
-      <Card className='min-h-full flex flex-col p-6'>
-      <div className='flex justify-between items-center'>
+      <Card className='min-h-full flex flex-1 flex-col p-6'>
+        <div className='flex justify-between items-center mb-2'>
           <div>
-            <h1 className='text-2xl font-bold'>Leads Management</h1>
+            <h1 className='text-2xl font-bold'>Team Manager</h1>
             <p className='text-sm text-muted-foreground'>
-              Manage and track your leads in one place
+              Manage your team members and their roles
             </p>
           </div>
         </div>
@@ -638,6 +635,7 @@ export default function ManageAgentsPage() {
         }}
         // @ts-ignore
         user={isCreateDialogOpen ? undefined : selectedAgent}
+        refetch={refetch}
       />
       <AgentMetricsDialog
         open={isMetricsDialogOpen}

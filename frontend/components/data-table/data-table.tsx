@@ -199,7 +199,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
               disabled={disabled}
               size='sm'
               variant='outline'
-              className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+              className='p-1 border-[1px] bg-red-600 text-white hover:bg-red-700 px-2 rounded-md flex items-center text-xs'
               onClick={async () => {
                 const ok = await confirm();
                 if (ok) {

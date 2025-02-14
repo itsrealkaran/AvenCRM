@@ -30,6 +30,7 @@ interface CreateAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: User; // Optional user for editing mode
+  refetch: () => void;
 }
 
 interface User {
@@ -59,7 +60,7 @@ const getTeams = async (): Promise<Team[]> => {
   return response.json();
 };
 
-export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialogProps) {
+export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateAgentDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showThreshold, setShowThreshold] = useState(false);
   const [formData, setFormData] = useState({
@@ -177,12 +178,13 @@ export function CreateAgentDialog({ open, onOpenChange, user }: CreateAgentDialo
       toast.error(`Failed to ${user ? 'update' : 'create'} agent. Please try again.`);
     } finally {
       setLoading(false);
+      refetch();
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[425px]'>
+      <DialogContent className='sm:max-w-[625px]'>
         <DialogHeader>
           <DialogTitle>{user ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
           <DialogDescription>

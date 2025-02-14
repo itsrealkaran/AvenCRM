@@ -385,7 +385,7 @@ export const columns: ColumnDef<Deal>[] = [
       );
     },
     cell: ({ row }) => {
-      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+      return format(new Date(row.getValue('createdAt')), 'dd/MM/yyyy');
     },
   },
   {

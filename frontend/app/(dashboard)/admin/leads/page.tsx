@@ -13,7 +13,6 @@ import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
