@@ -11,7 +11,7 @@ interface JWTPayload {
 }
 
 // List of public routes that don't require authentication
-const publicRoutes = ['/', '/sign-in', '/sign-up', '/forgot-password', 'property'];
+const publicRoutes = ['/', '/sign-in', '/sign-up', '/forgot-password', '/property'];
 
 // List of protected routes that require authentication
 const protectedRoutes = ['/agent', '/admin', '/superadmin', '/teamleader'];
@@ -88,11 +88,11 @@ export async function middleware(request: NextRequest) {
       // Handle team leader redirection
       if (role === 'team_leader') {
         // Allow access to /agent route for team leaders
-        if (pathname.startsWith('/agent') || pathname.startsWith('/dashboard')) {
+        if (pathname.startsWith('/teamleader')) {
           return NextResponse.next();
         }
         // Redirect to /agent for any other routes
-        const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+        const redirectResponse = NextResponse.redirect(new URL('/teamleader', request.url));
         redirectResponse.headers.set('x-middleware-cache', 'no-cache');
         return redirectResponse;
       }
@@ -174,10 +174,10 @@ export async function middleware(request: NextRequest) {
 
       // Handle team leader permissions
       if (role === 'team_leader') {
-        if (pathname.startsWith('/agent') || pathname.startsWith('/dashboard')) {
+        if (pathname.startsWith('/teamleader')) {
           return NextResponse.next();
         }
-        const redirectResponse = NextResponse.redirect(new URL('/agent', request.url));
+        const redirectResponse = NextResponse.redirect(new URL('/teamleader', request.url));
         redirectResponse.headers.set('x-middleware-cache', 'no-cache');
         return redirectResponse;
       }
