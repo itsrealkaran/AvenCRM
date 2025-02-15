@@ -117,6 +117,48 @@ export const dealsController: Controller = {
     }
   },
 
+  getAllWonDeals: async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      let deals: any[] = [];
+      if (user.role === UserRole.ADMIN) {
+        deals = await prisma.deal.findMany({
+          where: {
+            status: DealStatus.WON,
+            companyId: user.companyId,
+          },
+          select: {
+            id: true,
+            name: true,
+            dealAmount: true,
+          },
+        });
+      } else if (user.role === UserRole.AGENT || user.role === UserRole.TEAM_LEADER) {
+        deals = await prisma.deal.findMany({
+        where: {
+          status: DealStatus.WON,
+          companyId: user.companyId,
+          agentId: user.id,
+        },
+        select: {
+          id: true,
+          name: true,
+          dealAmount: true,
+          },
+        });
+      }
+
+      return res.json(deals);
+    } catch (error) {
+      logger.error("Error in getAllWonDeals:", error);
+      return res.status(500).json({ message: "Failed to fetch won deals" });
+    }
+  },
+
   getDealById: async (req: Request, res: Response) => {
     try {
       const deal = await prisma.deal.findUnique({

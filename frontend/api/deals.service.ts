@@ -18,6 +18,12 @@ export const dealsApi = {
     return response.data;
   },
 
+  // Get all the won deals
+  getAllWonDeals: async (): Promise<any> => {
+    const response = await api.get('/deals/won');
+    return response.data;
+  },
+
   // Create a new deal with files
   createDeal: async (data: CreateDeal, files?: File[]): Promise<Deal> => {
     const formData = new FormData();

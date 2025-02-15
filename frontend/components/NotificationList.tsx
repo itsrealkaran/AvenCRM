@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, CheckSquareIcon } from 'lucide-react';
+import { CalendarIcon, CheckSquareIcon, UserIcon } from 'lucide-react';
 import axios from 'axios';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -54,21 +54,25 @@ export function NotificationList({allNotifications, isLoading}: {allNotification
     }
   };
 
-  const getIconByType = (type: 'calendar' | 'task') => {
+  const getIconByType = (type: 'calendar' | 'task' | 'lead') => {
     switch (type) {
       case 'calendar':
         return <CalendarIcon className="w-4 h-4 text-white" />;
       case 'task':
         return <CheckSquareIcon className="w-4 h-4 text-white" />;
+      case 'lead':
+        return <UserIcon className="w-4 h-4 text-white" />;
     }
   };
 
-  const getIconBgColor = (type: 'calendar' | 'task') => {
+  const getIconBgColor = (type: 'calendar' | 'task' | 'lead') => {
     switch (type) {
       case 'calendar':
         return 'bg-blue-500';
       case 'task':
         return 'bg-green-500';
+      case 'lead':
+        return 'bg-red-500';
     }
   };
 

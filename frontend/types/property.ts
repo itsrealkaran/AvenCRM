@@ -14,9 +14,9 @@ export enum PropertyStatus {
 }
 
 export enum PropertyType {
-  RESIDENTIAL = 'Residential',
-  COMMERCIAL = 'Commercial',
-  LAND = 'Land',
+  RESIDENTIAL = 'RESIDENTIAL',
+  COMMERCIAL = 'COMMERCIAL',
+  LAND = 'LAND',
 }
 
 export type Property = PropertyResponseSchema;

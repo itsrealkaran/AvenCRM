@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { dealsApi } from '@/api/deals.service';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -49,6 +50,14 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
       commissionRate: '',
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
+    },
+  });
+
+  const { data: wonDealsData, isLoading: isWonDealsLoading } = useQuery({
+    queryKey: ['wonDeals'],
+    queryFn: async () => {
+      const response = await dealsApi.getAllWonDeals();
+      return response;
     },
   });
 
@@ -98,12 +107,29 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 name='amount'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                  <FormLabel>Amount</FormLabel>
+                  <Select 
+                    onValueChange={(value) => field.onChange(value)}
+                    disabled={createTransaction.isPending}
+                  >
                     <FormControl>
-                      <Input type='number' placeholder='1000' {...field} />
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select a deal' />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                    <SelectContent>
+                      {wonDealsData && wonDealsData.map((deal: any) => (
+                        <SelectItem 
+                          key={deal.id} 
+                          value={deal.dealAmount.toString()}
+                        >
+                          {deal.name} - ${deal.dealAmount.toLocaleString()}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
                 )}
               />
               <FormField
