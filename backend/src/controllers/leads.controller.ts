@@ -361,11 +361,25 @@ export const leadsController: Controller  = {
     try {
       const { note } = req.body;
       const { id } = req.params;
+
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      let lead;
+      if (user.role === UserRole.ADMIN) {
+        lead = await prisma.lead.update({
+          where: { id },
+          data: { notes: note },
+        });
+      } else {
+        lead = await prisma.lead.update({
+          where: { id, agentId: user.id },
+          data: { notes: note },
+        });
+      }
   
-      const lead = await prisma.lead.update({
-        where: { id },
-        data: { notes: note },
-      });
 
       return res.json(lead);
     } catch (error) {

@@ -108,6 +108,7 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({
         images: formData.imageNames.map((file) => file), // Convert File objects to file names
         documents: formData.documents.map((file) => file.name), // Convert File objects to file names
       };
+      console.log(completeFormData, 'completeFormData');
 
       // Create card-related data
       const cardData = {
@@ -124,7 +125,7 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({
         parking: Number.parseInt(formData.parking) || 0,
       };
 
-      const response = await api.post(`/property`, {
+      await api.post(`/property`, {
         cardData,
         completeFormData,
       });

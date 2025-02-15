@@ -42,15 +42,14 @@ const LastDocuments: React.FC = () => {
           },
         });
 
-        return response.data.downloadUrl;
+        return response.data.key;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
-      const validUrls = uploadedUrls.filter((url) => url);
 
       // Update form with new document URLs
       updateFormData({
-        documents: [...(formData.documents || []), ...validUrls],
+        documents: uploadedUrls,
       });
     } catch (error) {
       console.error('Error uploading documents:', error);

@@ -401,10 +401,23 @@ export const dealsController: Controller = {
       const { note } = req.body;
       const { id } = req.params;
   
-      const deal = await prisma.deal.update({
-        where: { id },
-        data: { notes: note },
-      });
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      let deal: any;
+      if (user.role === UserRole.ADMIN) {
+        deal = await prisma.deal.update({
+          where: { id },
+          data: { notes: note },
+        });
+      } else {
+        deal = await prisma.deal.update({
+          where: { id, agentId: user.id },
+          data: { notes: note },
+        });
+      }
 
       return res.json(deal);
     } catch (error) {
