@@ -501,4 +501,70 @@ export const leadsController: Controller  = {
       return res.status(500).json({ message: 'Internal server error' });
     }
   },
+
+  bulkAssignLeads: async (req: Request, res: Response) => {
+    try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { leadIds, agentId } = req.body;
+
+      if (!Array.isArray(leadIds) || !agentId) {
+        return res.status(400).json({ 
+          message: 'Invalid request: leadIds must be an array and agentId is required' 
+        });
+      }
+
+      // Verify the agent belongs to the same company
+      const agent = await prisma.user.findFirst({
+        where: {
+          id: agentId,
+          companyId: user.companyId,
+        },
+      });
+
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      // Update all leads in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // First verify all leads belong to the company
+        const leads = await tx.lead.findMany({
+          where: {
+            id: { in: leadIds },
+            companyId: user.companyId,
+          },
+        });
+
+        if (leads.length !== leadIds.length) {
+          throw new Error('Some leads were not found or do not belong to your company');
+        }
+
+        // Perform the bulk update
+        return await tx.lead.updateMany({
+          where: {
+            id: { in: leadIds },
+            companyId: user.companyId,
+          },
+          data: {
+            agentId,
+          },
+        });
+      });
+
+      return res.json({ 
+        message: `Successfully assigned ${result.count} leads to agent`,
+        count: result.count 
+      });
+    } catch (error) {
+      logger.error('Error in bulkAssignLeads:', error);
+      if (error instanceof Error) {
+        return res.status(400).json({ message: error.message });
+      }
+      return res.status(500).json({ message: 'Failed to assign leads' });
+    }
+  },
 };

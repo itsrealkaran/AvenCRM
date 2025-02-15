@@ -100,12 +100,12 @@ export default function SignUp() {
                 <Image
                   src={
                     step <= 2
-                      ? 'https://www.pngarts.com/files/4/House-PNG-Image.png'
+                      ? '/sign-in.svg'
                       : step === 3 || step === 4
-                        ? 'https://www.pngarts.com/files/4/House-PNG-Image.png'
+                        ? '/sign-in.svg'
                         : step === 5 || step === 6 || step === 7
-                          ? 'https://www.pngarts.com/files/4/House-PNG-Image.png'
-                          : 'https://www.pngarts.com/files/4/House-PNG-Image.png'
+                          ? '/sign-in.svg'
+                          : '/sign-in.svg'
                   }
                   alt='Sign up illustration'
                   width={800}

@@ -190,7 +190,7 @@ function SignInContent() {
             <div className='absolute -bottom-8 left-20 w-72 h-72 bg-[#FFC2B4] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000'></div>
             <div className='relative'>
               <Image
-                src='https://www.pngarts.com/files/4/House-PNG-Image.png'
+                src='/sign-in.svg'
                 alt='CRM Dashboard Preview'
                 width={800}
                 height={600}

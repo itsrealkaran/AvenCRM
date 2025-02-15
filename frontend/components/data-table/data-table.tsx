@@ -20,6 +20,7 @@ import {
   Trash,
   Upload,
   X,
+  UserCog,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { read, utils } from 'xlsx';
@@ -42,6 +43,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import FileImportModal from './file-import-modal';
 import { BaseRecord, DataTableProps } from './types';
@@ -62,6 +70,8 @@ export function DataTable<TData extends BaseRecord, TValue>({
   buttons,
   refetch,
   onDownload,
+  onBulkAssign,
+  agents,
 }: DataTableProps<TData, TValue>) {
   const [ConfirmDialog, confirm] = useConfirm(
     'Are You Sure?',
@@ -194,6 +204,31 @@ export function DataTable<TData extends BaseRecord, TValue>({
         <div className='ml-auto flex gap-2'>
           {buttons}
           {additionalActions}
+          {onBulkAssign && agents && table.getFilteredSelectedRowModel().rows.length > 0 && (
+            <Select
+              onValueChange={async (agentId) => {
+                const selectedIds = table.getFilteredSelectedRowModel().rows.map(
+                  (row) => row.original.id
+                );
+                await onBulkAssign(selectedIds, agentId);
+                table.resetRowSelection();
+              }}
+            >
+              <SelectTrigger className='w-[150px]'>
+                <div className='flex items-center'>
+                  <span>Assign Selected</span>
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='unassigned'>Unassigned</SelectItem>
+                {agents.map((agent) => (
+                  <SelectItem key={agent.id} value={agent.id}>
+                    {agent.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
           {onBulkDelete && table.getFilteredSelectedRowModel().rows.length > 0 && (
             <Button
               disabled={disabled}
