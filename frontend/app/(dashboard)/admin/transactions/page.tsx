@@ -2,106 +2,88 @@
 
 import { useState } from 'react';
 import { transactionApi } from '@/api/api';
-import { Transaction, TransactionType } from '@/types';
+import { Transaction, TransactionStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { CirclePlus, RefreshCw, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
+import { Box } from '@mui/material';
+import * as XLSX from 'xlsx';
 
-import { TransactionFilters } from '@/components/filters/transaction-filters';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MRT_ToggleFiltersButton } from 'material-react-table';
 
-import { columns } from './columns';
+import { columns, renderRowActionMenuItems } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
-import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
-
-interface TransactionsResponse {
-  data: Transaction[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
-interface TransactionFilters {
-  page?: number;
-  limit?: number;
-  startDate?: Date;
-  endDate?: Date;
-  createdById?: string;
-  type?: TransactionType;
-  minAmount?: number;
-  maxAmount?: number;
-  sortBy?: string;
-  sortOrder?: 'asc' | 'desc';
-}
 
 export default function TransactionsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
-  const [filters, setFilters] = useState<TransactionFilters>({});
-  const [page, setPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
-  const [loading, setLoading] = useState(false);
 
-  const { data: transactionsData, isLoading } = useQuery({
-    queryKey: ['transactions', filters, page],
-    queryFn: () => transactionApi.getAll({ ...filters, page, limit: 10 }).then((res) => res.data),
+  const { data: transactionsData, isLoading: isTransactionsLoading } = useQuery({
+    queryKey: ['transactions'],
+    queryFn: () => transactionApi.getAll().then((res) => res.data),
   });
 
   const transactions = transactionsData?.data || [];
-  const totalPages = transactionsData?.meta?.totalPages || 1;
-
-  const typeOptions = Object.values(TransactionType).map((type) => ({
-    label: type.charAt(0) + type.slice(1).toLowerCase(),
-    value: type,
-  }));
-
-  const handleFilterChange = (newFilters: Partial<TransactionFilters>) => {
-    setFilters(newFilters);
-    setPage(1); // Reset to first page when filters change
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
 
   const deleteTransaction = useMutation({
     mutationFn: (transactionId: string) => {
-      setLoading(true);
+      setIsLoading(true);
       return transactionApi.delete(transactionId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transaction deleted successfully');
-      setLoading(false);
+      setIsLoading(false);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete transaction');
-      setLoading(false);
+      setIsLoading(false);
     },
   });
 
   const bulkDeleteTransactions = useMutation({
     mutationFn: (transactionIds: string[]) => {
-      setLoading(true);
+      setIsLoading(true);
       return transactionApi.bulkDelete(transactionIds);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transactions deleted successfully');
-      setSelectedRows([]);
-      setLoading(false);
+      setIsLoading(false);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Failed to delete transactions');
-      setLoading(false);
+      setIsLoading(false);
+    },
+  });
+
+  const verifyTransaction = useMutation({
+    mutationFn: ({ transactionId, status }: { transactionId: string; status: TransactionStatus }) => {
+      setIsLoading(true);
+      return transactionApi.verify(transactionId, status === TransactionStatus.APPROVED);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transactions'] });
+      toast.success('Transaction status updated successfully');
+      setIsLoading(false);
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update transaction status');
+      setIsLoading(false);
     },
   });
 
@@ -110,77 +92,211 @@ export default function TransactionsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async (transactionId: string) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
-      deleteTransaction.mutate(transactionId);
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    setIsLoading(false);
+  };
+
+  const handleDownload = (format: 'csv' | 'xlsx') => {
+    try {
+      // Prepare data for export
+      const exportData = transactions.map((transaction) => ({
+        'Invoice Number': transaction.invoiceNumber,
+        'Created By': transaction.agent?.name || 'N/A',
+        'Amount': new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+        }).format(transaction.amount),
+        'Status': transaction.status,
+        'Date': new Date(transaction.date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric'
+        }),
+        'Commission Rate': `${transaction.commissionRate || 0}%`,
+        'Transaction Method': transaction.transactionMethod || 'N/A',
+      }));
+
+      if (format === 'csv') {
+        // Create CSV content
+        const headers = Object.keys(exportData[0]);
+        const csvContent = [
+          headers.join(','),
+          ...exportData.map(row => 
+            headers.map(header => 
+              JSON.stringify(row[header as keyof typeof row])
+            ).join(',')
+          )
+        ].join('\n');
+
+        // Create and trigger download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `transactions_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } else {
+        // Create XLSX workbook
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+
+        // Generate and download XLSX file
+        XLSX.writeFile(workbook, `transactions_${new Date().toISOString().split('T')[0]}.xlsx`);
+      }
+
+      toast.success(`Transactions exported as ${format.toUpperCase()} successfully`);
+    } catch (error) {
+      console.error('Error exporting transactions:', error);
+      toast.error(`Failed to export transactions as ${format.toUpperCase()}`);
     }
   };
 
-  const verifyTransaction = useMutation({
-    mutationFn: ({ transactionId, isVerified }: { transactionId: string; isVerified: boolean }) => {
-      setLoading(true);
-      return transactionApi.verify(transactionId, isVerified);
+  const table = useMaterialReactTable({
+    columns,
+    data: transactions,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['transactions'] });
-      toast.success('Transaction status updated successfully');
-      setLoading(false);
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to update transaction status');
-      setLoading(false);
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '600px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder="Search transactions..."
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <Button
+              variant='outline'
+              size='sm'
+              className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete these transactions?')) {
+                  bulkDeleteTransactions.mutate(
+                    table.getSelectedRowModel().rows.map((row) => row.original.id)
+                  );
+                  table.resetRowSelection();
+                }
+              }}
+            >
+              Delete ({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+          )}
+          <Button variant='outline' size='sm' onClick={handleRefresh}>
+            <RefreshCw className='h-4 w-4' />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Upload className='h-4 w-4' />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
+            <CirclePlus className='h-4 w-4' /> Add Transaction
+          </Button>
+        </Box>
+      </Box>
+    ),
+    renderRowActionMenuItems: ({ row, closeMenu }) =>
+      renderRowActionMenuItems({
+        row,
+        closeMenu,
+        onEdit: handleEdit,
+        onDelete: (id) => deleteTransaction.mutate(id),
+        onVerify: (id, status) => verifyTransaction.mutate({ transactionId: id, status }),
+      }),
+    state: {
+      isLoading: isLoading || isTransactionsLoading,
     },
   });
 
-  if (isLoading) {
-    return (
-      <Card className='h-full p-6'>
-        <Skeleton className='h-[400px] w-full' />
-      </Card>
-    );
-  }
-
   return (
-    <Card className='flex flex-col gap-4 p-6 h-full'>
-      <div className='flex items-center justify-between'>
-        <h1 className='text-2xl font-semibold'>Transactions</h1>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className='mr-2 h-4 w-4' />
-          Add Transaction
-        </Button>
-      </div>
+    <div className='min-h-full w-full'>
+      <Card className='min-h-full flex flex-1 flex-col p-6'>
+        <div className='flex justify-between items-center mb-2'>
+          <div>
+            <h1 className='text-2xl font-bold'>Transactions</h1>
+            <p className='text-sm text-muted-foreground'>
+              Manage your transactions and their status
+            </p>
+          </div>
+        </div>
+        <MaterialReactTable table={table} />
+      </Card>
 
-      <TransactionFilters onFilterChange={handleFilterChange} typeOptions={typeOptions} />
-
-      <DataTable
-        columns={columns}
-        data={transactions}
-        onEdit={(transaction) => {
-          setSelectedTransaction(transaction);
-          setIsEditDialogOpen(true);
-        }}
-        onDelete={async (transactionId) => {
-          await deleteTransaction.mutateAsync(transactionId);
-        }}
-        onVerify={async (transactionId, isVerified) => {
-          await verifyTransaction.mutateAsync({ transactionId, isVerified });
-        }}
-        onBulkDelete={async (rows: any[]) => {
-          await bulkDeleteTransactions.mutateAsync(rows.map((row: { id: any }) => row.id));
-        }}
+      <CreateTransactionDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen} 
       />
-
-      <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
       {selectedTransaction && (
         <EditTransactionDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           transaction={selectedTransaction}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
+
         />
       )}
-    </Card>
+    </div>
   );
 }
