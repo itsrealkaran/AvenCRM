@@ -1,11 +1,12 @@
-'use client'
+'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CalendarIcon, CheckSquareIcon, UserIcon } from 'lucide-react';
 import axios from 'axios';
-import { useAuth } from '@/hooks/useAuth';
+import { CalendarIcon, CheckSquareIcon, UserIcon } from 'lucide-react';
+
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Notification {
   id: string;
@@ -17,7 +18,13 @@ interface Notification {
   link?: string;
 }
 
-export function NotificationList({allNotifications, isLoading}: {allNotifications: Notification[], isLoading: boolean}) {
+export function NotificationList({
+  allNotifications,
+  isLoading,
+}: {
+  allNotifications: Notification[];
+  isLoading: boolean;
+}) {
   const router = useRouter();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>(allNotifications);
@@ -26,18 +33,18 @@ export function NotificationList({allNotifications, isLoading}: {allNotification
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.isRead) {
       try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notification/read/${notification.id}`, {}, { withCredentials: true });
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/notification/read/${notification.id}`,
+          {},
+          { withCredentials: true }
+        );
         // Update the notification in the local state
         if (response.status === 200) {
-          setNotifications(prev =>
-            prev.map(n =>
-              n.id === notification.id ? { ...n, isRead: true } : n
-            )
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
           );
-          if (notification.link)
-            router.push(notification.link);
-        }
-        else {
+          if (notification.link) router.push(notification.link);
+        } else {
           toast({
             variant: 'destructive',
             title: 'Error',
@@ -48,7 +55,7 @@ export function NotificationList({allNotifications, isLoading}: {allNotification
         console.error('Error marking notification as read:', error);
       }
     }
-    
+
     if (notification.link) {
       router.push(notification.link);
     }
@@ -57,11 +64,11 @@ export function NotificationList({allNotifications, isLoading}: {allNotification
   const getIconByType = (type: 'calendar' | 'task' | 'lead') => {
     switch (type) {
       case 'calendar':
-        return <CalendarIcon className="w-4 h-4 text-white" />;
+        return <CalendarIcon className='w-4 h-4 text-white' />;
       case 'task':
-        return <CheckSquareIcon className="w-4 h-4 text-white" />;
+        return <CheckSquareIcon className='w-4 h-4 text-white' />;
       case 'lead':
-        return <UserIcon className="w-4 h-4 text-white" />;
+        return <UserIcon className='w-4 h-4 text-white' />;
     }
   };
 
@@ -78,7 +85,9 @@ export function NotificationList({allNotifications, isLoading}: {allNotification
 
   const clearAllNotifications = async () => {
     try {
-      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notification/all`, { withCredentials: true });
+      await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notification/all`, {
+        withCredentials: true,
+      });
       setNotifications([]);
     } catch (error) {
       console.error('Error clearing notifications:', error);
@@ -86,27 +95,27 @@ export function NotificationList({allNotifications, isLoading}: {allNotification
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center">Loading notifications...</div>;
+    return <div className='p-4 text-center'>Loading notifications...</div>;
   }
 
   if (allNotifications.length === 0) {
-    return <div className="p-4 text-center text-muted-foreground">No notifications</div>;
+    return <div className='p-4 text-center text-muted-foreground'>No notifications</div>;
   }
 
   return (
-    <div className="w-full">
-      <div className="px-4 py-3 border-b flex justify-between items-center">
-        <h3 className="font-semibold text-base">Recent Activities</h3>
+    <div className='w-full'>
+      <div className='px-4 py-3 border-b flex justify-between items-center'>
+        <h3 className='font-semibold text-base'>Recent Activities</h3>
         {notifications.length > 0 && (
           <button
             onClick={clearAllNotifications}
-            className="text-sm text-red-600 hover:text-red-800 transition-colors"
+            className='text-sm text-red-600 hover:text-red-800 transition-colors'
           >
             Clear All
           </button>
         )}
       </div>
-      <div className="p-2 h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+      <div className='p-2 h-[200px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100'>
         {allNotifications.map((notification) => (
           <div
             key={notification.id}

@@ -59,7 +59,9 @@ export default function DashboardPage() {
   return (
     <div className='flex-1 space-y-4 p-4 md:p-6 rounded-xl z-20 shadow-lg bg-white'>
       <div className='flex items-center justify-between space-y-2'>
-        <h1 className='text-3xl font-bold tracking-tight'>Welcome {user?.name ? `${user.name} !` : ''}</h1>
+        <h1 className='text-3xl font-bold tracking-tight'>
+          Welcome {user?.name ? `${user.name} !` : ''}
+        </h1>
       </div>
       <AgentDashboard />
     </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { leadsApi } from '@/api/leads.service';
 import { Lead, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
@@ -41,8 +43,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
-import { leadsApi } from '@/api/leads.service';
 
 const getStatusColor = (status: LeadStatus) => {
   const colors = {

@@ -123,15 +123,7 @@ export default function LeadsPage() {
     }
 
     // Define common data structure
-    const headers = [
-      'Name',
-      'Email',
-      'Phone',
-      'Source',
-      'Status',
-      'Agent',
-      'Created At'
-    ];
+    const headers = ['Name', 'Email', 'Phone', 'Source', 'Status', 'Agent', 'Created At'];
     const data = lead.map((lead) => [
       lead.name || '',
       lead.email || '',

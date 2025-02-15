@@ -103,8 +103,8 @@ export const dealsApi = {
     return response.data;
   },
 
-   // Add a note to a lead
-   addNote: async (id: string, note: any) => {
+  // Add a note to a lead
+  addNote: async (id: string, note: any) => {
     const response = await api.post(`/deals/${id}/notes`, { note });
     return response.data;
   },

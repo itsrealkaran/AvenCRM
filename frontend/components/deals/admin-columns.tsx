@@ -9,7 +9,9 @@ import {
   ReactPortal,
   useState,
 } from 'react';
+import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus } from '@/types';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
@@ -34,8 +36,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { dealsApi } from '@/api/deals.service';
 
 const statusColorMap: Record<DealStatus, string> = {
   NEW: 'bg-blue-100 text-blue-800',
@@ -164,7 +164,6 @@ function NotesCell({ row }: NotesCellProps) {
     </Dialog>
   );
 }
-
 
 export const adminColumns: ColumnDef<Deal>[] = [
   {

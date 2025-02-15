@@ -296,11 +296,7 @@ function DealForm({
         >
           Cancel
         </Button>
-        <Button 
-          type='submit' 
-          disabled={isLoading}
-          className='min-w-[100px]'
-        >
+        <Button type='submit' disabled={isLoading} className='min-w-[100px]'>
           {isLoading ? (
             <>
               <Loader2 className='mr-2 h-4 w-4 animate-spin' />

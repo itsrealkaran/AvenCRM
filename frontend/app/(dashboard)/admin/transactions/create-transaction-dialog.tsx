@@ -1,11 +1,12 @@
 'use client';
 
+import { dealsApi } from '@/api/deals.service';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -26,7 +27,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { dealsApi } from '@/api/deals.service';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -108,29 +108,27 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 name='amount'
                 render={({ field }) => (
                   <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(value)}
-                    disabled={createTransaction.isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select a deal' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {wonDealsData && wonDealsData.map((deal: any) => (
-                        <SelectItem 
-                          key={deal.id} 
-                          value={deal.dealAmount.toString()}
-                        >
-                          {deal.name} - ${deal.dealAmount.toLocaleString()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)}
+                      disabled={createTransaction.isPending}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a deal' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {wonDealsData &&
+                          wonDealsData.map((deal: any) => (
+                            <SelectItem key={deal.id} value={deal.dealAmount.toString()}>
+                              {deal.name} - ${deal.dealAmount.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
               <FormField
@@ -140,10 +138,10 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                   <FormItem>
                     <FormLabel>Commission Rate (%)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type='number' 
-                        placeholder='10' 
-                        {...field} 
+                      <Input
+                        type='number'
+                        placeholder='10'
+                        {...field}
                         disabled={createTransaction.isPending}
                       />
                     </FormControl>
@@ -157,8 +155,8 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Transaction Method</FormLabel>
-                    <Select 
-                      onValueChange={field.onChange} 
+                    <Select
+                      onValueChange={field.onChange}
                       defaultValue={field.value}
                       disabled={createTransaction.isPending}
                     >
@@ -184,11 +182,7 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                   <FormItem>
                     <FormLabel>Transaction Date</FormLabel>
                     <FormControl>
-                      <Input 
-                        type='date' 
-                        {...field} 
-                        disabled={createTransaction.isPending}
-                      />
+                      <Input type='date' {...field} disabled={createTransaction.isPending} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -196,16 +190,16 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
               />
             </div>
             <div className='flex justify-end space-x-4'>
-              <Button 
-                type='button' 
-                variant='outline' 
+              <Button
+                type='button'
+                variant='outline'
                 onClick={() => onOpenChange(false)}
                 disabled={createTransaction.isPending}
               >
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
+              <Button
+                type='submit'
                 disabled={createTransaction.isPending || !form.formState.isValid}
                 className='min-w-[100px]'
               >

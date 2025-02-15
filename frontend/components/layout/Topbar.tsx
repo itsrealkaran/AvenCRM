@@ -31,10 +31,11 @@ export default function Topbar() {
     return name.split(' ')[0][0].toUpperCase();
   };
 
-  
   const getNotifications = async () => {
     try {
-      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notification`, { withCredentials: true});
+      const { data } = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/notification`, {
+        withCredentials: true,
+      });
       return data.notifications;
     } catch (error) {
       console.error('Error fetching notifications:', error);

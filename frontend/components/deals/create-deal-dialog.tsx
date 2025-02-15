@@ -4,8 +4,8 @@ import { dealsApi } from '@/api/deals.service';
 import { createDealSchema } from '@/schema/deal.schema';
 import { CreateDeal, DealStatus, PropertyType } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -239,8 +239,8 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
             >
               Cancel
             </Button>
-            <Button 
-              type='submit' 
+            <Button
+              type='submit'
               disabled={createDeal.isPending || !form.formState.isValid}
               className='min-w-[100px]'
             >

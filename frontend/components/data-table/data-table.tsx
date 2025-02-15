@@ -102,7 +102,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
       const fileType = file.name.split('.').pop()?.toLowerCase();
 
       if (fileType === 'csv') {
-        setHeaders(null)
+        setHeaders(null);
         const text = await file.text();
         const rows = text.split('\n');
         const headers = rows[0].split(',').map((header) => header.trim());
@@ -119,16 +119,16 @@ export function DataTable<TData extends BaseRecord, TValue>({
           );
         });
       } else if (fileType === 'xlsx') {
-        setHeaders(null)
+        setHeaders(null);
         const buffer = await file.arrayBuffer();
         const workbook = read(buffer);
         const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-        
+
         // Get headers from the first row
         const headers = utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
 
         setHeaders(headers);
-        
+
         // Get data excluding the header row
         jsonData = utils.sheet_to_json(worksheet);
       } else {
@@ -287,7 +287,11 @@ export function DataTable<TData extends BaseRecord, TValue>({
         </div>
       </div>
       {fileData && fileData.length > 0 && (
-        <FileImportModal jsonData={fileData} headers={headers || []} onClose={() => setFileData(null)} />
+        <FileImportModal
+          jsonData={fileData}
+          headers={headers || []}
+          onClose={() => setFileData(null)}
+        />
       )}
       <div className='rounded-md border flex-1 overflow-x-auto'>
         <Table>

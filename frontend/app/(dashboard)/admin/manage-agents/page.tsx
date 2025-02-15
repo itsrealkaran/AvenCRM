@@ -1,53 +1,47 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { UserRole, type User } from '@/types';
+import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { toast } from 'sonner';
-import * as XLSX from 'xlsx';
-import { 
-  MaterialReactTable, 
-  useMaterialReactTable,
-  type MRT_ColumnDef,
-  MRT_ToggleFiltersButton,
-  MRT_GlobalFilterTextField,
-} from 'material-react-table';
-import { 
-  Box, 
-  ListItemIcon,
-  MenuItem,
-  Typography,
-  lighten,
-} from '@mui/material';
-import { 
-  CirclePlus, 
-  Download, 
-  RefreshCw, 
-  Upload,
-  Pencil,
-  Trash2,
+import { format, isValid } from 'date-fns';
+import {
   BarChart3,
+  CirclePlus,
+  Download,
+  Pencil,
+  RefreshCw,
+  Trash2,
+  Upload,
   UserCog,
 } from 'lucide-react';
+import {
+  MaterialReactTable,
+  MRT_GlobalFilterTextField,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+  type MRT_ColumnDef,
+} from 'material-react-table';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
+import { read } from 'xlsx';
+import { utils } from 'xlsx';
+
+import FileImportModal from '@/components/data-table/file-import-modal';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { format, isValid } from 'date-fns';
-import { useRef } from 'react';
+import { Input } from '@/components/ui/input';
 
 import { AgentMetricsDialog } from './agent-metrics-dialog';
 import { CreateAgentDialog } from './create-agent-dialog';
-import { read } from 'xlsx';
-import { utils } from 'xlsx';
-import { Input } from '@/components/ui/input';
-import FileImportModal from '@/components/data-table/file-import-modal';
 
 async function getAgents(): Promise<User[]> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
@@ -144,7 +138,6 @@ export default function ManageAgentsPage() {
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
-  
 
   const bulkDeleteAgents = useMutation({
     mutationFn: async (agentIds: string[]) => {
@@ -248,7 +241,7 @@ export default function ManageAgentsPage() {
         const rows = text.split('\n');
         const headers = rows[0].split(',').map((header) => header.trim());
         setHeaders(headers);
-        console.log(headers, "headers");
+        console.log(headers, 'headers');
 
         jsonData = rows.slice(1).map((row) => {
           const values = row.split(',').map((value) => value.trim());
@@ -268,7 +261,7 @@ export default function ManageAgentsPage() {
         // Get headers from the first row
         const headers = utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
         setHeaders(headers);
-        
+
         jsonData = utils.sheet_to_json(worksheet);
       } else {
         throw new Error('Unsupported file format');
@@ -294,7 +287,6 @@ export default function ManageAgentsPage() {
       setFileData(null);
     }
   };
-
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
     if (!agents || agents.length === 0) {
@@ -366,67 +358,70 @@ export default function ManageAgentsPage() {
     }
   };
 
-  const columns = useMemo<MRT_ColumnDef<User>[]>(() => [
-    {
-      accessorKey: 'name',
-      header: 'Name',
-    },
-    {
-      accessorKey: 'email',
-      header: 'Email',
-      enableClickToCopy: true,
-    },
-    {
-      accessorKey: 'phone',
-      header: 'Phone',
-    },
-    {
-      accessorKey: 'dob',
-      header: 'Date of Birth',
-      Cell: ({ row }) => {
-        const date = new Date(row.getValue('dob'));
-        return isValid(date) ? format(date, 'dd/MM/yyyy') : 'N/A';
+  const columns = useMemo<MRT_ColumnDef<User>[]>(
+    () => [
+      {
+        accessorKey: 'name',
+        header: 'Name',
       },
-    },
-    {
-      accessorKey: 'role',
-      header: 'Role',
-      Cell: ({ row }) => {
-        const role: UserRole = row.getValue('role');
-        return <Badge className={getRoleBadgeColor(role)}>{role.replace('_', ' ')}</Badge>;
+      {
+        accessorKey: 'email',
+        header: 'Email',
+        enableClickToCopy: true,
       },
-      filterVariant: 'select',
-      filterSelectOptions: ['ADMIN', 'TEAM_LEADER', 'AGENT'],
-    },
-    {
-      accessorKey: 'team',
-      header: 'Team',
-      Cell: ({ row }) => {
-        const team = row.original.team;
-        return team ? team.name : 'Not Assigned';
+      {
+        accessorKey: 'phone',
+        header: 'Phone',
       },
-    },
-    {
-      accessorKey: 'isActive',
-      header: 'Status',
-      Cell: ({ row }) => {
-        const isActive: boolean = row.getValue('isActive');
-        return (
-          <Badge className={isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
-            {isActive ? 'Active' : 'Inactive'}
-          </Badge>
-        );
+      {
+        accessorKey: 'dob',
+        header: 'Date of Birth',
+        Cell: ({ row }) => {
+          const date = new Date(row.getValue('dob'));
+          return isValid(date) ? format(date, 'dd/MM/yyyy') : 'N/A';
+        },
       },
-    },
-    {
-      accessorKey: 'createdAt',
-      header: 'Created At',
-      Cell: ({ row }) => {
-        const date = new Date(row.getValue('createdAt'));
-        return isValid(date) ? format(date, 'dd/MM/yyyy') : 'N/A';
+      {
+        accessorKey: 'role',
+        header: 'Role',
+        Cell: ({ row }) => {
+          const role: UserRole = row.getValue('role');
+          return <Badge className={getRoleBadgeColor(role)}>{role.replace('_', ' ')}</Badge>;
+        },
+        filterVariant: 'select',
+        filterSelectOptions: ['ADMIN', 'TEAM_LEADER', 'AGENT'],
       },
-    },
-  ], []);
+      {
+        accessorKey: 'team',
+        header: 'Team',
+        Cell: ({ row }) => {
+          const team = row.original.team;
+          return team ? team.name : 'Not Assigned';
+        },
+      },
+      {
+        accessorKey: 'isActive',
+        header: 'Status',
+        Cell: ({ row }) => {
+          const isActive: boolean = row.getValue('isActive');
+          return (
+            <Badge className={isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+              {isActive ? 'Active' : 'Inactive'}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: 'createdAt',
+        header: 'Created At',
+        Cell: ({ row }) => {
+          const date = new Date(row.getValue('createdAt'));
+          return isValid(date) ? format(date, 'dd/MM/yyyy') : 'N/A';
+        },
+      },
+    ],
+    []
+  );
 
   const table = useMaterialReactTable({
     columns,
@@ -457,15 +452,15 @@ export default function ManageAgentsPage() {
         boxShadow: 'none',
       },
     },
-    muiTableContainerProps: { 
-      sx: { 
+    muiTableContainerProps: {
+      sx: {
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
         height: '600px',
         border: '1px solid rgb(201, 201, 201)',
-        borderRadius: '8px' 
-      } 
+        borderRadius: '8px',
+      },
     },
     renderTopToolbar: ({ table }) => (
       <Box
@@ -478,7 +473,7 @@ export default function ManageAgentsPage() {
       >
         <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Input
-            placeholder="Search agents..."
+            placeholder='Search agents...'
             value={table.getState().globalFilter ?? ''}
             onChange={(e) => table.setGlobalFilter(e.target.value)}
             className='w-md'
@@ -486,7 +481,7 @@ export default function ManageAgentsPage() {
           <MRT_ToggleFiltersButton table={table} />
         </Box>
         <Box sx={{ display: 'flex', gap: '0.5rem' }}>
-        {table.getSelectedRowModel().rows.length > 0 && (
+          {table.getSelectedRowModel().rows.length > 0 && (
             <Button
               size={'sm'}
               variant={'outline'}
@@ -495,7 +490,7 @@ export default function ManageAgentsPage() {
                 const ok = await confirm();
                 if (ok) {
                   toast.loading('Deleting agents...', { id: 'delete' });
-                  handleBulkDelete(table.getSelectedRowModel().rows.map(row => row.original.id));
+                  handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
                   toast.dismiss('delete');
                   table.resetRowSelection();
                 }
@@ -505,7 +500,7 @@ export default function ManageAgentsPage() {
               Delete({table.getFilteredSelectedRowModel().rows.length})
             </Button>
           )}
-            
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='sm'>
@@ -553,8 +548,12 @@ export default function ManageAgentsPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleDownload('csv')}>Export as CSV</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>Export as XLSX</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
           <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
@@ -600,10 +599,10 @@ export default function ManageAgentsPage() {
           closeMenu();
         }}
         sx={{ m: 0 }}
-        className="text-red-600"
+        className='text-red-600'
       >
         <ListItemIcon>
-          <Trash2 className="text-red-600" />
+          <Trash2 className='text-red-600' />
         </ListItemIcon>
         Delete Agent
       </MenuItem>,
@@ -642,7 +641,13 @@ export default function ManageAgentsPage() {
         onOpenChange={setIsMetricsDialogOpen}
         userId={selectedAgentId}
       />
-      {fileData && <FileImportModal jsonData={fileData} headers={headers || []} onClose={() => setFileData(null)} />}
+      {fileData && (
+        <FileImportModal
+          jsonData={fileData}
+          headers={headers || []}
+          onClose={() => setFileData(null)}
+        />
+      )}
     </div>
   );
 }

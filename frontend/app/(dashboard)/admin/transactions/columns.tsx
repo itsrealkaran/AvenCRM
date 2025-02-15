@@ -1,10 +1,11 @@
 'use client';
 
 import { Transaction, TransactionStatus } from '@/types';
+import { ListItemIcon, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
 import { Pencil, Trash2, UserCog } from 'lucide-react';
 import { type MRT_ColumnDef } from 'material-react-table';
-import { MenuItem, ListItemIcon } from '@mui/material';
+
 import { Badge } from '@/components/ui/badge';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
@@ -37,7 +38,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     header: 'Status',
     Cell: ({ row }) => {
       const status: TransactionStatus = row.getValue('status');
-      
+
       switch (status) {
         case TransactionStatus.APPROVED:
           return (
@@ -71,14 +72,14 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
   },
 ];
 
-export const renderRowActionMenuItems = ({ 
-  row, 
+export const renderRowActionMenuItems = ({
+  row,
   closeMenu,
   onEdit,
   onDelete,
-  onVerify 
-}: { 
-  row: any; 
+  onVerify,
+}: {
+  row: any;
   closeMenu: () => void;
   onEdit: (transaction: Transaction) => void;
   onDelete: (transactionId: string) => void;
@@ -93,7 +94,7 @@ export const renderRowActionMenuItems = ({
     sx={{ m: 0 }}
   >
     <ListItemIcon>
-      <Pencil className="size-4" />
+      <Pencil className='size-4' />
     </ListItemIcon>
     Edit Transaction
   </MenuItem>,
@@ -105,10 +106,10 @@ export const renderRowActionMenuItems = ({
         closeMenu();
       }}
       sx={{ m: 0 }}
-      className="text-green-600"
+      className='text-green-600'
     >
       <ListItemIcon>
-        <UserCog className="size-4 text-green-600" />
+        <UserCog className='size-4 text-green-600' />
       </ListItemIcon>
       Approve Transaction
     </MenuItem>
@@ -121,10 +122,10 @@ export const renderRowActionMenuItems = ({
         closeMenu();
       }}
       sx={{ m: 0 }}
-      className="text-orange-600"
+      className='text-orange-600'
     >
       <ListItemIcon>
-        <UserCog className="size-4 text-orange-600" />
+        <UserCog className='size-4 text-orange-600' />
       </ListItemIcon>
       Reject Transaction
     </MenuItem>
@@ -136,10 +137,10 @@ export const renderRowActionMenuItems = ({
       closeMenu();
     }}
     sx={{ m: 0 }}
-    className="text-red-600"
+    className='text-red-600'
   >
     <ListItemIcon>
-      <Trash2 className="size-4 text-red-600" />
+      <Trash2 className='size-4 text-red-600' />
     </ListItemIcon>
     Delete Transaction
   </MenuItem>,

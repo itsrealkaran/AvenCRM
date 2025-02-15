@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+import { dealsApi } from '@/api/deals.service';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -25,8 +27,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { dealsApi } from '@/api/deals.service';
-import { useState } from 'react';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -94,7 +94,7 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
   function onSubmit(values: TransactionFormValues) {
     createTransaction.mutate(values);
   }
-  console.log(wonDealsData, "wonDealsData");
+  console.log(wonDealsData, 'wonDealsData');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -110,30 +110,32 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 name='amount'
                 render={({ field }) => (
                   <FormItem>
-                  <FormLabel>Amount</FormLabel>
-                  <Select 
-                    onValueChange={(value) => field.onChange(value)}
-                    disabled={createTransaction.isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select a deal' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {wonDealsData && wonDealsData.map((deal: any) => (
-                        console.log(deal, "deal"),
-                        <SelectItem 
-                          key={deal.id} 
-                          value={deal.dealAmount.toString()}
-                        >
-                          {deal.name} - ${deal.dealAmount.toLocaleString()}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)}
+                      disabled={createTransaction.isPending}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a deal' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {wonDealsData &&
+                          wonDealsData.map(
+                            (deal: any) => (
+                              console.log(deal, 'deal'),
+                              (
+                                <SelectItem key={deal.id} value={deal.dealAmount.toString()}>
+                                  {deal.name} - ${deal.dealAmount.toLocaleString()}
+                                </SelectItem>
+                              )
+                            )
+                          )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
                 )}
               />
               <FormField
