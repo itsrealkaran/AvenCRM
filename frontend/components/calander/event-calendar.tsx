@@ -287,7 +287,6 @@ export default function CalendarView() {
 
   const handleConnectGoogle = async () => {
     try {
-      setLoading(true);
       await googleCalendar.initialize();
       await googleCalendar.signIn();
       setIsGoogleConnected(true);
@@ -296,7 +295,9 @@ export default function CalendarView() {
         description: 'Connected to Google Calendar successfully!',
         variant: 'success',
       });
-      loadEvents(); // Reload events to include Google Calendar events
+      if(isGoogleConnected){
+        loadEvents(); // Reload events to include Google Calendar events
+      }
     } catch (error) {
       console.error('Error connecting to Google Calendar:', error);
       toast({
@@ -304,8 +305,6 @@ export default function CalendarView() {
         description: 'Failed to connect to Google Calendar',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -413,10 +412,15 @@ export default function CalendarView() {
                 if (isConnected) {
                   loadEvents();
                 }
+                toast({
+                  title: 'Success',
+                  description: 'Connected to Outlook Calendar successfully!',
+                  variant: 'success',
+                });
               } catch (error) {
                 toast({
                   title: 'Error',
-                  description: 'Failed to connect to Microsoft Calendar',
+                  description: 'Failed to connect to Outlook Calendar',
                   variant: 'destructive',
                 });
               }
