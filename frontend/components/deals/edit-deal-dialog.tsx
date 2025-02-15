@@ -134,126 +134,160 @@ function DealForm({
 
   return (
     <>
-      <CommonFormFields form={form} isLoading={isLoading} />
-      <div className='grid grid-cols-2 gap-4'>
-        <FormField
-          control={form.control}
-          name='status'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                disabled={isLoading}
-              >
+      <div className='h-[50vh] overflow-y-auto pr-2'>
+        <div className='grid grid-cols-2 gap-4 p-2'>
+          <FormField
+            control={form.control}
+            name='name'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select status' />
-                  </SelectTrigger>
+                  <Input placeholder='Enter name' disabled={isLoading} {...field} />
                 </FormControl>
-                <SelectContent>
-                  {Object.values(DealStatus).map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name='propertyType'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Property Type</FormLabel>
-              <Select
-                onValueChange={field.onChange}
-                defaultValue={field.value}
-                disabled={isLoading}
-              >
+          <FormField
+            control={form.control}
+            name='email'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
                 <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select property type' />
-                  </SelectTrigger>
+                  <Input placeholder='Enter email' disabled={isLoading} {...field} />
                 </FormControl>
-                <SelectContent>
-                  {Object.values(PropertyType).map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name='propertyValue'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Budget</FormLabel>
-              <FormControl>
-                <Input
-                  type='number'
-                  placeholder='Enter budget'
+          <FormField
+            control={form.control}
+            name='phone'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone</FormLabel>
+                <FormControl>
+                  <Input placeholder='Enter phone' disabled={isLoading} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='propertyType'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Property Type</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
                   disabled={isLoading}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select property type' />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Object.values(PropertyType).map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name='propertyAddress'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Location</FormLabel>
-              <FormControl>
-                <Input placeholder='Enter location' disabled={isLoading} {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name='propertyAddress'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Property Address</FormLabel>
+                <FormControl>
+                  <Input placeholder='Enter property address' disabled={isLoading} {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name='dealAmount'
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Deal Amount</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder='Enter deal amount'
-                  disabled={isLoading}
-                  type='number'
-                  {...field}
-                  onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                  value={field.value || ''}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name='propertyValue'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Property Value</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    placeholder='Enter property value'
+                    disabled={isLoading}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name='dealAmount'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Deal Amount</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    placeholder='Enter deal amount'
+                    disabled={isLoading}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='estimatedCommission'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Estimated Commission</FormLabel>
+                <FormControl>
+                  <Input
+                    type='number'
+                    placeholder='Enter estimated commission'
+                    disabled={isLoading}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    value={field.value || ''}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Notes and Co-owners */}
+        <div className='space-y-4'>
+          <NotesField form={form} isLoading={isLoading} />
+          <CoOwnersField form={form} isLoading={isLoading} />
+        </div>
       </div>
 
-      <NotesField form={form} isLoading={isLoading} />
-      <CoOwnersField form={form} isLoading={isLoading} />
-
-      <div className='flex justify-end space-x-4'>
+      <div className='flex justify-end space-x-4 mt-4'>
         <Button
           type='button'
           variant='outline'
@@ -262,7 +296,11 @@ function DealForm({
         >
           Cancel
         </Button>
-        <Button type='submit' disabled={isLoading} className='min-w-[100px]'>
+        <Button 
+          type='submit' 
+          disabled={isLoading}
+          className='min-w-[100px]'
+        >
           {isLoading ? (
             <>
               <Loader2 className='mr-2 h-4 w-4 animate-spin' />

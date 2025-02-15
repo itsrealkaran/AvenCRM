@@ -55,7 +55,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
     email: lead.email ?? '',
     phone: lead.phone ?? '',
     status: lead.status,
-    source: lead.source ?? '',
+    source: 'Manual',
     propertyType: lead.propertyType,
     budget: lead.budget ?? 0,
     location: lead.location ?? '',
@@ -88,128 +88,127 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
     >
       {(form) => (
         <>
-          <CommonFormFields form={form} isLoading={updateLead.isPending} />
-          {/* <div className='space-y-1 bg-red-200 text-red-800 p-4'>
-            Errors: <p>{JSON.stringify(form.formState.errors, null, 2)}</p>
-            Values: <p>{JSON.stringify(form.getValues(), null, 2)}</p>
-            Watch: <p>{JSON.stringify(form.watch(), null, 2)}</p>
-            Form Valid: <p>{form.formState.isValid ? 'true' : 'false'}</p>
-          </div> */}
-          <div className='grid grid-cols-2 gap-4'>
-            <FormField
-              control={form.control}
-              name='status'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={updateLead.isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select status' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(LeadStatus).map((status) => (
-                        <SelectItem key={status} value={status}>
-                          {status}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className='h-[50vh] overflow-y-auto pr-2'>
+            <div className='grid grid-cols-2 gap-4 p-2'>
+              {/* Left Column */}
+              <div className='space-y-4'>
+                <FormField
+                  control={form.control}
+                  name='name'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter name' disabled={updateLead.isPending} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name='propertyType'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Property Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={updateLead.isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder='Select property type' />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {Object.values(PropertyType).map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name='email'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter email' disabled={updateLead.isPending} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name='budget'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Budget</FormLabel>
-                  <FormControl>
-                    <Input
-                      type='number'
-                      placeholder='Enter budget'
-                      disabled={updateLead.isPending}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
-                      value={field.value || ''}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name='phone'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter phone' disabled={updateLead.isPending} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            <FormField
-              control={form.control}
-              name='location'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder='Enter location'
-                      disabled={updateLead.isPending}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              {/* Right Column */}
+              <div className='space-y-4'>
+                <FormField
+                  control={form.control}
+                  name='propertyType'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        disabled={updateLead.isPending}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select property type' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Object.values(PropertyType).map((type) => (
+                            <SelectItem key={type} value={type}>
+                              {type}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name='source'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Source</FormLabel>
-                  <FormControl>
-                    <Input placeholder='Enter source' disabled={updateLead.isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name='budget'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Budget</FormLabel>
+                      <FormControl>
+                        <Input
+                          type='number'
+                          placeholder='Enter budget'
+                          disabled={updateLead.isPending}
+                          onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='location'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter location' disabled={updateLead.isPending} {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Notes Field - Full Width */}
+            <div className='mt-4'>
+              <NotesField form={form} isLoading={updateLead.isPending} />
+            </div>
           </div>
 
-          <NotesField form={form} isLoading={updateLead.isPending} />
-
-          <div className='flex justify-end space-x-4'>
+          <div className='flex justify-end space-x-4 mt-4'>
             <Button
               type='button'
               variant='outline'

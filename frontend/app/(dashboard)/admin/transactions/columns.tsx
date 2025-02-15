@@ -1,185 +1,146 @@
 'use client';
 
 import { Transaction, TransactionStatus } from '@/types';
-import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, MoreHorizontal, Pencil, Trash } from 'lucide-react';
-
+import { Pencil, Trash2, UserCog } from 'lucide-react';
+import { type MRT_ColumnDef } from 'material-react-table';
+import { MenuItem, ListItemIcon } from '@mui/material';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
-export const columns: ColumnDef<Transaction>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+export const columns: MRT_ColumnDef<Transaction>[] = [
   {
     accessorKey: 'invoiceNumber',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Invoice Number
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Invoice Number',
+    enableClickToCopy: true,
   },
   {
     accessorKey: 'agent.name',
     header: 'Created By',
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const agent = row.original.agent;
       return agent?.name || 'N/A';
     },
   },
   {
     accessorKey: 'amount',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Amount
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
+    header: 'Amount',
+    Cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
-      const formatted = new Intl.NumberFormat('en-US', {
+      return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
       }).format(amount);
-      return formatted;
     },
   },
   {
-    accessorKey: 'isVerified',
+    accessorKey: 'status',
     header: 'Status',
-    cell: ({ row, table }) => {
-      const transaction = row.original;
-      const isVerified = transaction.status;
-      const meta = table.options.meta as {
-        onVerify?: (transactionId: string, isVerified: TransactionStatus) => void;
-      };
-
-      if (isVerified === TransactionStatus.APPROVED) {
-        return (
-          <Badge variant='outline' className='bg-green-50 text-green-600'>
-            Approved
-          </Badge>
-        );
-      } else if (isVerified === TransactionStatus.REJECTED) {
-        return (
-          <Badge variant='outline' className='bg-red-50 text-red-600'>
-            Rejected
-          </Badge>
-        );
+    Cell: ({ row }) => {
+      const status: TransactionStatus = row.getValue('status');
+      
+      switch (status) {
+        case TransactionStatus.APPROVED:
+          return (
+            <Badge variant='outline' className='bg-green-50 text-green-600'>
+              Approved
+            </Badge>
+          );
+        case TransactionStatus.REJECTED:
+          return (
+            <Badge variant='outline' className='bg-red-50 text-red-600'>
+              Rejected
+            </Badge>
+          );
+        default:
+          return (
+            <Badge variant='outline' className='bg-yellow-50 text-yellow-600'>
+              Pending
+            </Badge>
+          );
       }
-
-      return (
-        <div className='flex items-center gap-2'>
-          <div className='flex gap-1'>
-            <Button
-              variant='outline'
-              size='sm'
-              disabled={!!isVerified}
-              onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.APPROVED)}
-              className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
-            >
-              {isVerified ? 'Verified' : 'Verify'}
-            </Button>
-            <Button
-              variant='ghost'
-              size='sm'
-              disabled={!isVerified}
-              onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.REJECTED)}
-              className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
-            >
-              {!isVerified ? 'Unverified' : 'Unverify'}
-            </Button>
-          </div>
-        </div>
-      );
     },
+    filterVariant: 'select',
+    filterSelectOptions: Object.values(TransactionStatus),
   },
   {
     accessorKey: 'date',
     header: 'Date',
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return format(new Date(row.getValue('date')), 'MMM d, yyyy');
     },
   },
-  {
-    id: 'actions',
-    cell: ({ row, table }) => {
-      const transaction = row.original;
-      const meta = table.options.meta as {
-        onEdit?: (transaction: Transaction) => void;
-        onDelete?: (transactionId: string) => void;
-      };
+];
 
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => navigator.clipboard.writeText(transaction.id)}>
-              Copy transaction ID
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(transaction)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit transaction
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => meta.onDelete?.(transaction.id)}
-              className='text-red-600'
-            >
-              <Trash className='mr-2 h-4 w-4' /> Delete transaction
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
+export const renderRowActionMenuItems = ({ 
+  row, 
+  closeMenu,
+  onEdit,
+  onDelete,
+  onVerify 
+}: { 
+  row: any; 
+  closeMenu: () => void;
+  onEdit: (transaction: Transaction) => void;
+  onDelete: (transactionId: string) => void;
+  onVerify: (transactionId: string, status: TransactionStatus) => void;
+}) => [
+  <MenuItem
+    key={0}
+    onClick={() => {
+      onEdit(row.original);
+      closeMenu();
+    }}
+    sx={{ m: 0 }}
+  >
+    <ListItemIcon>
+      <Pencil className="size-4" />
+    </ListItemIcon>
+    Edit Transaction
+  </MenuItem>,
+  row.original.status === TransactionStatus.PENDING && (
+    <MenuItem
+      key={1}
+      onClick={() => {
+        onVerify(row.original.id, TransactionStatus.APPROVED);
+        closeMenu();
+      }}
+      sx={{ m: 0 }}
+      className="text-green-600"
+    >
+      <ListItemIcon>
+        <UserCog className="size-4 text-green-600" />
+      </ListItemIcon>
+      Approve Transaction
+    </MenuItem>
+  ),
+  row.original.status === TransactionStatus.PENDING && (
+    <MenuItem
+      key={2}
+      onClick={() => {
+        onVerify(row.original.id, TransactionStatus.REJECTED);
+        closeMenu();
+      }}
+      sx={{ m: 0 }}
+      className="text-orange-600"
+    >
+      <ListItemIcon>
+        <UserCog className="size-4 text-orange-600" />
+      </ListItemIcon>
+      Reject Transaction
+    </MenuItem>
+  ),
+  <MenuItem
+    key={3}
+    onClick={() => {
+      onDelete(row.original.id);
+      closeMenu();
+    }}
+    sx={{ m: 0 }}
+    className="text-red-600"
+  >
+    <ListItemIcon>
+      <Trash2 className="size-4 text-red-600" />
+    </ListItemIcon>
+    Delete Transaction
+  </MenuItem>,
 ];

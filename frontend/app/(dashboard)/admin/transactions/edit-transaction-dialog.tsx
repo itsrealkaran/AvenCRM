@@ -7,6 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -42,16 +43,12 @@ interface EditTransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
-  onEdit: (transaction: Transaction) => void;
-  onDelete: (transactionId: string) => Promise<void>;
 }
 
 export function EditTransactionDialog({
   open,
   onOpenChange,
   transaction,
-  onEdit,
-  onDelete,
 }: EditTransactionDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<TransactionFormValues>({
@@ -98,10 +95,10 @@ export function EditTransactionDialog({
         throw new Error('Failed to update transaction');
       }
     },
-    onSuccess: (updatedTransaction) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       onOpenChange(false);
-      onEdit(updatedTransaction);
+      form.reset();
       toast.success('Transaction updated successfully');
     },
     onError: (error) => {
@@ -129,7 +126,12 @@ export function EditTransactionDialog({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input type='number' placeholder='1000' {...field} />
+                      <Input 
+                        type='number' 
+                        placeholder='1000' 
+                        {...field} 
+                        disabled={editTransaction.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -142,7 +144,12 @@ export function EditTransactionDialog({
                   <FormItem>
                     <FormLabel>Commission Rate (%)</FormLabel>
                     <FormControl>
-                      <Input type='number' placeholder='10' {...field} />
+                      <Input 
+                        type='number' 
+                        placeholder='10' 
+                        {...field} 
+                        disabled={editTransaction.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -156,17 +163,39 @@ export function EditTransactionDialog({
                 <FormItem>
                   <FormLabel>Transaction Date</FormLabel>
                   <FormControl>
-                    <Input type='date' {...field} />
+                    <Input 
+                      type='date' 
+                      {...field} 
+                      disabled={editTransaction.isPending}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className='flex justify-end space-x-4'>
-              <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
+              <Button 
+                type='button' 
+                variant='outline' 
+                onClick={() => onOpenChange(false)}
+                disabled={editTransaction.isPending}
+              >
                 Cancel
               </Button>
-              <Button type='submit'>Update Transaction</Button>
+              <Button 
+                type='submit' 
+                disabled={editTransaction.isPending || !form.formState.isValid}
+                className='min-w-[100px]'
+              >
+                {editTransaction.isPending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Transaction'
+                )}
+              </Button>
             </div>
           </form>
         </Form>

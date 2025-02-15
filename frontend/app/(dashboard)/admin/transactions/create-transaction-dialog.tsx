@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -55,14 +56,20 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
 
   const createTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
-      const payload = {
-        ...values,
-        amount: parseFloat(values.amount),
-        commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : 0,
-        date: new Date(values.date).toISOString(),
-      };
+      try {
+        const payload = {
+          ...values,
+          amount: parseFloat(values.amount),
+          commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : 0,
+          date: new Date(values.date).toISOString(),
+        };
 
-      const response = await api.post('/transactions', payload);
+        const response = await api.post('/transactions', payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error creating transaction:', error);
+        throw new Error('Failed to create transaction');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -70,8 +77,8 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
       form.reset();
       toast.success('Transaction created successfully');
     },
-    onError: (error: Error) => {
-      toast.error(error.message || 'Failed to create transaction');
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : 'Failed to create transaction');
     },
   });
 
@@ -95,7 +102,12 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input type='number' placeholder='1000' {...field} />
+                      <Input 
+                        type='number' 
+                        placeholder='1000' 
+                        {...field} 
+                        disabled={createTransaction.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,9 +118,14 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 name='commissionRate'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tax Rate (%)</FormLabel>
+                    <FormLabel>Commission Rate (%)</FormLabel>
                     <FormControl>
-                      <Input type='number' placeholder='10' {...field} />
+                      <Input 
+                        type='number' 
+                        placeholder='10' 
+                        {...field} 
+                        disabled={createTransaction.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -120,7 +137,11 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Transaction Method</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      disabled={createTransaction.isPending}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder='Select method' />
@@ -143,7 +164,11 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                   <FormItem>
                     <FormLabel>Transaction Date</FormLabel>
                     <FormControl>
-                      <Input type='date' {...field} />
+                      <Input 
+                        type='date' 
+                        {...field} 
+                        disabled={createTransaction.isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -151,10 +176,28 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
               />
             </div>
             <div className='flex justify-end space-x-4'>
-              <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
+              <Button 
+                type='button' 
+                variant='outline' 
+                onClick={() => onOpenChange(false)}
+                disabled={createTransaction.isPending}
+              >
                 Cancel
               </Button>
-              <Button type='submit'>Create Transaction</Button>
+              <Button 
+                type='submit' 
+                disabled={createTransaction.isPending || !form.formState.isValid}
+                className='min-w-[100px]'
+              >
+                {createTransaction.isPending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Transaction'
+                )}
+              </Button>
             </div>
           </form>
         </Form>
