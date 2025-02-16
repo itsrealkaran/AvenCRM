@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await authService.logout();
       setUser(null);
-      router.push('/');
+      router.push('/sign-in');
     } catch (error) {
       console.error('Logout failed:', error);
     }
