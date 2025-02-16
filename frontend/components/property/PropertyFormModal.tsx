@@ -125,10 +125,17 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({
         parking: Number.parseInt(formData.parking) || 0,
       };
 
-      await api.post(`/property`, {
-        cardData,
-        completeFormData,
-      });
+      if (propertyToEdit) {
+        await api.put(`/property/${propertyToEdit.id}`, {
+          cardData,
+          completeFormData,
+        });
+      } else {
+        await api.post(`/property`, {
+          cardData,
+          completeFormData,
+        });
+      }
 
       // Call the onSubmit prop with the card data
       onSubmit(cardData);

@@ -67,6 +67,7 @@ const LastDocuments: React.FC = () => {
   const removeDocument = (index: number) => {
     updateFormData({
       documents: formData.documents.filter((_, i) => i !== index),
+      documentNames: formData.documentNames.filter((_, i) => i !== index),
     });
   };
 
@@ -82,15 +83,15 @@ const LastDocuments: React.FC = () => {
         <Input id='documents' type='file' multiple onChange={handleFileChange} />
         <ScrollArea className='h-[300px] w-full rounded-md border p-4'>
           <ul className='space-y-2'>
-            {formData.documents.map((file, index) => (
+            {formData.documentNames.map((file, index) => (
               <li key={index} className='flex justify-between items-center'>
-                <span className='truncate max-w-[200px]'>{file.name}</span>
+                <span className='truncate max-w-[200px]'>{file}</span>
                 <div className='flex items-center space-x-2'>
                   <Button
                     type='button'
                     variant='outline'
                     size='sm'
-                    onClick={() => openDocument(file)}
+                    onClick={() => openDocument(formData.documents[index])}
                   >
                     <ExternalLink className='h-4 w-4 mr-2' />
                     Open
