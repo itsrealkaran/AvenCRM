@@ -6,6 +6,7 @@ import { Pencil, Trash2, UserCog } from 'lucide-react';
 import { type MRT_ColumnDef } from 'material-react-table';
 import { MenuItem, ListItemIcon } from '@mui/material';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -33,34 +34,54 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: 'status',
+    accessorKey: 'isVerified',
     header: 'Status',
-    Cell: ({ row }) => {
-      const status: TransactionStatus = row.getValue('status');
-      
-      switch (status) {
-        case TransactionStatus.APPROVED:
-          return (
-            <Badge variant='outline' className='bg-green-50 text-green-600'>
-              Approved
-            </Badge>
-          );
-        case TransactionStatus.REJECTED:
-          return (
-            <Badge variant='outline' className='bg-red-50 text-red-600'>
-              Rejected
-            </Badge>
-          );
-        default:
-          return (
-            <Badge variant='outline' className='bg-yellow-50 text-yellow-600'>
-              Pending
-            </Badge>
-          );
+    Cell: ({ row, table }) => {
+      const transaction = row.original;
+      const isVerified = transaction.status;
+      const meta = table.options.meta as {
+        onVerify?: (transactionId: string, isVerified: TransactionStatus) => void;
+      };
+
+      if (isVerified === TransactionStatus.APPROVED) {
+        return (
+          <Badge variant='outline' className='bg-green-50 text-green-600'>
+            Approved
+          </Badge>
+        );
+      } else if (isVerified === TransactionStatus.REJECTED) {
+        return (
+          <Badge variant='outline' className='bg-red-50 text-red-600'>
+            Rejected
+          </Badge>
+        );
       }
+
+      return (
+        <div className='flex items-center gap-2'>
+          <div className='flex gap-1'>
+            <Button
+              variant='outline'
+              size='sm'
+              disabled={!!isVerified}
+              onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.APPROVED)}
+              className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
+            >
+              {isVerified ? 'Verified' : 'Verify'}
+            </Button>
+            <Button
+              variant='ghost'
+              size='sm'
+              disabled={!isVerified}
+              onClick={() => meta.onVerify?.(transaction.id, TransactionStatus.REJECTED)}
+              className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
+            >
+              {!isVerified ? 'Unverified' : 'Unverify'}
+            </Button>
+          </div>
+        </div>
+      );
     },
-    filterVariant: 'select',
-    filterSelectOptions: Object.values(TransactionStatus),
   },
   {
     accessorKey: 'date',

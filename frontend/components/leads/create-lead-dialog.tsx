@@ -149,7 +149,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                           <SelectContent>
                             {Object.values(PropertyType).map((type) => (
                               <SelectItem key={type} value={type}>
-                                {type}
+                                {type.charAt(0).toUpperCase() + type.toLowerCase().slice(1)}
                               </SelectItem>
                             ))}
                           </SelectContent>
