@@ -30,7 +30,7 @@ import { EditTransactionDialog } from './edit-transaction-dialog';
 
 async function getTransactions(): Promise<Transaction[]> {
   try {
-    const response = await api.get('/transactions/agent');
+    const response = await api.get('/transactions');
     return response.data;
   } catch (error) {
     console.error('Error fetching transactions:', error);
@@ -151,6 +151,7 @@ export default function TransactionsPage() {
       toast.error(`Failed to export transactions as ${format.toUpperCase()}`);
     }
   };
+  console.log(transactions)
 
   const table = useMaterialReactTable({
     columns,

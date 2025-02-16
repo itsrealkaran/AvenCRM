@@ -20,6 +20,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     header: 'Created By',
     Cell: ({ row }) => {
       const agent = row.original.agent;
+      console.log(row.original, "row.orignal")
       return agent?.name || 'N/A';
     },
   },

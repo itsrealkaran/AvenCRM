@@ -12,8 +12,8 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'calendar' | 'task';
-  isRead: boolean;
+  type: 'calendar' | 'task' | 'lead';
+  read: boolean;
   timestamp: string;
   link?: string;
 }
@@ -31,7 +31,7 @@ export function NotificationList({
   const { toast } = useToast();
 
   const handleNotificationClick = async (notification: Notification) => {
-    if (!notification.isRead) {
+    if (!notification.read) {
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/notification/read/${notification.id}`,
@@ -121,7 +121,7 @@ export function NotificationList({
             key={notification.id}
             onClick={() => handleNotificationClick(notification)}
             className={`flex items-start gap-3 my-2 p-2 hover:bg-accent rounded-lg transition-colors cursor-pointer ${
-              !notification.isRead ? 'bg-blue-50' : ''
+              !notification.read ? 'bg-blue-50' : ''
             }`}
           >
             <div
@@ -132,14 +132,14 @@ export function NotificationList({
             </div>
             <div className='flex-1 min-w-0'>
               <p
-                className={`text-sm font-medium ${!notification.isRead ? 'text-blue-600' : 'text-gray-900'}`}
+                className={`text-sm font-medium ${!notification.read ? 'text-blue-600' : 'text-gray-900'}`}
               >
                 {notification.title}
               </p>
               <p className='text-sm text-muted-foreground'>{notification.message}</p>
               <p className='text-xs text-muted-foreground mt-1'>{notification.timestamp}</p>
             </div>
-            {!notification.isRead && <div className='w-2 h-2 bg-blue-500 rounded-full mt-1'></div>}
+            {!notification.read && <div className='w-2 h-2 bg-blue-500 rounded-full mt-1'></div>}
           </div>
         ))}
       </div>

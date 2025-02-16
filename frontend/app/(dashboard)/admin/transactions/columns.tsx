@@ -63,20 +63,18 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
             <Button
               variant='outline'
               size='sm'
-              disabled={!!isVerified}
               onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.APPROVED)}
               className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
             >
-              {isVerified ? 'Verified' : 'Verify'}
+              Verify
             </Button>
             <Button
               variant='ghost'
               size='sm'
-              disabled={!isVerified}
               onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.REJECTED)}
               className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
             >
-              {!isVerified ? 'Unverified' : 'Unverify'}
+             Unverify
             </Button>
           </div>
         </div>

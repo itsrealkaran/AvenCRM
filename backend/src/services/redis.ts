@@ -145,6 +145,38 @@ export const notificationService = {
     }
   },
 
+  async markAllRead(userId: string) {
+    try {
+      const notificationKey = `${NOTIFICATION_KEY_PREFIX}${userId}`;
+      
+      // Get all notifications
+      const notifications = await redisClient.zrange(notificationKey, 0, -1);
+      
+      // Update all notifications to read=true
+      const updatedNotifications = notifications.map(n => {
+        const notification = JSON.parse(n);
+        notification.read = true;
+        return {
+          score: notification.createdAt,
+          value: JSON.stringify(notification)
+        };
+      });
+
+      // Remove all existing notifications
+      await redisClient.del(notificationKey);
+      
+      // Add back updated notifications if there are any
+      if (updatedNotifications.length > 0) {
+        await redisClient.zadd(notificationKey,
+          ...updatedNotifications.flatMap(n => [n.score, n.value])
+        );
+      }
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      throw new Error('Failed to mark all notifications as read');
+    }
+  },
+
   /**
    * Delete a specific notification
    */

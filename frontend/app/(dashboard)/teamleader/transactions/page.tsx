@@ -154,7 +154,7 @@ export default function TransactionsPage() {
     }
   };
 
-
+  console.log(transactions, "transactions")
   const table = useMaterialReactTable({
     columns,
     data: transactions,

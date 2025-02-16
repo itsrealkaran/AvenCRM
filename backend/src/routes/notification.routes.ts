@@ -12,6 +12,8 @@ router.get("/count", NotificationController.getNotificationsCount)
 
 router.post("/read/:id", NotificationController.markNotificationAsRead)
 
+router.put("/mark-all-read", NotificationController.markAllRead)
+
 router.delete("/all", NotificationController.deleteAllNotifications)
 
 export { router as notificationRoutes }
