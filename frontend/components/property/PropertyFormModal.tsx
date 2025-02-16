@@ -106,7 +106,7 @@ const PropertyFormModal: React.FC<PropertyFormModalProps> = ({
       const completeFormData = {
         ...formData,
         images: formData.imageNames.map((file) => file), // Convert File objects to file names
-        documents: formData.documents.map((file) => file.name), // Convert File objects to file names
+        documents: formData.documentNames.map((file) => file), // Convert File objects to file names
       };
       console.log(completeFormData, 'completeFormData');
 

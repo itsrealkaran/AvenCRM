@@ -44,6 +44,7 @@ interface PropertyFormData {
   images: File[];
   imageNames: string[];
   documents: File[];
+  documentNames: string[];
   utilities: string[];
   interiorFeatures: string[];
   exteriorFeatures: string[];
@@ -103,6 +104,7 @@ export const PropertyFormProvider: React.FC<{ children: ReactNode }> = ({ childr
     images: [],
     imageNames: [],
     documents: [],
+    documentNames: [],
     utilities: [],
     interiorFeatures: [],
     exteriorFeatures: [],

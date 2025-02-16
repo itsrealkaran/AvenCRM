@@ -21,12 +21,12 @@ const LastDocuments: React.FC = () => {
 
       const uploadPromises = Array.from(files).map(async (file) => {
         // First, get the presigned URL
-        const formData = new FormData();
-        formData.append('file', file);
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
 
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/property/upload-file`,
-          formData,
+          uploadFormData,
           {
             headers: {
               'Content-Type': 'multipart/form-data',
@@ -42,14 +42,19 @@ const LastDocuments: React.FC = () => {
           },
         });
 
-        return response.data.key;
+        updateFormData({
+          documentNames: [...(formData.documentNames || []), response.data.key],
+        });
+
+        return response.data.downloadUrl;
       });
 
       const uploadedUrls = await Promise.all(uploadPromises);
+      const validUrls = uploadedUrls.filter((url) => url);
 
       // Update form with new document URLs
       updateFormData({
-        documents: uploadedUrls,
+        documents: [...(formData.documents || []), ...validUrls],
       });
     } catch (error) {
       console.error('Error uploading documents:', error);
