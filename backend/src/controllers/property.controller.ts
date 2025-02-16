@@ -344,10 +344,22 @@ export const propertiesController: Controller = {
 
       // take the image from the property object and generate a presigned URL
       //@ts-ignore
-      if (property && property?.cardDetails?.image) {
+      if (property && (property?.features?.images || property.features.documents)) {
         try { //@ts-ignore
-          const imageUrl = await generatePresignedDownloadUrl(property.cardDetails.image); //@ts-ignore
-          property.cardDetails.image = imageUrl;
+          const images = property.features?.images;
+          if (images) {
+            const imageUrls = await Promise.all(images.map(async (image: string) => {
+              return await generatePresignedDownloadUrl(image);
+            })); //@ts-ignore
+            property.features.images = imageUrls;
+          }//@ts-ignore
+          const documents = property.features?.documents;
+          if (documents) {
+            const documentUrls = await Promise.all(documents.map(async (document: string) => {
+              return await generatePresignedDownloadUrl(document);
+            })); //@ts-ignore
+            property.features.documents = documentUrls;
+          }
         } catch (error) {
           console.error( 
             `Failed to generate URL for property image: `,

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { fieldMatcher } from '@/utils/field-matcher';
-import { Download, X, Loader2 } from 'lucide-react';
+import { Download, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 import apiClient from '@/lib/axios';
@@ -19,7 +19,15 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 
-const FileImportModal = ({ jsonData, headers, onClose }: { jsonData: any; headers: string[]; onClose: () => void }) => {
+const FileImportModal = ({
+  jsonData,
+  headers,
+  onClose,
+}: {
+  jsonData: any;
+  headers: string[];
+  onClose: () => void;
+}) => {
   const pathname = usePathname();
   const route = pathname.split('/')[2];
   const [isImporting, setIsImporting] = useState(false);
@@ -272,7 +280,7 @@ const FileImportModal = ({ jsonData, headers, onClose }: { jsonData: any; header
                 {Math.round((importProgress / totalBatches) * 100)}% Complete
               </div>
               <div className='w-full mt-4 h-2 bg-gray-200 rounded-full overflow-hidden'>
-                <div 
+                <div
                   className='h-full bg-blue-600 transition-all duration-300'
                   style={{ width: `${(importProgress / totalBatches) * 100}%` }}
                 />
@@ -322,7 +330,7 @@ const FileImportModal = ({ jsonData, headers, onClose }: { jsonData: any; header
                         onChange={(e) => handleFieldChange(key, e.target.value)}
                         className='px-4 py-2.5 rounded-md border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors'
                       >
-                        <option value="">Select matching field...</option>
+                        <option value=''>Select matching field...</option>
                         {headers.map((header) => (
                           <option key={header} value={header}>
                             {header}

@@ -73,12 +73,6 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
       isLoading={isLoading}
     >
       {(form) => {
-        useEffect(() => {
-          if (!open) {
-            form.reset(defaultValues);
-          }
-        }, [open, form]);
-
         return (
           <>
             <div className='h-[50vh] overflow-y-auto pr-2'>
@@ -210,8 +204,8 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
               >
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
+              <Button
+                type='submit'
                 disabled={createLead.isPending || !form.formState.isValid}
                 className='min-w-[100px]'
               >

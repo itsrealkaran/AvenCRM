@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useCallback, useEffect, useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock, CirclePlus } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, CirclePlus, Clock } from 'lucide-react';
 import moment from 'moment';
+import { PiMicrosoftOutlookLogoBold } from 'react-icons/pi';
+import { SiGooglecalendar } from 'react-icons/si';
 
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,8 +16,6 @@ import { createEvent, deleteEvent, fetchEvents, updateEvent } from './api';
 import EventCard from './event-card';
 import EventModal from './event-modal';
 import { getEventStyle } from './event-utils';
-import { PiMicrosoftOutlookLogoBold } from 'react-icons/pi';
-import { SiGooglecalendar } from 'react-icons/si';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -295,7 +295,7 @@ export default function CalendarView() {
         description: 'Connected to Google Calendar successfully!',
         variant: 'success',
       });
-      if(isGoogleConnected){
+      if (isGoogleConnected) {
         loadEvents(); // Reload events to include Google Calendar events
       }
     } catch (error) {
@@ -327,9 +327,13 @@ export default function CalendarView() {
           key={day.format('YYYY-MM-DD')}
           onClick={() => handleSelectDate(day)}
           className={`flex flex-col items-start justify-start p-1 sm:p-2 h-16 sm:h-24 w-full border border-gray-200 transition-all duration-200 ease-in-out ${
-            isToday ? 'font-bold bg-blue-100' : 
-            isSelected ? 'bg-purple-100' :
-            isCurrentMonth ? 'bg-white hover:bg-gray-50' : 'bg-gray-50'
+            isToday
+              ? 'font-bold bg-blue-100'
+              : isSelected
+                ? 'bg-purple-100'
+                : isCurrentMonth
+                  ? 'bg-white hover:bg-gray-50'
+                  : 'bg-gray-50'
           }`}
         >
           <span

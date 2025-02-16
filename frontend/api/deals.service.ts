@@ -18,6 +18,12 @@ export const dealsApi = {
     return response.data;
   },
 
+  // Get all the won deals
+  getAllWonDeals: async (): Promise<any> => {
+    const response = await api.get('/deals/won');
+    return response.data;
+  },
+
   // Create a new deal with files
   createDeal: async (data: CreateDeal, files?: File[]): Promise<Deal> => {
     const formData = new FormData();
@@ -97,8 +103,8 @@ export const dealsApi = {
     return response.data;
   },
 
-   // Add a note to a lead
-   addNote: async (id: string, note: any) => {
+  // Add a note to a lead
+  addNote: async (id: string, note: any) => {
     const response = await api.post(`/deals/${id}/notes`, { note });
     return response.data;
   },

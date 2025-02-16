@@ -55,6 +55,7 @@ interface PropertyDetails {
     latitude: string;
     bathrooms: string;
     documents: any[];
+    documentNames: string[];
     longitude: string;
     utilities: string[];
     imageNames: string[];
@@ -177,11 +178,12 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
             </DialogHeader>
 
             <Tabs defaultValue='details' className='w-full'>
-              <TabsList className='grid w-full grid-cols-4'>
+              <TabsList className='grid w-full grid-cols-5'>
                 <TabsTrigger value='details'>Details</TabsTrigger>
                 <TabsTrigger value='features'>Features</TabsTrigger>
                 <TabsTrigger value='utilities'>Utilities</TabsTrigger>
                 <TabsTrigger value='floors'>Floors & Rooms</TabsTrigger>
+                <TabsTrigger value='documents'>Documents</TabsTrigger>
               </TabsList>
 
               <TabsContent value='details' className='space-y-6'>
@@ -370,6 +372,22 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                   ))
                 ) : (
                   <p className='text-center text-gray-500'>No floor plans available</p>
+                )}
+              </TabsContent>
+              <TabsContent value='documents' className='space-y-6'>
+                {propertyDetails.features.documents?.length > 0 ? (
+                  <div className='space-y-2'>
+                    <h4 className='font-medium'>Documents</h4>
+                    {propertyDetails.features.documentNames.map((document, index) => (
+                      <div key={document}>
+                        <a href={propertyDetails.features.documents[index]} target='_blank' rel='noopener noreferrer' className='text-blue-500 hover:underline'>
+                          {document}
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className='text-center text-gray-500'>No documents available</p>
                 )}
               </TabsContent>
             </Tabs>

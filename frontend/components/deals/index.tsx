@@ -115,14 +115,7 @@ export default function DealsPage() {
   };
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
-    const headers = [
-      'Name',
-      'Amount',
-      'Status',
-      'Agent',
-      'Client',
-      'Created At'
-    ];
+    const headers = ['Name', 'Amount', 'Status', 'Agent', 'Client', 'Created At'];
     const data = deals.map((deal) => [
       deal.name || '',
       deal.dealAmount?.toString() || '',

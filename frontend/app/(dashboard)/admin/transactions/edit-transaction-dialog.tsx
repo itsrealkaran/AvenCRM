@@ -4,10 +4,10 @@ import { useEffect } from 'react';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -126,10 +126,10 @@ export function EditTransactionDialog({
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
                     <FormControl>
-                      <Input 
-                        type='number' 
-                        placeholder='1000' 
-                        {...field} 
+                      <Input
+                        type='number'
+                        placeholder='1000'
+                        {...field}
                         disabled={editTransaction.isPending}
                       />
                     </FormControl>
@@ -144,10 +144,10 @@ export function EditTransactionDialog({
                   <FormItem>
                     <FormLabel>Commission Rate (%)</FormLabel>
                     <FormControl>
-                      <Input 
-                        type='number' 
-                        placeholder='10' 
-                        {...field} 
+                      <Input
+                        type='number'
+                        placeholder='10'
+                        {...field}
                         disabled={editTransaction.isPending}
                       />
                     </FormControl>
@@ -163,27 +163,23 @@ export function EditTransactionDialog({
                 <FormItem>
                   <FormLabel>Transaction Date</FormLabel>
                   <FormControl>
-                    <Input 
-                      type='date' 
-                      {...field} 
-                      disabled={editTransaction.isPending}
-                    />
+                    <Input type='date' {...field} disabled={editTransaction.isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <div className='flex justify-end space-x-4'>
-              <Button 
-                type='button' 
-                variant='outline' 
+              <Button
+                type='button'
+                variant='outline'
                 onClick={() => onOpenChange(false)}
                 disabled={editTransaction.isPending}
               >
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
+              <Button
+                type='submit'
                 disabled={editTransaction.isPending || !form.formState.isValid}
                 className='min-w-[100px]'
               >

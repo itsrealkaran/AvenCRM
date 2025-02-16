@@ -99,7 +99,11 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter name' disabled={updateLead.isPending} {...field} />
+                        <Input
+                          placeholder='Enter name'
+                          disabled={updateLead.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -113,7 +117,11 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter email' disabled={updateLead.isPending} {...field} />
+                        <Input
+                          placeholder='Enter email'
+                          disabled={updateLead.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -127,7 +135,11 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter phone' disabled={updateLead.isPending} {...field} />
+                        <Input
+                          placeholder='Enter phone'
+                          disabled={updateLead.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -193,7 +205,11 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                     <FormItem>
                       <FormLabel>Location</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter location' disabled={updateLead.isPending} {...field} />
+                        <Input
+                          placeholder='Enter location'
+                          disabled={updateLead.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

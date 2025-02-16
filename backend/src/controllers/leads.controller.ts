@@ -14,6 +14,7 @@ import { InputJsonValue } from '@prisma/client/runtime/library';
 import logger from '../utils/logger.js';
 import multer from 'multer';
 import { LeadStatus } from '@prisma/client';
+import { notificationService } from '../services/redis.js';
 
 const upload = multer();
 
@@ -360,11 +361,25 @@ export const leadsController: Controller  = {
     try {
       const { note } = req.body;
       const { id } = req.params;
+
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      let lead;
+      if (user.role === UserRole.ADMIN) {
+        lead = await prisma.lead.update({
+          where: { id },
+          data: { notes: note },
+        });
+      } else {
+        lead = await prisma.lead.update({
+          where: { id, agentId: user.id },
+          data: { notes: note },
+        });
+      }
   
-      const lead = await prisma.lead.update({
-        where: { id },
-        data: { notes: note },
-      });
 
       return res.json(lead);
     } catch (error) {
@@ -488,6 +503,27 @@ export const leadsController: Controller  = {
           agent: true,
         },
       });
+
+      try {
+        const link = user.role === "ADMIN"
+        ? "/admin/leads"
+        : user.role === "TEAM_LEADER"
+        ? "/teamleader/leads"
+        : user.role === "AGENT"
+        ? "/agent/leads"
+        : user.role === "SUPERADMIN"
+        ? "/superadmin/leads"
+        : "";
+
+        await notificationService.createNotification(agentId, {
+          title: "New Lead Assigned",
+          message: `${updatedLead.name} is assigned to you`,          type: "lead",
+          link,
+        });
+      } catch (error) {
+        logger.error('Error in updateLeadAgent:', error);
+        return res.status(500).json({ message: 'Internal server error' });
+      }
 
       const result = leadResponseSchema.safeParse(updatedLead);
       if (!result.success) {

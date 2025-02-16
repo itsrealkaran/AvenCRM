@@ -103,9 +103,25 @@ const Page: React.FC = () => {
     }
   };
 
-  const handleEditProperty = (property: any) => {
-    setPropertyToEdit({ ...property.cardDetails, ...property.features });
-    setIsPropertyFormModalOpen(true);
+  const handleEditProperty = async (id: any) => {
+    try {
+      toast({
+        title: 'Fetching property...',
+        description: 'Please wait while we fetch the property.',
+      });
+      const response = await api.get(`/property/${id}`);
+      console.log(response.data, 'response.data');
+      setPropertyToEdit({ ...response.data.cardDetails, ...response.data.features, id: response.data.id });
+      setIsPropertyFormModalOpen(true);
+      console.log(response.data, 'response.data');
+    } catch (error) {
+      console.error('Error fetching property:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch the property.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const PropertySkeleton = () => (
@@ -170,7 +186,7 @@ const Page: React.FC = () => {
                     isVerified={prop.isVerified}
                     agent={prop.createdBy}
                     onDelete={() => handleDeleteProperty(prop.id)}
-                    onEdit={() => handleEditProperty(prop)}
+                    onEdit={() => handleEditProperty(prop.id)}
                   />
                 ))
               )}
@@ -201,7 +217,6 @@ const Page: React.FC = () => {
                     cardDetails={prop.cardDetails}
                     isVerified={prop.isVerified}
                     agent={prop.createdBy}
-                    onEdit={() => handleEditProperty(prop)}
                   />
                 ))
               )}

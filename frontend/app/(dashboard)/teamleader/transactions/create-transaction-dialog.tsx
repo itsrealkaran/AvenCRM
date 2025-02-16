@@ -1,7 +1,8 @@
 'use client';
 
+import { dealsApi } from '@/api/deals.service';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -52,6 +53,14 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
     },
   });
 
+  const { data: wonDealsData, isLoading: isWonDealsLoading } = useQuery({
+    queryKey: ['wonDeals'],
+    queryFn: async () => {
+      const response = await dealsApi.getAllWonDeals();
+      return response;
+    },
+  });
+
   const createTransaction = useMutation({
     mutationFn: async (values: TransactionFormValues) => {
       try {
@@ -99,9 +108,24 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
-                    <FormControl>
-                      <Input type='number' placeholder='1000' {...field} />
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)}
+                      disabled={createTransaction.isPending}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a deal' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {wonDealsData &&
+                          wonDealsData.map((deal: any) => (
+                            <SelectItem key={deal.id} value={deal.dealAmount.toString()}>
+                              {deal.name} - ${deal.dealAmount.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

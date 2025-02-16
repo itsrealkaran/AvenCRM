@@ -24,6 +24,7 @@ import { teamRoutes } from './routes/team.routes.js';
 import stripeRoutes from './routes/stripe.routes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import { publicRoutes } from './routes/public.routes.js';
+import { notificationRoutes } from './routes/notification.routes.js';
 
 const app = express();
 
@@ -174,6 +175,7 @@ app.use('/tasks', taskRoutes);
 app.use('/stripe', stripeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/public', publicRoutes);
+app.use('/notification', notificationRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

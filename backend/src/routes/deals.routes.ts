@@ -10,6 +10,9 @@ router.use(protect);
 // Get all deals with filtering and pagination
 router.get('/', dealsController.getAllDeals);
 
+// Get all the won deals
+router.get('/won', dealsController.getAllWonDeals);
+
 // Get single deal by ID
 router.get('/:id', dealsController.getDealById);
 

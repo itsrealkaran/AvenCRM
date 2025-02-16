@@ -97,14 +97,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               Pending Verification
             </Badge>
           )}
-          {onDelete && (<Button
-            variant='destructive'
-            size='icon'
-            className='absolute top-3 left-3 rounded-full'
-            onClick={handleDelete}
-          >
-            <Trash2 className='w-4 h-4' />
-          </Button>)}
+          {onDelete && (
+            <Button
+              variant='destructive'
+              size='icon'
+              className='absolute top-3 left-3 rounded-full'
+              onClick={handleDelete}
+            >
+              <Trash2 className='w-4 h-4' />
+            </Button>
+          )}
           <div className='absolute bottom-3 right-3 flex gap-2'>
             <Button
               variant='outline'
@@ -114,14 +116,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             >
               <Share2 className='w-4 h-4 text-gray-700' />
             </Button>
-            <Button
+            {onEdit && (<Button
               variant='outline'
               size='icon'
               className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
               onClick={onEdit}
             >
               <Edit className='w-4 h-4 text-gray-700' />
-            </Button>
+            </Button>)}
           </div>
         </div>
 

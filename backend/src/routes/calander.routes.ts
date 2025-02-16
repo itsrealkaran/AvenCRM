@@ -1,6 +1,8 @@
 import { Router } from "express";
 import db from "../db/index.js";
 import { protect } from "../middleware/auth.js";
+import { notificationService } from "../services/redis.js";
+import { cronService } from "../services/cron.service.js";
 
 const router: Router = Router();
 router.use(protect)
@@ -102,6 +104,30 @@ router.post("/createEvent", async (req, res) => {
           color,
         },
       });
+
+      const link =
+      req.user.role === "ADMIN"
+        ? "/admin/tasks"
+        : req.user.role === "TEAM_LEADER"
+        ? "/teamleader/tasks"
+        : req.user.role === "AGENT"
+        ? "/agent/tasks"
+        : req.user.role === "SUPERADMIN"
+        ? "/superadmin/tasks"
+        : "";
+
+      try{
+        // Schedule notification for the day before
+        cronService.scheduleEventNotification(
+          id,
+          event.id,
+          title,
+          startTimeDate,
+          link
+        );
+      } catch (error) {
+        console.log("Notification creation failed:", error)
+      }
 
       res.status(201).send(event);
     }

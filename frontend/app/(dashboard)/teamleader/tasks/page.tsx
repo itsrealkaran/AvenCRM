@@ -187,7 +187,7 @@ export default function TaskPage() {
           <h1 className='text-2xl font-bold'>Tasks</h1>
           <p className='text-sm text-gray-500'>{tasks.length} tasks found</p>
         </div>
-        
+
         <div className='flex gap-2'>
           {selectedTasks.size > 0 && (
             <Button variant='destructive' onClick={() => setIsDeleteDialogOpen(true)}>
@@ -195,7 +195,6 @@ export default function TaskPage() {
               Delete Selected ({selectedTasks.size})
             </Button>
           )}
-          
         </div>
       </div>
 
@@ -253,24 +252,24 @@ export default function TaskPage() {
           </DropdownMenuContent>
         </DropdownMenu>
         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className='w-4 h-4 mr-2' />
-                Create Task
-              </Button>
-            </DialogTrigger>
-            <DialogContent className='max-w-[800px] w-[90vw]'>
-              <DialogHeader>
-                <DialogTitle>Create New Task</DialogTitle>
-              </DialogHeader>
-              <TaskForm
-                formData={formData}
-                setFormData={setFormData}
-                onSubmit={handleCreateTask}
-                onCancel={() => setIsCreateModalOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className='w-4 h-4 mr-2' />
+              Create Task
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-[800px] w-[90vw]'>
+            <DialogHeader>
+              <DialogTitle>Create New Task</DialogTitle>
+            </DialogHeader>
+            <TaskForm
+              formData={formData}
+              setFormData={setFormData}
+              onSubmit={handleCreateTask}
+              onCancel={() => setIsCreateModalOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className='overflow-y-auto h-full'>

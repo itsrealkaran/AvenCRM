@@ -3,23 +3,26 @@
 import { useState } from 'react';
 import { transactionApi } from '@/api/api';
 import { Transaction, TransactionStatus } from '@/types';
+import { Box } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CirclePlus, RefreshCw, Upload } from 'lucide-react';
+import {
+  MaterialReactTable,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+} from 'material-react-table';
 import { toast } from 'sonner';
-import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
-import { Box } from '@mui/material';
 import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MRT_ToggleFiltersButton } from 'material-react-table';
+import { Input } from '@/components/ui/input';
 
 import { columns, renderRowActionMenuItems } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
@@ -72,7 +75,13 @@ export default function TransactionsPage() {
   });
 
   const verifyTransaction = useMutation({
-    mutationFn: ({ transactionId, status }: { transactionId: string; status: TransactionStatus }) => {
+    mutationFn: ({
+      transactionId,
+      status,
+    }: {
+      transactionId: string;
+      status: TransactionStatus;
+    }) => {
       setIsLoading(true);
       return transactionApi.verify(transactionId, status === TransactionStatus.APPROVED);
     },
@@ -104,15 +113,15 @@ export default function TransactionsPage() {
       const exportData = transactions.map((transaction) => ({
         'Invoice Number': transaction.invoiceNumber,
         'Created By': transaction.agent?.name || 'N/A',
-        'Amount': new Intl.NumberFormat('en-US', {
+        Amount: new Intl.NumberFormat('en-US', {
           style: 'currency',
           currency: 'USD',
         }).format(transaction.amount),
-        'Status': transaction.status,
-        'Date': new Date(transaction.date).toLocaleDateString('en-US', {
+        Status: transaction.status,
+        Date: new Date(transaction.date).toLocaleDateString('en-US', {
           month: 'short',
           day: 'numeric',
-          year: 'numeric'
+          year: 'numeric',
         }),
         'Commission Rate': `${transaction.commissionRate || 0}%`,
         'Transaction Method': transaction.transactionMethod || 'N/A',
@@ -123,11 +132,9 @@ export default function TransactionsPage() {
         const headers = Object.keys(exportData[0]);
         const csvContent = [
           headers.join(','),
-          ...exportData.map(row => 
-            headers.map(header => 
-              JSON.stringify(row[header as keyof typeof row])
-            ).join(',')
-          )
+          ...exportData.map((row) =>
+            headers.map((header) => JSON.stringify(row[header as keyof typeof row])).join(',')
+          ),
         ].join('\n');
 
         // Create and trigger download
@@ -206,7 +213,7 @@ export default function TransactionsPage() {
       >
         <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <Input
-            placeholder="Search transactions..."
+            placeholder='Search transactions...'
             value={table.getState().globalFilter ?? ''}
             onChange={(e) => table.setGlobalFilter(e.target.value)}
             className='w-md'
@@ -284,17 +291,13 @@ export default function TransactionsPage() {
         <MaterialReactTable table={table} />
       </Card>
 
-      <CreateTransactionDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen} 
-      />
+      <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
       {selectedTransaction && (
         <EditTransactionDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           transaction={selectedTransaction}
-
         />
       )}
     </div>

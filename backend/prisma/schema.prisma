@@ -48,9 +48,8 @@ enum TransactionStatus {
 
 enum PlanTier {
   BASIC
-  PROFESSIONAL
+  PREMIUM
   ENTERPRISE
-  CUSTOM
 }
 
 enum EventType {
@@ -254,9 +253,9 @@ model Team {
 model Plan {
   id           String     @id @default(cuid())
   name         PlanTier   @default(BASIC)
-  price        Float
-  maxUsers     Int
-  features     Json?
+  price        Json
+  maxUsers     Int?
+  features     String[]
   
   companies    Company[]
   

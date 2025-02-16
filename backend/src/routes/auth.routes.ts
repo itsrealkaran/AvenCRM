@@ -182,6 +182,55 @@ router.post("/sign-in", async (req: Request, res: Response) => {
   }
 });
 
+router.post("/sign-in/agents", async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await db.user.findUnique({
+      where: { email },
+      select: {
+        id: true,
+        email: true,
+        password: true,
+        role: true,
+        name: true,
+        companyId: true,
+        teamId: true,
+        isActive: true,
+      },
+    });
+
+    if (!user || !user.isActive) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (user.role === "ADMIN") {
+      return res.status(401).json({ message: "Admins cannot sign in" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const { password: _, ...userWithoutPassword } = user;
+    const tokens = generateTokens(user);
+    setTokenCookies(res, tokens);
+
+    // Cache user data
+    await cacheUser(user.id, userWithoutPassword);
+
+    res.json({
+      user: userWithoutPassword,
+      access_token: tokens.accessToken,
+      refresh_token: tokens.refreshToken,
+    });
+  } catch (error) {
+    logger.error("Sign In Error:", error);
+    res.status(500).json({ message: "Error signing in" });
+  }
+});
+
 // Refresh Token
 router.post("/refresh-token", async (req: Request, res: Response) => {
   const refreshToken = req.cookies.RefreshToken;
