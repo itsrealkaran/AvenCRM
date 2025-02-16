@@ -65,11 +65,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
               variant='outline'
               size='sm'
               disabled={!!isVerified}
-              onClick={() => {
-                if (meta?.onVerify) {
-                  meta.onVerify(transaction.id, TransactionStatus.APPROVED);
-                }
-              }}
+              onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.APPROVED)}
               className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
             >
               {isVerified ? 'Verified' : 'Verify'}
@@ -78,11 +74,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
               variant='ghost'
               size='sm'
               disabled={!isVerified}
-              onClick={() => {
-                if (meta?.onVerify) {
-                  meta.onVerify(transaction.id, TransactionStatus.REJECTED);
-                }
-              }}
+              onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.REJECTED)}
               className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
             >
               {!isVerified ? 'Unverified' : 'Unverify'}

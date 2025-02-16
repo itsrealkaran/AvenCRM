@@ -2,17 +2,30 @@
 
 import { useState } from 'react';
 import { Transaction, TransactionStatus } from '@/types';
+import { Box } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { CirclePlus, RefreshCw, Upload } from 'lucide-react';
+import {
+  MaterialReactTable,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+} from 'material-react-table';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 
-import { columns } from './columns';
+import { columns, renderRowActionMenuItems } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
-import { DataTable } from './data-table';
 import { EditTransactionDialog } from './edit-transaction-dialog';
 
 async function getTransactions(): Promise<Transaction[]> {
@@ -29,10 +42,10 @@ export default function TransactionsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [selectedRows, setSelectedRows] = useState<Transaction[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: transactions = [], isLoading } = useQuery({
+  const { data: transactions = [], isLoading: isTransactionsLoading } = useQuery({
     queryKey: ['transactions'],
     queryFn: getTransactions,
   });
@@ -49,7 +62,6 @@ export default function TransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transaction deleted successfully');
-      setSelectedRows([]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Failed to delete transaction');
@@ -70,7 +82,7 @@ export default function TransactionsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
       toast.success('Transactions deleted successfully');
-      setSelectedRows([]);
+      // setSelectedRows([]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : 'Failed to delete transactions');
@@ -97,23 +109,50 @@ export default function TransactionsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = async (transactionId: string) => {
-    if (window.confirm('Are you sure you want to delete this transaction?')) {
-      deleteTransaction.mutate(transactionId);
-    }
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await queryClient.invalidateQueries({ queryKey: ['transactions'] });
+    setIsLoading(false);
   };
 
-  const handleBulkDelete = async (transactionIds: string[]) => {
-    if (window.confirm(`Are you sure you want to delete ${transactionIds.length} transactions?`)) {
-      try {
-        await bulkDeleteTransactions.mutateAsync(transactionIds);
-        toast.success('Transactions deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete some transactions');
+  const handleDownload = (format: 'csv' | 'xlsx') => {
+    try {
+      const exportData = transactions.map((transaction) => ({
+        'Invoice Number': transaction.invoiceNumber,
+        'Created By': transaction.agent?.name || 'N/A',
+        Amount: new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+        }).format(transaction.amount),
+        Status: transaction.status,
+        Date: new Date(transaction.date).toLocaleDateString(),
+      }));
+
+      if (format === 'csv') {
+        const headers = Object.keys(exportData[0]);
+        const csvContent = [
+          headers.join(','),
+          ...exportData.map((row) =>
+            headers.map((header) => JSON.stringify(row[header as keyof typeof row])).join(',')
+          ),
+        ].join('\n');
+
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `transactions_${new Date().toISOString()}.csv`;
+        link.click();
+      } else {
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+        XLSX.writeFile(workbook, `transactions_${new Date().toISOString()}.xlsx`);
       }
+    } catch (error) {
+      console.error('Error exporting transactions:', error);
+      toast.error(`Failed to export transactions as ${format.toUpperCase()}`);
     }
   };
-
   const handleVerify = async (id: string, isVerified: TransactionStatus) => {
     try {
       await verifyTransaction.mutateAsync({ id, isVerified });
@@ -122,50 +161,152 @@ export default function TransactionsPage() {
     }
   };
 
-  const handleSelectionChange = (transactions: Transaction[]) => {
-    setSelectedRows(transactions);
-  };
+  // const handleSelectionChange = (transactions: Transaction[]) => {
+  //   setSelectedRows(transactions);
+  // };
+
+  const table = useMaterialReactTable({
+    columns,
+    data: transactions,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
+    },
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '600px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '0.5rem',
+          p: '8px',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search transactions...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-64'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <Button
+              variant='outline'
+              size='sm'
+              className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+              onClick={() => {
+                if (window.confirm('Are you sure you want to delete these transactions?')) {
+                  bulkDeleteTransactions.mutate(
+                    table.getSelectedRowModel().rows.map((row) => row.original.id)
+                  );
+                  table.resetRowSelection();
+                }
+              }}
+            >
+              Delete ({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+          )}
+          <Button variant='outline' size='sm' onClick={handleRefresh}>
+            <RefreshCw className='h-4 w-4' />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Upload className='h-4 w-4' />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
+            <CirclePlus className='h-4 w-4 mr-2' /> Add Transaction
+          </Button>
+        </Box>
+      </Box>
+    ),
+    renderRowActionMenuItems: ({ row, closeMenu }) =>
+      renderRowActionMenuItems({
+        row,
+        closeMenu,
+        onEdit: handleEdit,
+        onDelete: (id) => deleteTransaction.mutate(id),
+        onVerify: (id, isVerified) => verifyTransaction.mutate({ id, isVerified }),
+      }),
+    state: {
+      isLoading: isLoading || isTransactionsLoading,
+    },
+    meta: {
+      onVerify: (id: string, isVerified: TransactionStatus) =>
+        verifyTransaction.mutate({ id, isVerified }),
+    },
+  });
 
   return (
-    <section className='flex-1 space-y-4 p-4 md:p-6'>
-      <Card className='container mx-auto py-10'>
-        <div className='flex justify-between items-center p-5'>
+    <div className='min-h-full w-full'>
+      <Card className='min-h-full flex flex-1 flex-col p-6'>
+        <div className='flex justify-between items-center mb-2'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight text-primary'>
-              Transactions Management
-            </h1>
-            <p className='text-muted-foreground'>Manage and track your transactions in one place</p>
-          </div>
-          <div className='flex gap-2'>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className='mr-2 h-4 w-4' /> Add New Transaction
-            </Button>
+            <h1 className='text-2xl font-bold'>Transactions</h1>
+            <p className='text-sm text-muted-foreground'>
+              Manage your transactions and their status
+            </p>
           </div>
         </div>
+        <MaterialReactTable table={table} />
+      </Card>
 
-        <div className='space-4 p-6'>
-          <DataTable
-            columns={columns}
-            data={transactions}
-            onEdit={handleEdit}
-            onDelete={async (row) => {
-              const transactionIds = row.map((row) => row.original.id);
-              await handleBulkDelete(transactionIds);
-            }}
-            onVerify={handleVerify}
-            onSelectionChange={handleSelectionChange}
-          />
-        </div>
+      <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
 
-        <CreateTransactionDialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen} />
+      {selectedTransaction && (
         <EditTransactionDialog
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           transaction={selectedTransaction}
           onEdit={handleEdit}
-          onDelete={handleDelete}
         />
-      </Card>
-    </section>
+      )}
+    </div>
   );
 }

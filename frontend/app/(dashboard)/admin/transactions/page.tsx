@@ -275,6 +275,9 @@ export default function TransactionsPage() {
     state: {
       isLoading: isLoading || isTransactionsLoading,
     },
+    meta: {
+      onVerify: verifyTransaction.mutate,
+    },
   });
 
   return (
