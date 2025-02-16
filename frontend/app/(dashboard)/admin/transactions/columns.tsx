@@ -38,8 +38,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     accessorKey: 'isVerified',
     header: 'Status',
     Cell: ({ row, table }) => {
-      const transaction = row.original;
-      const isVerified = transaction.status;
+      const isVerified = row.original.status;
       const meta = table.options.meta as {
         onVerify?: (transactionId: string, isVerified: TransactionStatus) => void;
       };

@@ -153,17 +153,7 @@ export default function TransactionsPage() {
       toast.error(`Failed to export transactions as ${format.toUpperCase()}`);
     }
   };
-  const handleVerify = async (id: string, isVerified: TransactionStatus) => {
-    try {
-      await verifyTransaction.mutateAsync({ id, isVerified });
-    } catch (error) {
-      toast.error('Failed to update transaction status');
-    }
-  };
 
-  // const handleSelectionChange = (transactions: Transaction[]) => {
-  //   setSelectedRows(transactions);
-  // };
 
   const table = useMaterialReactTable({
     columns,
