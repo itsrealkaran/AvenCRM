@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowUpDown, Calendar, CheckSquare, CheckSquareIcon, Mail, RefreshCw, Search } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowUpDown,
+  Calendar,
+  CheckSquare,
+  CheckSquareIcon,
+  Mail,
+  RefreshCw,
+  Search,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -23,7 +32,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
 interface NotificationSchema {
@@ -68,12 +76,16 @@ export default function NotificationsPage() {
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   // Replace multiple state management with React Query
-  const { data: activities, isLoading, refetch } = useQuery({
+  const {
+    data: activities,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const response = await api.get('/notification');
       return response.data;
-    }
+    },
   });
 
   const markAllAsRead = async () => {
@@ -225,31 +237,32 @@ export default function NotificationsPage() {
                 </TableBody>
               ) : (
                 <TableBody>
-                  {filteredAndSortedActivities && filteredAndSortedActivities.map((activity) => (
-                    <TableRow key={activity.id} className='hover:bg-gray-50'>
-                      <TableCell>
-                        <div className={`${getIconColor(activity.type)}`}>
-                          {getIconByType(activity.type)}
-                        </div>
-                      </TableCell>
-                      <TableCell className='font-medium'>{activity.title}</TableCell>
-                      <TableCell className='hidden md:table-cell text-gray-500'>
-                        {activity.message}
-                      </TableCell>
-                      <TableCell className='text-gray-500'>{activity.timestamp}</TableCell>
-                      <TableCell className='text-right'>
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            activity.read
-                              ? 'bg-green-50 text-green-700 border border-green-200'
-                              : 'bg-[#5932ea]/10 text-[#5932ea] border border-[#5932ea]/20'
-                          }`}
-                        >
-                          {activity.read ? 'Read' : 'Unread'}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {filteredAndSortedActivities &&
+                    filteredAndSortedActivities.map((activity) => (
+                      <TableRow key={activity.id} className='hover:bg-gray-50'>
+                        <TableCell>
+                          <div className={`${getIconColor(activity.type)}`}>
+                            {getIconByType(activity.type)}
+                          </div>
+                        </TableCell>
+                        <TableCell className='font-medium'>{activity.title}</TableCell>
+                        <TableCell className='hidden md:table-cell text-gray-500'>
+                          {activity.message}
+                        </TableCell>
+                        <TableCell className='text-gray-500'>{activity.timestamp}</TableCell>
+                        <TableCell className='text-right'>
+                          <span
+                            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              activity.read
+                                ? 'bg-green-50 text-green-700 border border-green-200'
+                                : 'bg-[#5932ea]/10 text-[#5932ea] border border-[#5932ea]/20'
+                            }`}
+                          >
+                            {activity.read ? 'Read' : 'Unread'}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               )}
             </Table>

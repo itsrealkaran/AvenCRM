@@ -119,7 +119,7 @@ export default function TransactionsPage() {
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
-        
+
         // Generate CSV file
         const csvOutput = XLSX.write(workbook, {
           bookType: 'csv',
@@ -151,7 +151,7 @@ export default function TransactionsPage() {
       toast.error(`Failed to export transactions as ${format.toUpperCase()}`);
     }
   };
-  console.log(transactions)
+  console.log(transactions);
 
   const table = useMaterialReactTable({
     columns,
@@ -272,9 +272,7 @@ export default function TransactionsPage() {
         <div className='flex justify-between items-center mb-2'>
           <div>
             <h1 className='text-2xl font-bold'>Transactions</h1>
-            <p className='text-sm text-muted-foreground'>
-              Manage your transactions
-            </p>
+            <p className='text-sm text-muted-foreground'>Manage your transactions</p>
           </div>
         </div>
         <MaterialReactTable table={table} />

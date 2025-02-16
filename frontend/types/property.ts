@@ -13,7 +13,7 @@ export enum PropertyStatus {
   INACTIVE = 'INACTIVE',
 }
 
-export enum  PropertyType {
+export enum PropertyType {
   RESIDENTIAL = 'RESIDENTIAL',
   COMMERCIAL = 'COMMERCIAL',
   LAND = 'LAND',

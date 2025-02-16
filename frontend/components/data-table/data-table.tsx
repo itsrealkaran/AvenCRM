@@ -19,8 +19,8 @@ import {
   RefreshCw,
   Trash,
   Upload,
-  X,
   UserCog,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { read, utils } from 'xlsx';
@@ -35,6 +35,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Table,
   TableBody,
   TableCell,
@@ -43,13 +50,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useConfirm } from '@/hooks/use-confirm';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 
 import FileImportModal from './file-import-modal';
 import { BaseRecord, DataTableProps } from './types';
@@ -207,9 +207,9 @@ export function DataTable<TData extends BaseRecord, TValue>({
           {onBulkAssign && agents && table.getFilteredSelectedRowModel().rows.length > 0 && (
             <Select
               onValueChange={async (agentId) => {
-                const selectedIds = table.getFilteredSelectedRowModel().rows.map(
-                  (row) => row.original.id
-                );
+                const selectedIds = table
+                  .getFilteredSelectedRowModel()
+                  .rows.map((row) => row.original.id);
                 await onBulkAssign(selectedIds, agentId);
                 table.resetRowSelection();
               }}

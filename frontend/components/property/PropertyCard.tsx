@@ -116,14 +116,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             >
               <Share2 className='w-4 h-4 text-gray-700' />
             </Button>
-            {onEdit && (<Button
-              variant='outline'
-              size='icon'
-              className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
-              onClick={onEdit}
-            >
-              <Edit className='w-4 h-4 text-gray-700' />
-            </Button>)}
+            {onEdit && (
+              <Button
+                variant='outline'
+                size='icon'
+                className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
+                onClick={onEdit}
+              >
+                <Edit className='w-4 h-4 text-gray-700' />
+              </Button>
+            )}
           </div>
         </div>
 

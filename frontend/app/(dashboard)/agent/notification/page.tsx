@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowUpDown, Calendar, CheckSquare, Mail, RefreshCw, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 
 interface NotificationSchema {
@@ -67,12 +67,16 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'email' | 'calendar' | 'task'>('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
-  const { data: activities, isLoading, refetch } = useQuery({
+  const {
+    data: activities,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['notifications'],
     queryFn: async () => {
       const response = await api.get('/notification');
       return response.data;
-    }
+    },
   });
 
   const handleFilterChange = (value: string) => {

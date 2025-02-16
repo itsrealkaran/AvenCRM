@@ -52,7 +52,7 @@ export function EditTransactionDialog({
   open,
   onOpenChange,
   transaction,
-  onEdit
+  onEdit,
 }: EditTransactionDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<TransactionFormValues>({

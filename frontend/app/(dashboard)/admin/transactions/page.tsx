@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { api } from '@/lib/api';
 import { transactionApi } from '@/api/api';
 import { Transaction, TransactionStatus } from '@/types';
 import { Box } from '@mui/material';
@@ -24,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { api } from '@/lib/api';
 
 import { columns, renderRowActionMenuItems } from './columns';
 import { CreateTransactionDialog } from './create-transaction-dialog';
