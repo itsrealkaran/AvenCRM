@@ -25,7 +25,6 @@ const passwordRequirements = [
 ];
 
 export default function SetPassword({ onNext, onBack }: StepProps) {
-  const router = useRouter();
   const { password, updateField, ...formData } = useSignUp();
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);

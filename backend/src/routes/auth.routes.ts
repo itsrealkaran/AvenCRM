@@ -1,7 +1,8 @@
 import { Request, Response, Router } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { PlanTier, UserRole } from "@prisma/client";
+import { UserRole } from "@prisma/client";
+import nodemailer from "nodemailer"
 import db from "../db/index.js";
 import {
   protect,
@@ -80,11 +81,8 @@ router.post("/sign-up", async (req: Request, res: Response) => {
 
     if (existingUser) {
       const { password: _, ...userWithoutPassword } = existingUser;
-
-      const tokens = generateTokens(existingUser);
-      setTokenCookies(res, tokens);
       return res
-        .status(200)
+        .status(400)
         .json({ message: "User already exists with this email" });
     }
 
@@ -124,9 +122,63 @@ router.post("/sign-up", async (req: Request, res: Response) => {
 
     const { password: _, ...userWithoutPassword } = response;
 
-    const tokens = generateTokens(response);
-    setTokenCookies(res, tokens);
+    try {
+      const transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true, // true for port 465, false for other ports
+        auth: {
+          user: process.env.SMTP_USERNAME,
+          pass: process.env.SMTP_PASSWORD,
+        },
+      });
 
+      const info = await transporter.sendMail({
+        from: 'info@avencrm.com', // sender address
+        to: email, // list of receivers
+        subject: "Welcome to AvenCRM! 🏠", // Subject line
+        text: "Welcome to AvenCRM - Your Premier Real Estate Management Solution", // plain text body
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h1 style="color: #7C3AED; text-align: center;">Welcome to AvenCRM! 🏠</h1>
+            
+            <p style="font-size: 16px; line-height: 1.6;">
+              Thank you for choosing AvenCRM as your real estate management platform. We're excited to help you streamline your property management and grow your business.
+            </p>
+
+            <div style="background-color: #f8f8f8; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h2 style="color: #6D28D9; margin-top: 0;">What you can do with AvenCRM:</h2>
+              <ul style="list-style-type: none; padding: 0;">
+                <li style="margin: 10px 0;">📊 Manage your property portfolio</li>
+                <li style="margin: 10px 0;">🏢 List and track properties</li>
+                <li style="margin: 10px 0;">📝 Create detailed property records</li>
+                <li style="margin: 10px 0;">📍 Track location-based information</li>
+                <li style="margin: 10px 0;">📸 Manage your leads and deals</li>
+              </ul>
+            </div>
+
+            <p style="font-size: 16px; line-height: 1.6;">
+              Get started by exploring our intuitive dashboard and creating your first property listing. If you need any assistance, our support team is here to help!
+            </p>
+
+            <div style="text-align: center; margin-top: 30px;">
+              <a href="https://crm.avencrm.com/" style="background-color: #7C3AED; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Go to Dashboard
+              </a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; text-align: center; margin-top: 30px;">
+              Best regards,<br>
+              The AvenCRM Team
+            </p>
+          </div>
+        `, // html body
+      });
+    
+      
+    } catch (err) {
+      console.log("error sending an email", err)
+    }
     // Cache user data
     await cacheUser(response.id, userWithoutPassword);
 

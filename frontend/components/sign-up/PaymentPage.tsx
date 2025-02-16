@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { motion } from 'framer-motion';
 
@@ -17,22 +17,24 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [totalAmount, setTotalAmount] = useState<number | null>(null);
 
+  useEffect(()=>{
+        let price;
+        if (billingFrequency === 'monthly') {
+          price = 99 * userCount;
+        } else if (billingFrequency === 'yearly') {
+          price = 500 * userCount;
+        }
+        setTotalAmount(price || 0);
+  })
+
   const handlePayment = async () => {
     setIsProcessing(true);
-
-    let price;
-    if (billingFrequency === 'monthly') {
-      price = 99 * userCount;
-    } else if (billingFrequency === 'yearly') {
-      price = 500 * userCount;
-    }
-    setTotalAmount(price || 0);
 
     try {
       const response = await api.post('/stripe/create-checkout-session', {
         planId: plan,
         planName: `${plan} Plan (${billingFrequency})`,
-        price: price,
+        price: totalAmount,
       });
     } catch (error) {
       console.error('Payment error:', error);
