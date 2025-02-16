@@ -13,6 +13,7 @@ import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Card } from '@/components/ui/card';
+import axios from 'axios';
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -22,6 +23,35 @@ export default function LeadsPage() {
   const [lead, setLead] = useState<Lead[] | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const queryClient = useQueryClient();
+
+  const { data: agents } = useQuery({
+    queryKey: ['agents'],
+    queryFn: async () => {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
+        withCredentials: true,
+      });
+      if (!response) {
+        throw new Error('Failed to fetch agents');
+      }
+      return response.data;
+    }});
+
+  const bulkAssignLeads = useMutation({
+    mutationFn: async ({ leadIds, agentId }: { leadIds: string[], agentId: string }) => {
+      try {
+        await leadsApi.bulkAssignLeads(leadIds, agentId);
+      } catch (error) {
+        throw new Error('Failed to assign leads');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Leads assigned successfully');
+    },
+    onError: () => {
+      toast.error('Failed to assign leads');
+    },
+  });
 
   async function getLeads() {
     try {
@@ -185,6 +215,14 @@ export default function LeadsPage() {
     }
   };
 
+  const handleBulkAssign = async (leadIds: string[], agentId: string) => {
+    try {
+      await bulkAssignLeads.mutateAsync({ leadIds, agentId });
+    } catch (error) {
+      toast.error('Failed to assign leads');
+    }
+  };
+
   const handleSelectionChange = useCallback((leads: Lead[]) => {
     setSelectedRows(leads);
   }, []);
@@ -220,6 +258,8 @@ export default function LeadsPage() {
             }}
             refetch={refetch}
             onCreateLead={() => setIsCreateDialogOpen(true)}
+            onBulkAssign={handleBulkAssign}
+            agents={agents?.data}
           />
         </div>
 

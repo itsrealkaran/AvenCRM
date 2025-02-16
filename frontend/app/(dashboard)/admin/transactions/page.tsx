@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { api } from '@/lib/api';
 import { transactionApi } from '@/api/api';
 import { Transaction, TransactionStatus } from '@/types';
 import { Box } from '@mui/material';
@@ -75,15 +76,14 @@ export default function TransactionsPage() {
   });
 
   const verifyTransaction = useMutation({
-    mutationFn: ({
-      transactionId,
-      status,
-    }: {
-      transactionId: string;
-      status: TransactionStatus;
-    }) => {
+    mutationFn: async ({ id, isVerified }: { id: string; isVerified: TransactionStatus }) => {
       setIsLoading(true);
-      return transactionApi.verify(transactionId, status === TransactionStatus.APPROVED);
+      try {
+        await api.put(`/transactions/admin/verify/${id}`, { isVerified });
+      } catch (error) {
+        console.error('Error verifying transaction:', error);
+        throw new Error('Failed to verify transaction');
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['transactions'] });
@@ -270,10 +270,14 @@ export default function TransactionsPage() {
         closeMenu,
         onEdit: handleEdit,
         onDelete: (id) => deleteTransaction.mutate(id),
-        onVerify: (id, status) => verifyTransaction.mutate({ transactionId: id, status }),
+        onVerify: (id, isVerified) => verifyTransaction.mutate({ id, isVerified }),
       }),
     state: {
       isLoading: isLoading || isTransactionsLoading,
+    },
+    meta: {
+      onVerify: (id: string, isVerified: TransactionStatus) =>
+        verifyTransaction.mutate({ id, isVerified }),
     },
   });
 

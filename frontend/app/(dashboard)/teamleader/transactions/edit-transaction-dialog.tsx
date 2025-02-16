@@ -46,15 +46,13 @@ interface EditTransactionDialogProps {
   onOpenChange: (open: boolean) => void;
   transaction: Transaction | null;
   onEdit: (transaction: Transaction) => void;
-  onDelete: (transactionId: string) => Promise<void>;
 }
 
 export function EditTransactionDialog({
   open,
   onOpenChange,
   transaction,
-  onEdit,
-  onDelete,
+  onEdit
 }: EditTransactionDialogProps) {
   const queryClient = useQueryClient();
   const form = useForm<TransactionFormValues>({

@@ -24,4 +24,6 @@ export interface DataTableProps<TData extends BaseRecord, TValue> {
   onCreateLead?: () => void;
   onCreateDeal?: () => void;
   onDownload?: (format: 'csv' | 'xlsx') => void;
+  onBulkAssign?: (userIds: string[], agentId: string) => Promise<void>;
+  agents?: { id: string; name: string }[];
 }

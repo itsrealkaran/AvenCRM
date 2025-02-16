@@ -40,4 +40,7 @@ router.delete('/', leadsController.deleteMultipleLeads);
 // Convert lead to deal
 router.post('/convert', leadsController.convertToDeal);
 
+// Bulk assign leads to agent
+router.post('/bulk-assign', leadsController.bulkAssignLeads);
+
 export default router;

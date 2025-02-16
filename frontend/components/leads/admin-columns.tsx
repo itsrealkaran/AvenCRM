@@ -415,4 +415,48 @@ export const adminColumns: ColumnDef<Lead>[] = [
       return <NotesCell row={row} />;
     },
   },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row, table }) => {
+      const lead = row.original as Lead;
+      const meta = table.options.meta as {
+        onEdit?: (lead: Lead) => void;
+        onDelete?: (leadId: string) => void;
+        onConvertToDeal?: (lead: Lead) => void;
+      };
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 w-8 p-0'>
+              <span className='sr-only'>Open menu</span>
+              <MoreHorizontal className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-[160px]'>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
+              <Pencil className='mr-2 h-4 w-4' /> Edit lead
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onConvertToDeal?.(lead)}>
+              <ArrowRightLeft className='mr-2 h-4 w-4' /> Convert to Deal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
+              <Trash2 className='mr-2 h-4 w-4' /> Delete lead
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(lead.id);
+                toast.success('Lead ID copied to clipboard');
+              }}
+            >
+              <CopyIcon className='mr-2 h-4 w-4' /> Copy lead ID
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    },
+  },
 ];

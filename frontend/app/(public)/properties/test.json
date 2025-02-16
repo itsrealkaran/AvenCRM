@@ -1,0 +1,122 @@
+{
+    "propertyType": "Residential",
+    "zoningType": "R1",
+    "listingType": "Sale",
+    "propertyName": "Sunset Villa",
+    "price": "1250000",
+    "bedrooms": "4",
+    "bathrooms": "3.5",
+    "parking": "2",
+    "sqft": "2800",
+    "description": "Beautiful modern home with ocean views",
+    "addressLine": "123 Palm Avenue",
+    "streetName": "Palm Avenue",
+    "city": "San Diego",
+    "zipCode": "92101",
+    "country": "United States",
+    "longitude": "-117.1611",
+    "latitude": "32.7157",
+    "rooms": [],
+    "floors": [
+      {
+        "id": "f1abc123",
+        "name": "Ground Floor",
+        "level": 0,
+        "rooms": [
+          {
+            "id": "r1xyz789",
+            "name": "Living Room",
+            "width": "20",
+            "length": "15",
+            "type": "living"
+          },
+          {
+            "id": "r2def456",
+            "name": "Kitchen",
+            "width": "12",
+            "length": "15",
+            "type": "kitchen"
+          }
+        ]
+      },
+      {
+        "id": "f2def456",
+        "name": "First Floor",
+        "level": 1,
+        "rooms": [
+          {
+            "id": "r3ghi789",
+            "name": "Master Bedroom",
+            "width": "16",
+            "length": "14",
+            "type": "bedroom"
+          },
+          {
+            "id": "r4jkl012",
+            "name": "Guest Bedroom",
+            "width": "12",
+            "length": "12",
+            "type": "bedroom"
+          }
+        ]
+      }
+    ],
+    "isMetric": true,
+    "images": [],
+    "imageNames": [
+      "https://images.pexels.com/photos/186077/pexels-photo-186077.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "https://images.pexels.com/photos/186077/pexels-photo-186077.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "https://images.pexels.com/photos/186077/pexels-photo-186077.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "https://images.pexels.com/photos/186077/pexels-photo-186077.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
+      "https://images.pexels.com/photos/186077/pexels-photo-186077.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2"
+    ],
+    "documents": [],
+    "utilities": [
+      "Electricity",
+      "Gas",
+      "Water",
+      "Internet"
+    ],
+    "interiorFeatures": [
+      "Hardwood Floors",
+      "Central AC",
+      "Granite Countertops",
+      "Walk-in Closet"
+    ],
+    "exteriorFeatures": [
+      "Swimming Pool",
+      "Garden",
+      "Patio"
+    ],
+    "exteriorTypes": [
+      "Stucco",
+      "Stone Accents"
+    ],
+    "buildingDevelopmentFeatures": [
+      "Gated Community",
+      "24/7 Security"
+    ],
+    "locationFeatures": [
+      "Near Schools",
+      "Close to Beach",
+      "Shopping Nearby"
+    ],
+    "generalFeatures": [
+      "Smart Home System",
+      "Solar Panels",
+      "Recently Renovated"
+    ],
+    "views": [
+      "Ocean",
+      "Mountain",
+      "City"
+    ],
+    "googleMapsLink": "https://maps.app.goo.gl/rtBqGHtzF3o4Rgis6",
+    "agent": {
+      "id": "a1234567",
+      "name": "John Doe",
+      "phone": "1234567890",
+      "email": "john.doe@example.com",
+      "avatar": "https://cdn-icons-png.flaticon.com/512/8136/8136031.png"
+    }
+  }

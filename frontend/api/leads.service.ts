@@ -96,6 +96,13 @@ export const leadsApi = {
     return response.data;
   },
 
+  bulkAssignLeads: async (leadIds: string[], agentId: string) => {
+    return await api.post('/leads/bulk-assign', {
+      leadIds,
+      agentId,
+    });
+  },
+
   // Convert lead to deal
   convertToDeal: async (data: ConvertToDealPayload): Promise<{ deal: any; message: string }> => {
     const response = await api.post('/leads/convert', {
