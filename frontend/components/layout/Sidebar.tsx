@@ -60,7 +60,7 @@ const Sidebar = ({ menuItems }: SidebarProps) => {
         </div>
         {!isCollapsed && (
           <Link
-            href='/dashboard'
+            href='/'
             className='text-[1.24rem] text-[#5932ea] flex gap-[2px] items-end font-bold'
           >
             <h1>AvenCRM</h1>
