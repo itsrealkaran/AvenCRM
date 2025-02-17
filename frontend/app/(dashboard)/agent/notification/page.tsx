@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { ArrowUpDown, Calendar, CheckSquare, Mail, RefreshCw, Search } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -23,77 +24,36 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { api } from '@/lib/api';
 
-interface Activity {
-  id: number;
+interface NotificationSchema {
+  id: string;
   title: string;
-  subtitle: string;
+  message: string;
+  type: 'calendar' | 'task' | 'lead';
+  read: boolean;
   timestamp: string;
-  type: 'calendar' | 'email' | 'task';
-  isRead: boolean;
+  link?: string;
 }
 
-const initialActivities: Activity[] = [
-  {
-    id: 1,
-    title: 'Client Meeting',
-    subtitle: 'with Enterprise Team',
-    timestamp: 'Today at 2:00 PM',
-    type: 'calendar',
-    isRead: false,
-  },
-  {
-    id: 2,
-    title: 'New Lead Response',
-    subtitle: 'from contact@example.com',
-    timestamp: 'Yesterday at 4:30 PM',
-    type: 'email',
-    isRead: true,
-  },
-  {
-    id: 3,
-    title: 'Update Property Listing',
-    subtitle: 'Due in 2 hours',
-    timestamp: 'Today at 5:00 PM',
-    type: 'task',
-    isRead: false,
-  },
-  {
-    id: 4,
-    title: 'Team Sync',
-    subtitle: 'Weekly Progress Review',
-    timestamp: 'Tomorrow at 10:00 AM',
-    type: 'calendar',
-    isRead: false,
-  },
-  {
-    id: 5,
-    title: 'Contract Review',
-    subtitle: 'Pending approval',
-    timestamp: 'Today at 3:00 PM',
-    type: 'task',
-    isRead: false,
-  },
-];
-
-const getIconByType = (type: Activity['type']) => {
+const getIconByType = (type: NotificationSchema['type']) => {
   const iconProps = { className: 'w-4 h-4' };
 
   switch (type) {
     case 'calendar':
       return <Calendar {...iconProps} />;
-    case 'email':
+    case 'lead':
       return <Mail {...iconProps} />;
     case 'task':
       return <CheckSquare {...iconProps} />;
   }
 };
 
-const getIconColor = (type: Activity['type']) => {
+const getIconColor = (type: NotificationSchema['type']) => {
   switch (type) {
     case 'calendar':
       return 'text-blue-500';
-    case 'email':
+    case 'lead':
       return 'text-[#5932ea]';
     case 'task':
       return 'text-green-500';
@@ -101,46 +61,42 @@ const getIconColor = (type: Activity['type']) => {
 };
 
 export default function NotificationsPage() {
-  const [sortKey, setSortKey] = useState<keyof Activity>('timestamp');
+  const [sortKey, setSortKey] = useState<keyof NotificationSchema>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterValue, setFilterValue] = useState('');
   const [filter, setFilter] = useState<'all' | 'email' | 'calendar' | 'task'>('all');
-  const [activities, setActivities] = useState<Activity[]>(initialActivities);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
+
+  const {
+    data: activities,
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: async () => {
+      const response = await api.get('/notification');
+      return response.data;
+    },
+  });
 
   const handleFilterChange = (value: string) => {
     setFilter(value as 'all' | 'email' | 'calendar' | 'task');
   };
 
-  const markAllAsRead = () => {
-    setActivities(
-      activities.map((activity) =>
-        (readFilter === 'all' || (readFilter === 'unread' && !activity.isRead)) &&
-        (filter === 'all' || activity.type === filter) &&
-        (activity.title.toLowerCase().includes(filterValue.toLowerCase()) ||
-          activity.subtitle.toLowerCase().includes(filterValue.toLowerCase()))
-          ? { ...activity, isRead: true }
-          : activity
-      )
-    );
+  const markAllAsRead = async () => {
+    try {
+      await api.put('/notification/mark-all-read');
+      // refetch();
+    } catch (error) {
+      console.error('Error marking notifications as read:', error);
+    }
   };
 
-  const refreshActivities = async () => {
-    setIsRefreshing(true);
-    setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setActivities([...initialActivities]);
-    setFilterValue('');
-    setFilter('all');
-    setReadFilter('all');
-    setIsRefreshing(false);
-    setIsLoading(false);
+  const refreshActivities = () => {
+    // refetch();
   };
 
-  const handleSort = (key: keyof Activity) => {
+  const handleSort = (key: keyof NotificationSchema) => {
     if (sortKey === key) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -149,30 +105,23 @@ export default function NotificationsPage() {
     }
   };
 
-  const filteredAndSortedActivities = activities
-    .filter(
-      (activity) =>
-        (filter === 'all' || activity.type === filter) &&
-        (readFilter === 'all' ||
-          (readFilter === 'unread' && !activity.isRead) ||
-          (readFilter === 'read' && activity.isRead)) &&
-        (activity.title.toLowerCase().includes(filterValue.toLowerCase()) ||
-          activity.subtitle.toLowerCase().includes(filterValue.toLowerCase()))
-    )
-    .sort((a, b) => {
-      if (a[sortKey] < b[sortKey]) return sortOrder === 'asc' ? -1 : 1;
-      if (a[sortKey] > b[sortKey]) return sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
+  const filteredActivities = activities
+    ? activities.filter(
+        (activity: NotificationSchema) =>
+          (filter === 'all' || activity.type === filter) &&
+          (readFilter === 'all' ||
+            (readFilter === 'unread' && !activity.read) ||
+            (readFilter === 'read' && activity.read)) &&
+          (activity.title.toLowerCase().includes(filterValue.toLowerCase()) ||
+            activity.message.toLowerCase().includes(filterValue.toLowerCase()))
+      )
+    : [];
 
-  useEffect(() => {
-    setIsLoading(true);
-    // Simulate initial data fetching
-    setTimeout(() => {
-      setActivities(initialActivities);
-      setIsLoading(false);
-    }, 1500);
-  }, []);
+  const filteredAndSortedActivities = [...filteredActivities].sort((a, b) => {
+    if (a[sortKey] < b[sortKey]) return sortOrder === 'asc' ? -1 : 1;
+    if (a[sortKey] > b[sortKey]) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
@@ -205,8 +154,8 @@ export default function NotificationsPage() {
                 className='pl-8'
               />
             </div>
-            <Button variant='outline' onClick={refreshActivities} disabled={isRefreshing}>
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <Button variant='outline' onClick={refreshActivities}>
+              <RefreshCw className='h-4 w-4' />
               Refresh
             </Button>
             <Select value={filter} onValueChange={handleFilterChange}>
@@ -287,18 +236,18 @@ export default function NotificationsPage() {
                       </TableCell>
                       <TableCell className='font-medium'>{activity.title}</TableCell>
                       <TableCell className='hidden md:table-cell text-gray-500'>
-                        {activity.subtitle}
+                        {activity.message}
                       </TableCell>
                       <TableCell className='text-gray-500'>{activity.timestamp}</TableCell>
                       <TableCell className='text-right'>
                         <span
                           className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                            activity.isRead
+                            activity.read
                               ? 'bg-green-50 text-green-700 border border-green-200'
                               : 'bg-[#5932ea]/10 text-[#5932ea] border border-[#5932ea]/20'
                           }`}
                         >
-                          {activity.isRead ? 'Read' : 'Unread'}
+                          {activity.read ? 'Read' : 'Unread'}
                         </span>
                       </TableCell>
                     </TableRow>

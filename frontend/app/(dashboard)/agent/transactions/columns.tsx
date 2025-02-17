@@ -3,7 +3,7 @@
 import { Transaction, TransactionStatus } from '@/types';
 import { ListItemIcon, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
-import { Pencil, Trash2, Copy } from 'lucide-react';
+import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';

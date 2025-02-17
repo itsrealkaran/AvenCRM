@@ -189,12 +189,7 @@ function SignInContent() {
             <div className='absolute top-0 -right-4 w-72 h-72 bg-[#9BF3F0] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000'></div>
             <div className='absolute -bottom-8 left-20 w-72 h-72 bg-[#FFC2B4] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000'></div>
             <div className='relative'>
-              <Image
-                src='/sign-in.svg'
-                alt='CRM Dashboard Preview'
-                width={800}
-                height={600}
-              />
+              <Image src='/sign-in.svg' alt='CRM Dashboard Preview' width={800} height={600} />
             </div>
           </div>
         </motion.div>

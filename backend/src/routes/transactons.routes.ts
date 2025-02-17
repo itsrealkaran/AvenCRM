@@ -60,6 +60,14 @@ router.get("/teamleader", async (req: Request, res: Response) => {
             where: {
                 agentId: {
                     in: agentsId
+                },
+            },
+            include: {
+                agent: {
+                    select: {
+                        name: true,
+                        email: true
+                    }
                 }
             }
         });

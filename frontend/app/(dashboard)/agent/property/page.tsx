@@ -111,7 +111,11 @@ const Page: React.FC = () => {
       });
       const response = await api.get(`/property/${id}`);
       console.log(response.data, 'response.data');
-      setPropertyToEdit({ ...response.data.cardDetails, ...response.data.features, id: response.data.id });
+      setPropertyToEdit({
+        ...response.data.cardDetails,
+        ...response.data.features,
+        id: response.data.id,
+      });
       setIsPropertyFormModalOpen(true);
       console.log(response.data, 'response.data');
     } catch (error) {

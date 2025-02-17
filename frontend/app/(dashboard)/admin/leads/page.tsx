@@ -4,6 +4,7 @@ import { SetStateAction, useCallback, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { DealStatus, LeadResponse as Lead, LeadStatus } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -13,7 +14,6 @@ import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Card } from '@/components/ui/card';
-import axios from 'axios';
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -34,10 +34,11 @@ export default function LeadsPage() {
         throw new Error('Failed to fetch agents');
       }
       return response.data;
-    }});
+    },
+  });
 
   const bulkAssignLeads = useMutation({
-    mutationFn: async ({ leadIds, agentId }: { leadIds: string[], agentId: string }) => {
+    mutationFn: async ({ leadIds, agentId }: { leadIds: string[]; agentId: string }) => {
       try {
         await leadsApi.bulkAssignLeads(leadIds, agentId);
       } catch (error) {
