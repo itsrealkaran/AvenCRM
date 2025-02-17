@@ -157,11 +157,11 @@ function SignInContent() {
 
             <div className='text-center text-sm text-gray-500'>
               By proceeding, you agree to our{' '}
-              <Link href='/terms' className='text-[#5932EA] hover:underline'>
+              <Link href='https://avencrm.com/terms-of-service' className='text-[#5932EA] hover:underline'>
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href='/privacy' className='text-[#5932EA] hover:underline'>
+              <Link href='https://avencrm.com/privacy-policy' className='text-[#5932EA] hover:underline'>
                 Privacy Policy
               </Link>
             </div>
