@@ -85,7 +85,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       <Card className='w-full max-w-[260px] overflow-hidden bg-white hover:shadow-lg transition-shadow duration-200'>
         <div className='relative aspect-[4/3] overflow-hidden'>
           <img
-            src={cardDetails.image || '/plaeholder.svgc'}
+            src={cardDetails.image || '/plaeholder.svg'}
             alt={cardDetails.title}
             className='object-cover w-full h-full hover:scale-105 transition-transform duration-300'
           />

@@ -127,6 +127,7 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
       try {
         setLoading(true);
         const response = await api.get(`/property/${id}`);
+        console.log(response.data, 'response.data');
         setPropertyDetails(response.data);
       } catch (error) {
         toast({
@@ -191,7 +192,7 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                   <div className='space-y-4'>
                     <div className='aspect-[4/3] overflow-hidden rounded-lg'>
                       <img
-                        src={propertyDetails.cardDetails.image || '/placeholder.svg'}
+                        src={propertyDetails.features.images[0] || '/placeholder.svg'}
                         alt={propertyDetails.features.propertyName}
                         className='w-full h-full object-cover'
                       />
@@ -378,7 +379,7 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                 {propertyDetails.features.documents?.length > 0 ? (
                   <div className='space-y-2'>
                     <h4 className='font-medium'>Documents</h4>
-                    {propertyDetails.features.documentNames.map((document, index) => (
+                    {propertyDetails.features.documentNames && propertyDetails.features.documentNames.map((document, index) => (
                       <div key={document}>
                         <a
                           href={propertyDetails.features.documents[index]}

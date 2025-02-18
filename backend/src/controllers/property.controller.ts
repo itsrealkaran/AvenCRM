@@ -142,6 +142,7 @@ export const propertiesController: Controller = {
         updatedAt: property.updatedAt,
         createdById: property.createdById,
         imageUrls, // Add the presigned URLs to the response
+        agent: property.createdBy,
       };
 
       res.json(propertyDetails);
