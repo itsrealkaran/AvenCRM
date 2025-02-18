@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Briefcase, CheckSquare, DollarSign, Target } from 'lucide-react';
+import { ArrowUpRight, Briefcase, CheckSquare, DollarSign, Target } from 'lucide-react';
 import {
   Bar,
   BarChart,
@@ -16,12 +16,16 @@ import { toast } from 'sonner';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
+import { Switch } from '@/components/ui/switch';
 
 interface AgentDashboardData {
   totalLeads: number;
   totalDeals: number;
   pendingTasks: number;
-  revenue: number;
+  revenue: {
+    grossRevenue: number;
+    myRevenue: number;
+  };
   performanceData: {
     month: string;
     deals: number;
@@ -33,11 +37,15 @@ export function AgentDashboard() {
     totalLeads: 0,
     totalDeals: 0,
     pendingTasks: 0,
-    revenue: 0,
+    revenue: {
+      grossRevenue: 0,
+      myRevenue: 0,
+    },
     performanceData: [],
   });
 
   const [loading, setLoading] = useState<boolean>(true);
+  const [selectedRevenue, setSelectedRevenue] = useState<'commission' | 'total'>('commission');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -140,18 +148,38 @@ export function AgentDashboard() {
           </CardContent>
         </Card>
 
-        <Card className='bg-white hover:shadow-lg transition-shadow duration-300 border border-gray-100'>
-          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-            <CardTitle className='text-sm font-medium'>My Revenue</CardTitle>
-            <div className='h-8 w-8 rounded-full bg-yellow-100 p-2'>
-              <DollarSign className='h-4 w-4 text-yellow-600' />
+        <Card className='bg-white shadow-sm hover:shadow-md transition-all duration-200'>
+          <CardHeader>
+            <div className='flex items-center justify-between'>
+              <CardTitle className='text-sm font-medium text-gray-600'>
+                {selectedRevenue === 'commission' ? 'Gross revenue' : 'Total Revenue'}
+              </CardTitle>
+              <div className='flex items-center gap-2'>
+                <Switch
+                  checked={selectedRevenue === 'total'}
+                  onCheckedChange={(checked) =>
+                    setSelectedRevenue(checked ? 'total' : 'commission')
+                  }
+                  className='scale-75'
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
-              ${dashboardData.revenue.toLocaleString()}
+              $
+              {selectedRevenue === 'commission'
+                ? dashboardData?.revenue.myRevenue.toLocaleString()
+                : dashboardData?.revenue.grossRevenue.toLocaleString()}
             </div>
-            <p className='text-xs text-gray-500 mt-1'>Total revenue generated</p>
+            <div className='flex items-center pt-1'>
+              <ArrowUpRight className='h-4 w-4 text-green-500' />
+              <p className='text-xs text-gray-500 mt-1'>
+                {selectedRevenue === 'commission'
+                  ? 'Commission revenue'
+                  : 'Total revenue'}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

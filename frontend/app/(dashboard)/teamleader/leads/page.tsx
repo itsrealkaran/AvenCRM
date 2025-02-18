@@ -37,15 +37,15 @@ export default function LeadsPage() {
   const { user } = useAuth();
 
   const {
-    data: response,
+    data: leads,
     isLoading,
     refetch,
   } = useQuery({
     queryKey: ['leads'],
     queryFn: getLeads,
   });
-
-  const leads = response || [];
+  console.log(leads, "leads")
+  console.log(isLoading, "isLoading")
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
@@ -173,7 +173,7 @@ export default function LeadsPage() {
         <div className='space-4'>
           <DataTable
             columns={columns}
-            data={leads}
+            data={leads.data || []}
             onEdit={handleEdit}
             onBulkDelete={async (row: any[]) => {
               const leadIds = row.map((row: { original: { id: any } }) => row.original.id);

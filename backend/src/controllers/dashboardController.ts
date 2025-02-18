@@ -379,16 +379,22 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
       where: { userId: userId },
     });
 
-    const myRevenue = await prisma.deal.aggregate({
+    const revenue = await prisma.transaction.groupBy({
       where: {
         agentId: userId,
-        status: 'WON',
       },
+      by: ['id', 'amount', 'commissionRate'],
       _sum: {
-        dealAmount: true,
+        amount: true,
       },
     });
 
+    const grossRevenue = revenue.reduce((sum, transaction) => sum + transaction.amount, 0);
+    const myRevenue = (revenue.reduce((sum, transaction) => {
+      const commissionRate = transaction.commissionRate || 0;
+      return sum + (transaction.amount * (commissionRate / 100));
+    }, 0));
+    console.log(myRevenue, "myRevenue");
     // Get monthly performance data
     const leads = await prisma.lead.groupBy({
       by: ['createdAt'],
@@ -441,7 +447,7 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
       totalLeads: myLeads,
       totalDeals: myDeals,
       pendingTasks: myTasks,
-      revenue: myRevenue?._sum.dealAmount || 0,
+      revenue: { grossRevenue, myRevenue },
       performanceData: monthlyPerformance.map((item) => ({
         month: new Date(item.month).toLocaleString('default', { month: 'short' }),
         deals: item.deals,

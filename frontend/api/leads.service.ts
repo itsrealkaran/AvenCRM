@@ -14,12 +14,12 @@ export interface ConvertToDealPayload {
 export const leadsApi = {
   // Get all leads with optional filtering
   getLeads: async (filters?: LeadFilter) => {
-    const response = await api.get<LeadResponse[]>('/leads', { params: filters });
+    const response = await api.get<any>('/leads', { params: filters });
     return response.data;
   },
 
   // Get a single lead by ID
-  getLead: async (id: string): Promise<LeadResponse> => {
+  getLead: async (id: string): Promise<any> => {
     const response = await api.get<LeadResponse>(`/leads/${id}`);
     return response.data;
   },
