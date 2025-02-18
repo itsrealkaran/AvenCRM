@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { dealsApi } from '@/api/deals.service';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -56,9 +57,16 @@ export function EditTransactionDialog({
     defaultValues: {
       amount: '',
       commissionRate: '',
-      invoiceNumber: '',
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
+    },
+  });
+
+  const { data: wonDealsData, isLoading: isWonDealsLoading } = useQuery({
+    queryKey: ['wonDeals'],
+    queryFn: async () => {
+      const response = await dealsApi.getAllWonDeals();
+      return response;
     },
   });
 
@@ -67,7 +75,6 @@ export function EditTransactionDialog({
       form.reset({
         amount: transaction.amount.toString(),
         commissionRate: transaction.commissionRate?.toString() || '',
-        invoiceNumber: transaction.invoiceNumber || '',
         transactionMethod: transaction.transactionMethod || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
       });
@@ -125,14 +132,24 @@ export function EditTransactionDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Amount</FormLabel>
-                    <FormControl>
-                      <Input
-                        type='number'
-                        placeholder='1000'
-                        {...field}
-                        disabled={editTransaction.isPending}
-                      />
-                    </FormControl>
+                    <Select
+                      onValueChange={(value) => field.onChange(value)}
+                      disabled={isWonDealsLoading}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select a deal' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {wonDealsData &&
+                          wonDealsData.map((deal: any) => (
+                            <SelectItem key={deal.id} value={deal.dealAmount.toString()}>
+                              {deal.name} - ${deal.dealAmount.toLocaleString()}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

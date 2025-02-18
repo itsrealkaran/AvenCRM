@@ -187,13 +187,18 @@ router.put("/admin/verify/:id", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
     try {
-        const { amount, type, planType, invoiceNumber, commissionRate, transactionMethod, date } = req.body;
+        const { amount, commissionRate, transactionMethod, date } = req.body;
+        
+        const user = req.user;
+        if(!user) {
+            return res.status(401).json({ message: "Unauthorized" });
+        }
         
         // Check if transaction exists and belongs to the user's company
         const existingTransaction = await prisma.transaction.findFirst({
             where: {
                 id: req.params.id,
-                companyId: req.user?.companyId
+                companyId: user.companyId
             }
         });
 
@@ -205,7 +210,6 @@ router.put("/:id", async (req: Request, res: Response) => {
             where: { id: req.params.id },
             data: {
                 amount: parseFloat(amount),
-                invoiceNumber,
                 commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
                 date: new Date(date)

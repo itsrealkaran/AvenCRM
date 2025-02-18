@@ -185,6 +185,7 @@ export const propertiesController: Controller = {
 
       let properties = await prisma.property.findMany({
         where: {
+          companyId: user.companyId,
           isVerified: true,
         },
         orderBy: {
@@ -264,6 +265,9 @@ export const propertiesController: Controller = {
       }
 
       const properties = await prisma.property.findMany({
+        where: {
+          companyId: user.companyId,
+        },
         orderBy: {
           createdAt: "desc",
         },
