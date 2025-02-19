@@ -104,7 +104,7 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
       };
 
       const { data } = await api.post('/auth/sign-up', { personalData, companyData });
-      
+
       updateField('userId', data.userId);
       updateField('companyId', data.companyId);
 

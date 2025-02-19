@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { dealsApi } from '@/api/deals.service';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -28,7 +29,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { dealsApi } from '@/api/deals.service';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),

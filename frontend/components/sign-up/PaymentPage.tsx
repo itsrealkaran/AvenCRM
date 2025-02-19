@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useSignUp } from '@/contexts/SignUpContext';
-import { motion } from 'framer-motion';
 import { loadStripe } from '@stripe/stripe-js';
-import { useToast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface PaymentPageProps {
   onBack: () => void;
@@ -17,10 +17,19 @@ interface PaymentPageProps {
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
 export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
-  const { accountType, plan, billingFrequency, currency, userCount, userId, companyId, email, price } = useSignUp();
+  const {
+    accountType,
+    plan,
+    billingFrequency,
+    currency,
+    userCount,
+    userId,
+    companyId,
+    email,
+    price,
+  } = useSignUp();
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
-
 
   const handlePayment = async () => {
     setIsProcessing(true);

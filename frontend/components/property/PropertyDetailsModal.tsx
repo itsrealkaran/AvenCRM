@@ -379,18 +379,19 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                 {propertyDetails.features.documents?.length > 0 ? (
                   <div className='space-y-2'>
                     <h4 className='font-medium'>Documents</h4>
-                    {propertyDetails.features.documentNames && propertyDetails.features.documentNames.map((document, index) => (
-                      <div key={document}>
-                        <a
-                          href={propertyDetails.features.documents[index]}
-                          target='_blank'
-                          rel='noopener noreferrer'
-                          className='text-blue-500 hover:underline'
-                        >
-                          {document}
-                        </a>
-                      </div>
-                    ))}
+                    {propertyDetails.features.documentNames &&
+                      propertyDetails.features.documentNames.map((document, index) => (
+                        <div key={document}>
+                          <a
+                            href={propertyDetails.features.documents[index]}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            className='text-blue-500 hover:underline'
+                          >
+                            {document}
+                          </a>
+                        </div>
+                      ))}
                   </div>
                 ) : (
                   <p className='text-center text-gray-500'>No documents available</p>

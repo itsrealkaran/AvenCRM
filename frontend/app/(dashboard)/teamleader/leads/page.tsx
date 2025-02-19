@@ -44,8 +44,8 @@ export default function LeadsPage() {
     queryKey: ['leads'],
     queryFn: getLeads,
   });
-  console.log(leads, "leads")
-  console.log(isLoading, "isLoading")
+  console.log(leads, 'leads');
+  console.log(isLoading, 'isLoading');
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {

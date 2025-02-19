@@ -15,8 +15,8 @@ import {
 import { toast } from 'sonner';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { api } from '@/lib/api';
 import { Switch } from '@/components/ui/switch';
+import { api } from '@/lib/api';
 
 interface AgentDashboardData {
   totalLeads: number;
@@ -175,9 +175,7 @@ export function AgentDashboard() {
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
               <p className='text-xs text-gray-500 mt-1'>
-                {selectedRevenue === 'commission'
-                  ? 'Commission revenue'
-                  : 'Total revenue'}
+                {selectedRevenue === 'commission' ? 'Commission revenue' : 'Total revenue'}
               </p>
             </div>
           </CardContent>
