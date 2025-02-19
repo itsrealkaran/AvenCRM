@@ -4,6 +4,8 @@ import type React from 'react';
 import { createContext, useContext, useState } from 'react';
 
 interface SignUpContextType {
+  userId: string;
+  companyId: string;
   accountType: string;
   plan: string;
   billingFrequency: string;
@@ -16,9 +18,11 @@ interface SignUpContextType {
   companyCity: string;
   companyCountry: string;
   companySize: string;
+  currency: string;
   fullName: string;
   email: string;
   phone: string;
+  price: number;
   password: string;
   preferredCurrency: string;
   countriesOfOperation: string[];
@@ -39,9 +43,11 @@ export const useSignUp = () => {
 
 export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState({
+    userId: '',
+    companyId: '',
     accountType: 'company',
     plan: 'trial',
-    billingFrequency: 'yearly',
+    billingFrequency: 'monthly',
     companyName: '',
     companyEmail: '',
     companyWebsite: '',
@@ -51,9 +57,11 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     companyCity: '',
     companyCountry: '',
     companySize: '',
+    currency: 'USD',
     fullName: '',
     email: '',
     phone: '',
+    price: 0,
     password: '',
     preferredCurrency: 'USD',
     countriesOfOperation: [], // Initialize as an empty array

@@ -95,9 +95,18 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
         countriesOfOperation: formData.countriesOfOperation,
       };
 
-      const response = await api.post('/auth/sign-up', { personalData, companyData });
-      console.log(response);
-      console.log(personalData, companyData);
+      const subscriptionData = {
+        accountType: formData.accountType,
+        plan: formData.plan,
+        billingFrequency: formData.billingFrequency,
+        userCount: formData.userCount,
+        currency: formData.currency,
+      };
+
+      const { data } = await api.post('/auth/sign-up', { personalData, companyData });
+      
+      updateField('userId', data.userId);
+      updateField('companyId', data.companyId);
 
       onNext(); // Move to the Success step
     } catch (err) {

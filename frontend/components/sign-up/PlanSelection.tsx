@@ -153,7 +153,7 @@ export default function PlanSelection({ onNext }: StepProps) {
   const [currency, setCurrency] = useState('USD');
   const [currencySymbol, setCurrencySymbol] = useState('$');
 
-  const isYearly = billingFrequency === 'yearly';
+  const isYearly = billingFrequency === 'annually';
 
   useEffect(() => {
     const detectLocation = async () => {
@@ -173,6 +173,7 @@ export default function PlanSelection({ onNext }: StepProps) {
       if (selectedPlan) {
         const price = getPriceForCurrency(selectedPlan.price, currency, isYearly);
         setTotalPrice(price * userCount);
+        updateField('price', price * userCount);
       }
     } else {
       setTotalPrice(0);
@@ -223,7 +224,7 @@ export default function PlanSelection({ onNext }: StepProps) {
             <Switch
               checked={isYearly}
               onCheckedChange={(checked) =>
-                updateField('billingFrequency', checked ? 'yearly' : 'monthly')
+                updateField('billingFrequency', checked ? 'annually' : 'monthly')
               }
               className='bg-gray-200 data-[state=checked]:bg-[#5932EA]'
             />

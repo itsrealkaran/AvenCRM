@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSignUp } from '@/contexts/SignUpContext';
 import { motion } from 'framer-motion';
+import { loadStripe } from '@stripe/stripe-js';
+import { useToast } from '@/hooks/use-toast';
 
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -12,32 +14,55 @@ interface PaymentPageProps {
   onComplete: () => void;
 }
 
-export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
-  const { plan, billingFrequency, userCount } = useSignUp();
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [totalAmount, setTotalAmount] = useState<number | null>(null);
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string);
 
-  useEffect(() => {
-    let price;
-    if (billingFrequency === 'monthly') {
-      price = 99 * userCount;
-    } else if (billingFrequency === 'yearly') {
-      price = 500 * userCount;
-    }
-    setTotalAmount(price || 0);
-  });
+export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
+  const { accountType, plan, billingFrequency, currency, userCount, userId, companyId, email, price } = useSignUp();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { toast } = useToast();
+
 
   const handlePayment = async () => {
     setIsProcessing(true);
 
     try {
       const response = await api.post('/stripe/create-checkout-session', {
+        accountType,
         planId: plan,
         planName: `${plan} Plan (${billingFrequency})`,
-        price: totalAmount,
+        billingFrequency,
+        currency,
+        userCount,
+        email,
+        userId,
+        companyId,
       });
+
+      const { sessionId } = response.data;
+
+      // Get Stripe.js instance
+      const stripe = await stripePromise;
+
+      if (!stripe) {
+        throw new Error('Stripe failed to initialize');
+      }
+
+      // Redirect to Stripe Checkout
+      const { error } = await stripe.redirectToCheckout({
+        sessionId,
+      });
+
+      if (error) {
+        throw error;
+      }
     } catch (error) {
       console.error('Payment error:', error);
+      toast({
+        title: 'Error',
+        description: 'Something went wrong with the payment process. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -62,7 +87,7 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
         <p>Billing: {billingFrequency}</p>
         <p>Users: {userCount}</p>
         <p className='font-semibold mt-2'>
-          Total: ${totalAmount} / {billingFrequency === 'monthly' ? 'month' : 'year'}
+          Total: ${price} / {billingFrequency === 'monthly' ? 'month' : 'year'}
         </p>
       </div>
 
@@ -77,7 +102,7 @@ export default function PaymentPage({ onBack, onComplete }: PaymentPageProps) {
         >
           {isProcessing
             ? 'Processing...'
-            : `Pay $${totalAmount} ${billingFrequency === 'monthly' ? 'per month' : 'per year'}`}
+            : `Pay $${price} ${billingFrequency === 'monthly' ? 'per month' : 'per year'}`}
         </Button>
         <Button
           variant='outline'

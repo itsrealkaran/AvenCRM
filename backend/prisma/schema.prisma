@@ -252,7 +252,7 @@ model Team {
 // Plan Model for different subscription tiers
 model Plan {
   id           String     @id @default(cuid())
-  name         PlanTier   @default(BASIC)
+  name         PlanTier   @unique
   price        Json
   maxUsers     Int?
   features     String[]

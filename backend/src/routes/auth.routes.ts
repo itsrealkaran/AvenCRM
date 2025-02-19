@@ -182,7 +182,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
     // Cache user data
     await cacheUser(response.id, userWithoutPassword);
 
-    res.status(201).json(response);
+    res.status(201).json({ userId: response.id, companyId: response.companyId });
   } catch (err) {
     res.status(500).json(err);
   }

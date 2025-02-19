@@ -64,28 +64,66 @@ router.post(
 // Create a checkout session
 router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { planId, planName, price } = req.body;
+    const { planId, planName, price, accountType, billingFrequency, currency, userCount, email } = req.body;
     const planType = planId as PlanTier;
 
-    const userId = req.user?.id;
-    const companyId = req.user?.companyId;
+    const userId = req.user?.id || req.body.userId;
+    const companyId = req.user?.companyId || req.body.companyId;
 
     if (!userId || !companyId) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
+    const plan = await prisma.plan.findUnique({
+      where: {
+        name: planId.toUpperCase()
+      }
+    });
+
+    if (!plan) {
+      return res.status(401).json({ error: 'Plan not found' });
+    }
+
+    const priceJson: any = typeof plan.price === "string" ? JSON.parse(plan.price as string) : plan.price;
+    
+    // Verify priceJson is an object
+    if (typeof priceJson !== 'object' || priceJson === null) {
+      return res.status(400).json({ error: 'Invalid price structure' });
+    }
+
+    // Safely access the company property
+    const companyPricing = priceJson.company;
+    
+    const account = accountType === 'company' ? companyPricing : priceJson.individual;
+    if (!account) {
+      return res.status(400).json({ error: `Invalid account type: ${accountType}` });
+    }
+
+    const frequency = billingFrequency === 'monthly' ? account.monthly : account.annually;
+    const currencySymbol = currency === 'USD' ? 'USD' : currency === 'CAD' ? 'CAD' : currency === 'AED' ? 'AED' : null;
+
+    if (!currencySymbol) {
+      return res.status(401).json({ error: 'Invalid currency' });
+    }
+
+    const totalAmount = frequency[currencySymbol] * Number(userCount);
+
+    if (!totalAmount) {
+      return res.status(401).json({ error: 'Price not found for selected currency' });
+    }
+    const customerEmail = req.user?.email === undefined ? email : req.user?.email;
     // Create a Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: currencySymbol.toLowerCase(),
             product_data: {
               name: planName,
-              description: `Subscription to ${planName} plan`,
+              description: `Subscription to ${planId} plan`,
             },
-            unit_amount: Math.round(price * 100), // Convert to cents
+            unit_amount: Math.round(totalAmount * 100), // Convert to cents
             recurring: {
               interval: 'month',
             },
@@ -101,7 +139,7 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
         userId,
         companyId
       },//@ts-ignore
-      customer_email: req.user.email,
+      customer_email: customerEmail,
     });
 
     res.json({ sessionId: session.id });
