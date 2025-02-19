@@ -22,27 +22,30 @@ const plans = {
   basic: {
     id: 'BASIC',
     name: 'Basic',
-    price: 99,
+    price: 11,
     features: [
-      'All Analytics features',
-      'Up to 250,000 tracked visits',
-      'Normal support',
-      'Up to 3 team members',
-      'All analytics features',
-      'Normal support',
+      "Task Manager & Calendar",
+      "Team Management (up to 5 members)",
+      "Client Management",
+      "Advanced Monitoring Dashboard",
+      "Property Management (5 per user)",
+      "Lead Management System",
+      "Basic Marketing Tools"
     ],
   },
   popular: {
-    id: 'PROFESSIONAL',
-    name: 'Proffesional',
-    price: 199,
+    id: 'PREMIUM',
+    name: 'Premium',
+    price: 26,
     features: [
-      'All Analytics features',
-      'Up to 1,000,000 tracked visits',
-      'Premium support',
-      'Up to 10 team members',
-      'All analytics features',
-      'Priority support',
+      "All Basic features",
+      "Advanced Team Management",
+      "Unlimited Client Management",
+      "Real-time Monitoring",
+      "Property Management (15 per user)",
+      "Advanced Lead Management",
+      "Marketing Builder (Content Builder)",
+      "Email Campaigns (Non-attachment)"
     ],
   },
 };
@@ -114,20 +117,6 @@ const Page = () => {
                 <p className='mt-4 text-blue-600'>
                   Perfect for individuals and small teams getting started with our platform.
                 </p>
-                <div className='flex gap-4'>
-                  <div className='flex-col'>
-                    <div className='text-blue-900 rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium'>
-                      Status
-                    </div>
-                    <div className='mt-2 px-4 text-sm font-medium text-emerald-600'>Active</div>
-                  </div>
-                  <div className='flex-col'>
-                    <div className='text-blue-900 rounded-lg bg-blue-100 px-4 py-2 text-sm font-medium'>
-                      DueDate
-                    </div>
-                    <div className='mt-2 px-4 text-sm font-medium text-blue-600'>14/05/25</div>
-                  </div>
-                </div>
                 <button
                   onClick={() => handlePayment(plans.basic)}
                   className='mt-6 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700'
@@ -169,7 +158,7 @@ const Page = () => {
                   </div>
                   <div>
                     <p className='text-sm text-yellow-600'>For larger agencies</p>
-                    <h2 className='mt-1 text-2xl font-semibold text-yellow-900'>Proffestional</h2>
+                    <h2 className='mt-1 text-2xl font-semibold text-yellow-900'>Premium</h2>
                   </div>
                 </div>
                 <p className='mt-4 text-yellow-600'>
