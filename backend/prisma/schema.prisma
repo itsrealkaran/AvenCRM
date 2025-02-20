@@ -384,8 +384,9 @@ model Payments {
   amount         Float
   date           DateTime    @default(now())
 
-  planType       PlanTier
-  isSuccessfull  Boolean     @default(false)
+  planType         PlanTier
+  billingFrequency String?
+  isSuccessfull    Boolean     @default(false)
   
   // Invoice and Billing
   invoiceNumber  String?

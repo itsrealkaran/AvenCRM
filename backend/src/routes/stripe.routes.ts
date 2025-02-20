@@ -137,7 +137,8 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
       metadata: {
         planType,
         userId,
-        companyId
+        companyId,
+        billingFrequency
       },//@ts-ignore
       customer_email: customerEmail,
     });
@@ -164,14 +165,12 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
 async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
   
-  // Log the metadata for debugging
-
-  
-  if (!metadata.planType || !metadata.userId || !metadata.companyId) {
+  if (!metadata.planType || !metadata.userId || !metadata.companyId || !metadata.billingFrequency) {
     console.error('Missing metadata:', {
       planType: metadata.planType,
       userId: metadata.userId,
-      companyId: metadata.companyId
+      companyId: metadata.companyId,
+      billingFrequency: metadata.billingFrequency
     });
     throw new Error('Missing metadata in session');
   }
@@ -187,25 +186,31 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
       receiptUrl = charges.data[0]?.receipt_url ?? undefined;
     }
 
+    
     // Create a subscription transaction record
-     const transaction = await prisma.payments.create({
-      data: {
-        amount: session.amount_total! / 100,
-        companyId: metadata.companyId,
-        planType: metadata.planType as PlanTier,
-        isSuccessfull: true,
-        transactionMethod: 'STRIPE',
-        receiptUrl,
-      },
-    });
-
-    // Update company subscription details
-    await prisma.company.update({
-      where: { id: metadata.companyId },
-      data: {
-        planStart: new Date(),
-        planEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      },
+    await prisma.$transaction(async (tx) => {
+      if(!session.amount_total) {
+        throw new Error('Amount total not found in session');
+      }
+      const payment = await tx.payments.create({
+        data: {
+          amount: session.amount_total / 100,
+          companyId: metadata.companyId,
+          planType: metadata.planType as PlanTier,
+          isSuccessfull: true,
+          transactionMethod: 'STRIPE',
+          receiptUrl,
+          billingFrequency: metadata.billingFrequency
+        },
+      })
+      const timePeriod = metadata.billingFrequency === 'monthly' ? 30 : 365;
+      await tx.company.update({
+        where: { id: metadata.companyId },
+        data: {
+          planStart: new Date(),
+          planEnd: new Date(Date.now() + timePeriod * 24 * 60 * 60 * 1000),
+        },
+      });
     });
   } catch (error) {
     console.error('Error updating subscription status:', error);
