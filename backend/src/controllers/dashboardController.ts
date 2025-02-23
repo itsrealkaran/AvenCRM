@@ -192,26 +192,30 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       },
     });
 
+    // Get consolidated revenue data for the past 6 months
     const revenueData = await prisma.transaction.groupBy({
       where: {
         companyId,
+        createdAt: {
+          gte: sixMonthsAgo,
+        },
       },
-      by: ['id', 'amount', 'commissionRate'],
+      by: ['createdAt'],
       _sum: {
         amount: true,
       },
+      _max: {
+        commissionRate: true,
+      },
     });
 
-    const totalRevenue = revenueData.reduce((sum, transaction) => sum + transaction.amount, 0);
-    const commissionRevenue = revenueData.reduce((sum, transaction) => {
-      const commissionRate = transaction.commissionRate || 0;
-      return sum + (transaction.amount * (commissionRate / 100));
-    }, 0);
+    // Calculate total and commission revenue in one pass
+    const { totalRevenue, commissionRevenue } = revenueData.reduce((acc, transaction) => ({
+      totalRevenue: acc.totalRevenue + (transaction._sum.amount || 0),
+      commissionRevenue: acc.commissionRevenue + ((transaction._sum.amount || 0) * ((transaction._max.commissionRate || 0) / 100))
+    }), { totalRevenue: 0, commissionRevenue: 0 });
 
-    const revenue = {
-      totalRevenue,
-      commissionRevenue,
-    };
+    const revenue = { totalRevenue, commissionRevenue };
 
     // Get last month's data for growth calculation
     const lastMonthData = await getPreviousMonthData(companyId);
@@ -221,38 +225,50 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
       deals: calculateGrowthRate(deals, lastMonthData.deals),
       activeLeads: calculateGrowthRate(activeLeads, lastMonthData.activeLeads),
       wonDeals: calculateGrowthRate(wonDeals, lastMonthData.wonDeals),
-      revenue: calculateGrowthRate(revenue.totalRevenue, lastMonthData.revenue)
+      revenue: calculateGrowthRate(totalRevenue, lastMonthData.revenue)
     };
 
-    // Get monthly performance data with more details
-    const monthlyPerformance = await prisma.deal.groupBy({
-      by: ['createdAt', 'status'],
+    // Get revenue data for the past 6 months
+    const monthlyRevenue = await prisma.transaction.groupBy({
+      by: ['createdAt'],
       where: {
         companyId,
         createdAt: {
           gte: sixMonthsAgo,
         },
       },
-      _count: true,
       _sum: {
-        dealAmount: true,
+        amount: true,
+      },
+      _max: {
+        commissionRate: true,
       },
     });
 
     const performanceData = Object.values(
-      monthlyPerformance.reduce((acc, item) => {
+      monthlyRevenue.reduce((acc, item) => {
         const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
         if (!acc[month]) {
           acc[month] = {
             month,
-            dealCount: 0,
-            totalAmount: 0
+            totalRevenue: 0,
+            commissionRevenue: 0
           };
         }
-        acc[month].dealCount += item._count;
-        acc[month].totalAmount += item._sum.dealAmount || 0;
+
+        // Directly use the current item instead of searching through monthlyRevenue again
+        const amount = item._sum.amount || 0;
+        const commissionRate = item._max.commissionRate || 0;
+        
+        acc[month].totalRevenue = amount;
+        acc[month].commissionRevenue = amount * (commissionRate / 100);
+
         return acc;
-      }, {} as Record<string, { month: string; dealCount: number; totalAmount: number }>)
+      }, {} as Record<string, { 
+        month: string; 
+        totalRevenue: number;
+        commissionRevenue: number;
+      }>)
     );
 
     // Get top performing agents
@@ -379,34 +395,54 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
       where: { userId: userId },
     });
 
-    const revenue = await prisma.transaction.groupBy({
-      where: {
-        agentId: userId,
-      },
-      by: ['id', 'amount', 'commissionRate'],
-      _sum: {
-        amount: true,
-      },
-    });
-
-    const grossRevenue = revenue.reduce((sum, transaction) => sum + transaction.amount, 0);
-    const myRevenue = (revenue.reduce((sum, transaction) => {
-      const commissionRate = transaction.commissionRate || 0;
-      return sum + (transaction.amount * (commissionRate / 100));
-    }, 0));
-    console.log(myRevenue, "myRevenue");
-    // Get monthly performance data
-    const leads = await prisma.lead.groupBy({
-      by: ['createdAt'],
+    const transactions = await prisma.transaction.findMany({
       where: {
         agentId: userId,
         createdAt: {
           gte: sixMonthsAgo,
         },
       },
-      _count: true,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        amount: true,
+        commissionRate: true,
+        createdAt: true,
+      },
     });
 
+    // Calculate revenue metrics
+    const { grossRevenue, myRevenue, revenueByMonth } = transactions.reduce((acc, transaction) => {
+      const commissionRate = transaction.commissionRate || 0;
+      const month = new Date(transaction.createdAt).toLocaleString('default', { month: 'short' });
+      
+      // Update total revenues
+      acc.grossRevenue += transaction.amount;
+      acc.myRevenue += transaction.amount * (commissionRate / 100);
+      
+      // Update monthly data
+      if (!acc.revenueByMonth[month]) {
+        acc.revenueByMonth[month] = { grossRevenue: 0, myRevenue: 0 };
+      }
+      acc.revenueByMonth[month].grossRevenue += transaction.amount;
+      acc.revenueByMonth[month].myRevenue += transaction.amount * (commissionRate / 100);
+      
+      return acc;
+    }, {
+      grossRevenue: 0,
+      myRevenue: 0,
+      revenueByMonth: {} as Record<string, { grossRevenue: number; myRevenue: number }>
+    });
+
+    // Convert revenueByMonth to array format
+    const performanceData = Object.entries(revenueByMonth).map(([month, revenue]) => ({
+      month,
+      grossRevenue: revenue.grossRevenue,
+      myRevenue: revenue.myRevenue
+    }));
+
+    // Get all deals for the last 6 months
     const deals = await prisma.deal.groupBy({
       by: ['createdAt'],
       where: {
@@ -418,40 +454,33 @@ export const getAgentDashboard = async (req: Request, res: Response) => {
       _count: true,
     });
 
-    // Create a map to store combined metrics by month
-    const metricsByMonth = new Map<string, { month: string; leads: number; deals: number }>();
+    // Create an array of the last 6 months
+    const last6Months = Array.from({ length: 6 }, (_, i) => {
+      const date = new Date();
+      date.setMonth(date.getMonth() - i);
+      return date.toLocaleString('default', { month: 'short' }); // Format: YYYY-MM
+    }).reverse();
 
-    // Process leads
-    leads.forEach((item) => {
-      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
-      if (!metricsByMonth.has(month)) {
-        metricsByMonth.set(month, { month, leads: 0, deals: 0 });
-      }
-      metricsByMonth.get(month)!.leads += item._count;
-    });
+    // Create a map of existing deals data
+    const dealsMap = deals.reduce((acc, item) => {
+      const month = item.createdAt.toLocaleString('default', { month: 'short' });
+      acc[month] = item._count;
+      return acc;
+    }, {} as Record<string, number>);
 
-    // Process deals
-    deals.forEach((item) => {
-      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
-      if (!metricsByMonth.has(month)) {
-        metricsByMonth.set(month, { month, leads: 0, deals: 0 });
-      }
-      metricsByMonth.get(month)!.deals += item._count;
-    });
-
-    // Convert to array and sort by month
-    const monthlyPerformance = Array.from(metricsByMonth.values())
-      .sort((a, b) => a.month.localeCompare(b.month));
+    // Fill in the data for all months
+    const dealsClosureTrends = last6Months.map(month => ({
+      month,
+      deals: dealsMap[month] || 0
+    }));
 
     res.json({
       totalLeads: myLeads,
       totalDeals: myDeals,
       pendingTasks: myTasks,
       revenue: { grossRevenue, myRevenue },
-      performanceData: monthlyPerformance.map((item) => ({
-        month: new Date(item.month).toLocaleString('default', { month: 'short' }),
-        deals: item.deals,
-      })),
+      performanceData,
+      dealsClosureTrends,
     });
   } catch (error) {
     console.error('Error in getAgentDashboard:', error);

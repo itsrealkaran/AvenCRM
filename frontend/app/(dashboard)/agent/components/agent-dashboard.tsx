@@ -28,6 +28,11 @@ interface AgentDashboardData {
   };
   performanceData: {
     month: string;
+    grossRevenue: number;
+    myRevenue: number;
+  }[];
+  dealsClosureTrends: {
+    month: string;
     deals: number;
   }[];
 }
@@ -42,6 +47,7 @@ export function AgentDashboard() {
       myRevenue: 0,
     },
     performanceData: [],
+    dealsClosureTrends: [],
   });
 
   const [loading, setLoading] = useState<boolean>(true);
@@ -63,6 +69,29 @@ export function AgentDashboard() {
 
     fetchData();
   }, []);
+
+  const processPerformanceData = (data: AgentDashboardData['performanceData']) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentMonth = new Date().getMonth();
+    
+    if(data.length === 6) {
+      return data;
+    } else {
+      const dataLength = data.length;
+      const missingMonths = 6 - dataLength;
+      const futureMonths = Array.from({length: missingMonths}, (_, i) => {
+        const monthIndex = (currentMonth + i + 1) % 12; // +1 to start from next month
+        return {
+          month: months[monthIndex],
+          grossRevenue: 0,
+          myRevenue: 0,
+          deals: 0
+        };
+      });
+      
+      return [...data, ...futureMonths];
+    }
+  };
 
   if (loading) {
     return (
@@ -190,7 +219,7 @@ export function AgentDashboard() {
           </CardHeader>
           <CardContent className='pl-2'>
             <ResponsiveContainer width='100%' height={350}>
-              <BarChart data={dashboardData.performanceData}>
+              <BarChart data={processPerformanceData(dashboardData.performanceData)}>
                 <XAxis
                   dataKey='month'
                   stroke='#888888'
@@ -203,8 +232,8 @@ export function AgentDashboard() {
                   contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
                   labelStyle={{ color: '#111827' }}
                 />
-                <Bar dataKey='deals' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
-                <Bar dataKey='leads' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey='myRevenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey='grossRevenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -217,7 +246,7 @@ export function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width='100%' height={350}>
-              <LineChart data={dashboardData.performanceData}>
+              <LineChart data={dashboardData.dealsClosureTrends}>
                 <XAxis
                   dataKey='month'
                   stroke='#888888'

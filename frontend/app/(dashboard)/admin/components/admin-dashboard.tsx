@@ -41,9 +41,8 @@ interface AdminDashboardData {
   };
   performanceData: {
     month: string;
-    deals: number;
-    status: string;
-    revenue: number;
+    totalRevenue: number;
+    commissionRevenue: number;
   }[];
   topPerformers: TopPerformer[];
   leadMetrics: LeadMetric[];
@@ -85,6 +84,29 @@ export function AdminDashboard() {
       </div>
     );
   }
+
+  const processPerformanceData = (data: AdminDashboardData['performanceData']) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentMonth = new Date().getMonth();
+    
+    if(data.length === 6) {
+      return data;
+    } else {
+      const dataLength = data.length;
+      const missingMonths = 6 - dataLength;
+      const futureMonths = Array.from({length: missingMonths}, (_, i) => {
+        const monthIndex = (currentMonth + i + 1) % 12; // +1 to start from next month
+        return {
+          month: months[monthIndex],
+          grossRevenue: 0,
+          myRevenue: 0,
+          deals: 0
+        };
+      });
+      
+      return [...data, ...futureMonths];
+    }
+  };
 
   if (isLoading) {
     return (
@@ -155,6 +177,28 @@ export function AdminDashboard() {
   const calculateGrowth = (current: number, previous: number) => {
     if (previous === 0) return 100;
     return ((current - previous) / previous) * 100;
+  };
+
+  const processLeadMetrics = (data: AdminDashboardData['leadMetrics']) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentMonth = new Date().getMonth();
+
+    if(data.length === 6) {
+      return data;
+    } else {
+      const dataLength = data.length;
+      const missingMonths = 6 - dataLength;
+      const futureMonths = Array.from({length: missingMonths}, (_, i) => {
+        const monthIndex = (currentMonth + i + 1) % 12; // +1 to start from next month
+        return {
+          month: months[monthIndex],
+          leads: 0,
+          deals: 0
+        };
+      });
+
+      return [...data, ...futureMonths];
+    }
   };
 
   return (
@@ -266,7 +310,7 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent className='pl-2'>
             <ResponsiveContainer width='100%' height={350}>
-              <BarChart data={dashboardData?.performanceData}>
+              <BarChart data={processPerformanceData(dashboardData?.performanceData || [])}>
                 <CartesianGrid strokeDasharray='3 3' stroke='#f0f0f0' />
                 <XAxis
                   dataKey='month'
@@ -284,8 +328,8 @@ export function AdminDashboard() {
                   }}
                   labelStyle={{ color: '#111827' }}
                 />
-                <Bar dataKey='dealCount' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={30} />
-                <Bar dataKey='totalAmount' fill='#10b981' radius={[4, 4, 0, 0]} barSize={30} />
+                <Bar dataKey='totalRevenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={30} />
+                <Bar dataKey='commissionRevenue' fill='#10b981' radius={[4, 4, 0, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -301,7 +345,7 @@ export function AdminDashboard() {
             <ResponsiveContainer width='100%' height={350}>
               <LineChart
                 className='mt-4 h-72'
-                data={dashboardData?.leadMetrics || []}
+                data={processLeadMetrics(dashboardData?.leadMetrics || [])}
                 index='month'
                 categories={['leads', 'deals']}
                 colors={['gray', 'blue']}
