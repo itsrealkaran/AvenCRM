@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
+import { useRouter } from 'next/navigation';
 
 interface NotificationSchema {
   id: string;
@@ -75,6 +76,8 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<'all' | 'email' | 'calendar' | 'task'>('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
+  const router = useRouter();
+
   // Replace multiple state management with React Query
   const {
     data: activities,
@@ -84,7 +87,7 @@ export default function NotificationsPage() {
     queryKey: ['notifications'],
     queryFn: async () => {
       const response = await api.get('/notification');
-      return response.data;
+      return response.data.notifications;
     },
   });
 
@@ -98,7 +101,7 @@ export default function NotificationsPage() {
   };
 
   const refreshActivities = () => {
-    // refetch();
+    refetch();
   };
 
   const handleSort = (key: keyof NotificationSchema) => {
@@ -239,7 +242,7 @@ export default function NotificationsPage() {
                 <TableBody>
                   {filteredAndSortedActivities &&
                     filteredAndSortedActivities.map((activity) => (
-                      <TableRow key={activity.id} className='hover:bg-gray-50'>
+                      <TableRow key={activity.id} className='hover:bg-gray-50' onClick={() => router.push(activity.link)}>
                         <TableCell>
                           <div className={`${getIconColor(activity.type)}`}>
                             {getIconByType(activity.type)}

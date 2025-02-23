@@ -20,38 +20,6 @@ interface Payment {
   createdAt: string;
 }
 
-const plans = {
-  basic: {
-    id: 'BASIC',
-    name: 'Basic',
-    price: 11,
-    features: [
-      'Task Manager & Calendar',
-      'Team Management (up to 5 members)',
-      'Client Management',
-      'Advanced Monitoring Dashboard',
-      'Property Management (5 per user)',
-      'Lead Management System',
-      'Basic Marketing Tools',
-    ],
-  },
-  popular: {
-    id: 'PREMIUM',
-    name: 'Premium',
-    price: 26,
-    features: [
-      'All Basic features',
-      'Advanced Team Management',
-      'Unlimited Client Management',
-      'Real-time Monitoring',
-      'Property Management (15 per user)',
-      'Advanced Lead Management',
-      'Marketing Builder (Content Builder)',
-      'Email Campaigns (Non-attachment)',
-    ],
-  },
-};
-
 const getPlans = async () => {
   const response = await api.get('/subscription/plans');
   return response.data;
