@@ -71,24 +71,37 @@ export function AgentDashboard() {
   }, []);
 
   const processPerformanceData = (data: AgentDashboardData['performanceData']) => {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
     const currentMonth = new Date().getMonth();
-    
-    if(data.length === 6) {
+
+    if (data.length === 6) {
       return data;
     } else {
       const dataLength = data.length;
       const missingMonths = 6 - dataLength;
-      const futureMonths = Array.from({length: missingMonths}, (_, i) => {
+      const futureMonths = Array.from({ length: missingMonths }, (_, i) => {
         const monthIndex = (currentMonth + i + 1) % 12; // +1 to start from next month
         return {
           month: months[monthIndex],
           grossRevenue: 0,
           myRevenue: 0,
-          deals: 0
+          deals: 0,
         };
       });
-      
+
       return [...data, ...futureMonths];
     }
   };

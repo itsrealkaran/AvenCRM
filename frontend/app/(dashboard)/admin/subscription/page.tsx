@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { FaCheck } from 'react-icons/fa';
 
 import { StripeModal } from '@/components/stripe/stripe-modal';
 import { Card } from '@/components/ui/card';
+import { api } from '@/lib/api';
 
 import { TransactionHistoryTable } from './transaction-history';
-import { api } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
 
 interface Payment {
   id: string;
@@ -32,14 +32,16 @@ const getSubscription = async () => {
 
 const Page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<
-    any | null
-  >(null);
+  const [selectedPlan, setSelectedPlan] = useState<any | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [hasOverflow, setHasOverflow] = useState<Record<string, boolean>>({});
   const featuresRefs = React.useRef<Record<string, HTMLUListElement | null>>({});
 
-  const { data: allPlans, isLoading: plansLoading, isSuccess: plansSuccess } = useQuery({
+  const {
+    data: allPlans,
+    isLoading: plansLoading,
+    isSuccess: plansSuccess,
+  } = useQuery({
     queryKey: ['plans'],
     queryFn: getPlans,
   });
@@ -116,7 +118,8 @@ const Page = () => {
               </div>
             </>
           ) : (
-            plansSuccess && allPlans?.map((plan: any) => (
+            plansSuccess &&
+            allPlans?.map((plan: any) => (
               <div
                 key={plan.id}
                 className={`rounded-2xl ${
@@ -126,38 +129,52 @@ const Page = () => {
                 <div className='flex'>
                   <div className='flex-1 p-8'>
                     <div className='flex items-start gap-4'>
-                      <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${
-                        plan.name === 'PREMIUM' ? 'bg-yellow-100' : 'bg-blue-100'
-                      }`}>
-                        <div className={`h-8 w-8 overflow-hidden ${
-                          plan.name === 'Premium' ? 'rounded-lg' : 'rounded-full'
-                        }`}>
+                      <div
+                        className={`flex h-14 w-14 items-center justify-center rounded-xl ${
+                          plan.name === 'PREMIUM' ? 'bg-yellow-100' : 'bg-blue-100'
+                        }`}
+                      >
+                        <div
+                          className={`h-8 w-8 overflow-hidden ${
+                            plan.name === 'Premium' ? 'rounded-lg' : 'rounded-full'
+                          }`}
+                        >
                           <div className='flex h-full w-full'>
-                            <div className={`h-full w-1/2 ${
-                              plan.name === 'Premium' ? 'bg-yellow-400' : 'bg-blue-400'
-                            }`}></div>
-                            <div className={`h-full w-1/2 ${
-                              plan.name === 'Premium' ? 'bg-yellow-600' : 'bg-blue-600'
-                            }`}></div>
+                            <div
+                              className={`h-full w-1/2 ${
+                                plan.name === 'Premium' ? 'bg-yellow-400' : 'bg-blue-400'
+                              }`}
+                            ></div>
+                            <div
+                              className={`h-full w-1/2 ${
+                                plan.name === 'Premium' ? 'bg-yellow-600' : 'bg-blue-600'
+                              }`}
+                            ></div>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <p className={`text-sm ${
-                          plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
-                        }`}>
+                        <p
+                          className={`text-sm ${
+                            plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                          }`}
+                        >
                           {plan.name === 'PREMIUM' ? 'For larger agencies' : 'For individuals'}
                         </p>
-                        <h2 className={`mt-1 text-2xl font-semibold ${
-                          plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
-                        }`}>
+                        <h2
+                          className={`mt-1 text-2xl font-semibold ${
+                            plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
+                          }`}
+                        >
                           {plan.name}
                         </h2>
                       </div>
                     </div>
-                    <p className={`mt-4 ${
-                      plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
-                    }`}>
+                    <p
+                      className={`mt-4 ${
+                        plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                      }`}
+                    >
                       {plan.name === 'PREMIUM'
                         ? 'Ideal for growing businesses that need more power and features.'
                         : 'Perfect for individuals and small teams getting started with our platform.'}
@@ -175,28 +192,36 @@ const Page = () => {
                       {plan.name === 'PREMIUM' ? 'Upgrade' : 'Pay now'}
                     </button>
                   </div>
-                  <div className={`flex-1 border-l ${
-                    plan.name === 'PREMIUM' ? 'border-yellow-100' : 'border-blue-100'
-                  } p-8`}>
+                  <div
+                    className={`flex-1 border-l ${
+                      plan.name === 'PREMIUM' ? 'border-yellow-100' : 'border-blue-100'
+                    } p-8`}
+                  >
                     <div className='flex items-baseline gap-2'>
-                      <span className={`text-4xl font-bold ${
-                        plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
-                      }`}>
+                      <span
+                        className={`text-4xl font-bold ${
+                          plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
+                        }`}
+                      >
                         ${plan.price.company.monthly.USD}
                       </span>
-                      <span className={`text-sm ${
-                        plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
-                      }`}>
+                      <span
+                        className={`text-sm ${
+                          plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                        }`}
+                      >
                         /monthly
                       </span>
                     </div>
-                    <h3 className={`mt-6 font-semibold ${
-                      plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
-                    }`}>
+                    <h3
+                      className={`mt-6 font-semibold ${
+                        plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
+                      }`}
+                    >
                       What&apos;s included
                     </h3>
                     <div>
-                      <ul 
+                      <ul
                         ref={(el) => {
                           if (el) {
                             featuresRefs.current[plan.id] = el;
@@ -208,14 +233,18 @@ const Page = () => {
                       >
                         {plan.features.map((feature: any, index: any) => (
                           <li key={index} className='flex items-center gap-3'>
-                            <div className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                              plan.name === 'PREMIUM' ? 'bg-yellow-600' : 'bg-blue-600'
-                            } text-[10px] text-white`}>
+                            <div
+                              className={`flex h-5 w-5 items-center justify-center rounded-full ${
+                                plan.name === 'PREMIUM' ? 'bg-yellow-600' : 'bg-blue-600'
+                              } text-[10px] text-white`}
+                            >
                               <FaCheck />
                             </div>
-                            <span className={`text-sm ${
-                              plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
-                            }`}>
+                            <span
+                              className={`text-sm ${
+                                plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                              }`}
+                            >
                               {feature}
                             </span>
                           </li>

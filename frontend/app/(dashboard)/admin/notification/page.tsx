@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowUpDown,
@@ -33,7 +34,6 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
-import { useRouter } from 'next/navigation';
 
 interface NotificationSchema {
   id: string;
@@ -242,7 +242,11 @@ export default function NotificationsPage() {
                 <TableBody>
                   {filteredAndSortedActivities &&
                     filteredAndSortedActivities.map((activity) => (
-                      <TableRow key={activity.id} className='hover:bg-gray-50' onClick={() => router.push(activity.link)}>
+                      <TableRow
+                        key={activity.id}
+                        className='hover:bg-gray-50'
+                        onClick={() => router.push(activity.link)}
+                      >
                         <TableCell>
                           <div className={`${getIconColor(activity.type)}`}>
                             {getIconByType(activity.type)}

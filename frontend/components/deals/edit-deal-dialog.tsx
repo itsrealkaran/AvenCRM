@@ -84,7 +84,11 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
                     <FormItem>
                       <FormLabel>Name</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter name' disabled={updateDeal.isPending} {...field} />
+                        <Input
+                          placeholder='Enter name'
+                          disabled={updateDeal.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -98,7 +102,11 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter email' disabled={updateDeal.isPending} {...field} />
+                        <Input
+                          placeholder='Enter email'
+                          disabled={updateDeal.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -112,7 +120,11 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter phone' disabled={updateDeal.isPending} {...field} />
+                        <Input
+                          placeholder='Enter phone'
+                          disabled={updateDeal.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -154,7 +166,11 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
                     <FormItem>
                       <FormLabel>Property Address</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter property address' disabled={updateDeal.isPending} {...field} />
+                        <Input
+                          placeholder='Enter property address'
+                          disabled={updateDeal.isPending}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -237,7 +253,12 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
               >
                 Cancel
               </Button>
-              <Button form={form.id} type='submit' disabled={updateDeal.isPending} className='min-w-[100px]'>
+              <Button
+                form={form.id}
+                type='submit'
+                disabled={updateDeal.isPending}
+                className='min-w-[100px]'
+              >
                 {updateDeal.isPending ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
