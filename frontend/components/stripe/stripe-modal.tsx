@@ -21,6 +21,8 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 
 export function StripeModal({ isOpen, onClose, planId, planName, price }: StripeModalProps) {
   const [loading, setLoading] = useState(false);
+  const [userCount, setUserCount] = useState(1);
+  const [billingPeriod, setBillingPeriod] = useState('monthly');
   const { toast } = useToast();
 
   const handlePayment = async () => {
@@ -84,11 +86,54 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
           <DialogTitle>Subscribe to {planName}</DialogTitle>
         </DialogHeader>
         <div className='grid gap-4 py-4'>
-          <div className='space-y-2'>
+          <div className='space-y-4'>
             <h3 className='font-medium'>Plan Details</h3>
-            <p className='text-sm text-gray-500'>You have selected the {planName} plan</p>
+            <div className='space-y-3'>
+              <div>
+                <label htmlFor='userCount' className='block text-sm font-medium text-gray-700'>
+                  Number of Users
+                </label>
+                <input
+                  type='number'
+                  id='userCount'
+                  min='1'
+                  value={userCount}
+                  onChange={(e) => setUserCount(Math.max(1, parseInt(e.target.value) || 1))}
+                  className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500'
+                />
+              </div>
+              
+              <div>
+                <label className='block text-sm font-medium text-gray-700 mb-2'>
+                  Billing Period
+                </label>
+                <div className='space-x-4'>
+                  <label className='inline-flex items-center'>
+                    <input
+                      type='radio'
+                      value='monthly'
+                      checked={billingPeriod === 'monthly'}
+                      onChange={(e) => setBillingPeriod(e.target.value)}
+                      className='h-4 w-4 text-blue-600'
+                    />
+                    <span className='ml-2 text-sm'>Monthly</span>
+                  </label>
+                  <label className='inline-flex items-center'>
+                    <input
+                      type='radio'
+                      value='annually'
+                      checked={billingPeriod === 'annually'}
+                      onChange={(e) => setBillingPeriod(e.target.value)}
+                      className='h-4 w-4 text-blue-600'
+                    />
+                    <span className='ml-2 text-sm'>Annually</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+            
             <p className='text-2xl font-bold'>
-              ${price.toFixed(2)} <span className='text-sm font-normal'>/month</span>
+              ${price.toFixed(2)} <span className='text-sm font-normal'>/{billingPeriod === 'monthly' ? 'month' : 'year'}</span>
             </p>
           </div>
           <div className='flex justify-end space-x-2'>

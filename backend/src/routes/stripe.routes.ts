@@ -4,6 +4,7 @@ import { AuthenticatedRequest, protect } from '../middleware/auth.js';
 import { verifyAdmin } from '../lib/verifyUser.js';
 import { prisma } from '../lib/prisma.js';
 import { PlanTier, User } from '@prisma/client';
+import { decode } from 'jsonwebtoken';
 
 // Extend Express Request type
 declare global {
@@ -64,11 +65,35 @@ router.post(
 // Create a checkout session
 router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const { planId, planName, price, accountType, billingFrequency, currency, userCount, email } = req.body;
+    const { planId, planName, accountType, billingFrequency, currency, userCount, email } = req.body;
     const planType = planId as PlanTier;
 
-    const userId = req.user?.id || req.body.userId;
-    const companyId = req.user?.companyId || req.body.companyId;
+    let token = req.cookies.Authorization;
+    
+    if (!token && req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (token) {
+      const decoded = decode(token);
+      if (decoded && typeof decoded === 'object' && 'id' in decoded) {
+        const user = await prisma.user.findUnique({
+          where: { id: decoded.id },
+        });
+        if (user) {
+          req.user = {
+            id: user.id,
+            role: user.role,
+            email: user.email,
+            companyId: user.companyId || '',
+            teamId: user.teamId || ''
+          };
+        }
+      }
+    }
+
+    const userId = req.user?.id !== undefined ? req.user.id : req.body.userId;
+    const companyId = req.user?.companyId !== undefined ? req.user.companyId : req.body.companyId;
 
     if (!userId || !companyId) {
       return res.status(401).json({ error: 'User not authenticated' });
