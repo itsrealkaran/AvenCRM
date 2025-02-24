@@ -373,6 +373,21 @@ export const leadsController: Controller  = {
           where: { id },
           data: { notes: note },
         });
+      } else if (user.role === UserRole.TEAM_LEADER) {
+        const teamMembers = await prisma.user.findMany({
+          where: {
+            teamId: user.teamId,
+            companyId: user.companyId
+          },
+        });
+        if (!teamMembers) {
+          return res.status(404).json({ message: 'Team members not found' });
+        }
+        
+        lead = await prisma.lead.update({
+          where: { id, agentId: { in: teamMembers.map(member => member.id) } },
+          data: { notes: note },
+        });
       } else {
         lead = await prisma.lead.update({
           where: { id, agentId: user.id },

@@ -44,6 +44,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+interface Note {
+  time: string;
+  note: string;
+}
+
 const getStatusColor = (status: LeadStatus) => {
   const colors = {
     NEW: 'bg-blue-100 text-blue-800',
@@ -74,16 +79,7 @@ const updateLeadAgent = async (leadId: string, agentId: string | null) => {
   return response.data;
 };
 
-interface Note {
-  note: string;
-  time: string;
-}
-
-interface NotesCellProps {
-  row: any; // We'll properly type this later
-}
-
-function NotesCell({ row }: NotesCellProps) {
+function NotesCell({ row }: any) {
   const notes = row.original.notes || [];
   const noteCount = Array.isArray(notes) ? notes.length : 0;
   const [showTextArea, setShowTextArea] = useState(false);
@@ -138,16 +134,23 @@ function NotesCell({ row }: NotesCellProps) {
           </DialogTitle>
         </DialogHeader>
         <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
-          {notes.map((note: Note, index: number) => (
-            <div key={index} className='relative pl-6'>
-              <div className='absolute left-0 top-2 w-2 h-2 rounded-full bg-gray-300'></div>
-              <div className='space-y-2'>
-                <div className='flex items-center gap-2'>
-                  <span className='text-sm text-gray-500'>
-                    {format(new Date(note.time), 'MMM d, yyyy')}
-                  </span>
+        {Object.entries(notes as Record<string, Note>)
+          .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+          .map(([time, note]) => (
+            <div
+              key={time}
+              className='relative flex gap-6 items-start group animate-slide-up'
+            >
+              <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300 border border-blue-300 shadow-md'>
+                <div className='w-2.5 h-2.5 rounded-full bg-blue-600'></div>
+              </div>
+              <div className='flex-1 ml-4 space-y-2 bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200'>
+                <div className='text-xs text-gray-500'>
+                  {format(new Date(note.time), 'MMM d, yyyy HH:mm')}
                 </div>
-                <p className='text-gray-700'>{note.note}</p>
+                <div className='text-sm text-gray-700 whitespace-pre-wrap leading-relaxed'>
+                  <p>{note.note}</p>
+                </div>
               </div>
             </div>
           ))}
