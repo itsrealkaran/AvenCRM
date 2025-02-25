@@ -487,11 +487,9 @@ export default function ManageAgentsPage() {
               variant={'outline'}
               className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
               onClick={async () => {
-                const ok = await confirm();
+                const ok = confirm("Are you sure you want to delete these agents?");
                 if (ok) {
-                  toast.loading('Deleting agents...', { id: 'delete' });
                   handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
-                  toast.dismiss('delete');
                   table.resetRowSelection();
                 }
               }}

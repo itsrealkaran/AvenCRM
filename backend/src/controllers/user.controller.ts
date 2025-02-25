@@ -4,6 +4,8 @@ import db from "../db/index.js";
 import bcrypt from "bcrypt";
 import { AuthenticatedRequest } from "../middleware/auth.js";
 import { uploadFile } from "../utils/s3.js";
+import { notificationService } from "../services/redis.js";
+import { cronService } from "../services/cron.service.js";
 
 export const userController = {
   // User Management (SuperAdmin & Admin)
@@ -108,6 +110,38 @@ export const userController = {
           return user;
         });
 
+        try {
+          if (authUser.role === UserRole.ADMIN && dob) {
+            const birthday = new Date(dob);
+            const today = new Date();
+            
+            // Set birthday for this year
+            const birthdayThisYear = new Date(
+              today.getFullYear(),
+              birthday.getMonth(),
+              birthday.getDate()
+            );
+
+            // If birthday has passed this year, set for next year
+            if (birthdayThisYear < today) {
+              birthdayThisYear.setFullYear(today.getFullYear() + 1);
+            }
+
+            const event = await db.calendarEvent.create({
+              data: {
+                title: `${name}'s Birthday`,
+                start: birthdayThisYear,
+                end: birthdayThisYear,
+                setterId: authUser.id,
+              },
+            });
+
+            cronService.scheduleEventNotification(authUser.id, event.id, event.title, event.start, `/admin/calendar`);
+          }
+        } catch (error) {
+          console.error("Error in createBulkUser:", error);
+        }
+
         res.status(201).json({
           message: "User created successfully",
           user: {
@@ -209,6 +243,40 @@ export const userController = {
             }
           });
           createdUsers.push(createdUser);
+
+          //set the birthday event of the agent for the admin
+          try {
+            if (user.role === UserRole.ADMIN && userData.dob) {
+              const birthday = new Date(userData.dob);
+              const today = new Date();
+              
+              // Set birthday for this year
+              const birthdayThisYear = new Date(
+                today.getFullYear(),
+                birthday.getMonth(),
+                birthday.getDate()
+              );
+
+              // If birthday has passed this year, set for next year
+              if (birthdayThisYear < today) {
+                birthdayThisYear.setFullYear(today.getFullYear() + 1);
+              }
+
+              const event = await db.calendarEvent.create({
+                data: {
+                  title: `${userData.name}'s Birthday`,
+                  start: birthdayThisYear,
+                  end: birthdayThisYear,
+                  setterId: user.id,
+                },
+              });
+
+              cronService.scheduleEventNotification(user.id, event.id, event.title, event.start, `/admin/calendar`);
+            }
+          } catch (error) {
+            console.error("Error in createBulkUser:", error);
+          }
+          
         } catch (error) {
           errors.push({
             row: i + 1,

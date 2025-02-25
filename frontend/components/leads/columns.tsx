@@ -278,7 +278,7 @@ export const columns: ColumnDef<Lead>[] = [
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild disabled={status === 'WON'}>
             <Button variant='ghost' className='h-8 p-0'>
               <Badge className={`${getStatusColor(status)} cursor-pointer`}>{status}</Badge>
             </Button>

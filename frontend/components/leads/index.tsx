@@ -100,8 +100,12 @@ export default function LeadsPage() {
           body: JSON.stringify({ status: newStatus }),
           credentials: 'include',
         });
-      } else {
-        // Handle DealStatus update here if necessary
+        if (!response.ok) {
+          toast.error('Cannot change the status of a won lead');
+        } else {
+          await queryClient.invalidateQueries({ queryKey: ['leads'] });
+          toast.success('Lead status updated successfully');
+        }
       }
       await queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead status updated successfully');

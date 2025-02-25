@@ -120,7 +120,7 @@ export default function LeadsPage() {
     try {
       // Check if the newStatus is of type LeadStatus
       if (newStatus in LeadStatus) {
-        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -128,13 +128,16 @@ export default function LeadsPage() {
           body: JSON.stringify({ status: newStatus }),
           credentials: 'include',
         });
-      } else {
-        // Handle DealStatus update here if necessary
+        if (!response.ok) {
+          toast.error('Cannot change the status of a won lead');
+        } else {
+          await queryClient.invalidateQueries({ queryKey: ['leads'] });
+          toast.success('Lead status updated successfully');
+        }
       }
-      await queryClient.invalidateQueries({ queryKey: ['leads'] });
-      toast.success('Lead status updated successfully');
     } catch (error) {
-      toast.error('Failed to update lead status');
+      console.log(error);
+      toast.error(error as string || 'Failed to update lead status');
     }
   };
 

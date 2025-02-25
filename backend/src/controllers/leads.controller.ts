@@ -115,6 +115,11 @@ export const leadsController: Controller  = {
     upload.none(),
     async (req: Request, res: Response) => {
       try {
+        const user = req.user;
+        if (!user || !user.companyId) {
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
+
         // Parse the JSON string from the `FormData` key "data"
         const rawData = req.body.data;
         if (!rawData) {
@@ -136,8 +141,8 @@ export const leadsController: Controller  = {
         const lead = await prisma.lead.create({
           data: {
             ...leadData,
-            agentId: req.user?.id ?? '', // Assuming `req.user` is available from middleware
-            companyId: req.user?.companyId ?? '',
+            agentId: user.role === UserRole.ADMIN ? null : user.id,
+            companyId: user.companyId,
             notes: leadData.notes
               ? leadData.notes
                   .filter((note) => note !== null)
@@ -338,10 +343,24 @@ export const leadsController: Controller  = {
   updateLeadStatus: async (req: Request, res: Response) => {
     try {
       const { status } = req.body;
+
+      console.log(status);
   
       // Validate the status
       if (!status || !Object.values(LeadStatus).includes(status)) {
         return res.status(400).json({ message: "Invalid status" });
+      }
+
+      const checkLead = await prisma.lead.findUnique({
+        where: { id: req.params.id },
+      });
+
+      if (!checkLead) {
+        return res.status(404).json({ message: "Lead not found" });
+      }
+
+      if (checkLead.status === LeadStatus.WON) {
+        return res.status(400).json({ message: "Cannot change the status of a won lead" });
       }
   
       const lead = await prisma.lead.update({
@@ -349,8 +368,7 @@ export const leadsController: Controller  = {
         data: { status },
       });
   
-      const validatedResponse = leadResponseSchema.parse(lead);
-      return res.json(validatedResponse);
+      return res.json(lead);
     } catch (error) {
       console.error("Error in updateLeadStatus:", error);
       return res.status(500).json({ message: "Failed to update lead status" });
