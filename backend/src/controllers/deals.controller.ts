@@ -287,6 +287,11 @@ export const dealsController: Controller = {
     upload.none(),
     async (req: Request, res: Response) => {
       try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
         const rawData = req.body.data;
         if (!rawData) {
           return res
@@ -314,6 +319,8 @@ export const dealsController: Controller = {
             .json({ errors: validationResult.error.flatten() });
         }
 
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+
         const dealData = validationResult.data;
         const deal = await prisma.deal.update({
           where: { id: req.params.id },
@@ -322,7 +329,7 @@ export const dealsController: Controller = {
             notes: dealData.notes
               ? (dealData.notes
                   .filter((note) => note !== null)
-                  .map((note) => ({ time: note.time, note: note.note })) as
+                  .map((note) => ({ time: note.time, note: note.note, author: notesAuthor })) as
                   | InputJsonValue[]
                   | undefined)
               : undefined,
@@ -406,6 +413,11 @@ export const dealsController: Controller = {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
+      const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+
+      //note is a array of objects append author to the last object
+      note[note.length - 1].author = notesAuthor;
+      
       let deal: any;
       if (user.role === UserRole.ADMIN) {
         deal = await prisma.deal.update({

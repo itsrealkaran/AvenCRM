@@ -1,7 +1,10 @@
 'use client';
 
+import { authService } from '@/api/auth.service';
+import { api } from '@/lib/api';
 import type React from 'react';
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 type Currency = {
   code: string;
@@ -31,6 +34,26 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const [currency, setCurrency] = useState<Currency>(currencies[0]);
+
+  const loadCurrency = async () => {
+    try {
+      const { currency } = await authService.getCurrency();
+      //find the currency from the currencies array
+      const currencyObj = currencies.find((c) => c.code === currency);
+      if (currencyObj) {
+        setCurrency(currencyObj);
+      } else {
+        setCurrency(currencies[0]);
+      }
+    } catch (error) {
+      console.error('Failed to load user:', error);
+      toast.error('Failed to load user');
+    }
+  };
+
+  useEffect(() => {
+    loadCurrency();
+  }, []);
 
   const formatPrice = (price: number | null | undefined) => {
     if (price === null || price === undefined) {

@@ -22,6 +22,11 @@ export const authService = {
     return response.data;
   },
 
+  async getCurrency(): Promise<{ currency: string }> {
+    const response = await api.get('/auth/currency');
+    return response.data;
+  },
+
   async refreshToken(): Promise<AuthResponse> {
     const response = await api.post('/auth/refresh-token');
     return response.data;

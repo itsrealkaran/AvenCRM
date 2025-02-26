@@ -52,8 +52,6 @@ function SignInContent() {
     try {
       const { data } = await authApi.login(values);
 
-      console.log('data', data);
-
       if (data.access_token) {
         toast.success('Sign-in successful!');
 

@@ -53,6 +53,7 @@ const getStatusColor = (status: LeadStatus) => {
 interface Note {
   note: string;
   time: string;
+  author: string | null;
 }
 
 interface NotesCellProps {
@@ -135,6 +136,11 @@ function NotesCell({ row }: NotesCellProps) {
                     <div className='text-sm text-gray-700 whitespace-pre-wrap leading-relaxed'>
                       <p>{note.note}</p>
                     </div>
+                  {note.author && (
+                    <div className='text-sm text-gray-500 absolute top-6 right-4'>
+                      {note.author}
+                    </div>
+                  )}
                   </div>
                 </div>
               ))}

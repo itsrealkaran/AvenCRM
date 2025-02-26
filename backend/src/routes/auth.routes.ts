@@ -70,7 +70,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
     country,
     size,
     userCount,
-    preferredCurrency,
+    currency,
     countriesOfOperation,
   } = companyData;
 
@@ -108,6 +108,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
           address: `${address}, ${city}, ${country}`,
           size,
           userCount,
+          currency,
           adminId: admin.id,
         },
       });
@@ -174,8 +175,8 @@ router.post("/sign-up", async (req: Request, res: Response) => {
           </div>
         `, // html body
       });
-    
-      
+
+
     } catch (err) {
       console.log("error sending an email", err)
     }
@@ -362,6 +363,51 @@ router.get("/me", protect, async (req: AuthenticatedRequest, res: Response) => {
   } catch (error) {
     logger.error("Get Current User Error:", error);
     res.status(500).json({ message: "Error fetching user data" });
+  }
+});
+
+router.get('/currency', protect, async (req: AuthenticatedRequest, res: Response) => {
+  const companyId = req.user?.companyId;
+  if (!companyId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  try {
+    const company = await db.company.findUnique({
+      where: { id: companyId },
+      select: {
+        currency: true,
+      },
+    });
+
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    res.json({ currency: company.currency || "USD" });
+  } catch (error) {
+    logger.error("Get Currency Error:", error);
+    res.status(500).json({ message: "Error fetching currency" });
+  }
+});
+
+router.patch('/set-currency', protect, async (req: AuthenticatedRequest, res: Response) => {
+  const companyId = req.user?.companyId;
+  if (!companyId) {
+    return res.status(401).json({ message: "Not authenticated" });
+  }
+
+  const { currency } = req.body;
+  try {
+      await db.company.update({
+      where: { id: companyId },
+      data: { currency },
+    });
+
+    res.json({ message: "Currency set successfully" });
+  } catch (error) {
+    logger.error("Set Currency Error:", error);
+    res.status(500).json({ message: "Error setting currency" });
   }
 });
 

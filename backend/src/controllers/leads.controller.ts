@@ -137,6 +137,8 @@ export const leadsController: Controller  = {
 
         const leadData = validationResult.data;
 
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+
         // Save the validated lead data to the database
         const lead = await prisma.lead.create({
           data: {
@@ -146,7 +148,7 @@ export const leadsController: Controller  = {
             notes: leadData.notes
               ? leadData.notes
                   .filter((note) => note !== null)
-                  .map((note) => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined
+                  .map((note) => ({ time: note.time, note: note.note, author: notesAuthor })) as InputJsonValue[] | undefined
               : undefined,
           },
 
@@ -219,6 +221,8 @@ export const leadsController: Controller  = {
 
           const validationResult = createLeadSchema.safeParse(leadData);
 
+          const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+
           if (validationResult.success) {
             validatedLeads.push({
               ...validationResult.data,
@@ -226,7 +230,7 @@ export const leadsController: Controller  = {
               notes: validationResult.data.notes
                 ? validationResult.data.notes
                     .filter((note: any) => note !== null)
-                    .map((note: any) => ({ time: note.time, note: note.note })) as InputJsonValue[]
+                    .map((note: any) => ({ time: note.time, note: note.note, author: notesAuthor })) as InputJsonValue[]
                 : [],
               // Ensure required fields
               agentId: user.role === UserRole.ADMIN ? null : user.id,
@@ -297,13 +301,20 @@ export const leadsController: Controller  = {
         if (!validationResult.success) {
           return res.status(400).json({ errors: validationResult.error.flatten() });
         }
+        
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: 'Unauthorized' });
+        }
   
         const leadData = validationResult.data;
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+        
         const lead = await prisma.lead.update({
           where: { id: req.params.id },
           data: {
             ...leadData,
-            notes: leadData.notes ? leadData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note })) as InputJsonValue[] | undefined : undefined,
+            notes: leadData.notes ? leadData.notes.filter(note => note !== null).map(note => ({ time: note.time, note: note.note, author: notesAuthor })) as InputJsonValue[] | undefined : undefined,
           },
           select: {
             id: true,
@@ -384,6 +395,11 @@ export const leadsController: Controller  = {
       if (!user) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
+
+      const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+
+      //note is a array of objects append author to the last object
+      note[note.length - 1].author = notesAuthor;
 
       let lead;
       if (user.role === UserRole.ADMIN) {
