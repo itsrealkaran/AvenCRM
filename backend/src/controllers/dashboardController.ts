@@ -247,7 +247,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
 
     const performanceData = Object.values(
       monthlyRevenue.reduce((acc, item) => {
-        const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+        const month = item.createdAt.toLocaleString('default', { month: 'long' });
         if (!acc[month]) {
           acc[month] = {
             month,
@@ -333,7 +333,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
 
     // Process leads
     monthlyLeads.forEach((item) => {
-      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+      const month = item.createdAt.toLocaleString('default', { month: 'long' });
       if (!metricsByMonth.has(month)) {
         metricsByMonth.set(month, { month, leads: 0, deals: 0 });
       }
@@ -342,7 +342,7 @@ export const getAdminDashboard = async (req: Request, res: Response) => {
 
     // Process deals
     monthlyDeals.forEach((item) => {
-      const month = item.createdAt.toISOString().split('T')[0].substring(0, 7);
+      const month = item.createdAt.toLocaleString('default', { month: 'long' });
       if (!metricsByMonth.has(month)) {
         metricsByMonth.set(month, { month, leads: 0, deals: 0 });
       }

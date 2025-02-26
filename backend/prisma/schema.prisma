@@ -195,6 +195,7 @@ model Company {
   email        String   @unique
   size         String?
   userCount    Int? @default(1)
+  currency     String? @default("USD")
   
   // Subscription details
   plan         Plan?     @relation(fields: [planId], references: [id])

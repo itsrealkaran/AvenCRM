@@ -46,13 +46,13 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       if (isVerified === TransactionStatus.APPROVED) {
         return (
           <Badge variant='outline' className='bg-green-50 text-green-600'>
-            Approved
+            Verified
           </Badge>
         );
       } else if (isVerified === TransactionStatus.REJECTED) {
         return (
           <Badge variant='outline' className='bg-red-50 text-red-600'>
-            Rejected
+            Unverified
           </Badge>
         );
       }
@@ -64,7 +64,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
               variant='outline'
               size='sm'
               onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.APPROVED)}
-              className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800'
+              className='h-7 px-2 text-xs bg-emerald-300 text-emerald-800 hover:bg-emerald-500 hover:text-white'
             >
               Verify
             </Button>
@@ -72,7 +72,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
               variant='ghost'
               size='sm'
               onClick={() => meta.onVerify?.(row.original.id, TransactionStatus.REJECTED)}
-              className='h-7 px-2 text-xs bg-orange-300 text-orange-800'
+              className='h-7 px-2 text-xs bg-red-300 text-red-800 hover:bg-red-500 hover:text-white'
             >
               Unverify
             </Button>

@@ -104,7 +104,6 @@ function NotesCell({ row }: any) {
       note: newNote,
       time: new Date().toISOString(),
     };
-    console.log(newNoteObj, existingNotes, 'note');
 
     addNoteMutation.mutate({
       leadId: row.original.id,
@@ -124,69 +123,77 @@ function NotesCell({ row }: any) {
           {noteCount === 1 ? 'Note' : 'Notes'}
         </Button>
       </DialogTrigger>
-      <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
-        <DialogHeader>
-          <DialogTitle className='text-2xl font-semibold text-gray-800 mb-4'>
-            Notes Timeline
-          </DialogTitle>
-        </DialogHeader>
-        <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
-        {Object.entries(notes as Record<string, Note>)
-          .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
-          .map(([time, note]) => (
-            <div
-              key={time}
-              className='relative flex gap-6 items-start group animate-slide-up'
-            >
-              <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300 border border-blue-300 shadow-md'>
-                <div className='w-2.5 h-2.5 rounded-full bg-blue-600'></div>
-              </div>
-              <div className='flex-1 ml-4 space-y-2 bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200'>
-                <div className='text-xs text-gray-500'>
-                  {format(new Date(note.time), 'MMM d, yyyy HH:mm')}
-                </div>
-                <div className='text-sm text-gray-700 whitespace-pre-wrap leading-relaxed'>
-                  <p>{note.note}</p>
-                </div>
-              </div>
-            </div>
-          ))}
+      <DialogContent className='max-w-3xl max-h-[80vh] flex flex-col bg-white rounded-lg shadow-lg'>
+        <div className=' bg-white border-b'>
+          <DialogHeader className='p-2'>
+            <DialogTitle className='text-2xl font-semibold text-gray-800'>
+              Notes Timeline
+            </DialogTitle>
+          </DialogHeader>
         </div>
-        {showTextArea ? (
-          <div className='mt-8 space-y-4'>
-            <textarea
-              placeholder='Add a new note...'
-              className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
-              value={newNote}
-              onChange={(e) => setNewNote(e.target.value)}
-            />
-            <div className='flex gap-2 justify-end'>
-              <Button
-                variant='outline'
-                onClick={() => {
-                  setShowTextArea(false);
-                  setNewNote('');
-                }}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
-                {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
+
+        <div className='flex-1 overflow-y-auto p-6'>
+          <div className='space-y-8 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-1/2 before:bg-gradient-to-b before:from-gray-200 before:via-gray-300 before:to-gray-200'>
+            {Object.entries(notes as Record<string, Note>)
+              .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
+              .map(([time, note]) => (
+                <div
+                  key={time}
+                  className='relative flex gap-6 items-start group animate-slide-up'
+                >
+                  <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300 border border-blue-300 shadow-md'>
+                    <div className='w-2.5 h-2.5 rounded-full bg-blue-600'></div>
+                  </div>
+                  <div className='flex-1 ml-4 space-y-2 bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200'>
+                    <div className='text-xs text-gray-500'>
+                      {format(new Date(note.time), 'MMM d, yyyy HH:mm')}
+                    </div>
+                    <div className='text-sm text-gray-700 whitespace-pre-wrap leading-relaxed'>
+                      <p>{note.note}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        <div className='bg-white border-t p-2'>
+          {showTextArea ? (
+            <div className='space-y-4'>
+              <textarea
+                placeholder='Add a new note...'
+                className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+              />
+              <div className='flex gap-2 justify-end'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    setShowTextArea(false);
+                    setNewNote('');
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
+                  {addNoteMutation.isPending ? 'Adding...' : 'Add Note'}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className='flex justify-end'>
+              <Button onClick={() => setShowTextArea(true)} variant='outline'>
+                Add New Note
               </Button>
             </div>
-          </div>
-        ) : (
-          <div className='mt-8 flex justify-end'>
-            <Button onClick={() => setShowTextArea(true)} variant='outline'>
-              Add New Note
-            </Button>
-          </div>
-        )}
+          )}
+        </div>
       </DialogContent>
-      <DialogFooter className='flex flex-col space-y-4 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 pt-4' />
     </Dialog>
   );
 }
+
 
 export const columns: ColumnDef<Lead>[] = [
   {
