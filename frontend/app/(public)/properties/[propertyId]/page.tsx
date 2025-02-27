@@ -24,6 +24,8 @@ import Logo from '@/components/logo';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { api } from '@/lib/api';
+import { Avatar } from '@/components/ui/avatar';
+import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
 interface PropertyDetails {
   id: string;
@@ -268,11 +270,13 @@ const PropertyDetails = () => {
     setIsLoading(true);
     try {
       toast.loading('Sending inquiry...');
-      const currentTime = new Date().toISOString().slice(0, 16); // Format: "2025-02-06T22:19"
+      const currentTime = new Date().toISOString(); // Format: "2025-02-06T22:19"
       const noteWithTime = {
         note: formData.notes[0]?.note || '',
         time: currentTime,
+        author: 'Client',
       };
+      console.log(noteWithTime);
 
       await api.post('/public/setLead', {
         name: formData.name,
@@ -382,15 +386,14 @@ const PropertyDetails = () => {
                 {property?.imageUrls.slice(1, 5).map((image, index) => (
                   <div
                     key={index}
-                    className={`relative group overflow-hidden ${
-                      index === 0
+                    className={`relative group overflow-hidden ${index === 0
                         ? ''
                         : index === 1
                           ? 'rounded-tr-xl'
                           : index === 3
                             ? 'rounded-br-xl'
                             : ''
-                    }`}
+                      }`}
                   >
                     <img
                       src={image}
@@ -732,13 +735,12 @@ const PropertyDetails = () => {
                   {/* Agent Details */}
                   <div className='space-y-4'>
                     <div className='flex items-start gap-4'>
-                      <div className='h-16 w-16 rounded-full overflow-hidden flex-shrink-0'>
-                        <img
-                          src={property?.agent?.avatar || 'https://via.placeholder.com/150'}
-                          alt='Agent'
-                          className='h-full w-full object-cover'
-                        />
-                      </div>
+                      <Avatar className='bg-red-50'>
+                        <AvatarImage src={property?.agent?.avatar} />
+                        <AvatarFallback className='flex items-center justify-center w-full'>
+                          {property?.agent?.name?.charAt(0) || 'A'}
+                        </AvatarFallback>
+                      </Avatar>
                       <div className='space-y-1'>
                         <h3 className='font-medium text-gray-900'>
                           {property?.agent?.name || 'Agent Name'}
@@ -842,11 +844,11 @@ const PropertyDetails = () => {
                     <button
                       type='submit'
                       disabled={
-                        isLoading ||
-                        !formData.name ||
-                        !formData.email ||
-                        !formData.phone ||
-                        !formData.notes[0]?.note
+                        isLoading 
+                        // !formData.name ||
+                        // !formData.email ||
+                        // !formData.phone ||
+                        // !formData.notes[0]?.note
                       }
                       className='w-full bg-indigo-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed'
                     >

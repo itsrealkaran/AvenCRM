@@ -34,6 +34,7 @@ interface PropertyCardProps {
     name: string;
     image?: string;
   };
+  onShare?: () => Promise<string | null>;
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({
@@ -47,6 +48,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     name: 'Jenny Wilson',
     image: '/placeholder.svg?height=32&width=32',
   },
+  onShare,
 }) => {
   const { formatPrice } = useCurrency();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -67,16 +69,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const handleShare = async () => {
-    try {
-      const response = await api.get('/property/agent');
-      const agentId = response.data.agentId;
+    if (!onShare) return;
+    
+    const agentId = await onShare();
+    if (agentId) {
       setIsShareModalOpen(true);
       setAgentId(agentId);
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        description: 'Something went wrong. Please try again later.',
-      });
     }
   };
 
@@ -108,14 +106,14 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             </Button>
           )}
           <div className='absolute bottom-3 right-3 flex gap-2'>
-            <Button
+            {onShare && (<Button
               variant='outline'
               size='icon'
               className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
               onClick={handleShare}
             >
               <Share2 className='w-4 h-4 text-gray-700' />
-            </Button>
+            </Button>)}
             {onEdit && (
               <Button
                 variant='outline'
@@ -136,7 +134,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 {cardDetails.address}
               </h3>
               <p className='text-xl font-bold text-[#4F46E5] mt-1'>
-                {formatPrice(cardDetails.price)}
+                {/* {formatPrice(cardDetails.price)} */}
+                ${cardDetails.price}
               </p>
             </div>
 

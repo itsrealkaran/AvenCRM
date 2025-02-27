@@ -7,6 +7,7 @@ import { CalendarIcon, CheckSquareIcon, UserIcon } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface Notification {
   id: string;
@@ -29,6 +30,7 @@ export function NotificationList({
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>(allNotifications);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.read) {
@@ -40,9 +42,12 @@ export function NotificationList({
         );
         // Update the notification in the local state
         if (response.status === 200) {
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+          queryClient.invalidateQueries({ queryKey: ['notification-count'] });
           setNotifications((prev) =>
             prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
           );
+          
           if (notification.link) router.push(notification.link);
         } else {
           toast({

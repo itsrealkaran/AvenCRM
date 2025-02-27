@@ -121,6 +121,20 @@ const Page: React.FC = () => {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const response = await api.get('/property/agent');
+      const agentId = response.data.agentId;
+      return agentId;
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        description: 'Something went wrong. Please try again later.',
+      });
+      return null;
+    }
+  };
+
   const PropertySkeleton = () => (
     <Card className='w-[260px] flex-shrink-0'>
       <CardContent className='p-0'>
@@ -214,6 +228,7 @@ const Page: React.FC = () => {
                     cardDetails={prop.cardDetails}
                     isVerified={prop.isVerified}
                     agent={prop.createdBy}
+                    onShare={handleShare}
                   />
                 ))
               )}

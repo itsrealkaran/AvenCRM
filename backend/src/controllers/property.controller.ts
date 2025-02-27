@@ -50,7 +50,7 @@ export const propertiesController: Controller = {
 
   setLeadFromProperty: async (req: Request, res: Response) => {
     try {
-      const { agentId, propertyId, name, phone, email, message } = req.body;
+      const { agentId, propertyId, name, phone, email, notes } = req.body;
       if (!agentId) {
         return res.status(400).json({ message: "Agent ID is required" });
       }
@@ -66,8 +66,9 @@ export const propertiesController: Controller = {
           name,
           phone,
           email,
-          notes: message ? [message] : [],
+          notes,
           agentId,
+          source: 'Property Link',
           companyId: agent.companyId!,
         },
       });

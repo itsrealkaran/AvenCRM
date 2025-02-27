@@ -115,6 +115,20 @@ const Page: React.FC = () => {
     }
   };
 
+  const handleShare = async () => {
+    try {
+      const response = await api.get('/property/agent');
+      const agentId = response.data.agentId;
+      return agentId;
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        description: 'Something went wrong. Please try again later.',
+      });
+      return null;
+    }
+  };
+
   const handleSubmitProperty = (property: any) => {
     console.log('Property submitted in AdminView:', property);
     if (propertyToEdit) {
@@ -217,7 +231,7 @@ const Page: React.FC = () => {
                       isVerified={prop.isVerified}
                       onVerify={() => handleVerify(prop.id)}
                       onDelete={() => handleDeleteProperty(prop.id)}
-                      onEdit={() => handleEditProperty(prop.id)}
+                      onShare={handleShare}
                     />
                   ))}
             </div>
