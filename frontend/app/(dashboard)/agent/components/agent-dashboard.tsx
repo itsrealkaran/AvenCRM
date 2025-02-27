@@ -13,6 +13,7 @@ import {
   YAxis,
 } from 'recharts';
 import { toast } from 'sonner';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -52,6 +53,7 @@ export function AgentDashboard() {
 
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedRevenue, setSelectedRevenue] = useState<'commission' | 'total'>('commission');
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -209,10 +211,9 @@ export function AgentDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
-              $
               {selectedRevenue === 'commission'
-                ? dashboardData?.revenue.myRevenue.toLocaleString()
-                : dashboardData?.revenue.grossRevenue.toLocaleString()}
+                ? formatPrice(dashboardData?.revenue.myRevenue)
+                : formatPrice(dashboardData?.revenue.grossRevenue)}
             </div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />
@@ -244,9 +245,24 @@ export function AgentDashboard() {
                 <Tooltip
                   contentStyle={{ background: 'white', border: '1px solid #e5e7eb' }}
                   labelStyle={{ color: '#111827' }}
+                  formatter={(value, dataKey) => [
+                    //@ts-ignore
+                    formatPrice(value),
+                    dataKey === 'myRevenue' ? 'My Commission' : 'Gross Revenue'
+                  ]}
                 />
-                <Bar dataKey='myRevenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
-                <Bar dataKey='grossRevenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar 
+                  dataKey='grossRevenue'
+                  fill='#10b981' 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={40} 
+                />
+                <Bar 
+                  dataKey='myRevenue'
+                  fill='#3b82f6' 
+                  radius={[4, 4, 0, 0]} 
+                  barSize={40} 
+                />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

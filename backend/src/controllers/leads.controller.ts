@@ -397,8 +397,6 @@ export const leadsController: Controller  = {
       }
 
       const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
-
-      //note is a array of objects append author to the last object
       note[note.length - 1].author = notesAuthor;
 
       let lead;
