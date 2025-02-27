@@ -1,7 +1,6 @@
 'use client';
 
 import { authService } from '@/api/auth.service';
-import { api } from '@/lib/api';
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -38,7 +37,6 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const loadCurrency = async () => {
     try {
       const { currency } = await authService.getCurrency();
-      //find the currency from the currencies array
       const currencyObj = currencies.find((c) => c.code === currency);
       if (currencyObj) {
         setCurrency(currencyObj);
@@ -59,9 +57,9 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     if (price === null || price === undefined) {
       return `${currency.symbol}0.00`;
     }
-    return `${currency.symbol}${price.toLocaleString(undefined, {
+    return `${currency.symbol} ${price.toLocaleString(undefined, {
       maximumFractionDigits: 2,
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 0,
     })}`;
   };
 
