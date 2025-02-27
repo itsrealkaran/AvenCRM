@@ -1,8 +1,8 @@
 'use client';
 
-import { authService } from '@/api/auth.service';
 import type React from 'react';
 import { createContext, useContext, useEffect, useState } from 'react';
+import { authService } from '@/api/auth.service';
 import { toast } from 'sonner';
 
 type Currency = {

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 import {
   Bath,
   Bed,
@@ -21,11 +22,10 @@ import {
 import { toast } from 'sonner';
 
 import Logo from '@/components/logo';
+import { Avatar } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { api } from '@/lib/api';
-import { Avatar } from '@/components/ui/avatar';
-import { AvatarFallback, AvatarImage } from '@radix-ui/react-avatar';
 
 interface PropertyDetails {
   id: string;
@@ -386,14 +386,15 @@ const PropertyDetails = () => {
                 {property?.imageUrls.slice(1, 5).map((image, index) => (
                   <div
                     key={index}
-                    className={`relative group overflow-hidden ${index === 0
+                    className={`relative group overflow-hidden ${
+                      index === 0
                         ? ''
                         : index === 1
                           ? 'rounded-tr-xl'
                           : index === 3
                             ? 'rounded-br-xl'
                             : ''
-                      }`}
+                    }`}
                   >
                     <img
                       src={image}
@@ -844,7 +845,7 @@ const PropertyDetails = () => {
                     <button
                       type='submit'
                       disabled={
-                        isLoading 
+                        isLoading
                         // !formData.name ||
                         // !formData.email ||
                         // !formData.phone ||

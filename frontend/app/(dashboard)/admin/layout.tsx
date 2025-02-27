@@ -1,5 +1,6 @@
 'use client';
 
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import {
   Bell,
   Building2,
@@ -21,7 +22,6 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
-import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 const menuItems = [
   {
@@ -128,7 +128,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div className='flex h-screen bg-slate-100 relative'>
         <Sidebar menuItems={menuItems} />
         <div className='flex-1 flex w-[82%] flex-col'>
-        <Topbar />
+          <Topbar />
           <main className='flex-1 overflow-y-auto p-4'>{children}</main>
         </div>
       </div>

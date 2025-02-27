@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { CalendarIcon, CheckSquareIcon, UserIcon } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
-import { useQueryClient } from '@tanstack/react-query';
 
 interface Notification {
   id: string;
@@ -47,7 +47,7 @@ export function NotificationList({
           setNotifications((prev) =>
             prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n))
           );
-          
+
           if (notification.link) router.push(notification.link);
         } else {
           toast({

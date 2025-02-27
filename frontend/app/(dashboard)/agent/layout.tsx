@@ -1,5 +1,6 @@
 'use client';
 
+import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import {
   Bell,
   Building2,
@@ -19,7 +20,6 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 import Sidebar from '@/components/layout/Sidebar';
 import Topbar from '@/components/layout/Topbar';
-import { CurrencyProvider } from '@/contexts/CurrencyContext';
 
 const menuItems = [
   {

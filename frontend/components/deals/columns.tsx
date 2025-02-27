@@ -118,10 +118,7 @@ function NotesCell({ row }: any) {
             {Object.entries(notes as Record<string, Note>)
               .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime())
               .map(([time, note]) => (
-                <div
-                  key={time}
-                  className='relative flex gap-6 items-start group animate-slide-up'
-                >
+                <div key={time} className='relative flex gap-6 items-start group animate-slide-up'>
                   <div className='absolute left-0 flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-tr from-blue-100 via-blue-200 to-blue-300 border border-blue-300 shadow-md'>
                     <div className='w-2.5 h-2.5 rounded-full bg-blue-600'></div>
                   </div>
@@ -133,10 +130,10 @@ function NotesCell({ row }: any) {
                       <p>{note.note}</p>
                     </div>
                     {note.author && (
-                    <div className='text-sm text-gray-500 absolute top-6 right-4'>
-                      {note.author}
-                    </div>
-                  )}
+                      <div className='text-sm text-gray-500 absolute top-6 right-4'>
+                        {note.author}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

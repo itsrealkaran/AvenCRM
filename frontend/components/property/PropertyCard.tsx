@@ -70,7 +70,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   const handleShare = async () => {
     if (!onShare) return;
-    
+
     const agentId = await onShare();
     if (agentId) {
       setIsShareModalOpen(true);
@@ -106,14 +106,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             </Button>
           )}
           <div className='absolute bottom-3 right-3 flex gap-2'>
-            {onShare && (<Button
-              variant='outline'
-              size='icon'
-              className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
-              onClick={handleShare}
-            >
-              <Share2 className='w-4 h-4 text-gray-700' />
-            </Button>)}
+            {onShare && (
+              <Button
+                variant='outline'
+                size='icon'
+                className='rounded-full bg-white/90 backdrop-blur-sm hover:bg-white'
+                onClick={handleShare}
+              >
+                <Share2 className='w-4 h-4 text-gray-700' />
+              </Button>
+            )}
             {onEdit && (
               <Button
                 variant='outline'
@@ -134,8 +136,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 {cardDetails.address}
               </h3>
               <p className='text-xl font-bold text-[#4F46E5] mt-1'>
-                {/* {formatPrice(cardDetails.price)} */}
-                ${cardDetails.price}
+                {/* {formatPrice(cardDetails.price)} */}${cardDetails.price}
               </p>
             </div>
 

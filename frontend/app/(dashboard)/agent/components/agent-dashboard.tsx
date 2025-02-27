@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { ArrowUpRight, Briefcase, CheckSquare, DollarSign, Target } from 'lucide-react';
 import {
   Bar,
@@ -13,7 +14,6 @@ import {
   YAxis,
 } from 'recharts';
 import { toast } from 'sonner';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -248,21 +248,11 @@ export function AgentDashboard() {
                   formatter={(value, dataKey) => [
                     //@ts-ignore
                     formatPrice(value),
-                    dataKey === 'myRevenue' ? 'My Commission' : 'Gross Revenue'
+                    dataKey === 'myRevenue' ? 'My Commission' : 'Gross Revenue',
                   ]}
                 />
-                <Bar 
-                  dataKey='grossRevenue'
-                  fill='#10b981' 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={40} 
-                />
-                <Bar 
-                  dataKey='myRevenue'
-                  fill='#3b82f6' 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={40} 
-                />
+                <Bar dataKey='grossRevenue' fill='#10b981' radius={[4, 4, 0, 0]} barSize={40} />
+                <Bar dataKey='myRevenue' fill='#3b82f6' radius={[4, 4, 0, 0]} barSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>

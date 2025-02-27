@@ -487,7 +487,7 @@ export default function ManageAgentsPage() {
               variant={'outline'}
               className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
               onClick={async () => {
-                const ok = confirm("Are you sure you want to delete these agents?");
+                const ok = confirm('Are you sure you want to delete these agents?');
                 if (ok) {
                   handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
                   table.resetRowSelection();
