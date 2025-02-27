@@ -13,6 +13,7 @@ export const leadBaseSchema = z.object({
   propertyType: z.nativeEnum(PropertyType).default(PropertyType.COMMERCIAL),
   budget: z.number().nullish(),
   location: z.string().nullish(),
+  role: z.any(), // error on enums
   lastContactDate: z.date().nullish(),
   expectedDate: z.date().nullish(),
   notes: z.array(noteEntrySchema).default([]),

@@ -286,6 +286,7 @@ model Lead {
   
   // Property/Contact Details
   propertyType   PropertyType @default(COMMERCIAL)
+  role           LeadRole    @default(SELL)
   budget         Float?
   location       String?
   

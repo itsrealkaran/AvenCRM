@@ -54,6 +54,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
     phone: '',
     status: LeadStatus.NEW,
     source: 'Manual',
+    role: 'BUY',
     propertyType: PropertyType.RESIDENTIAL,
     budget: undefined,
     location: '',
@@ -101,6 +102,33 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                         <FormLabel>Email</FormLabel>
                         <FormControl>
                           <Input placeholder='Enter email' disabled={isLoading} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='role'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Property Type</FormLabel>
+                        <FormControl>
+                          <Select
+                            disabled={isLoading}
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select property type' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={'BUY'}>Buy</SelectItem>
+                              <SelectItem value={'SELL'}>Sell</SelectItem>
+                              <SelectItem value={'RENT'}>Rent</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -167,6 +195,36 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                             onChange={(e) => field.onChange(parseFloat(e.target.value))}
                             value={field.value || ''}
                           />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='status'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Status</FormLabel>
+                        <FormControl>
+                          <Select
+                            disabled={isLoading}
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select lead status' />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value={LeadStatus.NEW}>New</SelectItem>
+                              <SelectItem value={LeadStatus.CONTACTED}>Discovery</SelectItem>
+                              <SelectItem value={LeadStatus.NEGOTIATION}>Negotiation</SelectItem>
+                              <SelectItem value={LeadStatus.WON}>Won</SelectItem>
+                              <SelectItem value={LeadStatus.FOLLOWUP}>Follow Up</SelectItem>
+                              <SelectItem value={LeadStatus.QUALIFIED}>Qualified</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

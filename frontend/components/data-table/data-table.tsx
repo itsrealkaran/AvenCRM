@@ -328,7 +328,7 @@ export function DataTable<TData extends BaseRecord, TValue>({
           onClose={() => setFileData(null)}
         />
       )}
-      <div className='rounded-md border flex-1 overflow-x-auto'>
+      <div className='rounded-md border flex-1 overflow-x-auto overflow-y-auto'>
         <Table>
           <TableHeader className='bg-gray-50 sticky top-0'>
             {table.getHeaderGroups().map((headerGroup) => (
