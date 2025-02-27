@@ -6,8 +6,16 @@ import { authService } from '@/api/auth.service';
 import { LoginCredentials, RegisterCredentials, User } from '@/types/user';
 import { toast } from 'sonner';
 
+interface Company {
+  userCount: number;
+  plan: string;
+  planType: string;
+  planEndDate: string;
+}
+
 interface AuthContextType {
   user: User | null;
+  company: Company | null;
   loading: boolean;
   error: string | null;
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -20,6 +28,7 @@ export const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -28,6 +37,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
+      const companyData = await authService.getCompany();
+      setCompany(companyData);
     } catch (error) {
       console.error('Failed to load user:', error);
       toast.error('Failed to load user');
@@ -84,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
+        company,
         loading,
         error,
         login,

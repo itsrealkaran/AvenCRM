@@ -27,6 +27,11 @@ export const authService = {
     return response.data;
   },
 
+  async getCompany() {
+    const response = await api.get('/auth/company');
+    return response.data;
+  },
+
   async refreshToken(): Promise<AuthResponse> {
     const response = await api.post('/auth/refresh-token');
     return response.data;

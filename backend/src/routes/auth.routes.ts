@@ -411,4 +411,28 @@ router.patch('/set-currency', protect, async (req: AuthenticatedRequest, res: Re
   }
 });
 
+router.get('/company', protect, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const companyId = req.user?.companyId;
+    if (!companyId) {
+      return res.status(401).json({ message: "Not authenticated" });
+    }
+
+    const company = await db.company.findUnique({
+      where: { id: companyId },
+      select: {
+        userCount: true,
+        planName: true,
+        planType: true,
+        planEnd: true,
+      },
+    });
+
+    res.json(company);
+  } catch (error) {
+    logger.error("Get Company Error:", error);
+    res.status(500).json({ message: "Error fetching company data" });
+  }
+});
+
 export default router;

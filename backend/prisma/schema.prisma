@@ -52,6 +52,11 @@ enum PlanTier {
   ENTERPRISE
 }
 
+enum PlanType {
+  MONTHLY
+  ANNUALLY
+}
+
 enum EventType {
   MEETING
   CALL
@@ -200,6 +205,8 @@ model Company {
   // Subscription details
   plan         Plan?     @relation(fields: [planId], references: [id])
   planId       String?
+  planType     PlanType?
+  planName     String?
   planStart    DateTime @default(now())
   planEnd      DateTime @default(now())
   
