@@ -13,6 +13,7 @@ export const dealBaseSchema = z.object({
   propertyType: z.nativeEnum(PropertyType).default(PropertyType.COMMERCIAL),
   propertyAddress: z.string().nullish(),
   propertyValue: z.number().positive().nullish(),
+  role: z.any(), //error on entering enum
   expectedCloseDate: z.date().nullish(),
   actualCloseDate: z.date().nullish(),
   commissionRate: z.number().min(0).max(100).nullish(),

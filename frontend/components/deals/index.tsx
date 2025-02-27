@@ -205,18 +205,28 @@ export default function DealsPage() {
             onStatusChange={handleStatusChange}
             refetch={refetch}
             onDownload={handleDownload}
-            onCreateDeal={() => setIsCreateDialogOpen(true)}
+            onCreateDeal={() => {
+              setSelectedDeal(null);
+              setIsCreateDialogOpen(true);
+            }}
           />
         </div>
 
         <CreateDealDialog
           open={isCreateDialogOpen}
-          onOpenChange={setIsCreateDialogOpen}
+          onOpenChange={(open) => {
+            setIsCreateDialogOpen(open);
+            if (!open) setSelectedDeal(null);
+          }}
           isLoading={isLoading}
         />
         <EditDealDialog
+          key={selectedDeal?.id}
           open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
+          onOpenChange={(open) => {
+            setIsEditDialogOpen(open);
+            if (!open) setSelectedDeal(null);
+          }}
           deal={selectedDeal}
         />
       </Card>

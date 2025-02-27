@@ -119,7 +119,7 @@ enum PropertyStatus {
 }
 
 enum LeadRole {
-  SALE
+  SELL
   BUY
   RENT
 }
@@ -334,7 +334,7 @@ model Deal {
   
   // Additional Details
   notes          Json[]      @default([])
-  role           LeadRole    @default(SALE)
+  role           LeadRole    @default(SELL)
 
   //co-owners
   coOwners       Json[]      @default([])

@@ -218,6 +218,65 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
 
                 <FormField
                   control={form.control}
+                  name='role'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Property Type</FormLabel>
+                      <FormControl>
+                        <Select
+                          disabled={updateDeal.isPending}
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select property type' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={'BUY'}>Buy</SelectItem>
+                            <SelectItem value={'SELL'}>Sell</SelectItem>
+                            <SelectItem value={'RENT'}>Rent</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='status'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Deal Status</FormLabel>
+                      <FormControl>
+                        <Select
+                          disabled={updateDeal.isPending}
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select deal status' />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={DealStatus.NEW}>New</SelectItem>
+                            <SelectItem value={DealStatus.DISCOVERY}>Discovery</SelectItem>
+                            <SelectItem value={DealStatus.NEGOTIATION}>Negotiation</SelectItem>
+                            <SelectItem value={DealStatus.PROPOSAL}>Proposal</SelectItem>
+                            <SelectItem value={DealStatus.WON}>Won</SelectItem>
+                            <SelectItem value={DealStatus.UNDER_CONTRACT}>
+                              Under Contract
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name='estimatedCommission'
                   render={({ field }) => (
                     <FormItem>
@@ -257,6 +316,7 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
                 form={form.id}
                 type='submit'
                 disabled={updateDeal.isPending}
+                onClick={() => handleSubmit(form.getValues())}
                 className='min-w-[100px]'
               >
                 {updateDeal.isPending ? (

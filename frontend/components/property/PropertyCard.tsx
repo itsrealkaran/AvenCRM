@@ -136,7 +136,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 {cardDetails.address}
               </h3>
               <p className='text-xl font-bold text-[#4F46E5] mt-1'>
-                {/* {formatPrice(cardDetails.price)} */}${cardDetails.price}
+                {formatPrice(cardDetails.price)}
               </p>
             </div>
 

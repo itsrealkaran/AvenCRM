@@ -191,7 +191,6 @@ export const dealsController: Controller = {
     upload.none(),
     async (req: Request, res: Response) => {
       try {
-        // Parse the JSON string from the `FormData` key "data"
         const rawData = req.body.data;
         if (!rawData) {
           return res
@@ -200,6 +199,7 @@ export const dealsController: Controller = {
         }
 
         const parsedData = JSON.parse(rawData);
+
         if (typeof parsedData.expectedCloseDate === "string") {
           parsedData.expectedCloseDate = new Date(parsedData.expectedCloseDate);
         }
@@ -210,7 +210,9 @@ export const dealsController: Controller = {
 
         // Validate the parsed data using Zod
         const validationResult = createDealSchema.safeParse(parsedData);
+
         if (!validationResult.success) {
+          console.log('Validation failed:', validationResult.error);
           logger.error(
             "Validation error in createDeal:",
             validationResult.error
@@ -226,9 +228,10 @@ export const dealsController: Controller = {
         const deal = await prisma.deal.create({
           data: {
             ...dealData,
-            agentId: req.user?.id ?? "", // Assuming `req.user` is available from middleware
+            role: dealData.role, // Explicitly set role
+            agentId: req.user?.id ?? "",
             companyId: req.user?.companyId ?? "",
-            notes: dealData.notes
+            notes:  dealData.notes
               ? (dealData.notes
                   .filter((note) => note !== null)
                   .map((note) => ({ time: note.time, note: note.note })) as

@@ -10,6 +10,7 @@ export const dealBaseSchema = z.object({
   phone: z.string().nullish(),
   dealAmount: z.number().positive('Deal amount must be positive'),
   status: z.nativeEnum(DealStatus).default(DealStatus.NEW),
+  role: z.enum(['BUY', 'SELL', 'RENT']),
   propertyType: z.nativeEnum(PropertyType).default(PropertyType.COMMERCIAL),
   propertyAddress: z.string().nullish(),
   propertyValue: z.number().positive().nullish(),

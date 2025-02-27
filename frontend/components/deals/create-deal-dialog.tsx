@@ -59,6 +59,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
     propertyAddress: '',
     expectedCloseDate: new Date(),
     actualCloseDate: new Date(),
+    role: 'BUY',
     commissionRate: 0,
     estimatedCommission: 0,
     notes: [],
@@ -196,6 +197,62 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
                         onChange={(e) => field.onChange(parseFloat(e.target.value))}
                         value={field.value || ''}
                       />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='role'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <FormControl>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select property type' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={'BUY'}>Buy</SelectItem>
+                          <SelectItem value={'SELL'}>Sell</SelectItem>
+                          <SelectItem value={'RENT'}>Rent</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='status'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Deal Status</FormLabel>
+                    <FormControl>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select deal status' />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={DealStatus.NEW}>New</SelectItem>
+                          <SelectItem value={DealStatus.DISCOVERY}>Discovery</SelectItem>
+                          <SelectItem value={DealStatus.NEGOTIATION}>Negotiation</SelectItem>
+                          <SelectItem value={DealStatus.PROPOSAL}>Proposal</SelectItem>
+                          <SelectItem value={DealStatus.WON}>Won</SelectItem>
+                          <SelectItem value={DealStatus.UNDER_CONTRACT}>Under Contract</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
