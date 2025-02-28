@@ -53,6 +53,11 @@ enum PlanTier {
 }
 
 enum PlanType {
+  INDIVIDUAL
+  COMPANY
+}
+
+enum BillingFrequency {
   MONTHLY
   ANNUALLY
 }
@@ -206,10 +211,10 @@ model Company {
   plan         Plan?     @relation(fields: [planId], references: [id])
   planId       String?
   planType     PlanType?
-  planName     String?
+  planName     PlanTier?
   planStart    DateTime @default(now())
   planEnd      DateTime @default(now())
-  
+  billingFrequency BillingFrequency?
   // Company Information
   address      String?
   phone        String?

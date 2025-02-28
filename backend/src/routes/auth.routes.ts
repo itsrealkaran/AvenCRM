@@ -424,6 +424,7 @@ router.get('/company', protect, async (req: AuthenticatedRequest, res: Response)
         userCount: true,
         planName: true,
         planType: true,
+        billingFrequency: true,
         planEnd: true,
       },
     });

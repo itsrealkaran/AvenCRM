@@ -10,6 +10,7 @@ interface Company {
   userCount: number;
   plan: string;
   planType: string;
+  billingFrequency: string;
   planEndDate: string;
 }
 
