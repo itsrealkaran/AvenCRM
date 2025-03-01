@@ -58,13 +58,10 @@ const Page: React.FC = () => {
     }
   };
 
-  const handleVerify = async (id: string) => {
+  const handleVerifyOrUnverify = async (id: string, isVerified: boolean) => {
     try {
-      await api.patch(`/property/${id}/status`, { isVerified: true });
-
-      setUnverifiedProperties((prev) => prev.filter((p) => p.id !== id));
-      const verifiedProperty = unverifiedProperties.find((p) => p.id === id)!;
-      setVerifiedProperties((prev) => [...prev, { ...verifiedProperty, isVerified: true }]);
+      await api.patch(`/property/${id}/status`, { isVerified });
+      fetchProperties();
 
       toast({
         title: 'Property Verified',
@@ -199,7 +196,7 @@ const Page: React.FC = () => {
                     cardDetails={prop.cardDetails}
                     agent={prop.createdBy}
                     isVerified={prop.isVerified}
-                    onVerify={() => handleVerify(prop.id)}
+                    onVerifyOrUnverify={() => handleVerifyOrUnverify(prop.id, true)}
                     onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop.id)}
                   />
@@ -229,7 +226,7 @@ const Page: React.FC = () => {
                       cardDetails={prop.cardDetails}
                       agent={prop.createdBy}
                       isVerified={prop.isVerified}
-                      onVerify={() => handleVerify(prop.id)}
+                      onVerifyOrUnverify={() => handleVerifyOrUnverify(prop.id, false)}
                       onDelete={() => handleDeleteProperty(prop.id)}
                       onShare={handleShare}
                     />

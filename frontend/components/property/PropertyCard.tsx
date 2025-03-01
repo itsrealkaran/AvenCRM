@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import { useCurrency } from '@/contexts/CurrencyContext';
-import { Bath, Bed, Car, Edit, Maximize2, Share2, Trash2 } from 'lucide-react';
+import { Bath, Bed, Car, Check, Edit, Maximize2, Share2, Trash2, X } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +27,7 @@ interface PropertyCardProps {
     parking?: number;
   };
   isVerified: boolean;
-  onVerify?: () => void;
+  onVerifyOrUnverify?: () => void;
   onDelete?: () => void;
   onEdit?: () => void;
   agent: {
@@ -41,7 +41,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   id,
   cardDetails,
   isVerified,
-  onVerify,
+  onVerifyOrUnverify,
   onDelete,
   onEdit,
   agent = {
@@ -175,12 +175,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               >
                 View Property
               </Button>
-              {!isVerified && onVerify && (
+              {onVerifyOrUnverify && (
                 <Button
-                  onClick={onVerify}
+                  onClick={onVerifyOrUnverify}
                   className='w-10 text-xs bg-transparent hover:bg-[#e8e8e8] text-green-600'
                 >
-                  ✓
+                  {isVerified ? (
+                    <X className='w-4 h-4 text-red-600' />
+                  ) : (
+                    <Check className='w-4 h-4 text-green-600' />
+                  )}
                 </Button>
               )}
             </div>
