@@ -25,6 +25,7 @@ import stripeRoutes from './routes/stripe.routes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import { publicRoutes } from './routes/public.routes.js';
 import { notificationRoutes } from './routes/notification.routes.js';
+import whatsappRoutes from './routes/whatsapp.routes.js';
 
 const app = express();
 
@@ -176,6 +177,7 @@ app.use('/stripe', stripeRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/public', publicRoutes);
 app.use('/notification', notificationRoutes);
+app.use('/whatsapp', whatsappRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

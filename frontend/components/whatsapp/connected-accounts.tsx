@@ -1,48 +1,208 @@
-import { FaWhatsapp } from 'react-icons/fa';
+'use client';
 
+import { useEffect, useState } from 'react';
+import { FaCheck, FaEdit, FaTrash, FaWhatsapp } from 'react-icons/fa';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { WhatsAppAccount } from '@/types/whatsapp.types';
+import { toast } from 'sonner';
 
 export function ConnectedAccounts() {
-  const accounts = [
-    { id: 1, name: 'Main Business Account', phoneNumber: '+1 (555) 123-4567', status: 'Active' },
-    { id: 2, name: 'Customer Support', phoneNumber: '+1 (555) 987-6543', status: 'Active' },
-  ];
+  const [accounts, setAccounts] = useState<WhatsAppAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAccount, setEditingAccount] = useState<WhatsAppAccount | null>(null);
+  const [displayName, setDisplayName] = useState('');
+
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true);
+      const data = await whatsAppService.getAccounts();
+      setAccounts(data);
+    } catch (error) {
+      console.error('Error fetching WhatsApp accounts:', error);
+      toast.error('Failed to load WhatsApp accounts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditAccount = (account: WhatsAppAccount) => {
+    setEditingAccount(account);
+    setDisplayName(account.displayName);
+    setShowEditModal(true);
+  };
+
+  const handleUpdateAccount = async () => {
+    if (!editingAccount) return;
+    
+    try {
+      await whatsAppService.updateAccount(editingAccount.id, { displayName });
+      toast.success('Account updated successfully');
+      setShowEditModal(false);
+      fetchAccounts();
+    } catch (error) {
+      console.error('Error updating account:', error);
+      toast.error('Failed to update account');
+    }
+  };
+
+  const handleDeleteAccount = async (accountId: string) => {
+    if (!confirm('Are you sure you want to delete this account? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      await whatsAppService.deleteAccount(accountId);
+      toast.success('Account deleted successfully');
+      fetchAccounts();
+    } catch (error) {
+      console.error('Error deleting account:', error);
+      toast.error('Failed to delete account');
+    }
+  };
+
+  const handleVerifyAccount = async (accountId: string) => {
+    try {
+      await whatsAppService.verifyAccount(accountId);
+      toast.success('Account verified successfully');
+      fetchAccounts();
+    } catch (error) {
+      console.error('Error verifying account:', error);
+      toast.error('Failed to verify account');
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle className='text-xl'>Connected Accounts</CardTitle>
-          <CardDescription>Manage your connected WhatsApp Business accounts</CardDescription>
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold">Connected WhatsApp Accounts</h2>
+        <Button 
+          onClick={() => setShowConnectModal(true)}
+          className="bg-[#25D366] hover:bg-[#25D366]/90 text-white"
+        >
+          <FaWhatsapp className="w-4 h-4 mr-2" />
+          Connect New Account
+        </Button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5932EA]"></div>
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className='space-y-4'>
-          {accounts.map((account) => (
-            <div
-              key={account.id}
-              className='flex items-center justify-between p-4 bg-gray-50 rounded-lg'
+      ) : accounts.length === 0 ? (
+        <Card className="border border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <FaWhatsapp className="w-12 h-12 text-[#25D366] mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No WhatsApp Accounts Connected</h3>
+            <p className="text-muted-foreground text-center mb-4">
+              Connect your WhatsApp Business account to start creating campaigns
+            </p>
+            <Button 
+              onClick={() => setShowConnectModal(true)}
+              className="bg-[#25D366] hover:bg-[#25D366]/90 text-white"
             >
-              <div className='flex items-center space-x-4'>
-                <FaWhatsapp className='w-8 h-8 text-[#25D366]' />
-                <div>
-                  <h3 className='font-medium'>{account.name}</h3>
-                  <p className='text-sm text-muted-foreground'>{account.phoneNumber}</p>
+              <FaWhatsapp className="w-4 h-4 mr-2" />
+              Connect Account
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {accounts.map((account) => (
+            <Card key={account.id}>
+              <CardHeader className="pb-2">
+                <CardTitle className="flex justify-between items-center">
+                  <div className="flex items-center">
+                    <FaWhatsapp className="w-5 h-5 text-[#25D366] mr-2" />
+                    <span>{account.displayName}</span>
+                  </div>
+                  {account.verified && (
+                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
+                      <FaCheck className="w-3 h-3 mr-1" /> Verified
+                    </span>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Phone: {account.phoneNumber}
+                  </p>
+                  <div className="flex space-x-2 mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleEditAccount(account)}
+                    >
+                      <FaEdit className="w-3 h-3 mr-1" /> Edit
+                    </Button>
+                    {!account.verified && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => handleVerifyAccount(account.id)}
+                      >
+                        <FaCheck className="w-3 h-3 mr-1" /> Verify
+                      </Button>
+                    )}
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => handleDeleteAccount(account.id)}
+                    >
+                      <FaTrash className="w-3 h-3 mr-1" /> Delete
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <div className='flex items-center space-x-2'>
-                <span className='px-2 py-1 text-xs rounded-full bg-green-100 text-green-800'>
-                  {account.status}
-                </span>
-                <Button variant='outline' size='sm'>
-                  Manage
-                </Button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      <WhatsAppConnectModal
+        open={showConnectModal}
+        onClose={() => setShowConnectModal(false)}
+        onConnect={() => {
+          fetchAccounts();
+        }}
+      />
+
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit WhatsApp Account</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Account Name</Label>
+              <Input 
+                id="displayName" 
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
+            </div>
+            <Button 
+              onClick={handleUpdateAccount}
+              className="w-full bg-[#5932EA] hover:bg-[#5932EA]/90"
+            >
+              Update Account
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
