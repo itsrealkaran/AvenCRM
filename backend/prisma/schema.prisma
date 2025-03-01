@@ -136,62 +136,63 @@ enum LeadRole {
 
 // Unified User Model
 model User {
-  id           String     @id @default(cuid())
-  name         String
-  email        String     @unique
-  password     String
-  phone        String?
-  gender       Gender?
-  dob          DateTime?
-  role         UserRole
-  designation  String?
-  lastLogin    DateTime?
-  avatar       String?
-  banner       String?
-  isActive     Boolean    @default(true)
-  
+  id          String    @id @default(cuid())
+  name        String
+  email       String    @unique
+  password    String
+  phone       String?
+  gender      Gender?
+  dob         DateTime?
+  role        UserRole
+  designation String?
+  lastLogin   DateTime?
+  avatar      String?
+  banner      String?
+  isActive    Boolean   @default(true)
+
   // Company Relations
-  company      Company?    @relation("CompanyUsers", fields: [companyId], references: [id])
-  companyId    String?
+  company   Company? @relation("CompanyUsers", fields: [companyId], references: [id])
+  companyId String?
 
   // commission
-  commissionRate   Float?
-  commissionThreshhold   Float? @default(0)
+  commissionRate            Float?
+  commissionThreshhold      Float? @default(0)
   commissionAfterThreshhold Float? @default(0)
 
   // For ADMIN role - Company they manage
   managedCompanies Company[] @relation("CompanyAdmin")
-  
+
   // Team Relations
-  team  Team?      @relation("TeamMembers", fields: [teamId], references: [id])
-  teamId        String? 
-  
+  team   Team?   @relation("TeamMembers", fields: [teamId], references: [id])
+  teamId String?
+
   // Team Leadership
-  leadingTeam   Team?      @relation("TeamLeadership")
-  
+  leadingTeam Team? @relation("TeamLeadership")
+
   // Relations for different functionalities
-  leads         Lead[]
-  deals         Deal[]
-  properties    Property[]
-  transactions  Transaction[]
-  emailAccounts EmailAccount[]
+  leads          Lead[]
+  deals          Deal[]
+  properties     Property[]
+  transactions   Transaction[]
+  emailAccounts  EmailAccount[]
   emailTemplates EmailTemplate[]
   emailCampaigns EmailCampaign[]
   pageBuilders   PageBuilder[]
-  supportTickets SupportTicket[]    // Tickets created by user
-  
+  supportTickets SupportTicket[] // Tickets created by user
+
   // Admin specific relations
-  allowedPages   PageBuilder[] @relation("AllowedAdmins")
-  
+  allowedPages PageBuilder[] @relation("AllowedAdmins")
+
   // SuperAdmin specific relations
   adminAccessTokens AdminAccessToken[]
   adminLoginLogs    AdminLoginLog[]
-  
-  tasks         Task[]
+
+  tasks           Task[]
   emailRecipients EmailRecipient[]
-  
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime   @updatedAt
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  WhatsAppAccount WhatsAppAccount[]
 
   @@index([email])
   @@index([role])
@@ -200,44 +201,44 @@ model User {
 
 // Updated Company Model
 model Company {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  size         String?
-  userCount    Int? @default(1)
-  currency     String? @default("USD")
-  
+  id        String  @id @default(cuid())
+  name      String
+  email     String  @unique
+  size      String?
+  userCount Int?    @default(1)
+  currency  String? @default("USD")
+
   // Subscription details
-  plan         Plan?     @relation(fields: [planId], references: [id])
-  planId       String?
-  planType     PlanType?
-  planName     PlanTier?
-  planStart    DateTime @default(now())
-  planEnd      DateTime @default(now())
+  plan             Plan?             @relation(fields: [planId], references: [id])
+  planId           String?
+  planType         PlanType?
+  planName         PlanTier?
+  planStart        DateTime          @default(now())
+  planEnd          DateTime          @default(now())
   billingFrequency BillingFrequency?
   // Company Information
-  address      String?
-  phone        String?
-  website      String?
-  
+  address          String?
+  phone            String?
+  website          String?
+
   // Relations
-  admin        User     @relation("CompanyAdmin", fields: [adminId], references: [id])
-  adminId      String   @unique
-  
-  users        User[]   @relation("CompanyUsers")
+  admin   User   @relation("CompanyAdmin", fields: [adminId], references: [id])
+  adminId String @unique
+
+  users        User[]        @relation("CompanyUsers")
   leads        Lead[]
   deals        Deal[]
   transactions Transaction[]
   teams        Team[]
   payments     Payments[]
-  
-  emailCampaigns    EmailCampaign[]
-  emailTemplates    EmailTemplate[]
-  companyAuditLogs  CompanyAuditLog[]
-  
-  blocked      Boolean  @default(false) // Indicates if the company is blocked
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime? @updatedAt
+
+  emailCampaigns   EmailCampaign[]
+  emailTemplates   EmailTemplate[]
+  companyAuditLogs CompanyAuditLog[]
+
+  blocked   Boolean   @default(false) // Indicates if the company is blocked
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 
   EmailRecipient EmailRecipient[]
 
@@ -246,312 +247,311 @@ model Company {
 
 // Updated Team Model
 model Team {
-  id           String     @id @default(cuid())
-  name         String
-  description  String?
-  
-  company      Company    @relation(fields: [companyId], references: [id])
-  companyId    String
-  
-  teamLeader   User?      @relation("TeamLeadership", fields: [teamLeaderId], references: [id])
-  teamLeaderId String?    @unique
-  
-  members      User[]     @relation("TeamMembers")
-  
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime?  @updatedAt
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
+  teamLeader   User?   @relation("TeamLeadership", fields: [teamLeaderId], references: [id])
+  teamLeaderId String? @unique
+
+  members User[] @relation("TeamMembers")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 // Plan Model for different subscription tiers
 model Plan {
-  id           String     @id @default(cuid())
-  name         PlanTier   @unique
-  price        Json
-  maxUsers     Int?
-  features     String[]
-  
-  companies    Company[]
-  
-  createdAt    DateTime   @default(now())
-  updatedAt    DateTime?   @updatedAt
+  id       String   @id @default(cuid())
+  name     PlanTier @unique
+  price    Json
+  maxUsers Int?
+  features String[]
+
+  companies Company[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 // Lead Model
 model Lead {
-  id             String      @id @default(cuid())
-  name           String
-  email          String?
-  phone          String?
-  
-  // Company Relation
-  company        Company     @relation(fields: [companyId], references: [id])
-  companyId      String
-  
-  // Agent Relation
-  agent          User?       @relation(fields: [agentId], references: [id])
-  agentId        String?
-  
-  // Lead Details
-  leadAmount     Float?
-  source         String?     @default("MANUAL")
-  status         LeadStatus  @default(NEW)
-  
-  // Property/Contact Details
-  propertyType   PropertyType @default(COMMERCIAL)
-  role           LeadRole    @default(SELL)
-  budget         Float?
-  location       String?
-  
-  // Timing and Expectations
-  expectedDate   DateTime?
-  lastContactDate DateTime?
-  
-  // Additional Details
-  notes          Json[]      @default([])
+  id    String  @id @default(cuid())
+  name  String
+  email String?
+  phone String?
 
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime?    @updatedAt
+  // Company Relation
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
+  // Agent Relation
+  agent   User?   @relation(fields: [agentId], references: [id])
+  agentId String?
+
+  // Lead Details
+  leadAmount Float?
+  source     String?    @default("MANUAL")
+  status     LeadStatus @default(NEW)
+
+  // Property/Contact Details
+  propertyType PropertyType @default(COMMERCIAL)
+  role         LeadRole     @default(SELL)
+  budget       Float?
+  location     String?
+
+  // Timing and Expectations
+  expectedDate    DateTime?
+  lastContactDate DateTime?
+
+  // Additional Details
+  notes Json[] @default([])
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 // Deal Model
 model Deal {
-  id             String      @id @default(cuid())
-  name           String
-  email          String?
-  phone          String?
-  
+  id    String  @id @default(cuid())
+  name  String
+  email String?
+  phone String?
+
   // Relations
-  company        Company     @relation(fields: [companyId], references: [id])
-  companyId      String
-  
-  agent          User       @relation(fields: [agentId], references: [id])
-  agentId        String
-  
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
+  agent   User   @relation(fields: [agentId], references: [id])
+  agentId String
+
   // Deal Specifics
-  dealAmount     Float
-  status         DealStatus  @default(NEW)
-  
+  dealAmount Float
+  status     DealStatus @default(NEW)
+
   // Property Details
-  propertyType   PropertyType @default(COMMERCIAL)
+  propertyType    PropertyType @default(COMMERCIAL)
   propertyAddress String?
-  propertyValue  Float?
-  
+  propertyValue   Float?
+
   // Timeline
   expectedCloseDate DateTime?
   actualCloseDate   DateTime?
-  
+
   // Commission and Financial
-  commissionRate Float?
+  commissionRate      Float?
   estimatedCommission Float?
-  
+
   // Additional Details
-  notes          Json[]      @default([])
-  role           LeadRole    @default(SELL)
+  notes Json[]   @default([])
+  role  LeadRole @default(SELL)
 
   //co-owners
-  coOwners       Json[]      @default([])
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  coOwners Json[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 //  Model
 model Transaction {
-  id             String      @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Relations
-  company        Company     @relation(fields: [companyId], references: [id])
-  companyId      String
-  
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
   // Tranasctions Details
-  amount         Float
-  date           DateTime    @default(now())
-  agent          User       @relation(fields: [agentId], references: [id])
-  agentId        String
+  amount  Float
+  date    DateTime @default(now())
+  agent   User     @relation(fields: [agentId], references: [id])
+  agentId String
 
   //verified status
   isApprovedByTeamLeader TransactionStatus @default(PENDING)
   status                 TransactionStatus @default(PENDING)
-  
+
   // Invoice and Billing
   invoiceNumber  String
   commissionRate Float? @default(0)
   totalAmount    Float?
-  
+
   // Additional Financial Info
-  transactionMethod  String?
-  receiptUrl     String?
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  transactionMethod String?
+  receiptUrl        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Payments {
-  id             String      @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Relations
-  company        Company     @relation(fields: [companyId], references: [id])
-  companyId      String
-  
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
   // Tranasctions Details
-  amount         Float
-  date           DateTime    @default(now())
+  amount Float
+  date   DateTime @default(now())
 
   planType         PlanTier
   billingFrequency String?
-  isSuccessfull    Boolean     @default(false)
-  
+  isSuccessfull    Boolean  @default(false)
+
   // Invoice and Billing
-  invoiceNumber  String?
-  taxRate        Float?
-  totalAmount    Float?
-  
+  invoiceNumber String?
+  taxRate       Float?
+  totalAmount   Float?
+
   // Additional Financial Info
-  transactionMethod  String?
-  receiptUrl     String?
-  
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime?   @updatedAt
+  transactionMethod String?
+  receiptUrl        String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
 
 // Updated EmailAccount Model
 model EmailAccount {
-  id            String        @id @default(cuid())
-  email         String
-  accessToken   String
-  refreshToken  String
-  expiresAt     DateTime
-  idToken       String?
-  isActive      Boolean       @default(true)
-  provider      EmailProvider
-  status        EmailAccountStatus
-  lastError     String
+  id           String             @id @default(cuid())
+  email        String
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  idToken      String?
+  isActive     Boolean            @default(true)
+  provider     EmailProvider
+  status       EmailAccountStatus
+  lastError    String
 
   // Relations
-  user          User          @relation(fields: [userId], references: [id])
-  userId        String
-  sentEmails    Email[]
+  user       User    @relation(fields: [userId], references: [id])
+  userId     String
+  sentEmails Email[]
 
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Updated SupportTicket Model
 model SupportTicket {
-  id           String    @id @default(cuid())
-  title        String
-  description  String
-  status       String    @default("OPEN")
-  priority     String    @default("MEDIUM")
-  
+  id          String @id @default(cuid())
+  title       String
+  description String
+  status      String @default("OPEN")
+  priority    String @default("MEDIUM")
+
   // Relations
-  createdBy    User      @relation(fields: [createdById], references: [id])
-  createdById  String
-  
-  assignedTo   String?
-  tags         String[]
-  comments     TicketComment[]
-  
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+
+  assignedTo String?
+  tags       String[]
+  comments   TicketComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Ticket Comment Model for Internal Communication
 model TicketComment {
-  id             String      @id @default(cuid())
-  
-  ticket         SupportTicket @relation(fields: [ticketId], references: [id])
-  ticketId       String
-  
-  content        String
-  createdBy      String
-  
-  createdAt     DateTime    @default(now())
+  id String @id @default(cuid())
+
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id])
+  ticketId String
+
+  content   String
+  createdBy String
+
+  createdAt DateTime @default(now())
 }
 
 // Updated AdminAccessToken Model
 model AdminAccessToken {
-  id           String    @id @default(cuid())
-  token        String    @unique
-  expiresAt    DateTime
-  isRevoked    Boolean   @default(false)
-  
-  user         User      @relation(fields: [userId], references: [id])
-  userId       String
-  
-  createdAt    DateTime  @default(now())
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  createdAt DateTime @default(now())
 }
 
 // Updated AdminLoginLog Model
 model AdminLoginLog {
-  id           String    @id @default(cuid())
+  id           String   @id @default(cuid())
   ipAddress    String
   userAgent    String?
-  loginTime    DateTime  @default(now())
+  loginTime    DateTime @default(now())
   isSuccessful Boolean
-  
-  user         User      @relation(fields: [userId], references: [id])
-  userId       String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
 }
 
 model CalendarEvent {
-  id                 String               @id @default(cuid())
-  
+  id String @id @default(cuid())
+
   // Event Details
-  title              String
-  description        String?
-  start             DateTime
-  end               DateTime
-  color              String @default("blue")
-  
-  setterId           String
-  
+  title       String
+  description String?
+  start       DateTime
+  end         DateTime
+  color       String   @default("blue")
+
+  setterId String
+
   // Audit
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Comprehensive Audit Logging
 model CompanyAuditLog {
-  id                 String               @id @default(cuid())
-  
-  company            Company              @relation(fields: [companyId], references: [id])
-  companyId          String
-  
+  id String @id @default(cuid())
+
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
   // Detailed Audit Information
-  action             String
-  entityType         String
-  entityId           String
-  performedBy        String
-  
+  action      String
+  entityType  String
+  entityId    String
+  performedBy String
+
   // Additional Context
-  details            Json?
-  
-  createdAt          DateTime             @default(now())
+  details Json?
+
+  createdAt DateTime @default(now())
 }
 
 model Property {
-  id              String   @id @default(cuid())
-  slug            String   @unique
+  id   String @id @default(cuid())
+  slug String @unique
 
   // Property Details
-  cardDetails     Json
-  features        Json
+  cardDetails Json
+  features    Json
 
-  isVerified      Boolean  @default(false)
-  verifiedDate    DateTime?
+  isVerified   Boolean   @default(false)
+  verifiedDate DateTime?
 
   // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
-  createdBy       User    @relation(fields: [createdById], references: [id])
-  createdById     String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
 
-  company         Company  @relation(fields: [companyId], references: [id])
-  companyId       String
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
 }
 
 // Email Template
@@ -560,104 +560,103 @@ model EmailTemplate {
   name        String
   subject     String
   content     String
-  variables   String[]  @default([])
+  variables   String[] @default([])
   description String?
   category    String?
-  isPrivate   Boolean   @default(false)
-  
-  // Relations
-  createdBy   User      @relation(fields: [createdById], references: [id])
-  createdById String
-  
-  company     Company?  @relation(fields: [companyId], references: [id])
-  companyId   String?
+  isPrivate   Boolean  @default(false)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  // Relations
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([companyId])
 }
 
 // Email Campaign
 model EmailCampaign {
-  id              String               @id @default(cuid())
+  id              String              @id @default(cuid())
   title           String
   subject         String
   content         String
-  totalRecipients Int                  @default(0)
-  successfulSends Int                  @default(0)
-  failedSends     Int                  @default(0)
-  status          EmailCampaignStatus  @default(DRAFT)
-  
+  totalRecipients Int                 @default(0)
+  successfulSends Int                 @default(0)
+  failedSends     Int                 @default(0)
+  status          EmailCampaignStatus @default(DRAFT)
+
   // Relations
-  createdBy       User                 @relation(fields: [createdById], references: [id])
-  createdById     String
-  
-  company         Company              @relation(fields: [companyId], references: [id])
-  companyId       String
-  
-  recipients      EmailRecipient[]
-  
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdById String
+
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId String
+
+  recipients EmailRecipient[]
+
   // Scheduling
-  scheduledAt     DateTime?
-  sentAt          DateTime?
-  completedAt     DateTime?
-  
-  createdAt       DateTime             @default(now())
-  updatedAt       DateTime             @updatedAt
+  scheduledAt DateTime?
+  sentAt      DateTime?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Email     Email[]
 
   @@index([companyId])
   @@index([createdById])
-  Email Email[]
 }
 
 // Email Recipient
 model EmailRecipient {
-  id          String   @id @default(cuid())
-  name        String
-  email       String
-  tags        String[]
-  notes       String?
-  isPrivate   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  tags      String[]
+  notes     String?
+  isPrivate Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
-  userId      String
-  user        User     @relation(fields: [userId], references: [id])
-  companyId   String
-  company     Company  @relation(fields: [companyId], references: [id])
-  campaigns   EmailCampaign[]
-  emails      Email[]
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  companyId String
+  company   Company         @relation(fields: [companyId], references: [id])
+  campaigns EmailCampaign[]
+  emails    Email[]
 
+  @@unique([email, companyId])
   @@index([userId])
   @@index([companyId])
-  @@unique([email, companyId])
-  
 }
 
 // Email Model
 model Email {
-  id              String          @id @default(cuid())
-  subject         String
-  body            String          @db.Text
-  scheduledFor    DateTime?
-  sentAt          DateTime?
-  status          EmailStatus     @default(PENDING)
-  error           String?         @db.Text
-  
-  // Relations
-  sender          EmailAccount    @relation(fields: [emailAccountId], references: [id])
-  emailAccountId  String
-  
-  campaign        EmailCampaign?  @relation(fields: [campaignId], references: [id])
-  campaignId      String?
-  
-  // Recipients
-  recipients      EmailRecipient[]
+  id           String      @id @default(cuid())
+  subject      String
+  body         String      @db.Text
+  scheduledFor DateTime?
+  sentAt       DateTime?
+  status       EmailStatus @default(PENDING)
+  error        String?     @db.Text
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  // Relations
+  sender         EmailAccount @relation(fields: [emailAccountId], references: [id])
+  emailAccountId String
+
+  campaign   EmailCampaign? @relation(fields: [campaignId], references: [id])
+  campaignId String?
+
+  // Recipients
+  recipients EmailRecipient[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([campaignId])
   @@index([emailAccountId])
@@ -665,35 +664,136 @@ model Email {
 }
 
 model PageBuilder {
-  id              String   @id @default(cuid())
-  title           String
-  content         Json     // JSON containing text, designs, image references, etc.
-  isPublic        Boolean  @default(false) // Privacy setting: public/private
+  id       String  @id @default(cuid())
+  title    String
+  content  Json // JSON containing text, designs, image references, etc.
+  isPublic Boolean @default(false) // Privacy setting: public/private
 
   // Created and updated timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
-  createdBy       User    @relation(fields: [createdById], references: [id])
-  createdById     String
-  allowedAdmins   User[]  @relation("AllowedAdmins")
+  createdBy     User   @relation(fields: [createdById], references: [id])
+  createdById   String
+  allowedAdmins User[] @relation("AllowedAdmins")
 }
 
 model Task {
-  id          String      @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
   description String?
   priority    TaskPriority @default(MEDIUM)
   status      TaskStatus   @default(TODO)
   dueDate     DateTime?
   colorTag    String?
-  tags        String[]    @default([])
+  tags        String[]     @default([])
   category    String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   userId      String
-  user        User        @relation(fields: [userId], references: [id])
+  user        User         @relation(fields: [userId], references: [id])
 
   @@index([userId])
+}
+
+// WhatsApp related models to add to schema.prisma
+
+// Store WhatsApp Business API credentials per user
+model WhatsAppAccount {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id])
+  phoneNumberId String // WhatsApp Business API Phone Number ID
+  wabaid        String // WhatsApp Business Account ID  
+  accessToken   String // Encrypted access token
+  phoneNumber   String // Display phone number
+  displayName   String
+  verified      Boolean            @default(false)
+  status        String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  audiences     WhatsAppAudience[]
+  campaigns     WhatsAppCampaign[]
+  templates     WhatsAppTemplate[]
+
+  @@unique([userId, phoneNumberId])
+}
+
+// Store audience groups
+model WhatsAppAudience {
+  id         String              @id @default(cuid())
+  name       String
+  accountId  String
+  account    WhatsAppAccount     @relation(fields: [accountId], references: [id])
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  recipients WhatsAppRecipient[]
+  campaigns  WhatsAppCampaign[]
+}
+
+// Store individual recipients
+model WhatsAppRecipient {
+  id          String            @id @default(cuid())
+  phoneNumber String
+  name        String?
+  audienceId  String
+  audience    WhatsAppAudience  @relation(fields: [audienceId], references: [id])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  messages    WhatsAppMessage[]
+
+  @@unique([audienceId, phoneNumber])
+}
+
+// Store campaign data
+model WhatsAppCampaign {
+  id             String            @id @default(cuid())
+  name           String
+  type           String // TEXT, IMAGE, TEMPLATE
+  message        String?
+  mediaUrl       String?
+  templateId     String?
+  template       WhatsAppTemplate? @relation(fields: [templateId], references: [id])
+  templateParams Json? // Stored as JSON object
+  accountId      String
+  account        WhatsAppAccount   @relation(fields: [accountId], references: [id])
+  audienceId     String
+  audience       WhatsAppAudience  @relation(fields: [audienceId], references: [id])
+  status         String            @default("DRAFT") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
+  scheduledAt    DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  messages       WhatsAppMessage[]
+}
+
+// Store message templates
+model WhatsAppTemplate {
+  id        String             @id @default(cuid())
+  name      String
+  content   String
+  accountId String
+  account   WhatsAppAccount    @relation(fields: [accountId], references: [id])
+  approved  Boolean            @default(false)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  campaigns WhatsAppCampaign[]
+}
+
+// Store individual messages
+model WhatsAppMessage {
+  id           String            @id @default(cuid())
+  campaignId   String
+  campaign     WhatsAppCampaign  @relation(fields: [campaignId], references: [id])
+  recipientId  String
+  recipient    WhatsAppRecipient @relation(fields: [recipientId], references: [id])
+  wamid        String? // WhatsApp Message ID for delivery tracking
+  status       String            @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  errorMessage String?
+  sentAt       DateTime?
+  deliveredAt  DateTime?
+  readAt       DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 }
