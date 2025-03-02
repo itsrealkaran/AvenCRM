@@ -34,9 +34,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
 import DocumentUpload from '../documents/document-upload';
+import { AITextarea } from '../ui/ai-textarea';
 
 interface EditPropertyDialogProps {
   open: boolean;
@@ -132,7 +132,7 @@ export function EditPropertyDialog({ open, onOpenChange, property }: EditPropert
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder='Enter property description' {...field} />
+                    <AITextarea placeholder='Enter property description' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

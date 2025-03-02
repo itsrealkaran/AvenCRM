@@ -34,9 +34,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 
 import DocumentUpload from '../documents/document-upload';
+import { AITextarea } from '../ui/ai-textarea';
 
 interface CreatePropertyDialogProps {
   open: boolean;
@@ -122,7 +122,7 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder='Enter property description' {...field} />
+                    <AITextarea placeholder='Enter property description' {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

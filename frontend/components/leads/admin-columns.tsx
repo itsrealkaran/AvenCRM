@@ -43,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { AITextarea } from '../ui/ai-textarea';
 
 interface Note {
   time: string;
@@ -167,7 +168,7 @@ function NotesCell({ row }: any) {
         <div className='bg-white border-t p-2'>
           {showTextArea ? (
             <div className='space-y-4'>
-              <textarea
+              <AITextarea
                 placeholder='Add a new note...'
                 className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
                 value={newNote}

@@ -24,7 +24,7 @@ const generateTokens = (user: any) => {
       teamId: user.teamId,
     },
     process.env.JWT_SECRET || "your-secret-key",
-    { expiresIn: "1d" } // Shorter expiry for access token
+    { expiresIn: "1d" }
   );
 
   const refreshToken = jwt.sign(

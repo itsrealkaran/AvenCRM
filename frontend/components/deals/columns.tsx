@@ -36,6 +36,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AITextarea } from '../ui/ai-textarea';
 
 const colors: Record<DealStatus, string> = {
   NEW: 'bg-purple-100 text-purple-800',
@@ -143,7 +144,7 @@ function NotesCell({ row }: any) {
         <div className='bg-white border-t p-2'>
           {showTextArea ? (
             <div className='space-y-4'>
-              <textarea
+              <AITextarea
                 placeholder='Add a new note...'
                 className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
                 value={newNote}

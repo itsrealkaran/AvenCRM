@@ -35,7 +35,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -46,6 +45,7 @@ import {
   fetchEmailRecipients,
   fetchEmailTemplates,
 } from '../api';
+import { AITextarea } from '@/components/ui/ai-textarea';
 
 export default function EmailCampaignSection() {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);
@@ -256,7 +256,7 @@ export default function EmailCampaignSection() {
 
               <div className='grid gap-2'>
                 <Label htmlFor='content'>Email Content</Label>
-                <Textarea
+                <AITextarea
                   id='content'
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}

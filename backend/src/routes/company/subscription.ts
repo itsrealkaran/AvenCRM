@@ -85,16 +85,12 @@ router.get("/getsubscription", async (req, res) => {
         return res.status(400).json({ err: "not verified" });
       }
 
-      const company = await db.company.findFirst({
+      const payments = await db.payments.findMany({
         where: {
-          id: companyId,
-        },
-        include: {
-          payments: true,
-        },
-      });
-
-      res.send(company?.payments);
+          companyId
+        }
+      })
+      res.send(payments);
     }
   } catch (err) {
     res.status(500).json(err);

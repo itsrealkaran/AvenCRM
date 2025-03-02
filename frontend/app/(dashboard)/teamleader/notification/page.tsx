@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpDown, Calendar, CheckSquare, Mail, RefreshCw, Search } from 'lucide-react';
+import { ArrowUpDown, Calendar, CheckSquare, Mail, RefreshCw, Search, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,7 +31,7 @@ interface Activity {
   title: string;
   subtitle: string;
   timestamp: string;
-  type: 'calendar' | 'email' | 'task';
+  type: 'calendar' | 'email' | 'task' | 'upgrade';
   isRead: boolean;
 }
 
@@ -45,6 +45,8 @@ const getIconByType = (type: Activity['type']) => {
       return <Mail {...iconProps} />;
     case 'task':
       return <CheckSquare {...iconProps} />;
+    case 'upgrade':
+      return <Sparkles {...iconProps} />;
   }
 };
 
@@ -56,6 +58,8 @@ const getIconColor = (type: Activity['type']) => {
       return 'text-[#5932ea]';
     case 'task':
       return 'text-green-500';
+    case 'upgrade':
+      return 'text-purple-500';
   }
 };
 
@@ -63,7 +67,7 @@ export default function NotificationsPage() {
   const [sortKey, setSortKey] = useState<keyof Activity>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterValue, setFilterValue] = useState('');
-  const [filter, setFilter] = useState<'all' | 'email' | 'calendar' | 'task'>('all');
+  const [filter, setFilter] = useState<'all' | 'email' | 'calendar' | 'task' | 'upgrade'>('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const {
@@ -79,7 +83,7 @@ export default function NotificationsPage() {
   });
 
   const handleFilterChange = (value: string) => {
-    setFilter(value as 'all' | 'email' | 'calendar' | 'task');
+    setFilter(value as 'all' | 'email' | 'calendar' | 'task' | 'upgrade');
   };
 
   const markAllAsRead = async () => {

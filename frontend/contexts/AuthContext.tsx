@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 
 interface Company {
   userCount: number;
-  plan: string;
+  planName: string;
   planType: string;
   billingFrequency: string;
-  planEndDate: string;
+  planEnd: string;
 }
 
 interface AuthContextType {

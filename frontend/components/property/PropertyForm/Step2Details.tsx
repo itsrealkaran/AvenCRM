@@ -3,7 +3,7 @@ import { usePropertyForm } from '@/contexts/PropertyFormContext';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { AITextarea } from '@/components/ui/ai-textarea';
 
 const Step2Details: React.FC = () => {
   const { formData, updateFormData } = usePropertyForm();
@@ -88,7 +88,7 @@ const Step2Details: React.FC = () => {
       </div>
       <div className='space-y-2'>
         <Label htmlFor='description'>Description</Label>
-        <Textarea
+        <AITextarea
           id='description'
           name='description'
           value={formData.description || ''}

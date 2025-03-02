@@ -25,12 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useAuth } from '@/hooks/useAuth';
+import { UpgradePlanDialog } from '@/components/upgrade-plan-dialog';
 
 interface CreateAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: User; // Optional user for editing mode
   refetch: () => void;
+  totalAgents: number
 }
 
 interface User {
@@ -60,7 +63,7 @@ const getTeams = async (): Promise<Team[]> => {
   return response.json();
 };
 
-export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateAgentDialogProps) {
+export function CreateAgentDialog({ open, onOpenChange, user, refetch, totalAgents }: CreateAgentDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showThreshold, setShowThreshold] = useState(false);
   const [formData, setFormData] = useState({
@@ -75,6 +78,7 @@ export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateA
     commissionAfterThreshhold: 0,
     teamId: '',
   });
+  const { company } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -182,9 +186,18 @@ export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateA
     }
   };
 
+  if (!company) return (
+    <div className='flex justify-center items-center h-full'>
+      <div className='text-gray-500'>
+        <p>Something went wrong</p>
+        <p>Please try again later or contact support</p>
+      </div>
+    </div>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[625px]'>
+      {totalAgents >= company.userCount ? <UpgradePlanDialog isOpen={open} onClose={() => onOpenChange(false)} userLimit={company.userCount} /> : <DialogContent className='sm:max-w-[625px]'>
         <DialogHeader>
           <DialogTitle>{user ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
           <DialogDescription>
@@ -374,13 +387,14 @@ export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateA
               )}
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className='flex justify-around items-center text-gray-500 w-full'>
+            <div>{totalAgents + "/" + company?.userCount}</div>
             <Button type='submit' disabled={loading}>
               {loading ? 'Creating...' : user ? 'Update Agent' : 'Create Agent'}
             </Button>
           </DialogFooter>
         </form>
-      </DialogContent>
+      </DialogContent>}
     </Dialog>
   );
 }

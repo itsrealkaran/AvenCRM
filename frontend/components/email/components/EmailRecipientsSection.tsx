@@ -47,10 +47,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 import { createEmailRecipient, deleteEmailRecipient, fetchEmailRecipients } from '../api';
+import { AITextarea } from '@/components/ui/ai-textarea';
 
 interface NewRecipient {
   name: string;
@@ -362,7 +362,7 @@ export default function EmailRecipientsSection() {
 
               <div className='grid gap-2'>
                 <label className='text-sm font-medium'>Notes</label>
-                <Textarea
+                <AITextarea
                   className='min-h-[100px]'
                   value={newRecipient.notes}
                   onChange={(e) => setNewRecipient({ ...newRecipient, notes: e.target.value })}
