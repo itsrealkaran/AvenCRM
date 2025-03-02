@@ -38,7 +38,6 @@ export default function Home() {
 
   useEffect(() => {
     if (data) {
-      // remove the objects with the isverified false from data.myProperty
       const myProperty = data.myProperty.filter((property: PropertyData) => property.isVerified)
       setProperties([...myProperty, ...data.allProperty])
     }
@@ -67,42 +66,40 @@ export default function Home() {
           </p>
         </div>
       </div>
-        <div className="h-full">
-          <div className="flex h-full">
-            {/* Left side: Scrollable property list */}
-            <div className="w-1/4 min-w-[250px]">
-              <div className="h-full overflow-y-auto p-4">
-                <div className="space-y-4">
-                  {properties.map((property) => (
-                    <PropertyCard
-                      key={property.id} //@ts-ignore
-                      property={property.cardDetails}
-                      id={property.id}
-                      onClick={handleSelectProperty}
-                      isSelected={selectedProperty?.id === property.id}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Right side: Property brochure */}
-            <div className="flex-1">
-              <div className="h-full overflow-y-auto p-4">
-                {selectedProperty ? (
-                  <PropertyBrochure 
-                    property={selectedProperty.features} 
-                    createdBy={selectedProperty.createdBy} 
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <p className="text-gray-500">Select a property to view its brochure</p>
-                  </div>
-                )}
-              </div>
+      <div className="flex h-[90%]">
+        {/* Left side: Scrollable property list */}
+        <div className="w-1/4 min-w-[250px]">
+          <div className="h-full overflow-y-auto p-4">
+            <div className="space-y-4">
+              {properties.map((property) => (
+                <PropertyCard
+                  key={property.id} //@ts-ignore
+                  property={property.cardDetails}
+                  id={property.id}
+                  onClick={handleSelectProperty}
+                  isSelected={selectedProperty?.id === property.id}
+                />
+              ))}
             </div>
           </div>
         </div>
+
+        {/* Right side: Property brochure */}
+        <div className="flex-1">
+          <div className="h-full overflow-y-auto p-4">
+            {selectedProperty ? (
+              <PropertyBrochure 
+                property={selectedProperty.features} 
+                createdBy={selectedProperty.createdBy} 
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-500">Select a property to view its brochure</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </Card>
   )
 }

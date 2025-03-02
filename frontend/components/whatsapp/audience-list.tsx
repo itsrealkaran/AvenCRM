@@ -131,8 +131,9 @@ export function AudienceList({ audiences: initialAudiences, onCreateAudience }: 
       cell: ({ row }) => {
         const count = row.original._count?.recipients || 0;
         return (
-          <Badge variant='outline' className='font-medium'>
-            {count}
+          <Badge variant='outline' className='font-medium items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 hover:bg-green-100 transition-colors'>
+            <span className='text-primary'>{count}</span>
+            <span className='text-gray-600'>{count === 1 ? 'Recipient' : 'Recipients'}</span>
           </Badge>
         );
       },
