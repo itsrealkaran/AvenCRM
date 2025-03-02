@@ -86,7 +86,7 @@ export default function Home() {
 
         {/* Right side: Property brochure */}
         <div className="flex-1">
-          <div className="h-full overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto px-4">
             {selectedProperty ? (
               <PropertyBrochure 
                 property={selectedProperty.features} 

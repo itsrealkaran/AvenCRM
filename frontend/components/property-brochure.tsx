@@ -72,15 +72,6 @@ export default function PropertyBrochure({ property, createdBy }: PropertyBrochu
     link.click()
   }
 
-  // Create room specs from floors data
-  // const roomSpecs = property.floors.flatMap((floor) =>
-  //   floor.rooms.map((room) => ({
-  //     name: room.name || `Room (${floor.name})`,
-  //     dimensions: `${room.width}x${room.length}`,
-  //   })),
-  // )
-
-  // Group features for better organization
   const allFeatures = [
     ...property.interiorFeatures.map((f) => ({ type: "Interior", name: f })),
     ...property.exteriorFeatures.map((f) => ({ type: "Exterior", name: f })),
