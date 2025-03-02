@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { toast } from 'sonner';
 
 import type { AudienceGroup } from './audience-list';
 import { CreateAudienceModal } from './create-audience-modal';
@@ -47,6 +49,7 @@ export type Campaign = {
   audience: AudienceGroup;
   status: 'Active' | 'Paused';
   createdAt: string;
+  accountId?: string;
 };
 
 const SAMPLE_TEMPLATES = [
@@ -80,9 +83,50 @@ export function CreateCampaignModal({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [templates, setTemplates] = useState<any[]>(SAMPLE_TEMPLATES);
 
   // Ensure audiences is always an array
   const safeAudiences = audiences || [];
+
+  // Fetch accounts when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchAccounts();
+      fetchTemplates();
+    }
+  }, [open]);
+
+  const fetchAccounts = async () => {
+    try {
+      const accountsData = await whatsAppService.getAccounts();
+      setAccounts(accountsData);
+      
+      // Set default account if available
+      if (accountsData.length > 0 && !selectedAccountId) {
+        setSelectedAccountId(accountsData[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching WhatsApp accounts:', error);
+      toast.error('Failed to load WhatsApp accounts');
+    }
+  };
+
+  const fetchTemplates = async () => {
+    try {
+      // If we have a real API for templates, use it
+      // const templatesData = await whatsAppService.getTemplates();
+      // setTemplates(templatesData);
+      
+      // For now, we're using sample templates
+      setTemplates(SAMPLE_TEMPLATES);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      toast.error('Failed to load message templates');
+    }
+  };
 
   useEffect(() => {
     if (editingCampaign) {
@@ -95,6 +139,7 @@ export function CreateCampaignModal({
       );
       setTemplateParams(editingCampaign.templateParams || {});
       setSelectedAudience(editingCampaign.audience);
+      setSelectedAccountId(editingCampaign.accountId || '');
     } else {
       // Reset form fields
       setCampaignName('');
@@ -104,12 +149,14 @@ export function CreateCampaignModal({
       setSelectedTemplate(SAMPLE_TEMPLATES[0]);
       setTemplateParams({});
       setSelectedAudience(null);
+      // Don't reset account ID to preserve the selected account
     }
   }, [editingCampaign]);
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     if (!campaignName.trim()) newErrors.name = 'Campaign name is required';
+    if (!selectedAccountId) newErrors.account = 'WhatsApp account is required';
     if (campaignType === 'text' && !message.trim()) newErrors.message = 'Message is required';
     if (campaignType === 'image' && !imageUrl.trim()) newErrors.imageUrl = 'Image URL is required';
     if (
@@ -123,8 +170,12 @@ export function CreateCampaignModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    
+    try {
       const campaignData: Campaign = {
         id: editingCampaign?.id,
         name: campaignName,
@@ -136,9 +187,27 @@ export function CreateCampaignModal({
         audience: selectedAudience!,
         status: editingCampaign?.status || 'Active',
         createdAt: editingCampaign?.createdAt || new Date().toISOString(),
+        accountId: selectedAccountId,
       };
-      onCreateCampaign(campaignData);
+      
+      // Call API to create or update campaign
+      let result;
+      if (editingCampaign?.id) {
+        result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
+        toast.success('Campaign updated successfully');
+      } else {
+        result = await whatsAppService.createCampaign(campaignData);
+        toast.success('Campaign created successfully');
+      }
+      
+      // Pass the result to parent component
+      onCreateCampaign(result);
       onClose();
+    } catch (error) {
+      console.error('Error saving campaign:', error);
+      toast.error(editingCampaign ? 'Failed to update campaign' : 'Failed to create campaign');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -206,7 +275,7 @@ export function CreateCampaignModal({
                 value={selectedTemplate.id}
                 onValueChange={(value) =>
                   setSelectedTemplate(
-                    SAMPLE_TEMPLATES.find((t) => t.id === value) || SAMPLE_TEMPLATES[0]
+                    templates.find((t) => t.id === value) || templates[0]
                   )
                 }
               >
@@ -214,7 +283,7 @@ export function CreateCampaignModal({
                   <SelectValue placeholder='Select a template' />
                 </SelectTrigger>
                 <SelectContent>
-                  {SAMPLE_TEMPLATES.map((template) => (
+                  {templates.map((template) => (
                     <SelectItem key={template.id} value={template.id}>
                       {template.name}
                     </SelectItem>
@@ -222,19 +291,22 @@ export function CreateCampaignModal({
                 </SelectContent>
               </Select>
             </div>
-            {selectedTemplate.content.match(/{{(\d+)}}/g)?.map((param, index) => (
-              <div key={index} className='space-y-2'>
-                <Label htmlFor={`param${index + 1}`}>Parameter {index + 1}</Label>
-                <Input
-                  id={`param${index + 1}`}
-                  placeholder={`Enter value for ${param}`}
-                  value={templateParams[`${index + 1}`] || ''}
-                  onChange={(e) =>
-                    setTemplateParams({ ...templateParams, [`${index + 1}`]: e.target.value })
-                  }
-                />
-              </div>
-            ))}
+            {selectedTemplate.content.match(/{{(\d+)}}/g)?.map((param, index) => {
+              const paramNumber = param.match(/\d+/)?.[0] || `${index + 1}`;
+              return (
+                <div key={index} className='space-y-2'>
+                  <Label htmlFor={`param${paramNumber}`}>Parameter {paramNumber}</Label>
+                  <Input
+                    id={`param${paramNumber}`}
+                    placeholder={`Enter value for ${param}`}
+                    value={templateParams[paramNumber] || ''}
+                    onChange={(e) =>
+                      setTemplateParams({ ...templateParams, [paramNumber]: e.target.value })
+                    }
+                  />
+                </div>
+              );
+            })}
             {errors.templateParams && (
               <p className='text-sm text-red-500'>{errors.templateParams}</p>
             )}
@@ -263,6 +335,9 @@ export function CreateCampaignModal({
               src={imageUrl || '/placeholder.svg'}
               alt='Preview'
               className='max-w-full h-auto rounded'
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/placeholder.svg';
+              }}
             />
             {message && <p className='text-sm break-words'>{message}</p>}
           </div>
@@ -275,6 +350,8 @@ export function CreateCampaignModal({
         });
         previewContent = <p className='text-sm break-words'>{previewMessage}</p>;
         break;
+      default:
+        previewContent = <p>Select a message type to see preview</p>;
     }
 
     return (
@@ -321,6 +398,26 @@ export function CreateCampaignModal({
             </div>
 
             <div className='space-y-2'>
+              <Label htmlFor='account'>WhatsApp Account</Label>
+              <Select
+                value={selectedAccountId}
+                onValueChange={setSelectedAccountId}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder='Select WhatsApp account' />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts.map((account) => (
+                    <SelectItem key={account.id} value={account.id}>
+                      {account.displayName || account.phoneNumber}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.account && <p className='text-sm text-red-500'>{errors.account}</p>}
+            </div>
+
+            <div className='space-y-2'>
               <Label htmlFor='campaign-type'>Campaign Type</Label>
               <Select
                 value={campaignType}
@@ -341,15 +438,15 @@ export function CreateCampaignModal({
 
             <div className='space-y-2'>
               <Label htmlFor='audience'>Audience</Label>
-              <div className='flex items-center space-x-2'>
+              <div className='flex gap-2'>
                 <Select
-                  value={selectedAudience?.id}
+                  value={selectedAudience?.id || ''}
                   onValueChange={(value) =>
                     setSelectedAudience(safeAudiences.find((a) => a.id === value) || null)
                   }
                 >
                   <SelectTrigger className='flex-grow'>
-                    <SelectValue placeholder='Select an audience group' />
+                    <SelectValue placeholder='Select audience' />
                   </SelectTrigger>
                   <SelectContent>
                     {safeAudiences.map((audience) => (
@@ -359,15 +456,31 @@ export function CreateCampaignModal({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button variant='outline' onClick={() => setIsCreateAudienceModalOpen(true)}>
-                  Create New
+                <Button 
+                  variant='outline' 
+                  onClick={() => setIsCreateAudienceModalOpen(true)}
+                  className='whitespace-nowrap'
+                >
+                  <Plus className='h-4 w-4 mr-1' />
+                  New
                 </Button>
               </div>
               {errors.audience && <p className='text-sm text-red-500'>{errors.audience}</p>}
             </div>
 
-            <Button className='w-full bg-[#5932EA] hover:bg-[#5932EA]/90' onClick={handleSubmit}>
-              {editingCampaign ? 'Update Campaign' : 'Create Campaign'}
+            <Button 
+              className='w-full bg-[#5932EA] hover:bg-[#5932EA]/90' 
+              onClick={handleSubmit}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-current rounded-full"></span>
+                  {editingCampaign ? 'Updating...' : 'Creating...'}
+                </>
+              ) : (
+                editingCampaign ? 'Update Campaign' : 'Create Campaign'
+              )}
             </Button>
           </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -9,7 +9,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Search } from 'lucide-react';
 import { FaEdit, FaPause, FaPlay, FaTrash } from 'react-icons/fa';
 
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { toast } from 'sonner';
 
 import type { Campaign } from './create-campaign-modal';
 import { CreateCampaignModal } from './create-campaign-modal';
@@ -48,22 +50,63 @@ export function CampaignsList({
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [filterValue, setFilterValue] = useState('');
 
   const handleEditCampaign = (campaign: Campaign) => {
     setEditingCampaign(campaign);
     setShowCampaignModal(true);
   };
 
-  const handleToggleCampaignStatus = (campaign: Campaign) => {
-    const newStatus = campaign.status === 'Active' ? 'Paused' : 'Active';
-    // TODO: Implement status toggle functionality
-    console.log('Toggle campaign status:', campaign, 'New status:', newStatus);
+  const handleToggleCampaignStatus = async (campaign: Campaign) => {
+    try {
+      setIsLoading(true);
+      const newStatus = campaign.status === 'Active' ? 'Paused' : 'Active';
+      
+      // Call the appropriate API method based on the status change
+      if (newStatus === 'Active') {
+        await whatsAppService.startCampaign(campaign.id!);
+      } else {
+        await whatsAppService.pauseCampaign(campaign.id!);
+      }
+      
+      // Update the campaign in the local state
+      const updatedCampaign = { ...campaign, status: newStatus };
+      onUpdateCampaign(updatedCampaign);
+      
+      toast.success(`Campaign ${newStatus === 'Active' ? 'started' : 'paused'} successfully`);
+    } catch (error) {
+      console.error('Error toggling campaign status:', error);
+      toast.error(`Failed to ${campaign.status === 'Active' ? 'pause' : 'start'} campaign`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteCampaign = (campaign: Campaign) => {
-    // TODO: Implement delete functionality
-    console.log('Delete campaign:', campaign);
+  const handleDeleteCampaign = async (campaign: Campaign) => {
+    if (!campaign.id) return;
+    
+    try {
+      setIsLoading(true);
+      await whatsAppService.deleteCampaign(campaign.id);
+      
+      // Notify parent component to refresh campaigns
+      onCreateCampaign();
+      
+      toast.success('Campaign deleted successfully');
+    } catch (error) {
+      console.error('Error deleting campaign:', error);
+      toast.error('Failed to delete campaign');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const filteredCampaigns = campaigns.filter(campaign => 
+    campaign.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+    campaign.audience.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+    campaign.type.toLowerCase().includes(filterValue.toLowerCase())
+  );
 
   const columns: ColumnDef<Campaign>[] = [
     {
@@ -155,7 +198,7 @@ export function CampaignsList({
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant='ghost' className='h-8 w-8 p-0'>
+              <Button variant='ghost' className='h-8 w-8 p-0' disabled={isLoading}>
                 <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -189,7 +232,7 @@ export function CampaignsList({
   ];
 
   const table = useReactTable({
-    data: campaigns,
+    data: filteredCampaigns,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -209,13 +252,22 @@ export function CampaignsList({
           </div>
         </div>
         <div className='mt-4 flex justify-between items-center'>
-          <Input placeholder='Filter campaigns...' className='max-w-sm' />
+          <div className="relative max-w-sm">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder='Filter campaigns...' 
+              className='pl-8'
+              value={filterValue}
+              onChange={(e) => setFilterValue(e.target.value)}
+            />
+          </div>
           <Button
             onClick={() => {
               setEditingCampaign(null);
               setShowCampaignModal(true);
             }}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
+            disabled={isLoading}
           >
             Create Campaign
           </Button>
@@ -266,6 +318,7 @@ export function CampaignsList({
                 setShowCampaignModal(true);
               }}
               className='bg-[#5932EA] hover:bg-[#5932EA]/90'
+              disabled={isLoading}
             >
               Create Campaign
             </Button>

@@ -29,15 +29,14 @@ export default function WhatsAppCampaignsPage() {
       try {
         setIsLoading(true);
         const accounts = await whatsAppService.getAccounts();
-        // Set isConnected to true if there are any accounts
         setIsConnected(accounts.length > 0);
         
-        // If accounts exist, also fetch campaigns and audiences
         if (accounts.length > 0) {
           const [campaignsData, audiencesData] = await Promise.all([
             whatsAppService.getCampaigns(),
             whatsAppService.getAudiences()
           ]);
+          console.log(audiencesData);
           setCampaigns(campaignsData);
           setAudiences(audiencesData);
         }

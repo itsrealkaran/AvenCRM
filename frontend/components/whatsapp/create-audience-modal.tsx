@@ -132,21 +132,17 @@ export function CreateAudienceModal({
       let audience;
       
       if (editingAudience) {
-        // Update existing audience
         audience = await whatsAppService.updateAudience(editingAudience.id, {
           name,
         });
         
-        // Get existing recipients to compare with new ones
         const existingRecipients = await whatsAppService.getAudienceRecipients(editingAudience.id);
         const existingPhoneNumbers = existingRecipients.map((r: any) => r.phoneNumber);
         
-        // Find new phone numbers to add
         const newPhoneNumbers = phoneNumbers.filter(
           number => !existingPhoneNumbers.includes(number)
         );
         
-        // Add new recipients if any
         if (newPhoneNumbers.length > 0) {
           const recipients = newPhoneNumbers.map(phoneNumber => ({
             phoneNumber,
@@ -155,20 +151,16 @@ export function CreateAudienceModal({
           await whatsAppService.addRecipients(editingAudience.id, recipients);
         }
         
-        // Find removed phone numbers
         const removedRecipients = existingRecipients.filter(
           (r: any) => !phoneNumbers.includes(r.phoneNumber)
         );
         
-        // Remove recipients if any
         for (const recipient of removedRecipients) {
           await whatsAppService.removeRecipient(editingAudience.id, recipient.id);
         }
         
-        // Get updated audience with recipient count
         const updatedAudience = await whatsAppService.getAudience(editingAudience.id);
         
-        // Merge the updated data with our local state
         audience = {
           ...updatedAudience,
           phoneNumbers: phoneNumbers,
@@ -176,13 +168,11 @@ export function CreateAudienceModal({
         
         toast.success('Audience updated successfully');
       } else {
-        // Create new audience
         audience = await whatsAppService.createAudience({
           name,
           accountId: selectedAccountId,
         });
         
-        // Add recipients
         if (phoneNumbers.length > 0) {
           const recipients = phoneNumbers.map(phoneNumber => ({
             phoneNumber,
@@ -191,10 +181,8 @@ export function CreateAudienceModal({
           await whatsAppService.addRecipients(audience.id, recipients);
         }
         
-        // Get the created audience with recipient count
         const createdAudience = await whatsAppService.getAudience(audience.id);
         
-        // Merge the created data with our local state
         audience = {
           ...createdAudience,
           phoneNumbers: phoneNumbers,
@@ -202,8 +190,7 @@ export function CreateAudienceModal({
         
         toast.success('Audience created successfully');
       }
-      
-      // Pass the complete audience object back to the parent
+    
       onCreateAudience(audience);
       onClose();
     } catch (error) {

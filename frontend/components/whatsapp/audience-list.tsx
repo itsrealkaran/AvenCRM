@@ -31,7 +31,9 @@ export interface AudienceGroup {
   id: string;
   name: string;
   phoneNumbers?: string[];
-  recipientCount?: number;
+  _count?: {
+    recipients: number;
+  };
   createdAt: string;
   accountId?: string;
 }
@@ -76,43 +78,29 @@ export function AudienceList({ audiences: initialAudiences, onCreateAudience }: 
 
   const handleEditAudience = async (audience: AudienceGroup) => {
     try {
-      setIsLoading(true);
-      // Fetch the audience details including recipients
       const audienceWithRecipients = await whatsAppService.getAudience(audience.id);
-      
-      // Set the editing audience with phone numbers from recipients
       setEditingAudience({
         ...audience,
         phoneNumbers: audienceWithRecipients.recipients.map((r: any) => r.phoneNumber)
       });
-      
-      // Show the create/edit modal
       setShowCreateModal(true);
     } catch (error) {
       console.error('Error fetching audience details:', error);
       toast.error('Failed to load audience details');
-    } finally {
-      setIsLoading(false);
-    }
+    } 
   };
 
   const handleCreateOrUpdateAudience = (audience: AudienceGroup) => {
     if (editingAudience) {
-      // Update existing audience in the local state
       setAudiences((prev) =>
         prev.map((a) => (a.id === audience.id ? audience : a))
       );
     } else {
-      // Add the new audience to the local state
       setAudiences((prev) => [...prev, audience]);
-      
-      // Call the parent's onCreateAudience callback if provided
       if (onCreateAudience) {
         onCreateAudience(audience);
       }
     }
-    
-    // Reset editing state
     setEditingAudience(null);
     setShowCreateModal(false);
   };
@@ -143,7 +131,7 @@ export function AudienceList({ audiences: initialAudiences, onCreateAudience }: 
         </div>
       ),
       cell: ({ row }) => {
-        const count = row.original.recipientCount || 0;
+        const count = row.original._count?.recipients || 0;
         return (
           <Badge variant='outline' className='font-medium'>
             {count}

@@ -53,6 +53,12 @@ const menuItems = [
     description: 'Property management',
   },
   {
+    heading: 'Content Builder',
+    icon: FileText,
+    path: '/agent/content-builder',
+    description: 'Create and manage content',
+  },
+  {
     heading: 'Leads',
     icon: Store,
     path: '/agent/leads',
@@ -105,7 +111,7 @@ const menuItems = [
     icon: Bell,
     path: '/agent/notification',
     description: 'Notification management',
-  },
+  }
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
