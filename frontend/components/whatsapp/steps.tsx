@@ -43,7 +43,6 @@ export function Steps({
                 className={`w-10 h-10 rounded-full flex items-center justify-center cursor-pointer
                   ${isActive ? 'bg-[#5932EA] text-white' : 
                     isCompleted ? 'bg-green-500 text-white' : 'bg-gray-100'}`}
-                onClick={() => onStepClick && onStepClick(stepNumber)}
               >
                 {stepNumber}
               </div>

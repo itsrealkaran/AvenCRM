@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type React from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
+import { Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,8 +31,8 @@ interface CreateCampaignModalProps {
   open: boolean;
   onClose: () => void;
   onCreateCampaign: (campaign: Campaign) => void;
-  onCreateAudience: ((audience: AudienceGroup) => AudienceGroup) | null; // Updated prop type
   audiences?: AudienceGroup[];
+  onCreateAudience: ((audience: AudienceGroup) => AudienceGroup);
   editingCampaign?: Campaign | null;
 }
 
@@ -65,8 +66,8 @@ export function CreateCampaignModal({
   open,
   onClose,
   onCreateCampaign,
+  audiences,
   onCreateAudience,
-  audiences = [],
   editingCampaign,
 }: CreateCampaignModalProps) {
   const [campaignName, setCampaignName] = useState('');
@@ -79,6 +80,9 @@ export function CreateCampaignModal({
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
+
+  // Ensure audiences is always an array
+  const safeAudiences = audiences || [];
 
   useEffect(() => {
     if (editingCampaign) {
@@ -292,12 +296,18 @@ export function CreateCampaignModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[900px]'>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{editingCampaign ? 'Edit Campaign' : 'Create Campaign'}</DialogTitle>
+          <DialogTitle>{editingCampaign ? 'Edit Campaign' : 'Create New Campaign'}</DialogTitle>
+          <DialogDescription>
+            {editingCampaign
+              ? 'Update your WhatsApp campaign details'
+              : 'Create a new WhatsApp campaign to reach your audience'}
+          </DialogDescription>
         </DialogHeader>
-        <div className='grid grid-cols-2 gap-6'>
+        
+        <div className="grid grid-cols-2 gap-6">
           <div className='space-y-4'>
             <div className='space-y-2'>
               <Label htmlFor='campaign-name'>Campaign Name</Label>
@@ -335,16 +345,16 @@ export function CreateCampaignModal({
                 <Select
                   value={selectedAudience?.id}
                   onValueChange={(value) =>
-                    setSelectedAudience(audiences.find((a) => a.id === value) || null)
+                    setSelectedAudience(safeAudiences.find((a) => a.id === value) || null)
                   }
                 >
                   <SelectTrigger className='flex-grow'>
                     <SelectValue placeholder='Select an audience group' />
                   </SelectTrigger>
                   <SelectContent>
-                    {audiences.map((audience) => (
+                    {safeAudiences.map((audience) => (
                       <SelectItem key={audience.id} value={audience.id}>
-                        {audience.name} ({audience.phoneNumbers.length} contacts)
+                        {audience.name} ({audience.phoneNumbers?.length || 0} recipients)
                       </SelectItem>
                     ))}
                   </SelectContent>

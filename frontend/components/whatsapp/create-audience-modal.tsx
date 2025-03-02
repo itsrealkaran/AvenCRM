@@ -13,6 +13,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { toast } from 'sonner';
 
 import type { AudienceGroup } from './audience-list';
 
@@ -33,29 +36,86 @@ export function CreateAudienceModal({
   const [phoneNumber, setPhoneNumber] = useState('');
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [accounts, setAccounts] = useState<any[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (open) {
+      fetchAccounts();
+    } else {
+      // Only reset if not editing - prevents flashing when modal closes
+      if (!editingAudience) {
+        resetForm();
+      }
+    }
+  }, [open]);
+
+  // Set form values when editing audience changes
   useEffect(() => {
     if (editingAudience) {
       setName(editingAudience.name);
-      setPhoneNumbers(editingAudience.phoneNumbers);
-    } else {
-      setName('');
-      setPhoneNumbers([]);
+      setPhoneNumbers(editingAudience.phoneNumbers || []);
+      setSelectedAccountId(editingAudience.accountId || '');
+    } else if (open) {
+      // Only reset if modal is open to prevent unnecessary state updates
+      resetForm();
     }
-  }, [editingAudience]);
+  }, [editingAudience, open]);
+
+  const resetForm = () => {
+    setName('');
+    setPhoneNumbers([]);
+    setPhoneNumber('');
+    setSelectedAccountId('');
+    setErrors({});
+  };
+
+  const fetchAccounts = async () => {
+    try {
+      const accountsData = await whatsAppService.getAccounts();
+      setAccounts(accountsData);
+      
+      // If there's only one account, select it automatically (only for new audiences)
+      if (accountsData.length === 1 && !editingAudience) {
+        setSelectedAccountId(accountsData[0].id);
+      }
+    } catch (error) {
+      console.error('Error fetching WhatsApp accounts:', error);
+      toast.error('Failed to load WhatsApp accounts');
+    }
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
     if (!name.trim()) newErrors.name = 'Audience name is required';
     if (phoneNumbers.length === 0) newErrors.phoneNumbers = 'At least one phone number is required';
+    if (!selectedAccountId && !editingAudience) newErrors.account = 'Please select a WhatsApp account';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleAddPhoneNumber = () => {
-    if (phoneNumber.trim() && !phoneNumbers.includes(phoneNumber.trim())) {
+    if (!phoneNumber.trim()) return;
+    
+    // Validate phone number format (basic validation)
+    const phoneRegex = /^\+[0-9]{10,15}$/;
+    if (!phoneRegex.test(phoneNumber.trim())) {
+      setErrors({...errors, phoneNumber: 'Invalid phone format. Use format: +1234567890'});
+      return;
+    }
+    
+    if (!phoneNumbers.includes(phoneNumber.trim())) {
       setPhoneNumbers([...phoneNumbers, phoneNumber.trim()]);
       setPhoneNumber('');
+      // Clear phone number error if it exists
+      if (errors.phoneNumber) {
+        const { phoneNumber: _, ...restErrors } = errors;
+        setErrors(restErrors);
+      }
+    } else {
+      setErrors({...errors, phoneNumber: 'This phone number is already added'});
     }
   };
 
@@ -63,23 +123,103 @@ export function CreateAudienceModal({
     setPhoneNumbers(phoneNumbers.filter((n) => n !== number));
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      const audienceData: AudienceGroup = {
-        id: editingAudience?.id || Date.now().toString(),
-        name,
-        phoneNumbers,
-        createdAt: editingAudience?.createdAt || new Date().toISOString(),
-      };
-      onCreateAudience(audienceData);
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    
+    try {
+      let audience;
+      
+      if (editingAudience) {
+        // Update existing audience
+        audience = await whatsAppService.updateAudience(editingAudience.id, {
+          name,
+        });
+        
+        // Get existing recipients to compare with new ones
+        const existingRecipients = await whatsAppService.getAudienceRecipients(editingAudience.id);
+        const existingPhoneNumbers = existingRecipients.map((r: any) => r.phoneNumber);
+        
+        // Find new phone numbers to add
+        const newPhoneNumbers = phoneNumbers.filter(
+          number => !existingPhoneNumbers.includes(number)
+        );
+        
+        // Add new recipients if any
+        if (newPhoneNumbers.length > 0) {
+          const recipients = newPhoneNumbers.map(phoneNumber => ({
+            phoneNumber,
+          }));
+          
+          await whatsAppService.addRecipients(editingAudience.id, recipients);
+        }
+        
+        // Find removed phone numbers
+        const removedRecipients = existingRecipients.filter(
+          (r: any) => !phoneNumbers.includes(r.phoneNumber)
+        );
+        
+        // Remove recipients if any
+        for (const recipient of removedRecipients) {
+          await whatsAppService.removeRecipient(editingAudience.id, recipient.id);
+        }
+        
+        // Get updated audience with recipient count
+        const updatedAudience = await whatsAppService.getAudience(editingAudience.id);
+        
+        // Merge the updated data with our local state
+        audience = {
+          ...updatedAudience,
+          phoneNumbers: phoneNumbers,
+        };
+        
+        toast.success('Audience updated successfully');
+      } else {
+        // Create new audience
+        audience = await whatsAppService.createAudience({
+          name,
+          accountId: selectedAccountId,
+        });
+        
+        // Add recipients
+        if (phoneNumbers.length > 0) {
+          const recipients = phoneNumbers.map(phoneNumber => ({
+            phoneNumber,
+          }));
+          
+          await whatsAppService.addRecipients(audience.id, recipients);
+        }
+        
+        // Get the created audience with recipient count
+        const createdAudience = await whatsAppService.getAudience(audience.id);
+        
+        // Merge the created data with our local state
+        audience = {
+          ...createdAudience,
+          phoneNumbers: phoneNumbers,
+        };
+        
+        toast.success('Audience created successfully');
+      }
+      
+      // Pass the complete audience object back to the parent
+      onCreateAudience(audience);
       onClose();
-      setName('');
-      setPhoneNumbers([]);
+    } catch (error) {
+      console.error('Error creating/updating audience:', error);
+      toast.error(editingAudience ? 'Failed to update audience' : 'Failed to create audience');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen) {
+        onClose();
+      }
+    }}>
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <div>
@@ -87,11 +227,31 @@ export function CreateAudienceModal({
               {editingAudience ? 'Edit Audience Group' : 'Create Audience Group'}
             </DialogTitle>
             <DialogDescription>
-              Create a new audience group for your WhatsApp campaigns
+              {editingAudience ? 'Update your audience group details' : 'Create a new audience group for your WhatsApp campaigns'}
             </DialogDescription>
           </div>
         </DialogHeader>
         <div className='grid gap-4 py-4'>
+          <div className='grid gap-2'>
+            <Label htmlFor='account'>WhatsApp Account</Label>
+            <Select 
+              value={selectedAccountId} 
+              onValueChange={setSelectedAccountId}
+              disabled={editingAudience !== null}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select WhatsApp account" />
+              </SelectTrigger>
+              <SelectContent>
+                {accounts.map(account => (
+                  <SelectItem key={account.id} value={account.id}>
+                    {account.displayName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.account && <p className='text-sm text-red-500'>{errors.account}</p>}
+          </div>
           <div className='grid gap-2'>
             <Label htmlFor='name'>Audience Name</Label>
             <Input
@@ -110,8 +270,14 @@ export function CreateAudienceModal({
                 id='phoneNumber'
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder='Enter phone number'
+                placeholder='Enter phone number with country code (e.g., +1234567890)'
                 className='flex-grow'
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAddPhoneNumber();
+                  }
+                }}
               />
               <Button
                 onClick={handleAddPhoneNumber}
@@ -121,32 +287,53 @@ export function CreateAudienceModal({
                 <Plus className='h-4 w-4' />
               </Button>
             </div>
+            {errors.phoneNumber && <p className='text-sm text-red-500'>{errors.phoneNumber}</p>}
           </div>
           <div>
-            <Label className='mb-2 block'>Phone Numbers</Label>
+            <Label className='mb-2 block'>Phone Numbers ({phoneNumbers.length})</Label>
             <ScrollArea className='h-[150px] w-full border rounded-md p-2'>
-              {phoneNumbers.map((number) => (
-                <div
-                  key={number}
-                  className='flex items-center justify-between py-2 px-2 hover:bg-gray-100 rounded'
-                >
-                  <Badge variant='secondary' className='font-mono'>
-                    {number}
-                  </Badge>
-                  <Button variant='ghost' size='sm' onClick={() => handleRemovePhoneNumber(number)}>
-                    <X className='h-4 w-4' />
-                  </Button>
+              {phoneNumbers.length > 0 ? (
+                phoneNumbers.map((number) => (
+                  <div
+                    key={number}
+                    className='flex items-center justify-between py-2 px-2 hover:bg-gray-100 rounded'
+                  >
+                    <Badge variant='secondary' className='font-mono'>
+                      {number}
+                    </Badge>
+                    <Button variant='ghost' size='sm' onClick={() => handleRemovePhoneNumber(number)}>
+                      <X className='h-4 w-4' />
+                    </Button>
+                  </div>
+                ))
+              ) : (
+                <div className='flex items-center justify-center h-full text-muted-foreground'>
+                  No phone numbers added yet
                 </div>
-              ))}
+              )}
             </ScrollArea>
             {errors.phoneNumbers && (
               <p className='text-sm text-red-500 mt-1'>{errors.phoneNumbers}</p>
             )}
           </div>
         </div>
-        <div className='flex justify-end'>
-          <Button onClick={handleSubmit} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
-            {editingAudience ? 'Update Audience' : 'Create Audience'}
+        <div className='flex justify-end gap-2'>
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <span className="animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-current rounded-full"></span>
+                {editingAudience ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              editingAudience ? 'Update Audience' : 'Create Audience'
+            )}
           </Button>
         </div>
       </DialogContent>

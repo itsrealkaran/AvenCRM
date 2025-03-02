@@ -23,6 +23,7 @@ router.put('/audiences/:id', whatsAppController.updateAudience);
 router.delete('/audiences/:id', whatsAppController.deleteAudience);
 router.post('/audiences/:id/recipients', whatsAppController.addRecipients);
 router.delete('/audiences/:audienceId/recipients/:recipientId', whatsAppController.removeRecipient);
+router.get('/audiences/:id/recipients', whatsAppController.getAudienceRecipients);
 
 // Template Management
 router.post('/templates', whatsAppController.createTemplate);

@@ -19,6 +19,7 @@ export function ConnectedAccounts() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<WhatsAppAccount | null>(null);
   const [displayName, setDisplayName] = useState('');
+  const [verifyingAccount, setVerifyingAccount] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAccounts();
@@ -73,13 +74,21 @@ export function ConnectedAccounts() {
   };
 
   const handleVerifyAccount = async (accountId: string) => {
+    setVerifyingAccount(accountId);
     try {
       await whatsAppService.verifyAccount(accountId);
       toast.success('Account verified successfully');
-      fetchAccounts();
-    } catch (error) {
+      
+      // Update the local state to reflect the verification
+      setAccounts(accounts.map(account => 
+        account.id === accountId ? { ...account, verified: true } : account
+      ));
+    } catch (error: any) {
       console.error('Error verifying account:', error);
-      toast.error('Failed to verify account');
+      const errorMessage = error.response?.data?.message || 'Failed to verify account';
+      toast.error(errorMessage);
+    } finally {
+      setVerifyingAccount(null);
     }
   };
 
@@ -152,8 +161,18 @@ export function ConnectedAccounts() {
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleVerifyAccount(account.id)}
+                        disabled={verifyingAccount === account.id}
                       >
-                        <FaCheck className="w-3 h-3 mr-1" /> Verify
+                        {verifyingAccount === account.id ? (
+                          <>
+                            <span className="animate-spin h-3 w-3 mr-1 border-2 border-t-transparent border-blue-600 rounded-full"></span>
+                            Verifying...
+                          </>
+                        ) : (
+                          <>
+                            <FaCheck className="w-3 h-3 mr-1" /> Verify
+                          </>
+                        )}
                       </Button>
                     )}
                     <Button 

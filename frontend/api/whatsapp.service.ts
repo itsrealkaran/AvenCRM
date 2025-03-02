@@ -55,6 +55,13 @@ export const whatsAppService = {
     return response.data;
   },
 
+  // New method to get all recipients of an audience
+  getAudienceRecipients: async (audienceId: string) => {
+    const response = await api.get(`/whatsapp/audiences/${audienceId}/recipients`);
+    console.log(response.data);
+    return response.data;
+  },
+
   updateAudience: async (audienceId: string, data: { name: string }) => {
     const response = await api.put(`/whatsapp/audiences/${audienceId}`, data);
     return response.data;

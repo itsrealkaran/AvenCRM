@@ -1044,6 +1044,41 @@ export class WhatsAppController extends BaseController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
+
+  // Add this new method to get all recipients of an audience
+  async getAudienceRecipients(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const audienceId = req.params.id;
+      
+      // First check if the audience exists and belongs to the user
+      const audience = await prisma.whatsAppAudience.findUnique({
+        where: { id: audienceId },
+        include: { account: true }
+      });
+      
+      if (!audience) {
+        return res.status(404).json({ message: 'Audience not found' });
+      }
+      
+      if (audience.account.userId !== req.user.id) {
+        return res.status(403).json({ message: 'Forbidden' });
+      }
+      
+      // Get all recipients for this audience
+      const recipients = await prisma.whatsAppRecipient.findMany({
+        where: { audienceId }
+      });
+      
+      return res.status(200).json(recipients);
+    } catch (error) {
+      logger.error('Error getting audience recipients:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
 }
 
 export const whatsAppController = new WhatsAppController(); 

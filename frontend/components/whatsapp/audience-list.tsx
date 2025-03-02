@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -9,7 +9,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, Search } from 'lucide-react';
 import { FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
 
 import { Badge } from '@/components/ui/badge';
@@ -22,14 +22,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { toast } from 'sonner';
 
 import { CreateAudienceModal } from './create-audience-modal';
 
 export interface AudienceGroup {
   id: string;
   name: string;
-  phoneNumbers: string[];
+  phoneNumbers?: string[];
+  recipientCount?: number;
   createdAt: string;
+  accountId?: string;
 }
 
 interface AudienceListProps {
@@ -37,86 +41,156 @@ interface AudienceListProps {
   onCreateAudience: (audience: AudienceGroup) => void;
 }
 
-export function AudienceList({ audiences, onCreateAudience }: AudienceListProps) {
+export function AudienceList({ audiences: initialAudiences, onCreateAudience }: AudienceListProps) {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [audiences, setAudiences] = useState<AudienceGroup[]>(initialAudiences);
   const [editingAudience, setEditingAudience] = useState<AudienceGroup | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleEditAudience = (audience: AudienceGroup) => {
-    setEditingAudience(audience);
-    setShowCreateModal(true);
+  // Use this effect only when initialAudiences changes from props
+  useEffect(() => {
+    setAudiences(initialAudiences);
+  }, [initialAudiences]);
+
+  const filteredAudiences = React.useMemo(() => {
+    return audiences.filter((audience) =>
+      audience.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [audiences, searchTerm]);
+
+  const handleDeleteAudience = async (id: string) => {
+    try {
+      setIsLoading(true);
+      await whatsAppService.deleteAudience(id);
+      setAudiences((prev) => prev.filter((audience) => audience.id !== id));
+      toast.success('Audience deleted successfully');
+    } catch (error) {
+      console.error('Error deleting audience:', error);
+      toast.error('Failed to delete audience');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleDeleteAudience = (audience: AudienceGroup) => {
-    // TODO: Implement delete functionality
-    console.log('Delete audience:', audience);
+  const handleEditAudience = async (audience: AudienceGroup) => {
+    try {
+      setIsLoading(true);
+      // Fetch the audience details including recipients
+      const audienceWithRecipients = await whatsAppService.getAudience(audience.id);
+      
+      // Set the editing audience with phone numbers from recipients
+      setEditingAudience({
+        ...audience,
+        phoneNumbers: audienceWithRecipients.recipients.map((r: any) => r.phoneNumber)
+      });
+      
+      // Show the create/edit modal
+      setShowCreateModal(true);
+    } catch (error) {
+      console.error('Error fetching audience details:', error);
+      toast.error('Failed to load audience details');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateOrUpdateAudience = (audience: AudienceGroup) => {
+    if (editingAudience) {
+      // Update existing audience in the local state
+      setAudiences((prev) =>
+        prev.map((a) => (a.id === audience.id ? audience : a))
+      );
+    } else {
+      // Add the new audience to the local state
+      setAudiences((prev) => [...prev, audience]);
+      
+      // Call the parent's onCreateAudience callback if provided
+      if (onCreateAudience) {
+        onCreateAudience(audience);
+      }
+    }
+    
+    // Reset editing state
+    setEditingAudience(null);
+    setShowCreateModal(false);
   };
 
   const columns: ColumnDef<AudienceGroup>[] = [
     {
       accessorKey: 'name',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Name
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <div
+          className='flex items-center cursor-pointer'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Name
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </div>
+      ),
+      cell: ({ row }) => <div className='font-medium'>{row.getValue('name')}</div>,
     },
     {
-      accessorKey: 'phoneNumbers',
-      header: 'Contacts',
+      accessorKey: 'recipientCount',
+      header: ({ column }) => (
+        <div
+          className='flex items-center cursor-pointer'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Recipients
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </div>
+      ),
       cell: ({ row }) => {
-        const phoneNumbers = row.getValue('phoneNumbers') as string[];
-        return <Badge variant='secondary'>{phoneNumbers.length} contacts</Badge>;
+        const count = row.original.recipientCount || 0;
+        return (
+          <Badge variant='outline' className='font-medium'>
+            {count}
+          </Badge>
+        );
       },
     },
     {
       accessorKey: 'createdAt',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Created At
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: ({ column }) => (
+        <div
+          className='flex items-center cursor-pointer'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Created
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </div>
+      ),
       cell: ({ row }) => {
         const date = new Date(row.getValue('createdAt'));
-        return date.toLocaleString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+        return <div>{date.toLocaleDateString()}</div>;
       },
     },
     {
       id: 'actions',
-      header: 'Actions',
       cell: ({ row }) => {
         const audience = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='ghost' className='h-8 w-8 p-0'>
+                <span className='sr-only'>Open menu</span>
                 <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={() => handleEditAudience(audience)}>
+              <DropdownMenuItem
+                onClick={() => handleEditAudience(audience)}
+                className='cursor-pointer'
+              >
                 <FaEdit className='mr-2 h-4 w-4' />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDeleteAudience(audience)}>
+              <DropdownMenuItem
+                onClick={() => handleDeleteAudience(audience.id)}
+                className='cursor-pointer text-destructive'
+              >
                 <FaTrash className='mr-2 h-4 w-4' />
                 Delete
               </DropdownMenuItem>
@@ -128,7 +202,7 @@ export function AudienceList({ audiences, onCreateAudience }: AudienceListProps)
   ];
 
   const table = useReactTable({
-    data: audiences,
+    data: filteredAudiences,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -139,16 +213,20 @@ export function AudienceList({ audiences, onCreateAudience }: AudienceListProps)
   });
 
   return (
-    <Card className='border rounded-lg'>
-      <CardHeader className='border-b'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <CardTitle className='text-xl'>Audience Groups</CardTitle>
-            <CardDescription>Manage your WhatsApp audience groups</CardDescription>
+    <Card>
+      <CardHeader>
+        <CardTitle>Audience Groups</CardTitle>
+        <CardDescription>Manage your WhatsApp audience groups</CardDescription>
+        <div className='flex items-center justify-between mt-4'>
+          <div className='relative w-64'>
+            <Search className='absolute left-2 top-2.5 h-4 w-4 text-muted-foreground' />
+            <Input
+              placeholder='Search audiences...'
+              className='pl-8'
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
-        </div>
-        <div className='mt-4 flex justify-between items-center'>
-          <Input placeholder='Filter audiences...' className='max-w-sm' />
           <Button
             onClick={() => {
               setEditingAudience(null);
@@ -160,10 +238,12 @@ export function AudienceList({ audiences, onCreateAudience }: AudienceListProps)
           </Button>
         </div>
       </CardHeader>
-      <CardContent className='p-0'>
-        {audiences.length > 0 ? (
-          <div className='container overflow-auto'>
-            <table className='w-full min-w-[800px]'>
+      <CardContent>
+        {isLoading ? (
+          <div className='text-center py-10'>Loading...</div>
+        ) : audiences.length > 0 ? (
+          <div className='rounded-md border'>
+            <table className='w-full'>
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
@@ -181,20 +261,31 @@ export function AudienceList({ audiences, onCreateAudience }: AudienceListProps)
                 ))}
               </thead>
               <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className='border-t hover:bg-gray-50/50'>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className='p-4 align-middle text-sm'>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
+                {table.getRowModel().rows.length > 0 ? (
+                  table.getRowModel().rows.map((row) => (
+                    <tr key={row.id} className='border-t hover:bg-gray-50/50'>
+                      {row.getVisibleCells().map((cell) => (
+                        <td key={cell.id} className='p-4 align-middle text-sm'>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={columns.length} className='h-24 text-center'>
+                      No results found.
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
         ) : (
           <div className='text-center py-10'>
+            <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4'>
+              <FaUsers className='w-8 h-8 text-[#5932EA]' />
+            </div>
             <h3 className='text-lg font-semibold mb-2'>No audience groups yet</h3>
             <p className='text-muted-foreground mb-4'>
               Create your first audience group to get started
@@ -210,8 +301,11 @@ export function AudienceList({ audiences, onCreateAudience }: AudienceListProps)
       </CardContent>
       <CreateAudienceModal
         open={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onCreateAudience={onCreateAudience}
+        onClose={() => {
+          setShowCreateModal(false);
+          setEditingAudience(null);
+        }}
+        onCreateAudience={handleCreateOrUpdateAudience}
         editingAudience={editingAudience}
       />
     </Card>

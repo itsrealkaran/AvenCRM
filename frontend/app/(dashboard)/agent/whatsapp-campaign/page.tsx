@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 
 import { Button } from '@/components/ui/button';
@@ -12,13 +12,45 @@ import { ConnectedAccounts } from '@/components/whatsapp/connected-accounts';
 import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create-campaign-modal';
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { toast } from 'sonner';
 
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
+
+  // Check if any WhatsApp accounts exist on component mount
+  useEffect(() => {
+    const checkConnectedAccounts = async () => {
+      try {
+        setIsLoading(true);
+        const accounts = await whatsAppService.getAccounts();
+        // Set isConnected to true if there are any accounts
+        setIsConnected(accounts.length > 0);
+        
+        // If accounts exist, also fetch campaigns and audiences
+        if (accounts.length > 0) {
+          const [campaignsData, audiencesData] = await Promise.all([
+            whatsAppService.getCampaigns(),
+            whatsAppService.getAudiences()
+          ]);
+          setCampaigns(campaignsData);
+          setAudiences(audiencesData);
+        }
+      } catch (error) {
+        console.error('Error checking WhatsApp accounts:', error);
+        toast.error('Failed to load WhatsApp account information');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkConnectedAccounts();
+  }, []);
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
@@ -53,7 +85,11 @@ export default function WhatsAppCampaignsPage() {
         )}
       </div>
 
-      {isConnected ? (
+      {isLoading ? (
+        <div className='flex items-center justify-center min-h-[400px]'>
+          <div className='animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full'></div>
+        </div>
+      ) : isConnected ? (
         <>
           <MetricsCards />
           <Tabs defaultValue='campaigns' className='space-y-4'>
@@ -66,8 +102,12 @@ export default function WhatsAppCampaignsPage() {
               <CampaignsList
                 campaigns={campaigns}
                 onCreateCampaign={() => setShowCampaignModal(true)}
-                audiences={[]}
-                onUpdateCampaign={() => {}}
+                audiences={audiences}
+                onUpdateCampaign={(updatedCampaign) => {
+                  setCampaigns(campaigns.map(c => 
+                    c.id === updatedCampaign.id ? updatedCampaign : c
+                  ));
+                }}
               />
             </TabsContent>
             <TabsContent value='accounts'>
@@ -97,7 +137,12 @@ export default function WhatsAppCampaignsPage() {
       <WhatsAppConnectModal
         open={showWhatsAppModal}
         onClose={() => setShowWhatsAppModal(false)}
-        onConnect={() => setIsConnected(true)}
+        onConnect={() => {
+          setIsConnected(true);
+          whatsAppService.getAccounts().catch(error => {
+            console.error('Error fetching accounts after connection:', error);
+          });
+        }}
       />
 
       <CreateCampaignModal
@@ -105,7 +150,7 @@ export default function WhatsAppCampaignsPage() {
         onClose={() => setShowCampaignModal(false)}
         onCreateCampaign={handleCreateCampaign}
         audiences={audiences}
-        onCreateAudience={null}
+        onCreateAudience={handleCreateAudience}
         editingCampaign={null}
       />
     </Card>

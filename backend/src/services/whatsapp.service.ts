@@ -6,12 +6,17 @@ import logger from '../utils/logger.js';
 
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default_key_for_development_only';
 const WHATSAPP_API_URL = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com';
-const WHATSAPP_API_VERSION = process.env.WHATSAPP_API_VERSION || 'v18.0';
+const WHATSAPP_API_VERSION = process.env.WHATSAPP_API_VERSION || 'v22.0';
+
+const getEncryptionKey = () => {
+  const key = crypto.createHash('sha256').update(String(ENCRYPTION_KEY)).digest('base64').substring(0, 32);
+  return Buffer.from(key);
+};
 
 export class WhatsAppService {
   public encrypt(text: string): string {
     const iv = crypto.randomBytes(16);
-    const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+    const cipher = crypto.createCipheriv('aes-256-cbc', getEncryptionKey(), iv);
     let encrypted = cipher.update(text);
     encrypted = Buffer.concat([encrypted, cipher.final()]);
     return iv.toString('hex') + ':' + encrypted.toString('hex');
@@ -21,7 +26,7 @@ export class WhatsAppService {
     const parts = text.split(':');
     const iv = Buffer.from(parts[0], 'hex');
     const encryptedText = Buffer.from(parts[1], 'hex');
-    const decipher = crypto.createDecipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
+    const decipher = crypto.createDecipheriv('aes-256-cbc', getEncryptionKey(), iv);
     let decrypted = decipher.update(encryptedText);
     decrypted = Buffer.concat([decrypted, decipher.final()]);
     return decrypted.toString();
