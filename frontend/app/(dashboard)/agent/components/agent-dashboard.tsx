@@ -95,7 +95,7 @@ export function AgentDashboard() {
       const dataLength = data.length;
       const missingMonths = 6 - dataLength;
       const futureMonths = Array.from({ length: missingMonths }, (_, i) => {
-        const monthIndex = (currentMonth + i + 1) % 12; // +1 to start from next month
+        const monthIndex = (currentMonth + i + 1) % 12; 
         return {
           month: months[monthIndex],
           grossRevenue: 0,

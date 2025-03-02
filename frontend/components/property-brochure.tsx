@@ -3,7 +3,7 @@
 import { useRef } from "react"
 import Image from "next/image"
 import type { PropertyData } from "@/types/property"
-import { formatCurrency } from "@/lib/utils"
+import { useCurrency } from "@/contexts/CurrencyContext"
 import { Download, MapPin, Bed, Bath, SquareIcon as SquareFoot } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import html2canvas from "html2canvas"
@@ -15,6 +15,7 @@ interface PropertyBrochureProps {
 
 export default function PropertyBrochure({ property }: PropertyBrochureProps) {
   const brochureRef = useRef<HTMLDivElement>(null)
+  const { formatPrice } = useCurrency();
 
   const handleDownloadPDF = async () => {
     if (!brochureRef.current) return
@@ -137,7 +138,7 @@ export default function PropertyBrochure({ property }: PropertyBrochureProps) {
                     <span>{property.sqft} sqft</span>
                   </div>
                 </div>
-                <p className="text-3xl font-bold">{formatCurrency(Number(property.price))}</p>
+                <p className="text-3xl font-bold">{formatPrice(Number(property.price))}</p>
               </div>
             </div>
           </div>
