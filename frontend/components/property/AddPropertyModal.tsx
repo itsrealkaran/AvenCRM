@@ -18,7 +18,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+
+import { AITextarea } from '../ui/ai-textarea';
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -160,7 +161,7 @@ const AddPropertyModal: React.FC<AddPropertyModalProps> = ({ isOpen, onClose, on
                 <Label htmlFor='description' className='text-right'>
                   Description
                 </Label>
-                <Textarea
+                <AITextarea
                   id='description'
                   name='description'
                   value={formData.description}

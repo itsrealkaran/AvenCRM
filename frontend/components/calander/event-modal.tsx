@@ -6,8 +6,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Textarea } from '@/components/ui/textarea';
 
+import { AITextarea } from '../ui/ai-textarea';
 import { createEvent, deleteEvent, updateEvent } from './api';
 import { eventColors } from './event-utils';
 
@@ -156,7 +156,7 @@ export default function EventModal({ isOpen, onClose, event, onSave, onDelete }:
           </div>
           <div>
             <Label htmlFor='description'>Description</Label>
-            <Textarea
+            <AITextarea
               id='description'
               {...register('description')}
               className={errors.description ? 'border-red-500' : ''}

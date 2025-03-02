@@ -5,6 +5,7 @@ import { EmailCampaign, EmailRecipient, EmailTemplate } from '@/types/email';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from 'lucide-react';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -35,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
@@ -256,7 +256,7 @@ export default function EmailCampaignSection() {
 
               <div className='grid gap-2'>
                 <Label htmlFor='content'>Email Content</Label>
-                <Textarea
+                <AITextarea
                   id='content'
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}

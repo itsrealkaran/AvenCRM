@@ -148,6 +148,42 @@ export const getSuperAdminDashboard = async (req: Request, res: Response) => {
       companies: companies,
     }));
 
+    // Calculate plan distribution data
+    const companyPlans = await prisma.company.findMany({
+      where: {
+        createdAt: {
+          gte: sixMonthsAgo
+        }
+      },
+      select: {
+        planName: true,
+      }
+    })
+
+    const planDistribution = [
+      {
+        name: "PROFESSIONAL",
+        companies: 0,
+      },
+      {
+        name: "ENTERPRISE",
+        companies: 0,
+      },
+      {
+        name: "BASIC",
+        companies: 0,
+      }
+    ]
+
+    companyPlans.map((plan) => {
+      if (plan.planName === 'BASIC')
+        planDistribution[0].companies += 1;
+      else if (plan.planName === 'PREMIUM')
+        planDistribution[1].companies += 1;
+      else if (plan.planName === 'ENTERPRISE')
+        planDistribution[2].companies += 1;
+    })
+
     res.json({
       salesData,
       totalRevenue: totalRevenue._sum.amount || 0,
@@ -155,6 +191,7 @@ export const getSuperAdminDashboard = async (req: Request, res: Response) => {
       totalUsers: users,
       growthRate,
       userGrowthRate,
+      planDistribution
     });
   } catch (error) {
     console.error('Error in getSuperAdminDashboard:', error);

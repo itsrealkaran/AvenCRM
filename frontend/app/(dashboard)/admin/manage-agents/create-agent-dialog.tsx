@@ -25,12 +25,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { UpgradePlanDialog } from '@/components/upgrade-plan-dialog';
+import { useAuth } from '@/hooks/useAuth';
 
 interface CreateAgentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   user?: User; // Optional user for editing mode
   refetch: () => void;
+  totalAgents: number;
 }
 
 interface User {
@@ -60,7 +63,13 @@ const getTeams = async (): Promise<Team[]> => {
   return response.json();
 };
 
-export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateAgentDialogProps) {
+export function CreateAgentDialog({
+  open,
+  onOpenChange,
+  user,
+  refetch,
+  totalAgents,
+}: CreateAgentDialogProps) {
   const [loading, setLoading] = useState(false);
   const [showThreshold, setShowThreshold] = useState(false);
   const [formData, setFormData] = useState({
@@ -75,6 +84,7 @@ export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateA
     commissionAfterThreshhold: 0,
     teamId: '',
   });
+  const { company } = useAuth();
 
   useEffect(() => {
     if (user) {
@@ -182,205 +192,224 @@ export function CreateAgentDialog({ open, onOpenChange, user, refetch }: CreateA
     }
   };
 
+  if (!company)
+    return (
+      <div className='flex justify-center items-center h-full'>
+        <div className='text-gray-500'>
+          <p>Something went wrong</p>
+          <p>Please try again later or contact support</p>
+        </div>
+      </div>
+    );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-[625px]'>
-        <DialogHeader>
-          <DialogTitle>{user ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
-          <DialogDescription>
-            {user
-              ? 'Update the agent details below.'
-              : 'Enter the details to create a new agent. They will receive an email with login credentials.'}
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className='grid gap-6 py-4'>
-            <div className='grid grid-cols-2 gap-6'>
-              <div className='grid gap-2'>
-                <Label htmlFor='name'>Name</Label>
-                <Input
-                  id='name'
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className='grid gap-2'>
-                <Label htmlFor='email'>Email</Label>
-                <Input
-                  id='email'
-                  type='email'
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-
-              <div className='grid gap-2'>
-                <Label htmlFor='phone'>Phone</Label>
-                <Input
-                  id='phone'
-                  type='tel'
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                />
-              </div>
-
-              <div className='grid gap-2'>
-                <Label htmlFor='gender'>Gender</Label>
-                <Select
-                  value={formData.gender}
-                  onValueChange={(value) => setFormData({ ...formData, gender: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select gender' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={Gender.MALE}>Male</SelectItem>
-                    <SelectItem value={Gender.FEMALE}>Female</SelectItem>
-                    <SelectItem value={Gender.OTHERS}>Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className='grid gap-2'>
-                <Label htmlFor='dob'>Date of Birth</Label>
-                <Input
-                  id='dob'
-                  type='date'
-                  value={formData.dob}
-                  onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                />
-              </div>
-
-              <div className='grid gap-2'>
-                <Label htmlFor='role'>Role</Label>
-                <Select
-                  value={formData.agentRole}
-                  onValueChange={(value: UserRole) =>
-                    setFormData({ ...formData, agentRole: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder='Select role' />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UserRole.AGENT}>Agent</SelectItem>
-                    <SelectItem value={UserRole.TEAM_LEADER}>Team Leader</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {(formData.agentRole === UserRole.AGENT || formData.teamId) && (
+      {totalAgents >= company.userCount ? (
+        <UpgradePlanDialog
+          isOpen={open}
+          onClose={() => onOpenChange(false)}
+          userLimit={company.userCount}
+        />
+      ) : (
+        <DialogContent className='sm:max-w-[625px]'>
+          <DialogHeader>
+            <DialogTitle>{user ? 'Edit Agent' : 'Create New Agent'}</DialogTitle>
+            <DialogDescription>
+              {user
+                ? 'Update the agent details below.'
+                : 'Enter the details to create a new agent. They will receive an email with login credentials.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit}>
+            <div className='grid gap-6 py-4'>
+              <div className='grid grid-cols-2 gap-6'>
                 <div className='grid gap-2'>
-                  <Label htmlFor='team'>Team</Label>
+                  <Label htmlFor='name'>Name</Label>
+                  <Input
+                    id='name'
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className='grid gap-2'>
+                  <Label htmlFor='email'>Email</Label>
+                  <Input
+                    id='email'
+                    type='email'
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className='grid gap-2'>
+                  <Label htmlFor='phone'>Phone</Label>
+                  <Input
+                    id='phone'
+                    type='tel'
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  />
+                </div>
+
+                <div className='grid gap-2'>
+                  <Label htmlFor='gender'>Gender</Label>
                   <Select
-                    value={formData.teamId}
-                    onValueChange={(value) => setFormData({ ...formData, teamId: value })}
+                    value={formData.gender}
+                    onValueChange={(value) => setFormData({ ...formData, gender: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder='Select team' />
+                      <SelectValue placeholder='Select gender' />
                     </SelectTrigger>
                     <SelectContent>
-                      {teams?.map((team) => (
-                        <SelectItem key={team.id} value={team.id}>
-                          {team.name}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value={Gender.MALE}>Male</SelectItem>
+                      <SelectItem value={Gender.FEMALE}>Female</SelectItem>
+                      <SelectItem value={Gender.OTHERS}>Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              )}
-              <div className='grid gap-2'>
-                <Label htmlFor='commissionRate'>Commission Rate (%)</Label>
-                <Input
-                  id='commissionRate'
-                  type='number'
-                  min={0}
-                  max={100}
-                  step={0.1}
-                  value={formData.commissionRate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })
-                  }
-                  placeholder='Enter commission rate'
-                />
-              </div>
-            </div>
-            <div className='grid gap-2'>
-              <div className='flex items-center space-x-2'>
-                <Checkbox
-                  id='hasThreshold'
-                  checked={showThreshold}
-                  onCheckedChange={(checked) => {
-                    setShowThreshold(checked === true);
-                    if (!checked) {
-                      setFormData({
-                        ...formData,
-                        commissionThreshhold: 0,
-                        commissionAfterThreshhold: 0,
-                      });
+
+                <div className='grid gap-2'>
+                  <Label htmlFor='dob'>Date of Birth</Label>
+                  <Input
+                    id='dob'
+                    type='date'
+                    value={formData.dob}
+                    onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                  />
+                </div>
+
+                <div className='grid gap-2'>
+                  <Label htmlFor='role'>Role</Label>
+                  <Select
+                    value={formData.agentRole}
+                    onValueChange={(value: UserRole) =>
+                      setFormData({ ...formData, agentRole: value })
                     }
-                  }}
-                />
-                <Label htmlFor='hasThreshold' className='whitespace-nowrap'>
-                  Enable Commission Threshold
-                </Label>
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select role' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={UserRole.AGENT}>Agent</SelectItem>
+                      <SelectItem value={UserRole.TEAM_LEADER}>Team Leader</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {(formData.agentRole === UserRole.AGENT || formData.teamId) && (
+                  <div className='grid gap-2'>
+                    <Label htmlFor='team'>Team</Label>
+                    <Select
+                      value={formData.teamId}
+                      onValueChange={(value) => setFormData({ ...formData, teamId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select team' />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teams?.map((team) => (
+                          <SelectItem key={team.id} value={team.id}>
+                            {team.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className='grid gap-2'>
+                  <Label htmlFor='commissionRate'>Commission Rate (%)</Label>
+                  <Input
+                    id='commissionRate'
+                    type='number'
+                    min={0}
+                    max={100}
+                    step={0.1}
+                    value={formData.commissionRate}
+                    onChange={(e) =>
+                      setFormData({ ...formData, commissionRate: parseFloat(e.target.value) || 0 })
+                    }
+                    placeholder='Enter commission rate'
+                  />
+                </div>
               </div>
-              {showThreshold && (
-                <div className='grid gap-6 py-4'>
-                  <div className='flex gap-6'>
-                    <div className='grid gap-2 flex-1'>
-                      <Label htmlFor='commissionThreshhold' className='whitespace-nowrap'>
-                        Threshold Amount
-                      </Label>
-                      <Input
-                        id='commissionThreshhold'
-                        type='number'
-                        min={0}
-                        step={1000}
-                        value={formData.commissionThreshhold}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            commissionThreshhold: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        placeholder='Enter threshold'
-                      />
-                    </div>
-                    <div className='grid gap-2 flex-1'>
-                      <Label htmlFor='commissionAfterThreshhold' className='whitespace-nowrap'>
-                        Commission After (%)
-                      </Label>
-                      <Input
-                        id='commissionAfterThreshhold'
-                        type='number'
-                        min={0}
-                        max={100}
-                        step={0.1}
-                        value={formData.commissionAfterThreshhold}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            commissionAfterThreshhold: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        placeholder='Enter rate'
-                      />
+              <div className='grid gap-2'>
+                <div className='flex items-center space-x-2'>
+                  <Checkbox
+                    id='hasThreshold'
+                    checked={showThreshold}
+                    onCheckedChange={(checked) => {
+                      setShowThreshold(checked === true);
+                      if (!checked) {
+                        setFormData({
+                          ...formData,
+                          commissionThreshhold: 0,
+                          commissionAfterThreshhold: 0,
+                        });
+                      }
+                    }}
+                  />
+                  <Label htmlFor='hasThreshold' className='whitespace-nowrap'>
+                    Enable Commission Threshold
+                  </Label>
+                </div>
+                {showThreshold && (
+                  <div className='grid gap-6 py-4'>
+                    <div className='flex gap-6'>
+                      <div className='grid gap-2 flex-1'>
+                        <Label htmlFor='commissionThreshhold' className='whitespace-nowrap'>
+                          Threshold Amount
+                        </Label>
+                        <Input
+                          id='commissionThreshhold'
+                          type='number'
+                          min={0}
+                          step={1000}
+                          value={formData.commissionThreshhold}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              commissionThreshhold: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          placeholder='Enter threshold'
+                        />
+                      </div>
+                      <div className='grid gap-2 flex-1'>
+                        <Label htmlFor='commissionAfterThreshhold' className='whitespace-nowrap'>
+                          Commission After (%)
+                        </Label>
+                        <Input
+                          id='commissionAfterThreshhold'
+                          type='number'
+                          min={0}
+                          max={100}
+                          step={0.1}
+                          value={formData.commissionAfterThreshhold}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              commissionAfterThreshhold: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          placeholder='Enter rate'
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button type='submit' disabled={loading}>
-              {loading ? 'Creating...' : user ? 'Update Agent' : 'Create Agent'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
+            <DialogFooter className='flex justify-around items-center text-gray-500 w-full'>
+              <div>{totalAgents + '/' + company?.userCount}</div>
+              <Button type='submit' disabled={loading}>
+                {loading ? 'Creating...' : user ? 'Update Agent' : 'Create Agent'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }

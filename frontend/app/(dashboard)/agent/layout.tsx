@@ -111,7 +111,7 @@ const menuItems = [
     icon: Bell,
     path: '/agent/notification',
     description: 'Notification management',
-  }
+  },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

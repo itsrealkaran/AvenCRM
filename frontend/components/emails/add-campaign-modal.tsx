@@ -31,8 +31,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+
+import { AITextarea } from '../ui/ai-textarea';
 
 interface AddCampaignModalProps {
   isOpen: boolean;
@@ -186,7 +187,7 @@ export function AddCampaignModal({ isOpen, onClose, onCampaignAdded }: AddCampai
                     <TabsTrigger value='preview'>Preview</TabsTrigger>
                   </TabsList>
                   <TabsContent value='edit' className='p-4'>
-                    <Textarea
+                    <AITextarea
                       id='content'
                       value={content}
                       onChange={(e) => setContent(e.target.value)}

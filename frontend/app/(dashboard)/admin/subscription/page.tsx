@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { FaCheck } from 'react-icons/fa';
 
 import { StripeModal } from '@/components/stripe/stripe-modal';
@@ -36,6 +36,8 @@ const Page = () => {
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [hasOverflow, setHasOverflow] = useState<Record<string, boolean>>({});
   const featuresRefs = React.useRef<Record<string, HTMLUListElement | null>>({});
+
+  const { formatPrice } = useCurrency();
 
   const {
     data: allPlans,
@@ -123,7 +125,7 @@ const Page = () => {
               <div
                 key={plan.id}
                 className={`rounded-2xl ${
-                  plan.name === 'Premium' ? 'bg-yellow-50' : 'bg-blue-50'
+                  plan.name === 'ENTERPRISE' ? 'bg-yellow-50' : 'bg-blue-50'
                 } shadow-sm transition hover:shadow-md`}
               >
                 <div className='flex'>
@@ -131,23 +133,23 @@ const Page = () => {
                     <div className='flex items-start gap-4'>
                       <div
                         className={`flex h-14 w-14 items-center justify-center rounded-xl ${
-                          plan.name === 'PREMIUM' ? 'bg-yellow-100' : 'bg-blue-100'
+                          plan.name === 'ENTERPRISE' ? 'bg-yellow-100' : 'bg-blue-100'
                         }`}
                       >
                         <div
                           className={`h-8 w-8 overflow-hidden ${
-                            plan.name === 'Premium' ? 'rounded-lg' : 'rounded-full'
+                            plan.name === 'ENTERPRISE' ? 'rounded-lg' : 'rounded-full'
                           }`}
                         >
                           <div className='flex h-full w-full'>
                             <div
                               className={`h-full w-1/2 ${
-                                plan.name === 'Premium' ? 'bg-yellow-400' : 'bg-blue-400'
+                                plan.name === 'ENTERPRISE' ? 'bg-yellow-400' : 'bg-blue-400'
                               }`}
                             ></div>
                             <div
                               className={`h-full w-1/2 ${
-                                plan.name === 'Premium' ? 'bg-yellow-600' : 'bg-blue-600'
+                                plan.name === 'ENTERPRISE' ? 'bg-yellow-600' : 'bg-blue-600'
                               }`}
                             ></div>
                           </div>
@@ -156,14 +158,14 @@ const Page = () => {
                       <div>
                         <p
                           className={`text-sm ${
-                            plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                            plan.name === 'ENTERPRISE' ? 'text-yellow-600' : 'text-blue-600'
                           }`}
                         >
-                          {plan.name === 'PREMIUM' ? 'For larger agencies' : 'For individuals'}
+                          {plan.name === 'ENTERPRISE' ? 'For larger agencies' : 'For individuals'}
                         </p>
                         <h2
                           className={`mt-1 text-2xl font-semibold ${
-                            plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
+                            plan.name === 'ENTERPRISE' ? 'text-yellow-900' : 'text-blue-900'
                           }`}
                         >
                           {plan.name}
@@ -172,42 +174,42 @@ const Page = () => {
                     </div>
                     <p
                       className={`mt-4 ${
-                        plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                        plan.name === 'ENTERPRISE' ? 'text-yellow-600' : 'text-blue-600'
                       }`}
                     >
-                      {plan.name === 'PREMIUM'
+                      {plan.name === 'ENTERPRISE'
                         ? 'Ideal for growing businesses that need more power and features.'
                         : 'Perfect for individuals and small teams getting started with our platform.'}
                     </p>
                     <button
                       onClick={() => handlePayment(plan)}
                       className={`mt-6 ${
-                        plan.name === 'PREMIUM' ? 'mt-16 w-full' : ''
+                        plan.name === 'ENTERPRISE' ? 'mt-16 w-full' : ''
                       } rounded-lg ${
-                        plan.name === 'PREMIUM'
+                        plan.name === 'ENTERPRISE'
                           ? 'bg-yellow-600 hover:bg-yellow-700'
                           : 'bg-blue-600 hover:bg-blue-700'
                       } px-4 py-2 text-sm font-medium text-white transition`}
                     >
-                      {plan.name === 'PREMIUM' ? 'Upgrade' : 'Pay now'}
+                      {plan.name === 'ENTERPRISE' ? 'Upgrade' : 'Pay now'}
                     </button>
                   </div>
                   <div
                     className={`flex-1 border-l ${
-                      plan.name === 'PREMIUM' ? 'border-yellow-100' : 'border-blue-100'
+                      plan.name === 'ENTERPRISE' ? 'border-yellow-100' : 'border-blue-100'
                     } p-8`}
                   >
                     <div className='flex items-baseline gap-2'>
                       <span
                         className={`text-4xl font-bold ${
-                          plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
+                          plan.name === 'ENTERPRISE' ? 'text-yellow-900' : 'text-blue-900'
                         }`}
                       >
                         ${plan.price.company.monthly.USD}
                       </span>
                       <span
                         className={`text-sm ${
-                          plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                          plan.name === 'ENTERPRISE' ? 'text-yellow-600' : 'text-blue-600'
                         }`}
                       >
                         /monthly
@@ -215,7 +217,7 @@ const Page = () => {
                     </div>
                     <h3
                       className={`mt-6 font-semibold ${
-                        plan.name === 'PREMIUM' ? 'text-yellow-900' : 'text-blue-900'
+                        plan.name === 'ENTERPRISE' ? 'text-yellow-900' : 'text-blue-900'
                       }`}
                     >
                       What&apos;s included
@@ -235,14 +237,14 @@ const Page = () => {
                           <li key={index} className='flex items-center gap-3'>
                             <div
                               className={`flex h-5 w-5 items-center justify-center rounded-full ${
-                                plan.name === 'PREMIUM' ? 'bg-yellow-600' : 'bg-blue-600'
+                                plan.name === 'ENTERPRISE' ? 'bg-yellow-600' : 'bg-blue-600'
                               } text-[10px] text-white`}
                             >
                               <FaCheck />
                             </div>
                             <span
                               className={`text-sm ${
-                                plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                                plan.name === 'ENTERPRISE' ? 'text-yellow-600' : 'text-blue-600'
                               }`}
                             >
                               {feature}
@@ -254,7 +256,7 @@ const Page = () => {
                         <button
                           onClick={() => setExpandedPlan(expandedPlan === plan.id ? null : plan.id)}
                           className={`text-sm font-medium ${
-                            plan.name === 'PREMIUM' ? 'text-yellow-600' : 'text-blue-600'
+                            plan.name === 'ENTERPRISE' ? 'text-yellow-600' : 'text-blue-600'
                           } hover:underline mt-2`}
                         >
                           {expandedPlan === plan.id ? 'Show less' : 'Show more'}
@@ -281,7 +283,7 @@ const Page = () => {
             onClose={() => setIsModalOpen(false)}
             planId={selectedPlan.name}
             planName={selectedPlan.name}
-            price={selectedPlan.price.company.monthly.USD}
+            price={selectedPlan.price.company}
           />
         )}
       </Card>

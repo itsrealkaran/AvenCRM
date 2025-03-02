@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -162,7 +163,7 @@ function NotesCell({ row }: any) {
         <div className='bg-white border-t p-2'>
           {showTextArea ? (
             <div className='space-y-4'>
-              <textarea
+              <AITextarea
                 placeholder='Add a new note...'
                 className='w-full min-h-[100px] p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary resize-none'
                 value={newNote}

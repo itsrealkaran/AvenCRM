@@ -6,7 +6,8 @@ import { useFieldArray, UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+
+import { AITextarea } from '../ui/ai-textarea';
 
 interface NotesFieldProps {
   form: UseFormReturn<any>;
@@ -48,7 +49,7 @@ export function NotesField({ form, isLoading }: NotesFieldProps) {
             render={({ field }) => (
               <FormItem className='flex-1'>
                 <FormControl>
-                  <Textarea
+                  <AITextarea
                     placeholder='Add a note...'
                     className='resize-none'
                     disabled={isLoading}

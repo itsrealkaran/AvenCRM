@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,7 +34,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
 interface EmailTemplate {
@@ -227,7 +227,7 @@ export default function EmailTemplatesSection() {
               </div>
               <div className='grid w-full gap-2'>
                 <Label htmlFor='content'>Email Content</Label>
-                <Textarea
+                <AITextarea
                   id='content'
                   value={formData.content}
                   onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -247,7 +247,7 @@ export default function EmailTemplatesSection() {
               </div>
               <div className='grid w-full gap-2'>
                 <Label htmlFor='description'>Description</Label>
-                <Textarea
+                <AITextarea
                   id='description'
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}

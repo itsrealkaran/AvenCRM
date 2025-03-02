@@ -104,7 +104,7 @@ export default function WhatsAppCampaignsPage() {
         open={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
         onCreateCampaign={handleCreateCampaign}
-        audiences={audiences}
+        audiences={audiences} // @ts-ignore
         onCreateAudience={null}
         editingCampaign={null}
       />

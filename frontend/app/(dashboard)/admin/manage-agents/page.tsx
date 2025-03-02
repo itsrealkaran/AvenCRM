@@ -39,6 +39,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { UpgradePlanDialog } from '@/components/upgrade-plan-dialog';
+import { useAuth } from '@/hooks/useAuth';
 
 import { AgentMetricsDialog } from './agent-metrics-dialog';
 import { CreateAgentDialog } from './create-agent-dialog';
@@ -60,23 +62,6 @@ async function getAgents(): Promise<User[]> {
   return response.json();
 }
 
-async function getCurrentUser(): Promise<User> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`, {
-    method: 'GET',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(error || 'Failed to fetch current user');
-  }
-  return response.json();
-}
-
 export default function ManageAgentsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -89,7 +74,7 @@ export default function ManageAgentsPage() {
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
-
+  const { company } = useAuth();
   const {
     data: agents = [],
     isLoading: isAgentsLoading,
@@ -98,11 +83,6 @@ export default function ManageAgentsPage() {
   } = useQuery({
     queryKey: ['users'],
     queryFn: getAgents,
-  });
-
-  const { data: currentUser } = useQuery({
-    queryKey: ['currentUser'],
-    queryFn: getCurrentUser,
   });
 
   const deleteAgent = useMutation({
@@ -280,7 +260,18 @@ export default function ManageAgentsPage() {
         fileInputRef.current.value = '';
       }
 
-      setFileData(filteredData);
+      if (!company) {
+        toast.error('Something went wrong');
+        setFileData(null);
+        return;
+      }
+
+      if (filteredData.length < company.userCount - agents.length) {
+        setFileData(filteredData);
+      } else {
+        toast.error(`User limit exceeded`);
+        setIsUpgradeDialogOpen(true);
+      }
     } catch (error) {
       console.error(`Error parsing ${file.name}:`, error);
       toast.error(`Failed to parse ${file.name}. Please check the format.`);
@@ -607,6 +598,8 @@ export default function ManageAgentsPage() {
     ],
   });
 
+  const [isUpgradeDialogOpen, setIsUpgradeDialogOpen] = useState(false);
+
   return (
     <div className='min-h-full w-full'>
       <Card className='min-h-full flex flex-1 flex-col p-6'>
@@ -623,6 +616,7 @@ export default function ManageAgentsPage() {
 
       <CreateAgentDialog
         open={isCreateDialogOpen || isEditDialogOpen}
+        totalAgents={agents.length}
         onOpenChange={(open) => {
           if (isEditDialogOpen) {
             setIsEditDialogOpen(open);
@@ -646,6 +640,11 @@ export default function ManageAgentsPage() {
           onClose={() => setFileData(null)}
         />
       )}
+      <UpgradePlanDialog
+        isOpen={isUpgradeDialogOpen}
+        onClose={() => setIsUpgradeDialogOpen(false)}
+        userLimit={company?.userCount ?? 0}
+      />
     </div>
   );
 }

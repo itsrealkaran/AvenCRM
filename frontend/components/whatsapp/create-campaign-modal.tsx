@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import type React from 'react';
-import { FaWhatsapp } from 'react-icons/fa';
+import { whatsAppService } from '@/api/whatsapp.service';
 import { Plus } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -23,8 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { whatsAppService } from '@/api/whatsapp.service';
-import { toast } from 'sonner';
 
 import type { AudienceGroup } from './audience-list';
 import { CreateAudienceModal } from './create-audience-modal';
@@ -34,7 +34,7 @@ interface CreateCampaignModalProps {
   onClose: () => void;
   onCreateCampaign: (campaign: Campaign) => void;
   audiences?: AudienceGroup[];
-  onCreateAudience: ((audience: AudienceGroup) => AudienceGroup);
+  onCreateAudience: (audience: AudienceGroup) => AudienceGroup;
   editingCampaign?: Campaign | null;
 }
 
@@ -103,7 +103,7 @@ export function CreateCampaignModal({
     try {
       const accountsData = await whatsAppService.getAccounts();
       setAccounts(accountsData);
-      
+
       // Set default account if available
       if (accountsData.length > 0 && !selectedAccountId) {
         setSelectedAccountId(accountsData[0].id);
@@ -119,7 +119,7 @@ export function CreateCampaignModal({
       // If we have a real API for templates, use it
       // const templatesData = await whatsAppService.getTemplates();
       // setTemplates(templatesData);
-      
+
       // For now, we're using sample templates
       setTemplates(SAMPLE_TEMPLATES);
     } catch (error) {
@@ -172,9 +172,9 @@ export function CreateCampaignModal({
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       const campaignData: Campaign = {
         id: editingCampaign?.id,
@@ -189,17 +189,18 @@ export function CreateCampaignModal({
         createdAt: editingCampaign?.createdAt || new Date().toISOString(),
         accountId: selectedAccountId,
       };
-      
+
       // Call API to create or update campaign
       let result;
       if (editingCampaign?.id) {
         result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
         toast.success('Campaign updated successfully');
       } else {
+        // @ts-ignore
         result = await whatsAppService.createCampaign(campaignData);
         toast.success('Campaign created successfully');
       }
-      
+
       // Pass the result to parent component
       onCreateCampaign(result);
       onClose();
@@ -274,9 +275,7 @@ export function CreateCampaignModal({
               <Select
                 value={selectedTemplate.id}
                 onValueChange={(value) =>
-                  setSelectedTemplate(
-                    templates.find((t) => t.id === value) || templates[0]
-                  )
+                  setSelectedTemplate(templates.find((t) => t.id === value) || templates[0])
                 }
               >
                 <SelectTrigger>
@@ -374,7 +373,7 @@ export function CreateCampaignModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className='max-w-2xl'>
         <DialogHeader>
           <DialogTitle>{editingCampaign ? 'Edit Campaign' : 'Create New Campaign'}</DialogTitle>
           <DialogDescription>
@@ -383,8 +382,8 @@ export function CreateCampaignModal({
               : 'Create a new WhatsApp campaign to reach your audience'}
           </DialogDescription>
         </DialogHeader>
-        
-        <div className="grid grid-cols-2 gap-6">
+
+        <div className='grid grid-cols-2 gap-6'>
           <div className='space-y-4'>
             <div className='space-y-2'>
               <Label htmlFor='campaign-name'>Campaign Name</Label>
@@ -399,10 +398,7 @@ export function CreateCampaignModal({
 
             <div className='space-y-2'>
               <Label htmlFor='account'>WhatsApp Account</Label>
-              <Select
-                value={selectedAccountId}
-                onValueChange={setSelectedAccountId}
-              >
+              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
                 <SelectTrigger>
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>
@@ -456,8 +452,8 @@ export function CreateCampaignModal({
                     ))}
                   </SelectContent>
                 </Select>
-                <Button 
-                  variant='outline' 
+                <Button
+                  variant='outline'
                   onClick={() => setIsCreateAudienceModalOpen(true)}
                   className='whitespace-nowrap'
                 >
@@ -468,18 +464,20 @@ export function CreateCampaignModal({
               {errors.audience && <p className='text-sm text-red-500'>{errors.audience}</p>}
             </div>
 
-            <Button 
-              className='w-full bg-[#5932EA] hover:bg-[#5932EA]/90' 
+            <Button
+              className='w-full bg-[#5932EA] hover:bg-[#5932EA]/90'
               onClick={handleSubmit}
               disabled={isLoading}
             >
               {isLoading ? (
                 <>
-                  <span className="animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-current rounded-full"></span>
+                  <span className='animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-current rounded-full'></span>
                   {editingCampaign ? 'Updating...' : 'Creating...'}
                 </>
+              ) : editingCampaign ? (
+                'Update Campaign'
               ) : (
-                editingCampaign ? 'Update Campaign' : 'Create Campaign'
+                'Create Campaign'
               )}
             </Button>
           </div>

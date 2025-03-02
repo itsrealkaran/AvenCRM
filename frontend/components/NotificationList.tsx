@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { CalendarIcon, CheckSquareIcon, UserIcon } from 'lucide-react';
+import { CalendarIcon, CheckSquareIcon, Sparkles, UserIcon } from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,7 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'calendar' | 'task' | 'lead';
+  type: 'calendar' | 'task' | 'lead' | 'upgrade';
   read: boolean;
   timestamp: string;
   link?: string;
@@ -66,7 +66,7 @@ export function NotificationList({
     }
   };
 
-  const getIconByType = (type: 'calendar' | 'task' | 'lead') => {
+  const getIconByType = (type: 'calendar' | 'task' | 'lead' | 'upgrade') => {
     switch (type) {
       case 'calendar':
         return <CalendarIcon className='w-4 h-4 text-white' />;
@@ -74,10 +74,12 @@ export function NotificationList({
         return <CheckSquareIcon className='w-4 h-4 text-white' />;
       case 'lead':
         return <UserIcon className='w-4 h-4 text-white' />;
+      case 'upgrade':
+        return <Sparkles className='w-4 h-4 text-white' />;
     }
   };
 
-  const getIconBgColor = (type: 'calendar' | 'task' | 'lead') => {
+  const getIconBgColor = (type: 'calendar' | 'task' | 'lead' | 'upgrade') => {
     switch (type) {
       case 'calendar':
         return 'bg-blue-500';
@@ -85,6 +87,8 @@ export function NotificationList({
         return 'bg-green-500';
       case 'lead':
         return 'bg-red-500';
+      case 'upgrade':
+        return 'bg-purple-500';
     }
   };
 

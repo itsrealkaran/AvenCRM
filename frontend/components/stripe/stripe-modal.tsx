@@ -13,7 +13,18 @@ interface StripeModalProps {
   onClose: () => void;
   planId: string;
   planName: string;
-  price: number;
+  price: {
+    monthly: {
+      USD: number;
+      CAD: number;
+      AED: number;
+    };
+    annually: {
+      USD: number;
+      CAD: number;
+      AED: number;
+    };
+  };
 }
 
 // Initialize Stripe
@@ -133,7 +144,10 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
             </div>
 
             <p className='text-2xl font-bold'>
-              ${price.toFixed(2)}{' '}
+              $
+              {billingPeriod === 'monthly'
+                ? price.monthly.USD * userCount
+                : price.annually.USD * userCount}{' '}
               <span className='text-sm font-normal'>
                 /{billingPeriod === 'monthly' ? 'month' : 'year'}
               </span>

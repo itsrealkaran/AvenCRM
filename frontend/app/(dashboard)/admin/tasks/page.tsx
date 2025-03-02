@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -52,7 +53,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 
 export default function TaskPage() {
@@ -406,7 +406,7 @@ function TaskForm({ formData, setFormData, onSubmit, onCancel, isEdit = false }:
           value={formData.title}
           onChange={(e) => setFormData({ ...formData, title: e.target.value })}
         />
-        <Textarea
+        <AITextarea
           placeholder='Description'
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
