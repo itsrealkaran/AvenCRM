@@ -1,47 +1,50 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getProperties, getProperty } from "@/lib/api"
 import type { PropertyData } from "@/types/property"
 import PropertyCard from "@/components/property-card"
 import PropertyBrochure from "@/components/property-brochure"
 import { Loader2 } from "lucide-react"
+import { useQuery } from "@tanstack/react-query"
+import { api } from "@/lib/api"
 
 export default function Home() {
   const [properties, setProperties] = useState<PropertyData[]>([])
   const [selectedProperty, setSelectedProperty] = useState<PropertyData | null>(null)
   const [loading, setLoading] = useState(true)
 
+  const { data, isLoading } = useQuery({
+    queryKey: ['properties'],
+    queryFn: async () => {
+      const response = await api.get('/property')
+      return response.data
+    },
+  })
+
   useEffect(() => {
-    async function loadProperties() {
-      try {
-        const data = await getProperties()
-        setProperties(data.properties)
-
-        // Select the first property by default
-        if (data.properties.length > 0) {
-          setSelectedProperty(data.properties[0])
-        }
-
-        setLoading(false)
-      } catch (error) {
-        console.error("Failed to load properties:", error)
-        setLoading(false)
-      }
+    if (data) {
+      // remove the objects with the isverified false from data.myProperty
+      const myProperty = data.myProperty.filter((property: PropertyData) => property.isVerified)
+      setProperties([...myProperty, ...data.allProperty])
     }
-
-    loadProperties()
-  }, [])
+    setLoading(false)
+  }, [data])
 
   const handleSelectProperty = async (id: string) => {
     setLoading(true)
     try {
-      const property = await getProperty(id)
+      const { data: property } = await useQuery({
+        queryKey: ['property', id],
+        queryFn: async () => {
+          const response = await api.get(`/property/${id}`)
+          return response.data
+        }
+      })
       if (property) {
         setSelectedProperty(property)
       }
     } catch (error) {
-      console.error("Failed to load property:", error)
+      console.error("Failed to load property:", error) 
     } finally {
       setLoading(false)
     }
@@ -62,8 +65,8 @@ export default function Home() {
         <div className="space-y-4">
           {properties.map((property) => (
             <PropertyCard
-              key={property.id}
-              property={property}
+              key={property.id} //@ts-ignore
+              property={property.cardDetails}
               onClick={handleSelectProperty}
               isSelected={selectedProperty?.id === property.id}
             />

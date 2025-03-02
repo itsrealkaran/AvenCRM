@@ -1,6 +1,6 @@
 import Image from "next/image"
 import type { PropertyData } from "@/types/property"
-import { formatCurrency } from "@/lib/utils"
+import { useCurrency } from "@/contexts/CurrencyContext"
 
 interface PropertyCardProps {
   property: PropertyData
@@ -9,6 +9,7 @@ interface PropertyCardProps {
 }
 
 export default function PropertyCard({ property, onClick, isSelected }: PropertyCardProps) {
+  const { formatPrice } = useCurrency()
   return (
     <div
       className={`border rounded-lg overflow-hidden cursor-pointer transition-all ${
@@ -18,7 +19,7 @@ export default function PropertyCard({ property, onClick, isSelected }: Property
     >
       <div className="relative h-48 w-full">
         <Image
-          src={property.images[0] || "/placeholder.svg?height=300&width=400"}
+          src={property.image || "/placeholder.svg?height=300&width=400"}
           alt={property.title}
           fill
           className="object-cover"
@@ -28,7 +29,7 @@ export default function PropertyCard({ property, onClick, isSelected }: Property
         <h3 className="font-bold text-lg">{property.title}</h3>
         <p className="text-gray-600 text-sm">{property.address}</p>
         <div className="mt-2">
-          <p className="text-xl font-bold text-primary">{formatCurrency(Number(property.price))}</p>
+          <p className="text-xl font-bold text-primary">{formatPrice(Number(property.price))}</p>
         </div>
         <div className="flex justify-between mt-2 text-sm text-gray-600">
           <span>{property.bedrooms} Beds</span>
