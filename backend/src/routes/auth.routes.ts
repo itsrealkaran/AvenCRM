@@ -413,13 +413,17 @@ router.patch('/set-currency', protect, async (req: AuthenticatedRequest, res: Re
 
 router.get('/company', protect, async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const companyId = req.user?.companyId;
-    if (!companyId) {
+    const user = req.user;
+    if (!user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
+    if(user.role === UserRole.SUPERADMIN) {
+      return res.json(null)
+    }
+
     const company = await db.company.findUnique({
-      where: { id: companyId },
+      where: { id: user.companyId },
       select: {
         userCount: true,
         planName: true,
