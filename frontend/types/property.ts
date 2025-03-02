@@ -37,3 +37,4 @@ export interface PropertyAgent {
   email?: string | null;
   phone?: string | null;
 }
+
