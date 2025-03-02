@@ -343,6 +343,7 @@ export const propertiesController: Controller = {
               id: true,
               name: true,
               email: true,
+              phone: true
             },
           },
         },

@@ -93,6 +93,7 @@ export interface PropertyData {
     id: string
     name: string
     email: string
+    phone: string
   }
   documents: string[]
   longitude: string

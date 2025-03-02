@@ -8,9 +8,21 @@ import { Loader2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 
+// Create a custom hook for property fetching
+const useProperty = (id: string | null) => {
+  return useQuery({
+    queryKey: ['property', id],
+    queryFn: async () => {
+      const response = await api.get(`/property/${id}`)
+      return response.data
+    },
+    enabled: !!id, // Only fetch when id is available
+  });
+};
+
 export default function Home() {
   const [properties, setProperties] = useState<PropertyData[]>([])
-  const [selectedProperty, setSelectedProperty] = useState<PropertyData | null>(null)
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   const { data, isLoading } = useQuery({
@@ -21,6 +33,8 @@ export default function Home() {
     },
   })
 
+  const { data: selectedProperty, isLoading: selectedPropertyLoading } = useProperty(selectedPropertyId)
+
   useEffect(() => {
     if (data) {
       // remove the objects with the isverified false from data.myProperty
@@ -30,24 +44,8 @@ export default function Home() {
     setLoading(false)
   }, [data])
 
-  const handleSelectProperty = async (id: string) => {
-    setLoading(true)
-    try {
-      const { data: property } = await useQuery({
-        queryKey: ['property', id],
-        queryFn: async () => {
-          const response = await api.get(`/property/${id}`)
-          return response.data
-        }
-      })
-      if (property) {
-        setSelectedProperty(property)
-      }
-    } catch (error) {
-      console.error("Failed to load property:", error) 
-    } finally {
-      setLoading(false)
-    }
+  const handleSelectProperty = (id: string) => {
+    setSelectedPropertyId(id)
   }
 
   if (loading && !selectedProperty) {
@@ -57,16 +55,18 @@ export default function Home() {
       </div>
     )
   }
+  console.log(selectedProperty)
 
   return (
     <main className="flex flex-col md:flex-row h-screen">
       {/* Left side: Scrollable property list */}
-      <div className="w-full md:w-1/3 p-4 overflow-y-auto border-r">
+      <div className="w-full md:w-1/4 p-4 overflow-y-auto border-r">
         <div className="space-y-4">
           {properties.map((property) => (
             <PropertyCard
               key={property.id} //@ts-ignore
               property={property.cardDetails}
+              id={property.id}
               onClick={handleSelectProperty}
               isSelected={selectedProperty?.id === property.id}
             />
@@ -75,10 +75,10 @@ export default function Home() {
       </div>
 
       {/* Right side: Property brochure */}
-      <div className="w-full md:w-2/3 p-4 overflow-y-auto">
+      <div className="w-full md:w-3/4 p-4 overflow-y-auto">
         {selectedProperty ? (
           <div className="max-w-full overflow-x-hidden">
-            <PropertyBrochure property={selectedProperty} />
+            <PropertyBrochure property={selectedProperty.features} createdBy={selectedProperty.createdBy} />
           </div>
         ) : (
           <div className="flex items-center justify-center h-full">

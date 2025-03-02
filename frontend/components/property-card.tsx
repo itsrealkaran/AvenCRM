@@ -6,16 +6,17 @@ interface PropertyCardProps {
   property: PropertyData
   onClick: (id: string) => void
   isSelected: boolean
+  id: string
 }
 
-export default function PropertyCard({ property, onClick, isSelected }: PropertyCardProps) {
+export default function PropertyCard({ property, onClick, isSelected, id }: PropertyCardProps) {
   const { formatPrice } = useCurrency()
   return (
     <div
       className={`border rounded-lg overflow-hidden cursor-pointer transition-all ${
         isSelected ? "border-primary ring-2 ring-primary" : "border-gray-200 hover:border-gray-300"
       }`}
-      onClick={() => onClick(property.id)}
+      onClick={() => onClick(id)}
     >
       <div className="relative h-48 w-full">
         <Image

@@ -4,16 +4,24 @@ import { useRef } from "react"
 import Image from "next/image"
 import type { PropertyData } from "@/types/property"
 import { useCurrency } from "@/contexts/CurrencyContext"
-import { Download, MapPin, Bed, Bath, SquareIcon as SquareFoot } from "lucide-react"
+import { Download, MapPin, Bed, Bath, SquareIcon as SquareFoot, Phone, Building2, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import html2canvas from "html2canvas"
 import jsPDF from "jspdf"
+import Logo from "@/components/logo"
+import { Avatar, AvatarImage } from "./ui/avatar"
+import { AvatarFallback } from "@radix-ui/react-avatar"
 
 interface PropertyBrochureProps {
   property: PropertyData
+  createdBy: {
+    name: string
+    phone: string
+    email: string
+  }
 }
 
-export default function PropertyBrochure({ property }: PropertyBrochureProps) {
+export default function PropertyBrochure({ property, createdBy }: PropertyBrochureProps) {
   const brochureRef = useRef<HTMLDivElement>(null)
   const { formatPrice } = useCurrency();
 
@@ -65,12 +73,12 @@ export default function PropertyBrochure({ property }: PropertyBrochureProps) {
   }
 
   // Create room specs from floors data
-  const roomSpecs = property.floors.flatMap((floor) =>
-    floor.rooms.map((room) => ({
-      name: room.name || `Room (${floor.name})`,
-      dimensions: `${room.width}x${room.length}`,
-    })),
-  )
+  // const roomSpecs = property.floors.flatMap((floor) =>
+  //   floor.rooms.map((room) => ({
+  //     name: room.name || `Room (${floor.name})`,
+  //     dimensions: `${room.width}x${room.length}`,
+  //   })),
+  // )
 
   // Group features for better organization
   const allFeatures = [
@@ -151,10 +159,10 @@ export default function PropertyBrochure({ property }: PropertyBrochureProps) {
             <div className="col-span-1">
               {/* Gallery */}
               <div className="grid grid-cols-2 gap-2 mb-6">
-                {[1, 2, 3, 4].map((_, index) => (
+                {property.images.map((image, index) => (
                   <div key={index} className="relative aspect-square w-full">
                     <Image
-                      src={property.images[index + 1] || "/placeholder.svg?height=300&width=400"}
+                      src={image}
                       alt={`Property image ${index + 1}`}
                       fill
                       className="object-cover rounded"
@@ -164,25 +172,35 @@ export default function PropertyBrochure({ property }: PropertyBrochureProps) {
               </div>
 
               {/* Broker Information */}
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-16 w-16 flex-shrink-0">
-                    <Image
-                      src="/placeholder.svg?height=200&width=200"
-                      alt={property.createdBy.name}
-                      fill
-                      className="object-cover rounded-full"
-                    />
+              <div className="bg-gray-50 rounded-xl flex flex-col gap-4 items-center py-4 px-2 shadow-md border border-gray-100 hover:shadow-lg transition-shadow duration-200">
+                <div className="flex items-center gap-6">
+                  <div className="relative h-8 w-8 flex-shrink-0">
+                  <Avatar className='bg-red-50'>
+                        <AvatarFallback className='flex items-center justify-center w-full text-gray-500'>
+                          {createdBy?.name?.charAt(0) || 'A'}
+                        </AvatarFallback>
+                      </Avatar>
                   </div>
                   <div>
-                    <h2 className="font-bold text-lg">{property.createdBy.name}</h2>
-                    <p className="text-gray-600 text-sm">Broker</p>
+                    <h2 className="font-semibold text-sm text-gray-800">{createdBy.name}</h2>
+                    <p className="text-primary/80 font-medium text-[0.6rem]">Licensed Real Estate Broker</p>
                   </div>
                 </div>
-                <div className="mt-3 space-y-1 text-sm">
-                  <p className="text-gray-700">416.390.2932 (cell)</p>
-                  <p className="text-gray-700">1.888.382.1920 (office)</p>
-                  <p className="text-gray-700">{property.createdBy.email}</p>
+                <div>
+
+                <div>
+                  <div className="flex items-center gap-3 text-gray-600 text-xs mt-2">
+                    <Phone className="h-4 w-4 text-primary/70" />
+                    <p className="">{createdBy.phone}</p>
+                  </div>
+                </div>
+                
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center gap-3 text-gray-600 text-xs">
+                    <Mail className="h-4 w-4 text-primary/70" />
+                    <p>{createdBy.email}</p>
+                  </div>
+                </div>
                 </div>
               </div>
             </div>
@@ -226,7 +244,12 @@ export default function PropertyBrochure({ property }: PropertyBrochureProps) {
               <div className="mb-6">
                 <h2 className="text-xl font-bold mb-3 text-gray-800">Room Dimensions</h2>
                 <div className="grid grid-cols-2 gap-x-8 gap-y-2">
-                  {roomSpecs.slice(0, 8).map((spec, index) => (
+                  {property.floors.flatMap((floor) =>
+                    floor.rooms.map((room) => ({
+                      name: room.name || `Room (${floor.name})`,
+                      dimensions: `${room.width}x${room.length}`,
+                    })),
+                  ).slice(0, 8).map((spec, index) => (
                     <div key={index} className="flex items-center justify-between border-b border-gray-100 py-1">
                       <span className="text-gray-700 text-sm font-medium">{spec.name || "Room"}</span>
                       <span className="text-gray-600 text-sm">{spec.dimensions}</span>
@@ -252,26 +275,13 @@ export default function PropertyBrochure({ property }: PropertyBrochureProps) {
           {/* Footer with Agency Info */}
             <div className="border-t border-gray-200 p-4 flex justify-between items-center bg-white">
               <div className="flex items-center">
-                <div className="relative h-12 w-24 mr-4">
-                  <Image src="/placeholder.svg?height=100&width=200" alt="Agency Logo" fill className="object-contain" />
+                <div className="relative text-[2rem] mr-4">
+                  <Logo />
                 </div>
                 <div className="text-xs text-gray-600">
                   <p className="font-medium">Prudential Real Estate</p>
                   <p>932 Broadview Avenue, {property.city}</p>
                   <p>{property.zipCode}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative h-10 w-10">
-                  <Image src="/placeholder.svg?height=50&width=50" alt="Realtor logo" fill className="object-contain" />
-                </div>
-                <div className="relative h-10 w-10">
-                  <Image
-                    src="/placeholder.svg?height=50&width=50"
-                    alt="Equal housing logo"
-                    fill
-                    className="object-contain"
-                  />
                 </div>
               </div>
               <div className="text-xs text-gray-500 max-w-[200px]">
