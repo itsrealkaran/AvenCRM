@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -53,7 +54,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { AITextarea } from '@/components/ui/ai-textarea';
 
 export default function TaskPage() {
   const [tasks, setTasks] = useState<Task[]>([]);

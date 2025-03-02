@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowUpDown, Calendar, CheckSquare, Mail, RefreshCw, Search, Sparkles } from 'lucide-react';
+import {
+  ArrowUpDown,
+  Calendar,
+  CheckSquare,
+  Mail,
+  RefreshCw,
+  Search,
+  Sparkles,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';

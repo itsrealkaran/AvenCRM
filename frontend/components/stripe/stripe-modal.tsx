@@ -15,15 +15,15 @@ interface StripeModalProps {
   planName: string;
   price: {
     monthly: {
-      USD: number,
-      CAD: number,
-      AED: number
-    },
+      USD: number;
+      CAD: number;
+      AED: number;
+    };
     annually: {
-      USD: number,
-      CAD: number,
-      AED: number
-    }
+      USD: number;
+      CAD: number;
+      AED: number;
+    };
   };
 }
 
@@ -144,7 +144,10 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
             </div>
 
             <p className='text-2xl font-bold'>
-              ${billingPeriod === 'monthly' ? price.monthly.USD * userCount : price.annually.USD * userCount}{' '}
+              $
+              {billingPeriod === 'monthly'
+                ? price.monthly.USD * userCount
+                : price.annually.USD * userCount}{' '}
               <span className='text-sm font-normal'>
                 /{billingPeriod === 'monthly' ? 'month' : 'year'}
               </span>

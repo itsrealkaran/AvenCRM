@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { Loader2, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { Loader2, Sparkles } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,12 +14,12 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
+
 import { UpgradePlanDialog } from '../upgrade-plan-dialog';
-import { useMutation } from '@tanstack/react-query';
-import { api } from '@/lib/api';
 
 interface AITextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   onAIComplete?: (result: string) => void;
@@ -64,7 +65,6 @@ export function AITextarea({
       });
     },
   });
-
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValue(e.target.value);
@@ -194,15 +194,16 @@ export function AITextarea({
               </p>
             </div>
             {user?.role === 'ADMIN' ? (
-              <Button onClick={() => window.location.href = '/admin/subscription'}>
-                Upgrade Plan<Sparkles className='ml-2 h-4 w-4' />
+              <Button onClick={() => (window.location.href = '/admin/subscription')}>
+                Upgrade Plan
+                <Sparkles className='ml-2 h-4 w-4' />
               </Button>
             ) : (
-              <Button 
+              <Button
                 onClick={() => {
                   notifyAdmin();
                   setHasNotified(true);
-                }} 
+                }}
                 disabled={isPending || hasNotified}
               >
                 {isPending && <Loader2 className='mr-2 h-4 w-4 animate-spin' />}

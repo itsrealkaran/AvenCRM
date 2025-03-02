@@ -47,11 +47,7 @@ function ContentBuilderPage() {
                 stroke='currentColor'
                 className='w-12 h-12'
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='M12 4.5v15m7.5-7.5h-15'
-                />
+                <path strokeLinecap='round' strokeLinejoin='round' d='M12 4.5v15m7.5-7.5h-15' />
               </svg>
             </div>
             <div className='flex gap-2 mt-4'>
@@ -69,7 +65,7 @@ function ContentBuilderPage() {
             />
             <div className='flex gap-2 mt-4'>
               <Button>Use Template</Button>
-              <Button variant="outline">Preview</Button>
+              <Button variant='outline'>Preview</Button>
             </div>
           </div>
 
@@ -83,7 +79,7 @@ function ContentBuilderPage() {
             />
             <div className='flex gap-2 mt-4'>
               <Button>Use Template</Button>
-              <Button variant="outline">Preview</Button>
+              <Button variant='outline'>Preview</Button>
             </div>
           </div>
 
@@ -97,7 +93,7 @@ function ContentBuilderPage() {
             />
             <div className='flex gap-2 mt-4'>
               <Button>Use Template</Button>
-              <Button variant="outline">Preview</Button>
+              <Button variant='outline'>Preview</Button>
             </div>
           </div>
 
@@ -111,10 +107,9 @@ function ContentBuilderPage() {
             />
             <div className='flex gap-2 mt-4'>
               <Button>Use Template</Button>
-              <Button variant="outline">Preview</Button>
+              <Button variant='outline'>Preview</Button>
             </div>
           </div>
-
         </div>
 
         <button
@@ -140,26 +135,32 @@ function ContentBuilderPage() {
           <h4 className='font-semibold text-lg'>Spring Market Update</h4>
           <p className='text-gray-500 text-sm mt-1'>Blog post • Created 3 days ago</p>
           <div className='mt-4 flex justify-between'>
-            <Button variant="outline" size="sm">Edit</Button>
-            <Button size="sm">Share</Button>
+            <Button variant='outline' size='sm'>
+              Edit
+            </Button>
+            <Button size='sm'>Share</Button>
           </div>
         </div>
-        
+
         <div className='p-4 bg-white border rounded-lg shadow-sm'>
           <h4 className='font-semibold text-lg'>Monthly Newsletter</h4>
           <p className='text-gray-500 text-sm mt-1'>Email • Created 1 week ago</p>
           <div className='mt-4 flex justify-between'>
-            <Button variant="outline" size="sm">Edit</Button>
-            <Button size="sm">Share</Button>
+            <Button variant='outline' size='sm'>
+              Edit
+            </Button>
+            <Button size='sm'>Share</Button>
           </div>
         </div>
-        
+
         <div className='p-4 bg-white border rounded-lg shadow-sm'>
           <h4 className='font-semibold text-lg'>New Listing Announcement</h4>
           <p className='text-gray-500 text-sm mt-1'>Social post • Created 2 weeks ago</p>
           <div className='mt-4 flex justify-between'>
-            <Button variant="outline" size="sm">Edit</Button>
-            <Button size="sm">Share</Button>
+            <Button variant='outline' size='sm'>
+              Edit
+            </Button>
+            <Button size='sm'>Share</Button>
           </div>
         </div>
       </div>
@@ -167,4 +168,4 @@ function ContentBuilderPage() {
   );
 }
 
-export default ContentBuilderPage; 
+export default ContentBuilderPage;

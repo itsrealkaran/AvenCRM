@@ -39,11 +39,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { UpgradePlanDialog } from '@/components/upgrade-plan-dialog';
+import { useAuth } from '@/hooks/useAuth';
 
 import { AgentMetricsDialog } from './agent-metrics-dialog';
 import { CreateAgentDialog } from './create-agent-dialog';
-import { useAuth } from '@/hooks/useAuth';
-import { UpgradePlanDialog } from '@/components/upgrade-plan-dialog';
 
 async function getAgents(): Promise<User[]> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/user`, {
@@ -640,7 +640,7 @@ export default function ManageAgentsPage() {
           onClose={() => setFileData(null)}
         />
       )}
-      <UpgradePlanDialog 
+      <UpgradePlanDialog
         isOpen={isUpgradeDialogOpen}
         onClose={() => setIsUpgradeDialogOpen(false)}
         userLimit={company?.userCount ?? 0}

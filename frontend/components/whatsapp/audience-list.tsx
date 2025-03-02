@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { whatsAppService } from '@/api/whatsapp.service';
 import {
   flexRender,
   getCoreRowModel,
@@ -11,6 +12,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Search } from 'lucide-react';
 import { FaEdit, FaTrash, FaUsers } from 'react-icons/fa';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,8 +24,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { whatsAppService } from '@/api/whatsapp.service';
-import { toast } from 'sonner';
 
 import { CreateAudienceModal } from './create-audience-modal';
 
@@ -81,20 +81,18 @@ export function AudienceList({ audiences: initialAudiences, onCreateAudience }: 
       const audienceWithRecipients = await whatsAppService.getAudience(audience.id);
       setEditingAudience({
         ...audience,
-        phoneNumbers: audienceWithRecipients.recipients.map((r: any) => r.phoneNumber)
+        phoneNumbers: audienceWithRecipients.recipients.map((r: any) => r.phoneNumber),
       });
       setShowCreateModal(true);
     } catch (error) {
       console.error('Error fetching audience details:', error);
       toast.error('Failed to load audience details');
-    } 
+    }
   };
 
   const handleCreateOrUpdateAudience = (audience: AudienceGroup) => {
     if (editingAudience) {
-      setAudiences((prev) =>
-        prev.map((a) => (a.id === audience.id ? audience : a))
-      );
+      setAudiences((prev) => prev.map((a) => (a.id === audience.id ? audience : a)));
     } else {
       setAudiences((prev) => [...prev, audience]);
       if (onCreateAudience) {

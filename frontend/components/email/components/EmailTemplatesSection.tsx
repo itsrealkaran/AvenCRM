@@ -3,6 +3,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Edit, Loader2, Plus, Trash2 } from 'lucide-react';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +35,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { AITextarea } from '@/components/ui/ai-textarea';
 
 interface EmailTemplate {
   id: string;

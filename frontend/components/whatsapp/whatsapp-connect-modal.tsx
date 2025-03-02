@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
+import { whatsAppService } from '@/api/whatsapp.service';
 import { FaWhatsapp } from 'react-icons/fa';
+import { toast } from 'sonner';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+
 import { Steps } from './steps';
-import { whatsAppService } from '@/api/whatsapp.service';
-import { toast } from 'sonner';
 
 interface WhatsAppConnectModalProps {
   open: boolean;
@@ -23,12 +25,12 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
     wabaid: '',
     accessToken: '',
     phoneNumber: '',
-    displayName: ''
+    displayName: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setAccountData(prev => ({ ...prev, [name]: value }));
+    setAccountData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleNext = () => {
@@ -39,12 +41,12 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
         return;
       }
     }
-    
-    setCurrentStep(prev => Math.min(prev + 1, steps.length));
+
+    setCurrentStep((prev) => Math.min(prev + 1, steps.length));
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => Math.max(prev - 1, 1));
+    setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
   const handleConnect = async () => {
@@ -58,10 +60,10 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
     try {
       // Create WhatsApp account
       const account = await whatsAppService.createAccount(accountData);
-      
+
       // Verify the account
       await whatsAppService.verifyAccount(account.id);
-      
+
       toast.success('WhatsApp account connected successfully!');
       setCurrentStep(3);
     } catch (error) {
@@ -82,23 +84,23 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
       title: 'Account Info',
       description: 'Enter your WhatsApp Business account information',
       content: (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Account Name</Label>
-            <Input 
-              id="displayName" 
-              name="displayName" 
-              placeholder="My WhatsApp Business" 
+        <div className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='displayName'>Account Name</Label>
+            <Input
+              id='displayName'
+              name='displayName'
+              placeholder='My WhatsApp Business'
               value={accountData.displayName}
               onChange={handleInputChange}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="phoneNumber">Phone Number</Label>
-            <Input 
-              id="phoneNumber" 
-              name="phoneNumber" 
-              placeholder="+1234567890" 
+          <div className='space-y-2'>
+            <Label htmlFor='phoneNumber'>Phone Number</Label>
+            <Input
+              id='phoneNumber'
+              name='phoneNumber'
+              placeholder='+1234567890'
               value={accountData.phoneNumber}
               onChange={handleInputChange}
             />
@@ -110,34 +112,34 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
       title: 'API Credentials',
       description: 'Enter your WhatsApp Business API credentials',
       content: (
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="phoneNumberId">Phone Number ID</Label>
-            <Input 
-              id="phoneNumberId" 
-              name="phoneNumberId" 
-              placeholder="123456789012345" 
+        <div className='space-y-4'>
+          <div className='space-y-2'>
+            <Label htmlFor='phoneNumberId'>Phone Number ID</Label>
+            <Input
+              id='phoneNumberId'
+              name='phoneNumberId'
+              placeholder='123456789012345'
               value={accountData.phoneNumberId}
               onChange={handleInputChange}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="wabaid">WhatsApp Business Account ID</Label>
-            <Input 
-              id="wabaid" 
-              name="wabaid" 
-              placeholder="123456789012345" 
+          <div className='space-y-2'>
+            <Label htmlFor='wabaid'>WhatsApp Business Account ID</Label>
+            <Input
+              id='wabaid'
+              name='wabaid'
+              placeholder='123456789012345'
               value={accountData.wabaid}
               onChange={handleInputChange}
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="accessToken">Access Token</Label>
-            <Input 
-              id="accessToken" 
-              name="accessToken" 
-              type="password" 
-              placeholder="Your WhatsApp API access token" 
+          <div className='space-y-2'>
+            <Label htmlFor='accessToken'>Access Token</Label>
+            <Input
+              id='accessToken'
+              name='accessToken'
+              type='password'
+              placeholder='Your WhatsApp API access token'
               value={accountData.accessToken}
               onChange={handleInputChange}
             />
@@ -149,15 +151,16 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
       title: 'Connected',
       description: 'Your WhatsApp Business account has been connected successfully',
       content: (
-        <div className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="bg-green-100 p-4 rounded-full">
-              <FaWhatsapp className="w-12 h-12 text-[#25D366]" />
+        <div className='text-center'>
+          <div className='flex justify-center mb-4'>
+            <div className='bg-green-100 p-4 rounded-full'>
+              <FaWhatsapp className='w-12 h-12 text-[#25D366]' />
             </div>
           </div>
-          <h3 className="text-lg font-semibold mb-2">WhatsApp Connected!</h3>
-          <p className="text-muted-foreground">
-            Your WhatsApp Business account has been connected successfully. You can now create campaigns and send messages.
+          <h3 className='text-lg font-semibold mb-2'>WhatsApp Connected!</h3>
+          <p className='text-muted-foreground'>
+            Your WhatsApp Business account has been connected successfully. You can now create
+            campaigns and send messages.
           </p>
         </div>
       ),
@@ -166,13 +169,13 @@ export function WhatsAppConnectModal({ open, onClose, onConnect }: WhatsAppConne
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className='sm:max-w-[550px]'>
         <DialogHeader>
           <DialogTitle>Connect to WhatsApp Business</DialogTitle>
         </DialogHeader>
-        <Steps 
-          steps={steps} 
-          currentStep={currentStep} 
+        <Steps
+          steps={steps}
+          currentStep={currentStep}
           onStepClick={setCurrentStep}
           showNavigation={true}
           onNext={currentStep === 2 ? handleConnect : handleNext}

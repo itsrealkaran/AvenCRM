@@ -24,7 +24,10 @@ export const whatsAppService = {
     return response.data;
   },
 
-  updateAccount: async (accountId: string, data: { displayName?: string; accessToken?: string }) => {
+  updateAccount: async (
+    accountId: string,
+    data: { displayName?: string; accessToken?: string }
+  ) => {
     const response = await api.put(`/whatsapp/accounts/${accountId}`, data);
     return response.data;
   },
@@ -72,13 +75,18 @@ export const whatsAppService = {
     return response.data;
   },
 
-  addRecipients: async (audienceId: string, recipients: Array<{ phoneNumber: string; name?: string }>) => {
+  addRecipients: async (
+    audienceId: string,
+    recipients: Array<{ phoneNumber: string; name?: string }>
+  ) => {
     const response = await api.post(`/whatsapp/audiences/${audienceId}/recipients`, { recipients });
     return response.data;
   },
 
   removeRecipient: async (audienceId: string, recipientId: string) => {
-    const response = await api.delete(`/whatsapp/audiences/${audienceId}/recipients/${recipientId}`);
+    const response = await api.delete(
+      `/whatsapp/audiences/${audienceId}/recipients/${recipientId}`
+    );
     return response.data;
   },
 
@@ -169,4 +177,4 @@ export const whatsAppService = {
     const response = await api.get(`/whatsapp/campaigns/${campaignId}/statistics`);
     return response.data;
   },
-}; 
+};

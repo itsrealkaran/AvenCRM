@@ -1,7 +1,7 @@
 export enum WhatsAppCampaignType {
   TEXT = 'TEXT',
   IMAGE = 'IMAGE',
-  TEMPLATE = 'TEMPLATE'
+  TEMPLATE = 'TEMPLATE',
 }
 
 export enum WhatsAppCampaignStatus {
@@ -10,7 +10,7 @@ export enum WhatsAppCampaignStatus {
   ACTIVE = 'ACTIVE',
   PAUSED = 'PAUSED',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
 }
 
 export interface WhatsAppAccount {
@@ -99,4 +99,4 @@ export interface WhatsAppCampaignStatistics {
   deliveryRate: number;
   readRate: number;
   failureRate: number;
-} 
+}

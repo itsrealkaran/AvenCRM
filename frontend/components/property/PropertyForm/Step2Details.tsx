@@ -1,9 +1,9 @@
 import type React from 'react';
 import { usePropertyForm } from '@/contexts/PropertyFormContext';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AITextarea } from '@/components/ui/ai-textarea';
 
 const Step2Details: React.FC = () => {
   const { formData, updateFormData } = usePropertyForm();

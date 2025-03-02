@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useQuery } from '@tanstack/react-query';
 import { FaCheck } from 'react-icons/fa';
 
@@ -9,7 +10,6 @@ import { Card } from '@/components/ui/card';
 import { api } from '@/lib/api';
 
 import { TransactionHistoryTable } from './transaction-history';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface Payment {
   id: string;
@@ -37,7 +37,7 @@ const Page = () => {
   const [hasOverflow, setHasOverflow] = useState<Record<string, boolean>>({});
   const featuresRefs = React.useRef<Record<string, HTMLUListElement | null>>({});
 
-  const { formatPrice } = useCurrency()
+  const { formatPrice } = useCurrency();
 
   const {
     data: allPlans,

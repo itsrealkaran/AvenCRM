@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Plus, Users, X } from 'lucide-react';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -50,7 +51,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 import { createEmailRecipient, deleteEmailRecipient, fetchEmailRecipients } from '../api';
-import { AITextarea } from '@/components/ui/ai-textarea';
 
 interface NewRecipient {
   name: string;

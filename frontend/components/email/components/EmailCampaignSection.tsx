@@ -5,6 +5,7 @@ import { EmailCampaign, EmailRecipient, EmailTemplate } from '@/types/email';
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Clock, Loader2, Mail, Plus, Users, X } from 'lucide-react';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -45,7 +46,6 @@ import {
   fetchEmailRecipients,
   fetchEmailTemplates,
 } from '../api';
-import { AITextarea } from '@/components/ui/ai-textarea';
 
 export default function EmailCampaignSection() {
   const [campaigns, setCampaigns] = useState<EmailCampaign[]>([]);

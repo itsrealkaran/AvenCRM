@@ -6,6 +6,7 @@ import { useFieldArray, UseFormReturn } from 'react-hook-form';
 
 import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+
 import { AITextarea } from '../ui/ai-textarea';
 
 interface NotesFieldProps {

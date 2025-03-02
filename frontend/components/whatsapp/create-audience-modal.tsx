@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { whatsAppService } from '@/api/whatsapp.service';
 import { Plus, X } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,9 +15,13 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { whatsAppService } from '@/api/whatsapp.service';
-import { toast } from 'sonner';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import type { AudienceGroup } from './audience-list';
 
@@ -76,7 +82,7 @@ export function CreateAudienceModal({
     try {
       const accountsData = await whatsAppService.getAccounts();
       setAccounts(accountsData);
-      
+
       // If there's only one account, select it automatically (only for new audiences)
       if (accountsData.length === 1 && !editingAudience) {
         setSelectedAccountId(accountsData[0].id);
@@ -91,21 +97,22 @@ export function CreateAudienceModal({
     const newErrors: { [key: string]: string } = {};
     if (!name.trim()) newErrors.name = 'Audience name is required';
     if (phoneNumbers.length === 0) newErrors.phoneNumbers = 'At least one phone number is required';
-    if (!selectedAccountId && !editingAudience) newErrors.account = 'Please select a WhatsApp account';
+    if (!selectedAccountId && !editingAudience)
+      newErrors.account = 'Please select a WhatsApp account';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleAddPhoneNumber = () => {
     if (!phoneNumber.trim()) return;
-    
+
     // Validate phone number format (basic validation)
     const phoneRegex = /^\+[0-9]{10,15}$/;
     if (!phoneRegex.test(phoneNumber.trim())) {
-      setErrors({...errors, phoneNumber: 'Invalid phone format. Use format: +1234567890'});
+      setErrors({ ...errors, phoneNumber: 'Invalid phone format. Use format: +1234567890' });
       return;
     }
-    
+
     if (!phoneNumbers.includes(phoneNumber.trim())) {
       setPhoneNumbers([...phoneNumbers, phoneNumber.trim()]);
       setPhoneNumber('');
@@ -115,7 +122,7 @@ export function CreateAudienceModal({
         setErrors(restErrors);
       }
     } else {
-      setErrors({...errors, phoneNumber: 'This phone number is already added'});
+      setErrors({ ...errors, phoneNumber: 'This phone number is already added' });
     }
   };
 
@@ -125,72 +132,72 @@ export function CreateAudienceModal({
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
-    
+
     setIsLoading(true);
-    
+
     try {
       let audience;
-      
+
       if (editingAudience) {
         audience = await whatsAppService.updateAudience(editingAudience.id, {
           name,
         });
-        
+
         const existingRecipients = await whatsAppService.getAudienceRecipients(editingAudience.id);
         const existingPhoneNumbers = existingRecipients.map((r: any) => r.phoneNumber);
-        
+
         const newPhoneNumbers = phoneNumbers.filter(
-          number => !existingPhoneNumbers.includes(number)
+          (number) => !existingPhoneNumbers.includes(number)
         );
-        
+
         if (newPhoneNumbers.length > 0) {
-          const recipients = newPhoneNumbers.map(phoneNumber => ({
+          const recipients = newPhoneNumbers.map((phoneNumber) => ({
             phoneNumber,
           }));
-          
+
           await whatsAppService.addRecipients(editingAudience.id, recipients);
         }
-        
+
         const removedRecipients = existingRecipients.filter(
           (r: any) => !phoneNumbers.includes(r.phoneNumber)
         );
-        
+
         for (const recipient of removedRecipients) {
           await whatsAppService.removeRecipient(editingAudience.id, recipient.id);
         }
-        
+
         const updatedAudience = await whatsAppService.getAudience(editingAudience.id);
-        
+
         audience = {
           ...updatedAudience,
           phoneNumbers: phoneNumbers,
         };
-        
+
         toast.success('Audience updated successfully');
       } else {
         audience = await whatsAppService.createAudience({
           name,
           accountId: selectedAccountId,
         });
-        
+
         if (phoneNumbers.length > 0) {
-          const recipients = phoneNumbers.map(phoneNumber => ({
+          const recipients = phoneNumbers.map((phoneNumber) => ({
             phoneNumber,
           }));
-          
+
           await whatsAppService.addRecipients(audience.id, recipients);
         }
-        
+
         const createdAudience = await whatsAppService.getAudience(audience.id);
-        
+
         audience = {
           ...createdAudience,
           phoneNumbers: phoneNumbers,
         };
-        
+
         toast.success('Audience created successfully');
       }
-    
+
       onCreateAudience(audience);
       onClose();
     } catch (error) {
@@ -202,11 +209,14 @@ export function CreateAudienceModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      if (!isOpen) {
-        onClose();
-      }
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          onClose();
+        }
+      }}
+    >
       <DialogContent className='sm:max-w-[500px]'>
         <DialogHeader>
           <div>
@@ -214,23 +224,25 @@ export function CreateAudienceModal({
               {editingAudience ? 'Edit Audience Group' : 'Create Audience Group'}
             </DialogTitle>
             <DialogDescription>
-              {editingAudience ? 'Update your audience group details' : 'Create a new audience group for your WhatsApp campaigns'}
+              {editingAudience
+                ? 'Update your audience group details'
+                : 'Create a new audience group for your WhatsApp campaigns'}
             </DialogDescription>
           </div>
         </DialogHeader>
         <div className='grid gap-4 py-4'>
           <div className='grid gap-2'>
             <Label htmlFor='account'>WhatsApp Account</Label>
-            <Select 
-              value={selectedAccountId} 
+            <Select
+              value={selectedAccountId}
               onValueChange={setSelectedAccountId}
               disabled={editingAudience !== null}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select WhatsApp account" />
+                <SelectValue placeholder='Select WhatsApp account' />
               </SelectTrigger>
               <SelectContent>
-                {accounts.map(account => (
+                {accounts.map((account) => (
                   <SelectItem key={account.id} value={account.id}>
                     {account.displayName}
                   </SelectItem>
@@ -288,7 +300,11 @@ export function CreateAudienceModal({
                     <Badge variant='secondary' className='font-mono'>
                       {number}
                     </Badge>
-                    <Button variant='ghost' size='sm' onClick={() => handleRemovePhoneNumber(number)}>
+                    <Button
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => handleRemovePhoneNumber(number)}
+                    >
                       <X className='h-4 w-4' />
                     </Button>
                   </div>
@@ -305,21 +321,23 @@ export function CreateAudienceModal({
           </div>
         </div>
         <div className='flex justify-end gap-2'>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button variant='outline' onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
             disabled={isLoading}
           >
             {isLoading ? (
               <>
-                <span className="animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-current rounded-full"></span>
+                <span className='animate-spin h-4 w-4 mr-2 border-2 border-t-transparent border-current rounded-full'></span>
                 {editingAudience ? 'Updating...' : 'Creating...'}
               </>
+            ) : editingAudience ? (
+              'Update Audience'
             ) : (
-              editingAudience ? 'Update Audience' : 'Create Audience'
+              'Create Audience'
             )}
           </Button>
         </div>

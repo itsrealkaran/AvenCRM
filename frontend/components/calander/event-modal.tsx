@@ -7,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
+import { AITextarea } from '../ui/ai-textarea';
 import { createEvent, deleteEvent, updateEvent } from './api';
 import { eventColors } from './event-utils';
-import { AITextarea } from '../ui/ai-textarea';
 
 interface EventModalProps {
   isOpen: boolean;
