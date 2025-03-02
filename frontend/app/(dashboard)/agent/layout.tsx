@@ -53,10 +53,10 @@ const menuItems = [
     description: 'Property management',
   },
   {
-    heading: 'Content Builder',
+    heading: 'Brochure Builder',
     icon: FileText,
-    path: '/agent/content-builder',
-    description: 'Create and manage content',
+    path: '/agent/brochure-builder',
+    description: 'Create and manage brochures',
   },
   {
     heading: 'Leads',

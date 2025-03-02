@@ -67,6 +67,12 @@ const menuItems = [
     description: 'Property management',
   },
   {
+    heading: 'Brochure Builder',
+    icon: FileText,
+    path: '/admin/brochure-builder',
+    description: 'Create and manage brochures',
+  },
+  {
     heading: 'Leads',
     icon: Store,
     path: '/admin/leads',

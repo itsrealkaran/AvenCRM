@@ -84,10 +84,10 @@ const menuItems = [
     description: 'Build and manage pages',
   },
   {
-    heading: 'Marketing',
-    icon: LineChart,
-    path: '/teamleader/marketing',
-    description: 'Marketing management',
+    heading: 'Brochure Builder',
+    icon: FileText,
+    path: '/teamleader/brochure-builder',
+    description: 'Create and manage brochures',
   },
   {
     heading: 'Tasks',

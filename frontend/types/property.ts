@@ -39,86 +39,85 @@ export interface PropertyAgent {
 }
 
 export interface Room {
-  id: string
-  name: string
-  type: string
-  width: string
-  length: string
+  id: string;
+  name: string;
+  type: string;
+  width: string;
+  length: string;
 }
 
 export interface Floor {
-  id: string
-  name: string
-  level: number
-  rooms: Room[]
+  id: string;
+  name: string;
+  level: number;
+  rooms: Room[];
 }
 
 export interface CardDetails {
-  id: string
-  beds: number
-  sqft: number
-  baths: number
-  image: string
-  price: number
-  title: string
-  address: string
-  parking: number
-  isVerified: boolean
+  id: string;
+  beds: number;
+  sqft: number;
+  baths: number;
+  image: string;
+  price: number;
+  title: string;
+  address: string;
+  parking: number;
+  isVerified: boolean;
 }
 
 export interface PropertyData {
-  id: string
-  beds: number
-  city: string
-  slug: string
-  sqft: string
-  baths: number
-  image: string
-  price: string
-  rooms: any[]
-  title: string
-  views: string[]
-  floors: Floor[]
-  images: string[]
-  address: string
-  country: string
-  parking: string
-  zipCode: string
-  bedrooms: string
-  isMetric: boolean
-  latitude: string
-  bathrooms: string
-  createdAt: string
+  id: string;
+  beds: number;
+  city: string;
+  slug: string;
+  sqft: string;
+  baths: number;
+  image: string;
+  price: string;
+  rooms: any[];
+  title: string;
+  views: string[];
+  floors: Floor[];
+  images: string[];
+  address: string;
+  country: string;
+  parking: string;
+  zipCode: string;
+  bedrooms: string;
+  isMetric: boolean;
+  latitude: string;
+  bathrooms: string;
+  createdAt: string;
   createdBy: {
-    id: string
-    name: string
-    email: string
-    phone: string
-  }
-  documents: string[]
-  longitude: string
-  utilities: string[]
-  imageNames: string[]
-  isVerified: boolean
-  streetName: string
-  zoningType: string
-  addressLine: string
-  cardDetails: CardDetails
-  description: string
-  listingType: string
-  propertyName: string
-  propertyType: string
-  documentNames: string[]
-  exteriorTypes: string[]
-  googleMapsLink: string
-  generalFeatures: string[]
-  exteriorFeatures: string[]
-  interiorFeatures: string[]
-  locationFeatures: string[]
-  buildingDevelopmentFeatures: string[]
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+  };
+  documents: string[];
+  longitude: string;
+  utilities: string[];
+  imageNames: string[];
+  isVerified: boolean;
+  streetName: string;
+  zoningType: string;
+  addressLine: string;
+  cardDetails: CardDetails;
+  description: string;
+  listingType: string;
+  propertyName: string;
+  propertyType: string;
+  documentNames: string[];
+  exteriorTypes: string[];
+  googleMapsLink: string;
+  generalFeatures: string[];
+  exteriorFeatures: string[];
+  interiorFeatures: string[];
+  locationFeatures: string[];
+  buildingDevelopmentFeatures: string[];
 }
 
 export interface PropertyListResponse {
-  properties: PropertyData[]
+  properties: PropertyData[];
 }
-
