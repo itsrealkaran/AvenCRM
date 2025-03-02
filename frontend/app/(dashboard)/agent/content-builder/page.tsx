@@ -7,6 +7,7 @@ import PropertyBrochure from "@/components/property-brochure"
 import { Loader2 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/lib/api"
+import { Card, CardTitle } from "@/components/ui/card"
 
 // Create a custom hook for property fetching
 const useProperty = (id: string | null) => {
@@ -55,38 +56,54 @@ export default function Home() {
       </div>
     )
   }
-  console.log(selectedProperty)
 
   return (
-    <main className="flex flex-col md:flex-row h-screen">
-      {/* Left side: Scrollable property list */}
-      <div className="w-full md:w-1/4 p-4 overflow-y-auto border-r">
-        <div className="space-y-4">
-          {properties.map((property) => (
-            <PropertyCard
-              key={property.id} //@ts-ignore
-              property={property.cardDetails}
-              id={property.id}
-              onClick={handleSelectProperty}
-              isSelected={selectedProperty?.id === property.id}
-            />
-          ))}
+    <Card className='h-full w-full p-6'>
+      <div className='flex justify-between items-center mb-4'>
+        <div>
+          <h1 className='text-2xl font-bold'>Brochure Builder</h1>
+          <p className='text-sm text-muted-foreground'>
+            Create and manage your property brochures
+          </p>
         </div>
       </div>
+        <div className="h-full">
+          <div className="flex h-full">
+            {/* Left side: Scrollable property list */}
+            <div className="w-1/4 min-w-[250px]">
+              <div className="h-full overflow-y-auto p-4">
+                <div className="space-y-4">
+                  {properties.map((property) => (
+                    <PropertyCard
+                      key={property.id} //@ts-ignore
+                      property={property.cardDetails}
+                      id={property.id}
+                      onClick={handleSelectProperty}
+                      isSelected={selectedProperty?.id === property.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
 
-      {/* Right side: Property brochure */}
-      <div className="w-full md:w-3/4 p-4 overflow-y-auto">
-        {selectedProperty ? (
-          <div className="max-w-full overflow-x-hidden">
-            <PropertyBrochure property={selectedProperty.features} createdBy={selectedProperty.createdBy} />
+            {/* Right side: Property brochure */}
+            <div className="flex-1">
+              <div className="h-full overflow-y-auto p-4">
+                {selectedProperty ? (
+                  <PropertyBrochure 
+                    property={selectedProperty.features} 
+                    createdBy={selectedProperty.createdBy} 
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Select a property to view its brochure</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">Select a property to view its brochure</p>
-          </div>
-        )}
-      </div>
-    </main>
+        </div>
+    </Card>
   )
 }
 
