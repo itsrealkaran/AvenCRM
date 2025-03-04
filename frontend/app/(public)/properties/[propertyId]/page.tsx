@@ -378,64 +378,84 @@ const PropertyDetails = () => {
                     setModalOpen(true);
                   }}
                 />
+                <div className='absolute top-4 left-4 text-6xl opacity-50'>
+                  <Logo />
+                </div>
                 <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200' />
               </div>
 
               {/* Right side grid */}
               <div className='col-span-2 grid grid-cols-2 grid-rows-2 gap-2'>
-                {property?.imageUrls.slice(1, 5).map((image, index) => (
-                  <div
-                    key={index}
-                    className={`relative group overflow-hidden ${
-                      index === 0
-                        ? ''
-                        : index === 1
-                          ? 'rounded-tr-xl'
-                          : index === 3
-                            ? 'rounded-br-xl'
-                            : ''
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`Property view ${index + 2}`}
-                      className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
-                      onClick={() => {
-                        setCurrentImageIndex(index + 1);
-                        setModalOpen(true);
-                      }}
-                    />
-                    {index === 3 && property?.imageUrls.length > 5 && (
-                      <div
-                        className='absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-all duration-200'
-                        onClick={() => {
-                          setCurrentImageIndex(0);
-                          setModalOpen(true);
-                        }}
-                      >
-                        <div className='text-white text-center'>
-                          <svg
-                            className='w-8 h-8 mx-auto mb-2'
-                            fill='none'
-                            stroke='currentColor'
-                            viewBox='0 0 24 24'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
-                            />
-                          </svg>
-                          <span className='text-lg font-medium'>
-                            +{property?.imageUrls.length - 5} photos
-                          </span>
-                        </div>
+                {[...Array(4)].map((_, index) => {
+                  const image = property?.imageUrls[index + 1];
+                  return (
+                    <div
+                      key={index}
+                      className={`relative group overflow-hidden ${
+                        index === 0
+                          ? ''
+                          : index === 1
+                            ? 'rounded-tr-xl'
+                            : index === 3
+                              ? 'rounded-br-xl'
+                              : ''
+                      }`}
+                    >
+                      <div className='absolute top-4 left-4 text-3xl opacity-50'>
+                        <Logo />
                       </div>
-                    )}
-                    <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200' />
-                  </div>
-                ))}
+                      {image ? (
+                        <>
+                        <div className='absolute top-4 left-4 text-3xl opacity-20'>
+                          <Logo />
+                        </div>
+                          <img
+                            src={image}
+                            alt={`Property view ${index + 2}`}
+                            className='w-full h-full object-cover transition-transform duration-300 group-hover:scale-105'
+                            onClick={() => {
+                              setCurrentImageIndex(index + 1);
+                              setModalOpen(true);
+                            }}
+                          />
+                          {index === 3 && property?.imageUrls.length > 5 && (
+                            <div
+                              className='absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer hover:bg-black/50 transition-all duration-200'
+                              onClick={() => {
+                                setCurrentImageIndex(0);
+                                setModalOpen(true);
+                              }}
+                            >
+                              <div className='text-white text-center'>
+                                <svg
+                                  className='w-8 h-8 mx-auto mb-2'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z'
+                                  />
+                                </svg>
+                                <span className='text-lg font-medium'>
+                                  +{property?.imageUrls.length - 5} photos
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                          <div className='absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-200' />
+                        </>
+                      ) : (
+                        <div className='w-full h-full bg-gray-100 flex items-center justify-center relative'>
+                          <Images className='w-8 h-8 text-gray-400' />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
