@@ -111,7 +111,7 @@ const Step3Location: React.FC = () => {
   return (
     <div className='flex space-x-4'>
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&libraries=places`}
         onLoad={initMap}
       />
       {/* Left Section */}

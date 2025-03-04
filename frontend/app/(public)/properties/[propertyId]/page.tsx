@@ -234,7 +234,7 @@ const FeatureSection = ({ title, features }: { title: string; features: string[]
   </div>
 );
 
-const FloorPlanSection = ({ floor }: { floor: any }) => (
+const FloorPlanSection = ({ floor, isMetric }: { floor: any; isMetric: boolean }) => (
   <div className='space-y-4'>
     <h3 className='font-medium text-gray-900'>{floor.name}</h3>
     <div className='divide-y divide-gray-200'>
@@ -242,7 +242,7 @@ const FloorPlanSection = ({ floor }: { floor: any }) => (
         <div key={index} className='py-3 grid grid-cols-12 gap-4 text-sm'>
           <div className='col-span-4 text-gray-600'>{room.name}</div>
           <div className='col-span-8 text-gray-900'>
-            {room.width} Ft × {room.length} Ft
+            {room.width} {isMetric ? 'm' : 'ft'} × {room.length} {isMetric ? 'm' : 'ft'}
           </div>
         </div>
       ))}
@@ -361,7 +361,7 @@ const PropertyDetails = () => {
 
   return (
     <div className='min-h-screen bg-[#fafbff] p-4 sm:p-6 lg:p-8'>
-      <div className='max-w-8xl mx-auto space-y-2 sm:space-y-4'>
+      <div className='max-w-8xl mx-auto'>
         <h1 className='text-2xl font-medium text-center'>{property?.propertyName}</h1>
         <Card className='overflow-hidden'>
           <div className='relative'>
@@ -587,15 +587,42 @@ const PropertyDetails = () => {
                   <div className='grid grid-cols-3 gap-4'>
                     <div>
                       <span className='text-sm text-gray-500'>Property Type:</span>
-                      <p className='font-medium text-gray-900'>{property?.propertyType}</p>
+                      <p className='font-medium text-gray-900'>
+                        {property?.propertyType
+                          && property?.propertyType
+                              .split('_')
+                              .join(' ')
+                              .charAt(0)
+                              .toUpperCase() +
+                              property?.propertyType?.split('_').join(' ').slice(1)
+                            }
+                      </p>
                     </div>
                     <div>
                       <span className='text-sm text-gray-500'>Zoning Type:</span>
-                      <p className='font-medium text-gray-900'>{property?.zoningType}</p>
+                      <p className='font-medium text-gray-900'>
+                        {property?.zoningType
+                          && property?.zoningType
+                              .split('_')
+                              .join(' ')
+                              .charAt(0)
+                              .toUpperCase() +
+                              property?.zoningType?.split('_').join(' ').slice(1)
+                            }
+                      </p>
                     </div>
                     <div>
                       <span className='text-sm text-gray-500'>Listing Type:</span>
-                      <p className='font-medium text-gray-900'>{property?.listingType}</p>
+                      <p className='font-medium text-gray-900'>
+                        {property?.listingType
+                          && property?.listingType
+                              .split('_')
+                              .join(' ')
+                              .charAt(0)
+                              .toUpperCase() +
+                              property?.listingType?.split('_').join(' ').slice(1)
+                            }
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -668,13 +695,28 @@ const PropertyDetails = () => {
                 {/* Floor Plans */}
                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8'>
                   {property?.floors.map((floor, index) => (
-                    <FloorPlanSection key={index} floor={floor} />
+                    <FloorPlanSection
+                      key={index}
+                      isMetric={isMetric}
+                      floor={{
+                        ...floor,
+                        rooms: floor.rooms.map((room) => ({
+                          ...room,
+                          width: isMetric
+                            ? (parseFloat(room.width) * 0.3048).toFixed(2)
+                            : room.width,
+                          length: isMetric
+                            ? (parseFloat(room.length) * 0.3048).toFixed(2)
+                            : room.length,
+                        }))
+                      }} 
+                    />
                   ))}
                 </div>
 
                 {/* Legend or Note */}
                 <p className='text-sm text-gray-500 mt-4'>
-                  * All dimensions are approximate and may vary
+                  * All dimensions are approximate and may vary. {isMetric ? 'Measurements shown in meters.' : 'Measurements shown in feet.'}
                 </p>
               </div>
             </Card>
