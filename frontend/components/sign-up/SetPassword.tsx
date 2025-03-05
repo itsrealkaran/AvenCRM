@@ -39,6 +39,7 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log(formData.plan, formData.billingFrequency, formData.accountType, 'formData');
   const checkPasswordStrength = (pwd: string) => {
     const newRequirements = {
       length: pwd.length >= 8,

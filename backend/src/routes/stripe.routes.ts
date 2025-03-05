@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { AuthenticatedRequest, protect } from '../middleware/auth.js';
 import { verifyAdmin } from '../lib/verifyUser.js';
 import { prisma } from '../lib/prisma.js';
-import { PlanTier, User } from '@prisma/client';
+import { BillingFrequency, PlanTier, PlanType, User } from '@prisma/client';
 import { decode } from 'jsonwebtoken';
 
 // Extend Express Request type
@@ -66,7 +66,7 @@ router.post(
 router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { planId, planName, accountType, billingFrequency, currency, userCount, email } = req.body;
-    const planType = planId as PlanTier;
+    const planTier = planId as PlanTier;
 
     let token = req.cookies.Authorization;
     
@@ -160,10 +160,11 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
       success_url: `${process.env.FRONTEND_URL}/admin/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/admin/subscription?canceled=true`,
       metadata: {
-        planType,
+        planTier,
         userId,
         companyId,
-        billingFrequency
+        billingFrequency,
+        accountType,
       },//@ts-ignore
       customer_email: customerEmail,
     });
@@ -221,7 +222,7 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
         data: {
           amount: session.amount_total / 100,
           companyId: metadata.companyId,
-          planType: metadata.planType as PlanTier,
+          planType: metadata.planTier as PlanTier,
           isSuccessfull: true,
           transactionMethod: 'STRIPE',
           receiptUrl,
@@ -234,6 +235,9 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
         data: {
           planStart: new Date(),
           planEnd: new Date(Date.now() + timePeriod * 24 * 60 * 60 * 1000),
+          planName: metadata.planTier as PlanTier,
+          billingFrequency: metadata.billingFrequency as BillingFrequency,
+          planType: metadata.accountType as PlanType || 'company',
         },
       });
     });

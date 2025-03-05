@@ -7,6 +7,8 @@ import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface StripeModalProps {
   isOpen: boolean;
@@ -36,6 +38,8 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   const { toast } = useToast();
 
+  const { currency, formatPrice } = useCurrency();
+
   const handlePayment = async () => {
     try {
       setLoading(true);
@@ -52,7 +56,10 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
           body: JSON.stringify({
             planId,
             planName,
-            price,
+            accountType: 'company',
+            billingFrequency: billingPeriod,
+            currency: currency.code,
+            userCount,
           }),
         }
       );
@@ -144,10 +151,11 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
             </div>
 
             <p className='text-2xl font-bold'>
-              $
-              {billingPeriod === 'monthly'
-                ? price.monthly.USD * userCount
-                : price.annually.USD * userCount}{' '}
+              {formatPrice(
+                billingPeriod === 'monthly'
+                  ? price.monthly[currency.code as keyof typeof price.monthly] * userCount
+                  : price.annually[currency.code as keyof typeof price.annually] * userCount
+              )}{' '}
               <span className='text-sm font-normal'>
                 /{billingPeriod === 'monthly' ? 'month' : 'year'}
               </span>

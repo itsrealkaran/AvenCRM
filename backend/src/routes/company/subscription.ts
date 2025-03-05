@@ -74,6 +74,33 @@ router.get('/plans', async (req, res) => {
   }
 });
 
+router.get("/plan/:planType", async (req, res) => {
+  try {
+    const { planType } = req.params;
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const company = await db.company.findUnique({
+      where: { id: user.companyId },
+      select: {
+        plan: true,
+        planEnd: true,
+      }
+    });
+
+    if (!company) {
+      return res.status(401).json({ error: 'Company not found' });
+    }
+
+    res.json({ plan: company.plan, company: company });
+  } catch (error) {
+    console.error('Error fetching plan:', error);
+    res.status(500).json({ error: 'Failed to fetch plan' });
+  }
+});
+
 router.get("/getsubscription", async (req, res) => {
   try {
     if (!req.user) {

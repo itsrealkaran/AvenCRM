@@ -37,7 +37,7 @@ const Page = () => {
   const [hasOverflow, setHasOverflow] = useState<Record<string, boolean>>({});
   const featuresRefs = React.useRef<Record<string, HTMLUListElement | null>>({});
 
-  const { formatPrice } = useCurrency();
+  const { formatPrice, currency } = useCurrency();
 
   const {
     data: allPlans,
@@ -205,7 +205,7 @@ const Page = () => {
                           plan.name === 'ENTERPRISE' ? 'text-yellow-900' : 'text-blue-900'
                         }`}
                       >
-                        ${plan.price.company.monthly.USD}
+                        {formatPrice(plan.price.company.monthly[currency.code])}
                       </span>
                       <span
                         className={`text-sm ${
