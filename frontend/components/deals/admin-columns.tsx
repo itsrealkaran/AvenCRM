@@ -12,9 +12,10 @@ import {
 import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ColumnDef } from '@tanstack/react-table';
+import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { format } from 'date-fns';
 import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MRT_ColumnDef } from 'material-react-table';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -45,7 +46,6 @@ const statusColorMap: Record<DealStatus, string> = {
   PROPOSAL: 'bg-purple-100 text-purple-800',
   UNDER_CONTRACT: 'bg-indigo-100 text-indigo-800',
   NEGOTIATION: 'bg-orange-100 text-orange-800',
-
   WON: 'bg-emerald-100 text-emerald-800',
 };
 
@@ -180,71 +180,33 @@ function NotesCell({ row }: any) {
   );
 }
 
-export const adminColumns: ColumnDef<Deal>[] = [
+export const adminColumns: MRT_ColumnDef<Deal>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Name
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Name',
+    enableSorting: true,
   },
   {
     accessorKey: 'agent.name',
     header: 'Created By',
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       const agent = row.original.agent;
       return agent?.name || 'N/A';
     },
   },
   {
     accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Email',
+    enableClickToCopy: true,
   },
   {
     accessorKey: 'phone',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Phone
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Phone',
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row, table }) => {
+    header: 'Status',
+    Cell: ({ row, table }) => {
       const status: DealStatus = row.getValue('status');
       const deal = row.original as Deal;
       const meta = table.options.meta as {
@@ -280,47 +242,84 @@ export const adminColumns: ColumnDef<Deal>[] = [
         </DropdownMenu>
       );
     },
+    filterVariant: 'select',
+    filterSelectOptions: Object.values(DealStatus),
   },
   {
     accessorKey: 'dealAmount',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Amount
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
+    header: 'Amount',
+    Cell: ({ row }) => {
       const amount = row.getValue('dealAmount');
       return amount ? `$${amount}` : '-';
     },
   },
   {
+    accessorKey: 'coOwners',
+    header: 'Co-owners',
+    Cell: ({ row }) => {
+      const coOwners = row.original.coOwners || [];
+      const coOwnerCount = coOwners.length;
+
+      return (
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
+            >
+              <span className='font-medium text-gray-700'>{coOwnerCount}</span>
+              {coOwnerCount === 1 ? 'Co-owner' : 'Co-owners'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
+            <DialogHeader>
+              <DialogTitle>Co-owners</DialogTitle>
+            </DialogHeader>
+            <div className='space-y-4'>
+              {coOwners.length > 0 ? (
+                coOwners.map((coOwner: any, index: number) => (
+                  <div
+                    key={index}
+                    className='flex flex-col gap-2 p-4 rounded-lg border border-gray-200'
+                  >
+                    <div className='grid grid-cols-3 gap-4'>
+                      <div>
+                        <span className='text-sm font-medium text-gray-500'>Name</span>
+                        <p className='text-sm text-gray-900'>{coOwner.name || '-'}</p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-medium text-gray-500'>Email</span>
+                        <p className='text-sm text-gray-900'>{coOwner.email || '-'}</p>
+                      </div>
+                      <div>
+                        <span className='text-sm font-medium text-gray-500'>Phone</span>
+                        <p className='text-sm text-gray-900'>{coOwner.phone || '-'}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className='text-center text-gray-500'>No co-owners found</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      );
+    },
+  },
+  {
     accessorKey: 'notes',
     header: 'Notes',
-    cell: ({ row }) => {
+    Cell: ({ row }) => {
       return <NotesCell row={row} />;
     },
   },
   {
     accessorKey: 'createdAt',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Created At
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+    header: 'Created At',
+    Cell: ({ row }) => {
+      return format(new Date(row.getValue('createdAt')), 'dd/MM/yyyy');
     },
   },
 ];
