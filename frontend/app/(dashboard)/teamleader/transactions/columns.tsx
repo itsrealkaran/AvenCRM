@@ -90,11 +90,49 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       );
     },
   },
+{
+    accessorKey: 'commissionRate',
+    header: 'Commission Rate',
+    Cell: ({ row }) => {
+      return `${row.getValue('commissionRate')}%`;
+    },
+  },
+  {
+    accessorKey: 'transactionMethod',
+    header: 'Transaction Method',
+    Cell: ({ row }) => {
+      const method = row.getValue('transactionMethod');
+      if (!method) return 'N/A';
+      return String(method)
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    },
+  },
+  {
+    accessorKey: 'propertyType',
+    header: 'Property Type',
+    Cell: ({ row }) => {
+      const type = row.getValue('propertyType');
+      if (!type) return 'N/A';
+      return String(type)
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    },
+  },
   {
     accessorKey: 'date',
     header: 'Date',
     Cell: ({ row }) => {
       return format(new Date(row.getValue('date')), 'MMM d, yyyy');
+    },
+  },
+  {
+    accessorKey: 'commissionRate',
+    header: 'Commission Rate',
+    Cell: ({ row }) => {
+      return `${row.getValue('commissionRate')}%`;
     },
   },
 ];
