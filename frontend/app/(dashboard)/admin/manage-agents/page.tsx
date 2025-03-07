@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { UserRole, type User } from '@/types';
-import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
+import { Box, ListItemIcon, MenuItem } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { format, isValid } from 'date-fns';
@@ -70,7 +70,6 @@ export default function ManageAgentsPage() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [headers, setHeaders] = useState<string[]>([]);
-  //const [searchTerm, setSearchTerm] = useState("")
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);

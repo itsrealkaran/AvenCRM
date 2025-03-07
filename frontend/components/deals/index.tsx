@@ -1,17 +1,41 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus, LeadStatus, UserRole } from '@/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
+import { 
+  CirclePlus, 
+  Download, 
+  Filter, 
+  Pencil, 
+  Plus, 
+  Copy,
+  RefreshCw, 
+  Trash2, 
+  Upload 
+} from 'lucide-react';
+import { 
+  MaterialReactTable, 
+  MRT_GlobalFilterTextField, 
+  MRT_ToggleFiltersButton, 
+  useMaterialReactTable 
+} from 'material-react-table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 
-import { DataTable } from '../data-table';
 import { adminColumns } from './admin-columns';
 import { columns } from './columns';
 import { CreateDealDialog } from './create-deal-dialog';
@@ -29,13 +53,13 @@ export default function DealsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedDeal, setSelectedDeal] = useState<Deal | null>(null);
-  const [selectedRows, setSelectedRows] = useState<Deal[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   const {
     data: response,
-    isLoading,
+    isLoading: isDealsLoading,
     refetch,
   } = useQuery({
     queryKey: ['deals'],
@@ -114,6 +138,12 @@ export default function DealsPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await refetch();
+    setIsLoading(false);
+  };
+
   const handleDownload = (format: 'csv' | 'xlsx') => {
     const headers = ['Name', 'Amount', 'Status', 'Agent', 'Client', 'Created At'];
     const data = deals.map((deal) => [
@@ -175,14 +205,167 @@ export default function DealsPage() {
     }
   };
 
-  const handleSelectionChange = useCallback((deals: Deal[]) => {
-    setSelectedRows(deals);
-  }, []);
+  const tableColumns = useMemo(() => {
+    return user?.role === UserRole.ADMIN ? adminColumns : columns;
+  }, [user?.role]);
+
+  const table = useMaterialReactTable({
+    //@ts-ignore
+    columns: tableColumns,
+    data: deals,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
+    },
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '600px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={(theme) => ({
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        })}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search deals...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <Button
+              size={'sm'}
+              variant={'outline'}
+              className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+              onClick={async () => {
+                const ok = confirm('Are you sure you want to delete these deals?');
+                if (ok) {
+                  handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
+                  table.resetRowSelection();
+                }
+              }}
+            >
+              <Trash2 className='size-4 mr-2' />
+              Delete({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Upload className='h-4 w-4' />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant='outline' size='sm' onClick={handleRefresh}>
+            <RefreshCw className='h-4 w-4' />
+            Refresh
+          </Button>
+          <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
+            <CirclePlus className='h-4 w-4' /> Add New Deal
+          </Button>
+        </Box>
+      </Box>
+    ),
+    state: {
+      isLoading: isLoading || isDealsLoading,
+    },
+    meta: {
+      onStatusChange: handleStatusChange,
+    },  
+    renderRowActionMenuItems: ({ row, closeMenu }) => [
+      <MenuItem
+        key={0}
+        onClick={() => {
+          handleEdit(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <Pencil />
+        </ListItemIcon>
+        Edit Deal
+      </MenuItem>,
+      <MenuItem
+        key={1}
+        onClick={() => {
+          handleDelete(row.original.id);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-red-600'
+      >
+        <ListItemIcon>
+          <Trash2 className='text-red-600' />
+        </ListItemIcon>
+        Delete Deal
+      </MenuItem>,
+      <MenuItem
+        key={2}
+        onClick={() => {
+          navigator.clipboard.writeText(row.original.id);
+          toast.success('Deal ID copied to clipboard');
+          closeMenu();
+        }}
+      >
+        <ListItemIcon>
+          <Copy className='size-4' />
+        </ListItemIcon>
+        Copy Deal ID
+      </MenuItem>,
+    ],
+  });
 
   return (
     <section className='flex-1 h-full'>
       <Card className='h-full w-full p-6'>
-        <div className='flex justify-between items-center '>
+        <div className='flex justify-between items-center mb-6'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight'>Deals Management</h1>
             <p className='text-sm text-muted-foreground'>
@@ -191,26 +374,7 @@ export default function DealsPage() {
           </div>
         </div>
 
-        <div className='space-4 h-[calc(100%-50px)] flex-1'>
-          <DataTable
-            columns={user?.role === UserRole.ADMIN ? adminColumns : columns}
-            data={deals}
-            onEdit={handleEdit}
-            onBulkDelete={async (row) => {
-              const dealIds = row.map((row) => row.original.id);
-              await handleBulkDelete(dealIds);
-            }}
-            onDelete={handleDelete}
-            onSelectionChange={handleSelectionChange}
-            onStatusChange={handleStatusChange}
-            refetch={refetch}
-            onDownload={handleDownload}
-            onCreateDeal={() => {
-              setSelectedDeal(null);
-              setIsCreateDialogOpen(true);
-            }}
-          />
-        </div>
+        <MaterialReactTable table={table} />
 
         <CreateDealDialog
           open={isCreateDialogOpen}

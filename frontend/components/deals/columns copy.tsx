@@ -1,22 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import {
+  AwaitedReactNode,
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useState,
+} from 'react';
 import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
+import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { 
-  ArrowUpDown, 
-  BarChart3,
-  CopyIcon, 
-  MoreHorizontal, 
-  Pencil, 
-  Trash2 
-} from 'lucide-react';
-import { 
-  MRT_ColumnDef,
-} from 'material-react-table';
+import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -181,33 +179,97 @@ function NotesCell({ row }: any) {
   );
 }
 
-export const columns: MRT_ColumnDef<Deal>[] = [
+export const columns: ColumnDef<Deal>[] = [
+  {
+    id: 'select',
+    header: ({ table }) => (
+      <div className='px-1'>
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && 'indeterminate')
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label='Select all'
+        />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className='px-1'>
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label='Select row'
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
   {
     accessorKey: 'name',
-    header: 'Name',
-    enableSorting: true,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Name
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'agent.name',
     header: 'Created By',
-    Cell: ({ row }) => {
+    cell: ({ row }) => {
       const agent = row.original.agent;
       return agent?.name || 'N/A';
     },
   },
   {
     accessorKey: 'email',
-    header: 'Email',
-    enableClickToCopy: true,
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Email
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'phone',
-    header: 'Phone',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Phone
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
   },
   {
     accessorKey: 'status',
-    header: 'Status',
-    Cell: ({ row, table }) => {
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Status
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row, table }) => {
       const status: DealStatus = row.getValue('status');
       const deal = row.original as Deal;
       const meta = table.options.meta as {
@@ -246,8 +308,18 @@ export const columns: MRT_ColumnDef<Deal>[] = [
   },
   {
     accessorKey: 'dealAmount',
-    header: 'Amount',
-    Cell: ({ row }) => {
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Amount
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
       const amount = row.getValue('dealAmount');
       return amount ? `$${amount}` : '-';
     },
@@ -255,7 +327,7 @@ export const columns: MRT_ColumnDef<Deal>[] = [
   {
     accessorKey: 'coOwners',
     header: 'Co-owners',
-    Cell: ({ row }) => {
+    cell: ({ row }) => {
       const coOwners = row.original.coOwners || [];
       const coOwnerCount = coOwners.length;
 
@@ -310,15 +382,65 @@ export const columns: MRT_ColumnDef<Deal>[] = [
   {
     accessorKey: 'notes',
     header: 'Notes',
-    Cell: ({ row }) => {
+    cell: ({ row }) => {
       return <NotesCell row={row} />;
     },
   },
   {
     accessorKey: 'createdAt',
-    header: 'Created At',
-    Cell: ({ row }) => {
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Created At
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'dd/MM/yyyy');
+    },
+  },
+  {
+    id: 'actions',
+    header: 'Actions',
+    cell: ({ row, table }) => {
+      const deal = row.original as Deal;
+      const meta = table.options.meta as {
+        onEdit?: (deal: Deal) => void;
+        onDelete?: (dealId: string) => void;
+      };
+
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' className='h-8 w-8 p-0'>
+              <span className='sr-only'>Open menu</span>
+              <MoreHorizontal className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end' className='w-[160px]'>
+            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => meta.onEdit?.(deal)}>
+              <Pencil className='mr-2 h-4 w-4' /> Edit deal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onDelete?.(deal.id)} className='text-red-600'>
+              <Trash2 className='mr-2 h-4 w-4' /> Delete deal
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(deal.id);
+                toast.success('Deal ID copied to clipboard');
+              }}
+            >
+              <CopyIcon className='mr-2 h-4 w-4' /> Copy deal ID
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
     },
   },
 ];
