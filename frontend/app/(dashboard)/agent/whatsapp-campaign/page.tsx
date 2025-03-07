@@ -14,6 +14,8 @@ import { ConnectedAccounts } from '@/components/whatsapp/connected-accounts';
 import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create-campaign-modal';
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
+import { useAuth } from '@/hooks/useAuth';
+import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -22,6 +24,7 @@ export default function WhatsAppCampaignsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
+  const { company } = useAuth();
 
   // Check if any WhatsApp accounts exist on component mount
   useEffect(() => {
@@ -58,6 +61,10 @@ export default function WhatsAppCampaignsPage() {
   const handleCreateAudience = (newAudience: AudienceGroup) => {
     setAudiences([...audiences, newAudience]);
   };
+
+  if (company?.planName !== "ENTERPRISE") {
+    return <WhatsAppPlaceholder />;
+  }
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>

@@ -9,6 +9,8 @@ import PropertyBrochure from '@/components/property-brochure';
 import PropertyCard from '@/components/property-card';
 import { Card, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
+import BrochurePlaceholder from '@/components/placeholders/brochure';
 
 // Create a custom hook for property fetching
 const useProperty = (id: string | null) => {
@@ -26,6 +28,7 @@ export default function Home() {
   const [properties, setProperties] = useState<PropertyData[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { company } = useAuth();
 
   const { data, isLoading } = useQuery({
     queryKey: ['properties'],
@@ -35,8 +38,7 @@ export default function Home() {
     },
   });
 
-  const { data: selectedProperty, isLoading: selectedPropertyLoading } =
-    useProperty(selectedPropertyId);
+  const { data: selectedProperty, isLoading: selectedPropertyLoading } = useProperty(selectedPropertyId);
 
   useEffect(() => {
     if (data) {
@@ -45,6 +47,11 @@ export default function Home() {
     }
     setLoading(false);
   }, [data]);
+
+  // Move plan check here, after all hooks are initialized
+  if (company?.planName !== "PREMIUM" && company?.planName !== "ENTERPRISE") {
+    return <BrochurePlaceholder />;
+  }
 
   const handleSelectProperty = (id: string) => {
     setSelectedPropertyId(id);

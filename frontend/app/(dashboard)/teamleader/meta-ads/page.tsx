@@ -19,6 +19,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/hooks/useAuth';
+import MetaAdsPlaceholder from '@/components/placeholders/meta-ads';
 
 export default function MetaAdsPage() {
   const [showFacebookModal, setShowFacebookModal] = useState(false);
@@ -27,7 +29,7 @@ export default function MetaAdsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [forms, setForms] = useState<Form[]>([]);
-
+  const { company } = useAuth();
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
   };
@@ -35,6 +37,10 @@ export default function MetaAdsPage() {
   const handleCreateForm = (newForm: Form) => {
     setForms([...forms, newForm]);
   };
+
+  if (company?.planName !== "ENTERPRISE") {
+    return <MetaAdsPlaceholder />;
+  }
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>

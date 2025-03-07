@@ -108,7 +108,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
           phone: companyPhone,
           address: `${address}, ${city}, ${country}`,
           size,
-          userCount,
+          userCount: isFreeTrial ? 5 : userCount,
           currency,
           adminId: admin.id,
           planName: isFreeTrial ? "BASIC" : null,

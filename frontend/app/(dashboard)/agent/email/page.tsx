@@ -14,11 +14,15 @@ import { EmailRecipientsList } from '@/components/emails/email-recipients-list';
 import { EmailTemplatesList } from '@/components/emails/email-templates-list';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EmailPlaceholder from '@/components/placeholders/email';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function EmailCampaignsPage() {
   const [connectedAccounts, setConnectedAccounts] = useState<EmailAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { company } = useAuth();
 
+  
   useEffect(() => {
     const loadAccounts = async () => {
       try {
@@ -32,11 +36,15 @@ export default function EmailCampaignsPage() {
     };
     loadAccounts();
   }, []);
-
+  
   const handleConnect = async (newAccount: EmailAccount) => {
     setConnectedAccounts([...connectedAccounts, newAccount]);
   };
 
+  if (company?.planName !== "PREMIUM" && company?.planName !== "ENTERPRISE") {
+    return <EmailPlaceholder />;
+  }
+  
   return (
     <Card className='p-6 space-y-6 min-h-full'>
       <div className='flex justify-between items-center'>
