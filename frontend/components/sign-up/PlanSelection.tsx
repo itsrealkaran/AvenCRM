@@ -196,9 +196,11 @@ export default function PlanSelection({ onNext }: StepProps) {
     if (!showFreeTrial) {
       setPlan('basic');
       updateField('plan', 'basic');
+      updateField('isFreeTrial', true);
     } else {
       setPlan('');
       updateField('plan', '');
+      updateField('isFreeTrial', false);
     }
   };
 

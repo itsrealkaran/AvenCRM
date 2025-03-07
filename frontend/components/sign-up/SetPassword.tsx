@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface StepProps {
   onNext: () => void;
@@ -25,7 +26,7 @@ const passwordRequirements = [
 ];
 
 export default function SetPassword({ onNext, onBack }: StepProps) {
-  const { password, updateField, ...formData } = useSignUp();
+  const { password, updateField, isFreeTrial, ...formData } = useSignUp();
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMatch, setPasswordMatch] = useState(true);
@@ -38,8 +39,9 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
-  console.log(formData.plan, formData.billingFrequency, formData.accountType, 'formData');
   const checkPasswordStrength = (pwd: string) => {
     const newRequirements = {
       length: pwd.length >= 8,
@@ -94,6 +96,7 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
         userCount: formData.userCount,
         preferredCurrency: formData.preferredCurrency,
         countriesOfOperation: formData.countriesOfOperation,
+        isFreeTrial: isFreeTrial,
       };
 
       const subscriptionData = {
@@ -109,7 +112,16 @@ export default function SetPassword({ onNext, onBack }: StepProps) {
       updateField('userId', data.userId);
       updateField('companyId', data.companyId);
 
-      onNext(); // Move to the Success step
+      if (isFreeTrial) {
+        toast({
+          title: 'Account created successfully',
+          description: 'You can now sign in to your account',
+        });
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        router.push('/sign-in');
+      } else {
+        onNext(); // Move to the Success step
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
