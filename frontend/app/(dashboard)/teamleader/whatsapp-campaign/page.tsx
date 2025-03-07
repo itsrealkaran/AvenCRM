@@ -12,6 +12,8 @@ import { ConnectedAccounts } from '@/components/whatsapp/connected-accounts';
 import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create-campaign-modal';
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
+import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -19,6 +21,11 @@ export default function WhatsAppCampaignsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
+  const { company } = useAuth();
+
+  if (company?.planName !== "ENTERPRISE") {
+    return <WhatsAppPlaceholder />;
+  }
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
