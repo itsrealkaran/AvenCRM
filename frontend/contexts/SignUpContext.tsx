@@ -28,6 +28,7 @@ interface SignUpContextType {
   countriesOfOperation: string[];
   gender: string; // Added gender field
   userCount: number;
+  isFreeTrial: boolean;
   updateField: (field: string, value: any) => void;
 }
 
@@ -67,12 +68,12 @@ export const SignUpProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     countriesOfOperation: [], // Initialize as an empty array
     gender: '', // Initialize gender field
     userCount: 1,
+    isFreeTrial: false,
   });
 
   const updateField = (field: string, value: any) => {
     setState((prev) => {
       const newState = { ...prev, [field]: value };
-      console.log(`Updated ${field}:`, value); // Log the update
       return newState;
     });
   };

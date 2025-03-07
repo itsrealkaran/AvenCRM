@@ -72,6 +72,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
     userCount,
     currency,
     countriesOfOperation,
+    isFreeTrial,
   } = companyData;
 
   try {
@@ -86,7 +87,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
         .json({ message: "User already exists with this email" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS || 12);
+    const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS || 12));
 
     const response = await db.$transaction(async (tx) => {
       const admin = await tx.user.create({
@@ -110,6 +111,9 @@ router.post("/sign-up", async (req: Request, res: Response) => {
           userCount,
           currency,
           adminId: admin.id,
+          planName: isFreeTrial ? "BASIC" : null,
+          planType: isFreeTrial ? "COMPANY" : null,
+          planEnd: isFreeTrial ? new Date(Date.now() + 14 * 24 * 60 * 60 * 1000) : undefined,
         },
       });
       const updatedAdmin = await tx.user.update({
@@ -118,6 +122,20 @@ router.post("/sign-up", async (req: Request, res: Response) => {
           companyId: company.id,
         },
       });
+
+      if (isFreeTrial) {
+        await tx.plan.update({
+          where: { name: "BASIC" },
+          data: {
+            companies: {
+              connect: {
+                id: company.id,
+              },
+            },
+          },
+        })
+      }
+      
       return updatedAdmin;
     });
 
