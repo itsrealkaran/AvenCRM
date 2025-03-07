@@ -12,19 +12,16 @@ import {
 import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { format } from 'date-fns';
-import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { ExternalLink, FileText } from 'lucide-react';
 import { MRT_ColumnDef } from 'material-react-table';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   Dialog,
   DialogContent,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -313,6 +310,62 @@ export const adminColumns: MRT_ColumnDef<Deal>[] = [
     header: 'Notes',
     Cell: ({ row }) => {
       return <NotesCell row={row} />;
+    },
+  },
+  {
+    accessorKey: 'documents',
+    header: 'Documents',
+    Cell: ({ row }: any) => {
+      const [isModalOpen, setIsModalOpen] = useState(false);
+      const documents = row.getValue('documents') || [];
+
+      return (
+        <>
+          <div 
+            className="cursor-pointer hover:text-primary transition-colors"
+            onClick={() => setIsModalOpen(true)}
+          >
+            {documents.length} {documents.length === 1 ? "Document" : "Documents"}
+          </div>
+
+          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Deal Documents</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4">
+                {documents.length === 0 ? (
+                  <p className="text-muted-foreground text-center py-4">
+                    No documents available
+                  </p>
+                ) : (
+                  documents.map((doc: any, index: number) => (
+                    <div 
+                      key={index}
+                      className="flex items-center justify-between p-3 rounded-lg border"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-5 w-5 text-primary" />
+                        <span className="font-medium">{doc.name}</span>
+                      </div>
+                      
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(doc.url, '_blank')}
+                        className="hover:text-primary"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      );
     },
   },
   {
