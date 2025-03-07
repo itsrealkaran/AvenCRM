@@ -6,6 +6,7 @@ import { AuthenticatedRequest } from "../middleware/auth.js";
 import { uploadFile } from "../utils/s3.js";
 import { notificationService } from "../services/redis.js";
 import { cronService } from "../services/cron.service.js";
+import SendUserPasswordEmail from "../email-templates/user-password.js";
 
 export const userController = {
   // User Management (SuperAdmin & Admin)
@@ -23,7 +24,6 @@ export const userController = {
       if (!companyId) {
         return res.status(400).json({ message: "Company ID is required" });
       }
-
       // Only SUPERADMIN can create ADMIN, and only ADMIN can create TEAM_LEADER/AGENT
       if (
         (agentRole === UserRole.ADMIN &&
@@ -34,15 +34,20 @@ export const userController = {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
 
+      //generate a 16 alpha-numeric password
+      const password = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS || 12));
+
+
       if (agentRole === UserRole.TEAM_LEADER) {
         const teamName = name + Math.floor(Math.random() * 1000);
 
-        await db.$transaction(async (tx) => {
+        const user = await db.$transaction(async (tx) => {
           const user = await tx.user.create({
             data: {
               name,
               email,
-              password: await bcrypt.hash("123456", 12),
+              password: hashedPassword,
               gender,
               phone,
               dob: new Date(dob),
@@ -67,15 +72,55 @@ export const userController = {
             },
           });
 
+          //send the password to the user's email
+          await SendUserPasswordEmail(email, password);
+
           return user;
         });
 
-        return res
-          .status(201)
-          .json({ message: "Team Leader created successfully" });
-      } else {
-        const hashedPassword = await bcrypt.hash("123456", 12);
+        try {
+          if (authUser.role === UserRole.ADMIN && dob) {
+            const birthday = new Date(dob);
+            const today = new Date();
+            
+            // Set birthday for this year
+            const birthdayThisYear = new Date(
+              today.getFullYear(),
+              birthday.getMonth(),
+              birthday.getDate()
+            );
 
+            // If birthday has passed this year, set for next year
+            if (birthdayThisYear < today) {
+              birthdayThisYear.setFullYear(today.getFullYear() + 1);
+            }
+
+            const event = await db.calendarEvent.create({
+              data: {
+                title: `${name}'s Birthday`,
+                start: birthdayThisYear,
+                end: birthdayThisYear,
+                setterId: authUser.id,
+              },
+            });
+
+            cronService.scheduleEventNotification(authUser.id, event.id, event.title, event.start, `/admin/calendar`);
+          }
+        } catch (error) {
+          console.error("Error in createBulkUser:", error);
+        }
+
+        res.status(201).json({
+          message: "User created successfully",
+          user: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            teamId: user.teamId,
+          },
+        });
+      } else {
         const user = await db.$transaction(async (tx) => {
           const user = await tx.user.create({
             data: {
@@ -107,6 +152,10 @@ export const userController = {
               },
             });
           }
+
+          //send the password to the user's email
+          await SendUserPasswordEmail(email, password);
+
           return user;
         });
 
@@ -175,11 +224,14 @@ export const userController = {
       const errors = [];
 
       for (let i = 0; i < usersData.length; i++) {
+        const password = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS || 12));
+
         const userData = {
           ...usersData[i],
           companyId: user.companyId,
           role: "AGENT",
-          password: bcrypt.hashSync("123456", 12)
+          password: hashedPassword
         };
 
         try {
@@ -205,7 +257,7 @@ export const userController = {
             continue;
           }
 
-          validatedUsers.push(userData);
+          validatedUsers.push({...userData, password});
         } catch (error) {
           errors.push({
             row: i + 1,
@@ -224,7 +276,7 @@ export const userController = {
             data: {
               name: userData.name,
               email: userData.email,
-              password: userData.password,
+              password: userData.hashedPassword,
               phone: userData.phone.toString(),
               dob: userData.dob ? new Date(userData.dob) : null,
               designation: userData.designation || null,
@@ -243,6 +295,9 @@ export const userController = {
             }
           });
           createdUsers.push(createdUser);
+
+          //send the password to the user's email
+          await SendUserPasswordEmail(userData.email, userData.password);
 
           //set the birthday event of the agent for the admin
           try {

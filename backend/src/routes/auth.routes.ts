@@ -86,7 +86,7 @@ router.post("/sign-up", async (req: Request, res: Response) => {
         .json({ message: "User already exists with this email" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, process.env.SALT_ROUNDS || 12);
 
     const response = await db.$transaction(async (tx) => {
       const admin = await tx.user.create({
