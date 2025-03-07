@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { BaseEntityDialog, CommonFormFields, CoOwnersField, NotesField } from '../entity-dialog';
+import { BaseEntityDialog, CoOwnersField, DocumentsField, NotesField } from '../entity-dialog';
 
 interface EditDealDialogProps {
   open: boolean;
@@ -301,6 +301,7 @@ export function EditDealDialog({ open, onOpenChange, deal }: EditDealDialogProps
               <div className='space-y-4'>
                 <NotesField form={form} isLoading={updateDeal.isPending} />
                 <CoOwnersField form={form} isLoading={updateDeal.isPending} />
+                <DocumentsField form={form} isLoading={updateDeal.isPending} />
               </div>
             </div>
 

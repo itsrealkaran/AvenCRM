@@ -346,6 +346,9 @@ model Deal {
   commissionRate      Float?
   estimatedCommission Float?
 
+  // Documents
+  documents Json[] @default([])
+
   // Additional Details
   notes Json[]   @default([])
   role  LeadRole @default(SELL)

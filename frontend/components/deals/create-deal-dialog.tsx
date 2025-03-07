@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { BaseEntityDialog, CommonFormFields, CoOwnersField, NotesField } from '../entity-dialog';
+import { BaseEntityDialog, CoOwnersField, DocumentsField, NotesField } from '../entity-dialog';
 
 interface CreateDealDialogProps {
   open: boolean;
@@ -64,6 +64,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
     estimatedCommission: 0,
     notes: [],
     coOwners: [],
+    documents: [],
   };
 
   return (
@@ -73,7 +74,10 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
       title='Create New Deal'
       schema={createDealSchema}
       defaultValues={defaultValues}
-      onSubmit={(values) => createDeal.mutate(values)}
+      onSubmit={(values) => {
+        console.log(values, 'values');
+        createDeal.mutate(values);
+      }}
       isLoading={isLoading}
     >
       {(form) => (
@@ -285,6 +289,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
             <div className='space-y-4'>
               <NotesField form={form} isLoading={isLoading} />
               <CoOwnersField form={form} isLoading={isLoading} />
+              <DocumentsField form={form} isLoading={isLoading} /> 
             </div>
           </div>
 
