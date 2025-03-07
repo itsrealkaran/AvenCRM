@@ -77,7 +77,7 @@ export function EditTransactionDialog({
   useEffect(() => {
     if (transaction) {
       form.reset({
-        amount: transaction.amount.toString(),
+        amount: (transaction.amount * (transaction?.commissionRate || 0 / 100)).toString(),
         commissionRate: transaction.commissionRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
