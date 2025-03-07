@@ -180,17 +180,17 @@ export function EditTransactionDialog({
               <FormField
                 control={form.control}
                 name='date'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Transaction Date</FormLabel>
-                  <FormControl>
-                    <Input type='date' {...field} disabled={editTransaction.isPending} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Transaction Date</FormLabel>
+                    <FormControl>
+                      <Input type='date' {...field} disabled={editTransaction.isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
                 control={form.control}
                 name='propertyType'
                 render={({ field }) => (

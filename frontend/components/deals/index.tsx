@@ -3,35 +3,35 @@
 import { useCallback, useMemo, useState } from 'react';
 import { dealsApi } from '@/api/deals.service';
 import { Deal, DealStatus, LeadStatus, UserRole } from '@/types';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
-import { 
-  CirclePlus, 
-  Download, 
-  Filter, 
-  Pencil, 
-  Plus, 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  CirclePlus,
   Copy,
-  RefreshCw, 
-  Trash2, 
-  Upload 
+  Download,
+  Filter,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Upload,
 } from 'lucide-react';
-import { 
-  MaterialReactTable, 
-  MRT_GlobalFilterTextField, 
-  MRT_ToggleFiltersButton, 
-  useMaterialReactTable 
+import {
+  MaterialReactTable,
+  MRT_GlobalFilterTextField,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
 } from 'material-react-table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
@@ -317,7 +317,7 @@ export default function DealsPage() {
     },
     meta: {
       onStatusChange: handleStatusChange,
-    },  
+    },
     renderRowActionMenuItems: ({ row, closeMenu }) => [
       <MenuItem
         key={0}

@@ -406,9 +406,9 @@ const PropertyDetails = () => {
                       </div>
                       {image ? (
                         <>
-                        <div className='absolute top-4 left-4 text-3xl opacity-20'>
-                          <Logo />
-                        </div>
+                          <div className='absolute top-4 left-4 text-3xl opacity-20'>
+                            <Logo />
+                          </div>
                           <img
                             src={image}
                             alt={`Property view ${index + 2}`}
@@ -608,40 +608,25 @@ const PropertyDetails = () => {
                     <div>
                       <span className='text-sm text-gray-500'>Property Type:</span>
                       <p className='font-medium text-gray-900'>
-                        {property?.propertyType
-                          && property?.propertyType
-                              .split('_')
-                              .join(' ')
-                              .charAt(0)
-                              .toUpperCase() +
-                              property?.propertyType?.split('_').join(' ').slice(1)
-                            }
+                        {property?.propertyType &&
+                          property?.propertyType.split('_').join(' ').charAt(0).toUpperCase() +
+                            property?.propertyType?.split('_').join(' ').slice(1)}
                       </p>
                     </div>
                     <div>
                       <span className='text-sm text-gray-500'>Zoning Type:</span>
                       <p className='font-medium text-gray-900'>
-                        {property?.zoningType
-                          && property?.zoningType
-                              .split('_')
-                              .join(' ')
-                              .charAt(0)
-                              .toUpperCase() +
-                              property?.zoningType?.split('_').join(' ').slice(1)
-                            }
+                        {property?.zoningType &&
+                          property?.zoningType.split('_').join(' ').charAt(0).toUpperCase() +
+                            property?.zoningType?.split('_').join(' ').slice(1)}
                       </p>
                     </div>
                     <div>
                       <span className='text-sm text-gray-500'>Listing Type:</span>
                       <p className='font-medium text-gray-900'>
-                        {property?.listingType
-                          && property?.listingType
-                              .split('_')
-                              .join(' ')
-                              .charAt(0)
-                              .toUpperCase() +
-                              property?.listingType?.split('_').join(' ').slice(1)
-                            }
+                        {property?.listingType &&
+                          property?.listingType.split('_').join(' ').charAt(0).toUpperCase() +
+                            property?.listingType?.split('_').join(' ').slice(1)}
                       </p>
                     </div>
                   </div>
@@ -728,15 +713,16 @@ const PropertyDetails = () => {
                           length: isMetric
                             ? (parseFloat(room.length) * 0.3048).toFixed(2)
                             : room.length,
-                        }))
-                      }} 
+                        })),
+                      }}
                     />
                   ))}
                 </div>
 
                 {/* Legend or Note */}
                 <p className='text-sm text-gray-500 mt-4'>
-                  * All dimensions are approximate and may vary. {isMetric ? 'Measurements shown in meters.' : 'Measurements shown in feet.'}
+                  * All dimensions are approximate and may vary.{' '}
+                  {isMetric ? 'Measurements shown in meters.' : 'Measurements shown in feet.'}
                 </p>
               </div>
             </Card>

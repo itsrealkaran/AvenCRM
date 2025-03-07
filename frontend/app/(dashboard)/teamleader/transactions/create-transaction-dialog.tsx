@@ -3,6 +3,7 @@
 import { dealsApi } from '@/api/deals.service';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -26,7 +27,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { Loader2 } from 'lucide-react';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
@@ -209,13 +209,10 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
-                disabled={createTransaction.isPending}
-              >
+              <Button type='submit' disabled={createTransaction.isPending}>
                 {createTransaction.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     Creating...
                   </>
                 ) : (

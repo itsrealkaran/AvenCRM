@@ -290,7 +290,7 @@ export function CreateDealDialog({ open, onOpenChange, isLoading }: CreateDealDi
             <div className='space-y-4'>
               <NotesField form={form} isLoading={isLoading} />
               <CoOwnersField form={form} isLoading={isLoading} />
-              <DocumentsField form={form} isLoading={isLoading} /> 
+              <DocumentsField form={form} isLoading={isLoading} />
             </div>
           </div>
 

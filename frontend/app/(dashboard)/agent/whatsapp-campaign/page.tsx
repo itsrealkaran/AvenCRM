@@ -5,6 +5,7 @@ import { whatsAppService } from '@/api/whatsapp.service';
 import { FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
 
+import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,7 +16,6 @@ import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 import { useAuth } from '@/hooks/useAuth';
-import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -62,7 +62,7 @@ export default function WhatsAppCampaignsPage() {
     setAudiences([...audiences, newAudience]);
   };
 
-  if (company?.planName !== "ENTERPRISE") {
+  if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
 
