@@ -11,6 +11,7 @@ export interface Transaction {
     name: string;
     email: string;
   };
+  propertyType: string;
   transactionType: TransactionType;
   isApprovedByTeamLeader: TransactionStatus;
   status: TransactionStatus;

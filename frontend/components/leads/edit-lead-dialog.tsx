@@ -147,6 +147,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                             <SelectItem value={'BUY'}>Buy</SelectItem>
                             <SelectItem value={'SELL'}>Sell</SelectItem>
                             <SelectItem value={'RENT'}>Rent</SelectItem>
+                            <SelectItem value={'NOT_LISTED'}>Not Listed</SelectItem>
                           </SelectContent>
                         </Select>
                       </FormControl>

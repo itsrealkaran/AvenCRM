@@ -8,6 +8,7 @@ import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -27,11 +28,21 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     accessorKey: 'amount',
     header: 'Amount',
     Cell: ({ row }) => {
+      const { currency } = useCurrency();
       const amount = parseFloat(row.getValue('amount'));
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
+      const commissionRate = row.original.commissionRate || 0;
+      const commissionAmount = (amount * commissionRate) / 100;
+
+      return (
+        <div className="flex flex-col gap-1">
+          <div>
+            {new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: currency.code,
+            }).format(commissionAmount)}
+          </div>
+        </div>
+      );
     },
   },
   {
@@ -103,63 +114,63 @@ export const renderRowActionMenuItems = ({
   onDelete: (transactionId: string) => void;
   onVerify: (transactionId: string, status: TransactionStatus) => void;
 }) => [
-  <MenuItem
-    key={0}
-    onClick={() => {
-      onEdit(row.original);
-      closeMenu();
-    }}
-    sx={{ m: 0 }}
-  >
-    <ListItemIcon>
-      <Pencil className='size-4' />
-    </ListItemIcon>
-    Edit Transaction
-  </MenuItem>,
-  row.original.status === TransactionStatus.PENDING && (
     <MenuItem
-      key={1}
+      key={0}
       onClick={() => {
-        onVerify(row.original.id, TransactionStatus.APPROVED);
+        onEdit(row.original);
         closeMenu();
       }}
       sx={{ m: 0 }}
-      className='text-green-600'
     >
       <ListItemIcon>
-        <UserCog className='size-4 text-green-600' />
+        <Pencil className='size-4' />
       </ListItemIcon>
-      Approve Transaction
-    </MenuItem>
-  ),
-  row.original.status === TransactionStatus.PENDING && (
+      Edit Transaction
+    </MenuItem>,
+    row.original.status === TransactionStatus.PENDING && (
+      <MenuItem
+        key={1}
+        onClick={() => {
+          onVerify(row.original.id, TransactionStatus.APPROVED);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-green-600'
+      >
+        <ListItemIcon>
+          <UserCog className='size-4 text-green-600' />
+        </ListItemIcon>
+        Approve Transaction
+      </MenuItem>
+    ),
+    row.original.status === TransactionStatus.PENDING && (
+      <MenuItem
+        key={2}
+        onClick={() => {
+          onVerify(row.original.id, TransactionStatus.REJECTED);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-orange-600'
+      >
+        <ListItemIcon>
+          <UserCog className='size-4 text-orange-600' />
+        </ListItemIcon>
+        Reject Transaction
+      </MenuItem>
+    ),
     <MenuItem
-      key={2}
+      key={3}
       onClick={() => {
-        onVerify(row.original.id, TransactionStatus.REJECTED);
+        onDelete(row.original.id);
         closeMenu();
       }}
       sx={{ m: 0 }}
-      className='text-orange-600'
+      className='text-red-600'
     >
       <ListItemIcon>
-        <UserCog className='size-4 text-orange-600' />
+        <Trash2 className='size-4 text-red-600' />
       </ListItemIcon>
-      Reject Transaction
-    </MenuItem>
-  ),
-  <MenuItem
-    key={3}
-    onClick={() => {
-      onDelete(row.original.id);
-      closeMenu();
-    }}
-    sx={{ m: 0 }}
-    className='text-red-600'
-  >
-    <ListItemIcon>
-      <Trash2 className='size-4 text-red-600' />
-    </ListItemIcon>
-    Delete Transaction
-  </MenuItem>,
-];
+      Delete Transaction
+    </MenuItem>,
+  ];

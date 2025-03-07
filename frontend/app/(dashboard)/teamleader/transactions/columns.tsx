@@ -8,6 +8,7 @@ import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -20,7 +21,6 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     header: 'Created By',
     Cell: ({ row }) => {
       const agent = row.original.agent;
-      console.log(row.original, 'row.orignal');
       return agent?.name || 'N/A';
     },
   },
@@ -29,10 +29,20 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     header: 'Amount',
     Cell: ({ row }) => {
       const amount = parseFloat(row.getValue('amount'));
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
+      const { currency } = useCurrency();
+      const commissionRate = row.original.commissionRate || 0;
+      const commissionAmount = (amount * commissionRate) / 100;
+
+      return (
+        <div className="flex flex-col gap-1">
+          <div>
+            {new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: currency.code,
+            }).format(commissionAmount)}
+          </div>
+        </div>
+      );
     },
   },
   {

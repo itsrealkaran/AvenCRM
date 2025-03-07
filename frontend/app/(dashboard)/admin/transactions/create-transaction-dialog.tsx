@@ -33,6 +33,7 @@ const transactionFormSchema = z.object({
   commissionRate: z.string().optional(),
   transactionMethod: z.string().optional(),
   date: z.string(),
+  propertyType: z.string().optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -51,6 +52,7 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
       commissionRate: '',
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
+      propertyType: '',
     },
   });
 
@@ -184,6 +186,29 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                     <FormControl>
                       <Input type='date' {...field} disabled={createTransaction.isPending} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select property type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='BUY'>Buy</SelectItem>
+                        <SelectItem value='SELL'>Sell</SelectItem>
+                        <SelectItem value='RENT'>Rent</SelectItem>
+                        <SelectItem value='NOT_LISTED'>Not Listed</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

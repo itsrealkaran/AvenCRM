@@ -551,20 +551,23 @@ export const leadsController: Controller  = {
         },
       });
 
+      if (!updatedLead.agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      console.log(updatedLead.agent);
+
       try {
-        const link = user.role === "ADMIN"
-        ? "/admin/leads"
-        : user.role === "TEAM_LEADER"
+        const link = updatedLead.agent.role === "TEAM_LEADER"
         ? "/teamleader/leads"
-        : user.role === "AGENT"
+        : updatedLead.agent.role === "AGENT"
         ? "/agent/leads"
-        : user.role === "SUPERADMIN"
-        ? "/superadmin/leads"
         : "";
 
         await notificationService.createNotification(agentId, {
           title: "New Lead Assigned",
-          message: `${updatedLead.name} is assigned to you`,          type: "lead",
+          message: `${updatedLead.name} is assigned to you`,
+          type: "lead",
           link,
         });
       } catch (error) {

@@ -2,7 +2,7 @@ import { Router, Response } from "express";
 import { prisma } from "../lib/prisma.js";
 import { protect } from "../middleware/auth.js";
 import { Request } from "express";
-import { PlanTier, TransactionStatus, UserRole } from "@prisma/client";
+import { LeadRole, PlanTier, TransactionStatus, UserRole } from "@prisma/client";
 import { getAllTransactions } from "../controllers/transactions.controller.js";
 
 const router: Router = Router();
@@ -92,7 +92,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
     try {
-        const { amount, commissionRate, transactionMethod, date } = req.body;
+        const { amount, commissionRate, transactionMethod, date, propertyType } = req.body;
 
         // generate a random 10 digit invoice number
         const invoiceNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
@@ -119,7 +119,8 @@ router.post("/", async (req: Request, res: Response) => {
                 date: new Date(date),
                 agentId: req.user?.id!,
                 companyId: req.user?.companyId!,
-                isApprovedByTeamLeader
+                isApprovedByTeamLeader,
+                propertyType: propertyType as LeadRole
             },
             include: {
                 agent: {
@@ -187,7 +188,7 @@ router.put("/admin/verify/:id", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
     try {
-        const { amount, commissionRate, transactionMethod, date } = req.body;
+        const { amount, commissionRate, transactionMethod, date, propertyType } = req.body;
         
         const user = req.user;
         if(!user) {
@@ -212,7 +213,8 @@ router.put("/:id", async (req: Request, res: Response) => {
                 amount: parseFloat(amount),
                 commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
-                date: new Date(date)
+                date: new Date(date),
+                propertyType: propertyType as LeadRole
             },
             include: {
                 agent: {

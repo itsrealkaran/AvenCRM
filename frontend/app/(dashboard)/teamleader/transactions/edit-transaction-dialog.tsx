@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
+import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -34,6 +35,7 @@ const transactionFormSchema = z.object({
   commissionRate: z.string().optional(),
   transactionMethod: z.string().optional(),
   date: z.string(),
+  propertyType: z.string().optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -59,6 +61,7 @@ export function EditTransactionDialog({
       commissionRate: '',
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
+      propertyType: '',
     },
   });
 
@@ -72,11 +75,13 @@ export function EditTransactionDialog({
 
   useEffect(() => {
     if (transaction) {
+      console.log(transaction, 'transaction');
       form.reset({
         amount: transaction.amount.toString(),
         commissionRate: transaction.commissionRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
+        propertyType: transaction.propertyType || '',
       });
     }
   }, [transaction, form]);
@@ -202,12 +207,47 @@ export function EditTransactionDialog({
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select property type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='BUY'>Buy</SelectItem>
+                        <SelectItem value='SELL'>Sell</SelectItem>
+                        <SelectItem value='RENT'>Rent</SelectItem>
+                        <SelectItem value='NOT_LISTED'>Not Listed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className='flex justify-end space-x-4'>
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type='submit'>Update Transaction</Button>
+              <Button 
+                type='submit' 
+                disabled={editTransaction.isPending}
+              >
+                {editTransaction.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Transaction'
+                )}
+              </Button>
             </div>
           </form>
         </Form>

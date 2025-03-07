@@ -26,12 +26,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { Loader2 } from 'lucide-react';
 
 const transactionFormSchema = z.object({
   amount: z.string().min(1, 'Amount is required'),
   commissionRate: z.string().optional(),
   transactionMethod: z.string().optional(),
   date: z.string(),
+  propertyType: z.string().optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -178,12 +180,47 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select property type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='BUY'>Buy</SelectItem>
+                        <SelectItem value='SELL'>Sell</SelectItem>
+                        <SelectItem value='RENT'>Rent</SelectItem>
+                        <SelectItem value='NOT_LISTED'>Not Listed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
             <div className='flex justify-end space-x-4'>
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type='submit'>Create Transaction</Button>
+              <Button 
+                type='submit' 
+                disabled={createTransaction.isPending}
+              >
+                {createTransaction.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  'Create Transaction'
+                )}
+              </Button>
             </div>
           </form>
         </Form>

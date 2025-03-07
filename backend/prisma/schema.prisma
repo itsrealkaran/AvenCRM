@@ -132,6 +132,7 @@ enum LeadRole {
   SELL
   BUY
   RENT
+  NOT_LISTED
 }
 
 // Unified User Model
@@ -378,6 +379,8 @@ model Transaction {
   invoiceNumber  String
   commissionRate Float? @default(0)
   totalAmount    Float?
+
+  propertyType LeadRole?
 
   // Additional Financial Info
   transactionMethod String?

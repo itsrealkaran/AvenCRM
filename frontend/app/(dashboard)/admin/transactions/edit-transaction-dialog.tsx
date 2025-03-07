@@ -36,6 +36,7 @@ const transactionFormSchema = z.object({
   invoiceNumber: z.string().optional(),
   transactionMethod: z.string().optional(),
   date: z.string(),
+  propertyType: z.string().optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -59,6 +60,7 @@ export function EditTransactionDialog({
       commissionRate: '',
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
+      propertyType: '',
     },
   });
 
@@ -77,6 +79,7 @@ export function EditTransactionDialog({
         commissionRate: transaction.commissionRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
+        propertyType: transaction.propertyType || '',
       });
     }
   }, [transaction, form]);
@@ -173,9 +176,10 @@ export function EditTransactionDialog({
                 )}
               />
             </div>
-            <FormField
-              control={form.control}
-              name='date'
+            <div className='grid grid-cols-2 gap-4'>
+              <FormField
+                control={form.control}
+                name='date'
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Transaction Date</FormLabel>
@@ -186,6 +190,30 @@ export function EditTransactionDialog({
                 </FormItem>
               )}
             />
+            <FormField
+                control={form.control}
+                name='propertyType'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Type</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select property type' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value='BUY'>Buy</SelectItem>
+                        <SelectItem value='SELL'>Sell</SelectItem>
+                        <SelectItem value='RENT'>Rent</SelectItem>
+                        <SelectItem value='NOT_LISTED'>Not Listed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className='flex justify-end space-x-4'>
               <Button
                 type='button'

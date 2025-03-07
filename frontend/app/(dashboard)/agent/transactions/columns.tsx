@@ -7,6 +7,7 @@ import { Copy, Pencil, Trash2 } from 'lucide-react';
 import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -18,11 +19,21 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     accessorKey: 'amount',
     header: 'Amount',
     Cell: ({ row }) => {
+      const { currency } = useCurrency();
       const amount = parseFloat(row.getValue('amount'));
-      return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-      }).format(amount);
+      const commissionRate = row.original.commissionRate || 0;
+      const commissionAmount = (amount * commissionRate) / 100;
+
+      return (
+        <div className="flex flex-col gap-1">
+          <div>
+            {new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: currency.code,
+            }).format(commissionAmount)}
+          </div>
+        </div>
+      );
     },
   },
   {

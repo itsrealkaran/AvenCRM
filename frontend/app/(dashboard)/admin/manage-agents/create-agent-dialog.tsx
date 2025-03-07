@@ -204,7 +204,7 @@ export function CreateAgentDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {totalAgents >= company.userCount ? (
+      {!user && totalAgents >= company.userCount ? (
         <UpgradePlanDialog
           isOpen={open}
           onClose={() => onOpenChange(false)}
