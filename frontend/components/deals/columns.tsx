@@ -243,6 +243,8 @@ export const columns: MRT_ColumnDef<Deal>[] = [
         </DropdownMenu>
       );
     },
+    filterVariant: 'select',
+    filterSelectOptions: Object.values(DealStatus),
   },
   {
     accessorKey: 'dealAmount',
