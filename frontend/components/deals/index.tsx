@@ -363,8 +363,8 @@ export default function DealsPage() {
   });
 
   return (
-    <section className='flex-1 h-full'>
-      <Card className='h-full w-full p-6'>
+    <section className='min-h-full w-full'>
+      <Card className='min-h-full flex flex-1 flex-col p-6'>
         <div className='flex justify-between items-center mb-6'>
           <div>
             <h1 className='text-2xl font-bold tracking-tight'>Deals Management</h1>

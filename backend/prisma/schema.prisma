@@ -133,6 +133,7 @@ enum LeadRole {
   BUY
   RENT
   NOT_LISTED
+  LISTED
 }
 
 // Unified User Model
