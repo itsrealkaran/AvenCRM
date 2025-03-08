@@ -318,38 +318,37 @@ export const adminColumns: MRT_ColumnDef<Deal>[] = [
     accessorKey: 'documents',
     header: 'Documents',
     Cell: ({ row }: any) => {
-      const [isModalOpen, setIsModalOpen] = useState(false);
       const documents = row.getValue('documents') || [];
+      const documentCount = documents.length;
 
       return (
-        <>
-          <div
-            className='cursor-pointer hover:text-primary transition-colors'
-            onClick={() => setIsModalOpen(true)}
-          >
-            {documents.length} {documents.length === 1 ? 'Document' : 'Documents'}
-          </div>
-
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogContent className='max-w-md'>
-              <DialogHeader>
-                <DialogTitle>Deal Documents</DialogTitle>
-              </DialogHeader>
-
-              <div className='space-y-4'>
-                {documents.length === 0 ? (
-                  <p className='text-muted-foreground text-center py-4'>No documents available</p>
-                ) : (
-                  documents.map((doc: any, index: number) => (
-                    <div
-                      key={index}
-                      className='flex items-center justify-between p-3 rounded-lg border'
-                    >
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
+            >
+              <span className='font-medium text-gray-700'>{documentCount}</span>
+              {documentCount === 1 ? 'Document' : 'Documents'}
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
+            <DialogHeader>
+              <DialogTitle>Deal Documents</DialogTitle>
+            </DialogHeader>
+            <div className='space-y-4'>
+              {documents.length > 0 ? (
+                documents.map((doc: any, index: number) => (
+                  <div
+                    key={index}
+                    className='flex flex-col gap-2 p-4 rounded-lg border border-gray-200'
+                  >
+                    <div className='flex items-center justify-between'>
                       <div className='flex items-center gap-3'>
                         <FileText className='h-5 w-5 text-primary' />
-                        <span className='font-medium'>{doc.name}</span>
+                        <span className='font-medium text-gray-900'>{doc.name}</span>
                       </div>
-
                       <Button
                         variant='ghost'
                         size='sm'
@@ -357,14 +356,17 @@ export const adminColumns: MRT_ColumnDef<Deal>[] = [
                         className='hover:text-primary'
                       >
                         <ExternalLink className='h-4 w-4' />
+                        <span className='ml-2 text-sm'>Open</span>
                       </Button>
                     </div>
-                  ))
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-        </>
+                  </div>
+                ))
+              ) : (
+                <p className='text-center text-gray-500'>No documents available</p>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       );
     },
   },
