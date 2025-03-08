@@ -1,28 +1,64 @@
 'use client';
 
-import { SetStateAction, useCallback, useState } from 'react';
+import { SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
-import { DealStatus, LeadResponse as Lead, LeadStatus } from '@/types';
+import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types';
+import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
+import {
+  CirclePlus,
+  Copy,
+  CopyIcon,
+  Download,
+  Filter,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Upload,
+  ArrowRightLeft,
+} from 'lucide-react';
+import {
+  MaterialReactTable,
+  MRT_GlobalFilterTextField,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+} from 'material-react-table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { read, utils } from 'xlsx';
 
-import { DataTable } from '@/components/data-table';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
+import { useAuth } from '@/hooks/useAuth';
+
 import { adminColumns } from '@/components/leads/admin-columns';
 import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
 import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
 import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
-import { Card } from '@/components/ui/card';
+import FileImportModal from '@/components/data-table/file-import-modal';
 
-export default function LeadsPage() {
+export default function AdminLeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isConvertDialogOpen, setIsConvertDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [lead, setLead] = useState<Lead[] | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const [headers, setHeaders] = useState<string[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: agents } = useQuery({
     queryKey: ['agents'],
@@ -59,7 +95,6 @@ export default function LeadsPage() {
       const lead = await leadsApi.getLeads();
       //@ts-ignore
       setLead(lead.data);
-      console.log(lead);
       return lead;
     } catch (error) {
       throw new Error('Failed to fetch leads');
@@ -68,14 +103,14 @@ export default function LeadsPage() {
 
   const {
     data: response,
-    isLoading,
+    isLoading: isLeadsLoading,
     refetch,
   } = useQuery({
     queryKey: ['leads'],
     queryFn: getLeads,
   });
 
-  const leads = response || [];
+  const leads = response?.data || [];
 
   const deleteLead = useMutation({
     mutationFn: async (leadId: string) => {
@@ -116,31 +151,28 @@ export default function LeadsPage() {
     setIsEditDialogOpen(true);
   };
 
+  const handleConvertToDeal = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsConvertDialogOpen(true);
+  };
+
   const handleStatusChange = async (recordId: string, newStatus: LeadStatus | DealStatus) => {
     try {
       // Check if the newStatus is of type LeadStatus
       if (newStatus in LeadStatus) {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`,
-          {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: newStatus }),
-            credentials: 'include',
-          }
-        );
-        if (!response.ok) {
-          toast.error('Cannot change the status of a won lead');
-        } else {
-          await queryClient.invalidateQueries({ queryKey: ['leads'] });
-          toast.success('Lead status updated successfully');
-        }
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: newStatus }),
+          credentials: 'include',
+        });
       }
+      await queryClient.invalidateQueries({ queryKey: ['leads'] });
+      toast.success('Lead status updated successfully');
     } catch (error) {
-      console.log(error);
-      toast.error((error as string) || 'Failed to update lead status');
+      toast.error('Failed to update lead status');
     }
   };
 
@@ -151,6 +183,12 @@ export default function LeadsPage() {
       toast.dismiss();
       toast.error('Failed to delete lead');
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await refetch();
+    setIsLoading(false);
   };
 
   const handleDownload = (format: 'csv' | 'xlsx') => {
@@ -230,14 +268,314 @@ export default function LeadsPage() {
     }
   };
 
-  const handleSelectionChange = useCallback((leads: Lead[]) => {
-    setSelectedRows(leads);
-  }, []);
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.error('No file selected');
+      return;
+    }
+
+    try {
+      let jsonData: Record<string, string>[] = [];
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileType === 'csv') {
+        setHeaders(null);
+        const text = await file.text();
+        const rows = text.split('\n');
+        const headers = rows[0].split(',').map((header) => header.trim());
+        setHeaders(headers);
+
+        jsonData = rows.slice(1).map((row) => {
+          const values = row.split(',').map((value) => value.trim());
+          return headers.reduce(
+            (obj, header, index) => {
+              obj[header] = values[index];
+              return obj;
+            },
+            {} as Record<string, string>
+          );
+        });
+      } else if (fileType === 'xlsx') {
+        setHeaders(null);
+        const buffer = await file.arrayBuffer();
+        const workbook = read(buffer);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        // Get headers from the first row
+        const headers = utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+
+        setHeaders(headers);
+
+        // Get data excluding the header row
+        jsonData = utils.sheet_to_json(worksheet);
+      } else {
+        throw new Error('Unsupported file format');
+      }
+
+      // Filter out empty objects (from empty lines)
+      const filteredData = jsonData.filter((obj) => Object.keys(obj).length > 0);
+
+      console.log('Converted data:', filteredData);
+      toast.success(
+        `Successfully parsed ${filteredData.length} rows from ${fileType?.toUpperCase()}`
+      );
+
+      // Reset the file input for future uploads
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      setFileData(filteredData);
+    } catch (error) {
+      console.error(`Error parsing ${file.name}:`, error);
+      toast.error(`Failed to parse ${file.name}. Please check the format.`);
+      setFileData(null);
+    }
+  };
+
+  const table = useMaterialReactTable({
+    columns: adminColumns,
+    data: leads,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      density: 'compact',
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
+    },
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '540px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={(theme) => ({
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        })}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search leads...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <>
+              <Button
+                size={'sm'}
+                variant={'outline'}
+                className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+                onClick={async () => {
+                  const ok = confirm('Are you sure you want to delete these leads?');
+                  if (ok) {
+                    handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
+                    table.resetRowSelection();
+                  }
+                }}
+              >
+                <Trash2 className='size-4 mr-2' />
+                Delete({table.getFilteredSelectedRowModel().rows.length})
+              </Button>
+              
+              {agents && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant='outline' size='sm'>
+                      Assign Selected
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+                        handleBulkAssign(selectedIds, 'unassigned');
+                        table.resetRowSelection();
+                      }}
+                    >
+                      Unassigned
+                    </DropdownMenuItem>
+                    {agents.data.map((agent: any) => (
+                      <DropdownMenuItem 
+                        key={agent.id}
+                        onClick={() => {
+                          const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+                          handleBulkAssign(selectedIds, agent.id);
+                          table.resetRowSelection();
+                        }}
+                      >
+                        {agent.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Upload className='h-4 w-4 mr-2' />
+                Import
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  Import as CSV
+                  <input
+                    type='file'
+                    ref={fileInputRef}
+                    accept='.csv'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  Import as XLSX
+                  <input
+                    type='file'
+                    accept='.xlsx'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant='outline' size='sm' onClick={handleRefresh}>
+            <RefreshCw className='h-4 w-4 mr-2' />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Download className='h-4 w-4 mr-2' />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
+            <CirclePlus className='h-4 w-4 mr-2' /> Add New Lead
+          </Button>
+        </Box>
+      </Box>
+    ),
+    state: {
+      isLoading: isLoading || isLeadsLoading,
+    },
+    meta: {
+      onStatusChange: handleStatusChange,
+      onConvertToDeal: handleConvertToDeal,
+    },
+    renderRowActionMenuItems: ({ row, closeMenu }) => [
+      <MenuItem
+        key={0}
+        onClick={() => {
+          handleEdit(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <Pencil className='size-4'/>
+        </ListItemIcon>
+        Edit Lead
+      </MenuItem>,
+      <MenuItem
+        key={1}
+        onClick={() => {
+          handleDelete(row.original.id);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-red-600'
+      >
+        <ListItemIcon>
+          <Trash2 className='text-red-600 size-4' />
+        </ListItemIcon>
+        Delete Lead
+      </MenuItem>,
+      <MenuItem
+        key={2}
+        onClick={() => {
+          handleConvertToDeal(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <ArrowRightLeft className='size-4'/>
+        </ListItemIcon>
+        Convert to Deal
+      </MenuItem>,
+      <MenuItem
+        key={3}
+        onClick={() => {
+          navigator.clipboard.writeText(row.original.id);
+          toast.success('Lead ID copied to clipboard');
+          closeMenu();
+        }}
+      >
+        <ListItemIcon>
+          <CopyIcon className='size-4' />
+        </ListItemIcon>
+        Copy Lead ID
+      </MenuItem>,
+    ],
+  });
 
   return (
     <section className='h-full'>
-      <Card className='h-full w-full p-6'>
-        <div className='flex justify-between items-center'>
+      <Card className='min-h-full w-full p-6'>
+        <div className='flex justify-between items-center mb-2'>
           <div>
             <h1 className='text-2xl font-bold'>Leads Management</h1>
             <p className='text-sm text-muted-foreground'>
@@ -246,29 +584,15 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <div className='space-4 h-[calc(100%-50px)] flex-1'>
-          <DataTable
-            columns={adminColumns}
-            data={lead || []}
-            onEdit={handleEdit}
-            onBulkDelete={async (row: any[]) => {
-              const leadIds = row.map((row: { original: { id: any } }) => row.original.id);
-              await handleBulkDelete(leadIds);
-            }}
-            onDelete={handleDelete}
-            onSelectionChange={handleSelectionChange}
-            onStatusChange={handleStatusChange}
-            onDownload={handleDownload}
-            onConvertToDeal={(lead: SetStateAction<Lead | null>) => {
-              setSelectedLead(lead);
-              setIsConvertDialogOpen(true);
-            }}
-            refetch={refetch}
-            onCreateLead={() => setIsCreateDialogOpen(true)}
-            onBulkAssign={handleBulkAssign}
-            agents={agents?.data}
+        <MaterialReactTable table={table} />
+
+        {fileData && fileData.length > 0 && (
+          <FileImportModal
+            jsonData={fileData}
+            headers={headers || []}
+            onClose={() => setFileData(null)}
           />
-        </div>
+        )}
 
         <CreateLeadDialog
           open={isCreateDialogOpen}

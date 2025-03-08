@@ -1,6 +1,6 @@
 'use client';
 
-import { SetStateAction, useCallback, useMemo, useState } from 'react';
+import { SetStateAction, useCallback, useMemo, useRef, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types';
 import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
@@ -26,6 +26,7 @@ import {
 } from 'material-react-table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { read, utils } from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -42,6 +43,7 @@ import { columns } from './columns';
 import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { CreateLeadDialog } from './create-lead-dialog';
 import { EditLeadDialog } from './edit-lead-dialog';
+import FileImportModal from '@/components/data-table/file-import-modal';
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -51,6 +53,9 @@ export default function LeadsPage() {
   const [lead, setLead] = useState<Lead[] | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileData, setFileData] = useState<Record<string, string>[] | null>(null);
+  const [headers, setHeaders] = useState<string[] | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -113,25 +118,16 @@ export default function LeadsPage() {
     setIsEditDialogOpen(true);
   };
 
-  const handleStatusChange = async (recordId: string, newStatus: LeadStatus | DealStatus) => {
+  const handleStatusChange = async (recordId: string, newStatus: LeadStatus) => {
     try {
-      // Check if the newStatus is of type LeadStatus
-      if (newStatus in LeadStatus) {
-        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ status: newStatus }),
-          credentials: 'include',
-        });
-        if (!response.ok) {
-          toast.error('Cannot change the status of a won lead');
-        } else {
-          await queryClient.invalidateQueries({ queryKey: ['leads'] });
-          toast.success('Lead status updated successfully');
-        }
-      }
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/leads/${recordId}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+        credentials: 'include',
+      });
       await queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Lead status updated successfully');
     } catch (error) {
@@ -223,19 +219,83 @@ export default function LeadsPage() {
     }
   };
 
-  const handleSelectionChange = useCallback((leads: Lead[]) => {
-    setSelectedRows(leads);
-  }, []);
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    event.stopPropagation();
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.error('No file selected');
+      return;
+    }
+
+    try {
+      let jsonData: Record<string, string>[] = [];
+      const fileType = file.name.split('.').pop()?.toLowerCase();
+
+      if (fileType === 'csv') {
+        setHeaders(null);
+        const text = await file.text();
+        const rows = text.split('\n');
+        const headers = rows[0].split(',').map((header) => header.trim());
+        setHeaders(headers);
+
+        jsonData = rows.slice(1).map((row) => {
+          const values = row.split(',').map((value) => value.trim());
+          return headers.reduce(
+            (obj, header, index) => {
+              obj[header] = values[index];
+              return obj;
+            },
+            {} as Record<string, string>
+          );
+        });
+      } else if (fileType === 'xlsx') {
+        setHeaders(null);
+        const buffer = await file.arrayBuffer();
+        const workbook = read(buffer);
+        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+
+        // Get headers from the first row
+        const headers = utils.sheet_to_json(worksheet, { header: 1 })[0] as string[];
+
+        setHeaders(headers);
+
+        // Get data excluding the header row
+        jsonData = utils.sheet_to_json(worksheet);
+      } else {
+        throw new Error('Unsupported file format');
+      }
+
+      // Filter out empty objects (from empty lines)
+      const filteredData = jsonData.filter((obj) => Object.keys(obj).length > 0);
+
+      console.log('Converted data:', filteredData);
+      toast.success(
+        `Successfully parsed ${filteredData.length} rows from ${fileType?.toUpperCase()}`
+      );
+
+      // Reset the file input for future uploads
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+
+      setFileData(filteredData);
+    } catch (error) {
+      console.error(`Error parsing file:`, error);
+      toast.error(`Failed to parse file. Please check the format.`);
+      setFileData(null);
+    }
+  };
 
   const handleConvertToDeal = (lead: Lead) => {
     setSelectedLead(lead);
     setIsConvertDialogOpen(true);
   };
 
+  const leads = response?.data || [];
+
   const table = useMaterialReactTable({
-    //@ts-ignore
     columns,
-    data: lead || [],
+    data: leads,
     enableRowSelection: true,
     enableColumnResizing: true,
     enableColumnOrdering: true,
@@ -268,7 +328,7 @@ export default function LeadsPage() {
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
-        height: '600px',
+        height: '540px',
         border: '1px solid rgb(201, 201, 201)',
         borderRadius: '8px',
       },
@@ -313,7 +373,46 @@ export default function LeadsPage() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant='outline' size='sm'>
-                <Upload className='h-4 w-4' />
+                <Download className='h-4 w-4 mr-2' />
+                Import
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  Import as CSV
+                  <input
+                    type='file'
+                    ref={fileInputRef}
+                    accept='.csv'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <label className='flex w-full cursor-pointer'>
+                  Import as XLSX
+                  <input
+                    type='file'
+                    accept='.xlsx'
+                    className='hidden'
+                    onChange={handleFileUpload}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </label>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant='outline' size='sm' onClick={handleRefresh}>
+            <RefreshCw className='h-4 w-4 mr-2' />
+            Refresh
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Upload className='h-4 w-4 mr-2' />
                 Export
               </Button>
             </DropdownMenuTrigger>
@@ -326,12 +425,8 @@ export default function LeadsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <Button variant='outline' size='sm' onClick={handleRefresh}>
-            <RefreshCw className='h-4 w-4' />
-            Refresh
-          </Button>
           <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
-            <CirclePlus className='h-4 w-4' /> Add New Lead
+            <CirclePlus className='h-4 w-4 mr-2' /> Add New Lead
           </Button>
         </Box>
       </Box>
@@ -402,7 +497,7 @@ export default function LeadsPage() {
 
   return (
     <section className='h-full'>
-      <Card className='h-full w-full p-6'>
+      <Card className='min-h-full w-full p-6'>
         <div className='flex justify-between items-center mb-2'>
           <div>
             <h1 className='text-2xl font-bold'>Leads Management</h1>
@@ -413,6 +508,14 @@ export default function LeadsPage() {
         </div>
 
         <MaterialReactTable table={table} />
+
+        {fileData && fileData.length > 0 && (
+          <FileImportModal
+            jsonData={fileData}
+            headers={headers || []}
+            onClose={() => setFileData(null)}
+          />
+        )}
 
         <CreateLeadDialog
           open={isCreateDialogOpen}

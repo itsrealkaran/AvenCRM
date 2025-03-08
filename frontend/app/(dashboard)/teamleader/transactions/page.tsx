@@ -190,7 +190,7 @@ export default function TransactionsPage() {
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
-        height: '600px',
+        height: '540px',
         border: '1px solid rgb(201, 201, 201)',
         borderRadius: '8px',
       },
