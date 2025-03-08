@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { AITextarea } from '../ui/ai-textarea';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 const colors: Record<DealStatus, string> = {
   NEW: 'bg-purple-100 text-purple-800',
@@ -250,8 +251,9 @@ export const columns: MRT_ColumnDef<Deal>[] = [
     accessorKey: 'dealAmount',
     header: 'Amount',
     Cell: ({ row }) => {
-      const amount = row.getValue('dealAmount');
-      return amount ? `$${amount}` : '-';
+      const { formatPrice } = useCurrency();
+      const amount = formatPrice(row.getValue('dealAmount'));
+      return amount ? `${amount}` : '-';
     },
   },
   {

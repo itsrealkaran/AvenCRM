@@ -37,6 +37,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 import { AITextarea } from '../ui/ai-textarea';
 
@@ -249,8 +250,9 @@ export const adminColumns: MRT_ColumnDef<Deal>[] = [
     accessorKey: 'dealAmount',
     header: 'Amount',
     Cell: ({ row }) => {
-      const amount = row.getValue('dealAmount');
-      return amount ? `$${amount}` : '-';
+      const { formatPrice } = useCurrency();
+      const amount = formatPrice(row.getValue('dealAmount'));
+      return amount ? `${amount}` : '-';
     },
   },
   {
