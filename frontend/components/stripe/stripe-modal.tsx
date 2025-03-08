@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { loadStripe } from '@stripe/stripe-js';
 import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useCurrency } from '@/contexts/CurrencyContext';
 import { useAuth } from '@/hooks/useAuth';
 
 interface StripeModalProps {

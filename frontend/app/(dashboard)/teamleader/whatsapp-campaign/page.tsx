@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 
+import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +13,6 @@ import { ConnectedAccounts } from '@/components/whatsapp/connected-accounts';
 import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create-campaign-modal';
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
-import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function WhatsAppCampaignsPage() {
@@ -23,7 +23,7 @@ export default function WhatsAppCampaignsPage() {
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
   const { company } = useAuth();
 
-  if (company?.planName !== "ENTERPRISE") {
+  if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
 

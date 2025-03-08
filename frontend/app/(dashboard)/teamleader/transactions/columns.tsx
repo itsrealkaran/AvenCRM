@@ -1,5 +1,6 @@
 'use client';
 
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Transaction, TransactionStatus } from '@/types';
 import { ListItemIcon, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
@@ -8,7 +9,6 @@ import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -34,7 +34,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       const commissionAmount = (amount * commissionRate) / 100;
 
       return (
-        <div className="flex flex-col gap-1">
+        <div className='flex flex-col gap-1'>
           <div>
             {new Intl.NumberFormat('en-US', {
               style: 'currency',
@@ -90,7 +90,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       );
     },
   },
-{
+  {
     accessorKey: 'commissionRate',
     header: 'Commission Rate',
     Cell: ({ row }) => {
@@ -105,7 +105,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       if (!method) return 'N/A';
       return String(method)
         .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
     },
   },
@@ -117,7 +117,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       if (!type) return 'N/A';
       return String(type)
         .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
     },
   },

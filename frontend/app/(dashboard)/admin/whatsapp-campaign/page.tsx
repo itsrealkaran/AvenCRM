@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { FaWhatsapp } from 'react-icons/fa';
 
+import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,7 +14,6 @@ import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 import { useAuth } from '@/hooks/useAuth';
-import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -32,9 +32,9 @@ export default function WhatsAppCampaignsPage() {
 
   const { company } = useAuth();
 
-  if (company?.planName !== "ENTERPRISE") {
+  if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
-  } 
+  }
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>

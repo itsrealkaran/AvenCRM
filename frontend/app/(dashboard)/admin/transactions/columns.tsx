@@ -1,5 +1,6 @@
 'use client';
 
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Transaction, TransactionStatus } from '@/types';
 import { ListItemIcon, MenuItem } from '@mui/material';
 import { format } from 'date-fns';
@@ -8,7 +9,6 @@ import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -34,7 +34,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       const commissionAmount = (amount * commissionRate) / 100;
 
       return (
-        <div className="flex flex-col gap-1">
+        <div className='flex flex-col gap-1'>
           <div>
             {new Intl.NumberFormat('en-US', {
               style: 'currency',
@@ -92,7 +92,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       );
     },
   },
-{
+  {
     accessorKey: 'commissionRate',
     header: 'Commission Rate',
     Cell: ({ row }) => {
@@ -107,7 +107,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       if (!method) return 'N/A';
       return String(method)
         .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
     },
   },
@@ -119,7 +119,7 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
       if (!type) return 'N/A';
       return String(type)
         .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
         .join(' ');
     },
   },
@@ -145,63 +145,63 @@ export const renderRowActionMenuItems = ({
   onDelete: (transactionId: string) => void;
   onVerify: (transactionId: string, status: TransactionStatus) => void;
 }) => [
+  <MenuItem
+    key={0}
+    onClick={() => {
+      onEdit(row.original);
+      closeMenu();
+    }}
+    sx={{ m: 0 }}
+  >
+    <ListItemIcon>
+      <Pencil className='size-4' />
+    </ListItemIcon>
+    Edit Transaction
+  </MenuItem>,
+  row.original.status === TransactionStatus.PENDING && (
     <MenuItem
-      key={0}
+      key={1}
       onClick={() => {
-        onEdit(row.original);
+        onVerify(row.original.id, TransactionStatus.APPROVED);
         closeMenu();
       }}
       sx={{ m: 0 }}
+      className='text-green-600'
     >
       <ListItemIcon>
-        <Pencil className='size-4' />
+        <UserCog className='size-4 text-green-600' />
       </ListItemIcon>
-      Edit Transaction
-    </MenuItem>,
-    row.original.status === TransactionStatus.PENDING && (
-      <MenuItem
-        key={1}
-        onClick={() => {
-          onVerify(row.original.id, TransactionStatus.APPROVED);
-          closeMenu();
-        }}
-        sx={{ m: 0 }}
-        className='text-green-600'
-      >
-        <ListItemIcon>
-          <UserCog className='size-4 text-green-600' />
-        </ListItemIcon>
-        Approve Transaction
-      </MenuItem>
-    ),
-    row.original.status === TransactionStatus.PENDING && (
-      <MenuItem
-        key={2}
-        onClick={() => {
-          onVerify(row.original.id, TransactionStatus.REJECTED);
-          closeMenu();
-        }}
-        sx={{ m: 0 }}
-        className='text-orange-600'
-      >
-        <ListItemIcon>
-          <UserCog className='size-4 text-orange-600' />
-        </ListItemIcon>
-        Reject Transaction
-      </MenuItem>
-    ),
+      Approve Transaction
+    </MenuItem>
+  ),
+  row.original.status === TransactionStatus.PENDING && (
     <MenuItem
-      key={3}
+      key={2}
       onClick={() => {
-        onDelete(row.original.id);
+        onVerify(row.original.id, TransactionStatus.REJECTED);
         closeMenu();
       }}
       sx={{ m: 0 }}
-      className='text-red-600'
+      className='text-orange-600'
     >
       <ListItemIcon>
-        <Trash2 className='size-4 text-red-600' />
+        <UserCog className='size-4 text-orange-600' />
       </ListItemIcon>
-      Delete Transaction
-    </MenuItem>,
-  ];
+      Reject Transaction
+    </MenuItem>
+  ),
+  <MenuItem
+    key={3}
+    onClick={() => {
+      onDelete(row.original.id);
+      closeMenu();
+    }}
+    sx={{ m: 0 }}
+    className='text-red-600'
+  >
+    <ListItemIcon>
+      <Trash2 className='size-4 text-red-600' />
+    </ListItemIcon>
+    Delete Transaction
+  </MenuItem>,
+];

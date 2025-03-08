@@ -14,6 +14,7 @@ import logger from "../utils/logger.js";
 import multer from "multer";
 import { z } from "zod";
 import { DealStatus } from "@prisma/client";
+import { generatePresignedDownloadUrl } from '../utils/s3.js'; // Use your existing S3 utility
 
 const upload = multer();
 
@@ -99,8 +100,52 @@ export const dealsController: Controller = {
             },
       });
 
+      // Generate presigned URLs for documents
+      const dealsWithPresignedUrls = await Promise.all(
+        deals.map(async (deal) => {
+          let documentUrls: any[] = [];
+          
+          try {
+            // Ensure documents is parsed if it's a string
+            const documents = typeof deal.documents === 'string' 
+              ? JSON.parse(deal.documents) 
+              : deal.documents;
+
+            if (Array.isArray(documents)) {
+              documentUrls = await Promise.all(
+                documents.map(async (doc) => {
+                  try {
+                    const url = await generatePresignedDownloadUrl(doc.file, 3600);
+                    return {
+                      name: doc.name,
+                      file: doc.file,
+                      url
+                    };
+                  } catch (error) {
+                    console.error(`Error generating presigned URL for document ${doc.file}:`, error);
+                    return null;
+                  }
+                })
+              );
+              // Filter out any null values (failed URLs)
+              documentUrls = documentUrls.filter(Boolean);
+            }
+          } catch (error) {
+            console.error("Error processing documents:", error);
+          }
+
+          // Create a new object with all deal properties and documents
+          const dealWithDocs = {
+            ...deal,
+            documents: documentUrls || [] // Ensure documents is always an array
+          };
+
+          return dealWithDocs;
+        })
+      );
+
       const response = {
-        data: deals,
+        data: dealsWithPresignedUrls,
         meta: {
           total,
           page,
@@ -109,8 +154,7 @@ export const dealsController: Controller = {
         },
       };
 
-      const validatedResponse = dealsResponseSchema.parse(response);
-      return res.json(validatedResponse);
+      return res.json(response);
     } catch (error) {
       logger.error("Error in getAllDeals:", error);
       return res.status(500).json({ message: "Failed to fetch deals" });
@@ -199,6 +243,7 @@ export const dealsController: Controller = {
         }
 
         const parsedData = JSON.parse(rawData);
+        console.log(parsedData, 'parsedData');
 
         if (typeof parsedData.expectedCloseDate === "string") {
           parsedData.expectedCloseDate = new Date(parsedData.expectedCloseDate);
@@ -223,7 +268,7 @@ export const dealsController: Controller = {
         }
 
         const dealData = validationResult.data;
-
+        console.log(dealData, 'dealData');
         // Save the validated deal data to the database
         const deal = await prisma.deal.create({
           data: {
@@ -247,6 +292,7 @@ export const dealsController: Controller = {
                     phone: coOwner.phone,
                   })) as InputJsonValue[] | undefined)
               : undefined,
+            documents: dealData.documents || []
           },
           select: {
             id: true,
@@ -325,6 +371,7 @@ export const dealsController: Controller = {
         const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
 
         const dealData = validationResult.data;
+
         const deal = await prisma.deal.update({
           where: { id: req.params.id },
           data: {
@@ -345,6 +392,7 @@ export const dealsController: Controller = {
                     phone: coOwner.phone,
                   })) as InputJsonValue[] | undefined)
               : undefined,
+            documents: dealData.documents || []
           },
           select: {
             id: true,

@@ -133,6 +133,7 @@ enum LeadRole {
   BUY
   RENT
   NOT_LISTED
+  LISTED
 }
 
 // Unified User Model
@@ -345,6 +346,9 @@ model Deal {
   // Commission and Financial
   commissionRate      Float?
   estimatedCommission Float?
+
+  // Documents
+  documents Json[] @default([])
 
   // Additional Details
   notes Json[]   @default([])

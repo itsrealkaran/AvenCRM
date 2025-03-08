@@ -1,5 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
+import { useQuery } from '@tanstack/react-query';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,11 +13,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useCurrency } from '@/contexts/CurrencyContext';
-import { useAuth } from '@/hooks/useAuth';
 import { api } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UpgradePlanDialogProps {
   isOpen: boolean;
@@ -40,21 +41,30 @@ export function UpgradePlanDialog({ isOpen, onClose, userLimit }: UpgradePlanDia
 
   useEffect(() => {
     if (companyData) {
-      const priceJson = typeof companyData?.plan.price === 'string' ? JSON.parse(companyData?.plan.price) : companyData?.plan.price;
-      const planPrice = company?.planType === 'INDIVIDUAL' ? priceJson.individual : priceJson.company;
-      const totalAmount = company?.billingFrequency === 'MONTHLY' ? planPrice.monthly : planPrice.annually;
+      const priceJson =
+        typeof companyData?.plan.price === 'string'
+          ? JSON.parse(companyData?.plan.price)
+          : companyData?.plan.price;
+      const planPrice =
+        company?.planType === 'INDIVIDUAL' ? priceJson.individual : priceJson.company;
+      const totalAmount =
+        company?.billingFrequency === 'MONTHLY' ? planPrice.monthly : planPrice.annually;
       const planEndDate = new Date(companyData.company.planEnd);
       const currentDate = new Date();
 
       if (companyData.company.planEnd && company?.billingFrequency === 'MONTHLY') {
         const totalAmountWithUserCount = totalAmount[currency.code] * userCount;
-        const daysRemaining = Math.ceil((planEndDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+        const daysRemaining = Math.ceil(
+          (planEndDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
         const totalAmountPerDay = totalAmountWithUserCount / 31;
         const totalAmountForDaysRemaining = totalAmountPerDay * daysRemaining;
         setTotalAmount(totalAmountForDaysRemaining);
       } else if (companyData.company.planEnd && company?.billingFrequency === 'ANNUALLY') {
         const totalAmountWithUserCount = totalAmount[currency.code] * userCount * 12;
-        const monthsRemaining = Math.ceil((planEndDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
+        const monthsRemaining = Math.ceil(
+          (planEndDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
+        );
         const totalAmountPerMonth = totalAmountWithUserCount / 12;
         const totalAmountForMonthsRemaining = totalAmountPerMonth * monthsRemaining;
         setTotalAmount(totalAmountForMonthsRemaining);
@@ -66,7 +76,6 @@ export function UpgradePlanDialog({ isOpen, onClose, userLimit }: UpgradePlanDia
     setIsUpgradeClicked(true);
 
     if (companyData?.company.planEnd) {
-      
     }
   };
 
@@ -76,8 +85,8 @@ export function UpgradePlanDialog({ isOpen, onClose, userLimit }: UpgradePlanDia
         <DialogHeader>
           <DialogTitle>User Limit Reached</DialogTitle>
           <DialogDescription>
-            You have reached the maximum limit of {userLimit} users for your current plan.
-            Upgrade your plan to add more agents and unlock additional features.
+            You have reached the maximum limit of {userLimit} users for your current plan. Upgrade
+            your plan to add more agents and unlock additional features.
           </DialogDescription>
           {isUpgradeClicked && (
             <>

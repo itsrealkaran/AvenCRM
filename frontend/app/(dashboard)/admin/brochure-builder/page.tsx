@@ -5,12 +5,12 @@ import type { PropertyData } from '@/types/property';
 import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 
+import BrochurePlaceholder from '@/components/placeholders/brochure';
 import PropertyBrochure from '@/components/property-brochure';
 import PropertyCard from '@/components/property-card';
 import { Card, CardTitle } from '@/components/ui/card';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
-import BrochurePlaceholder from '@/components/placeholders/brochure';
 
 // Create a custom hook for property fetching
 const useProperty = (id: string | null) => {
@@ -38,7 +38,8 @@ export default function Home() {
     },
   });
 
-  const { data: selectedProperty, isLoading: selectedPropertyLoading } = useProperty(selectedPropertyId);
+  const { data: selectedProperty, isLoading: selectedPropertyLoading } =
+    useProperty(selectedPropertyId);
 
   useEffect(() => {
     if (data) {
@@ -49,7 +50,7 @@ export default function Home() {
   }, [data]);
 
   // Move plan check here, after all hooks are initialized
-  if (company?.planName !== "PREMIUM" && company?.planName !== "ENTERPRISE") {
+  if (company?.planName !== 'PREMIUM' && company?.planName !== 'ENTERPRISE') {
     return <BrochurePlaceholder />;
   }
 

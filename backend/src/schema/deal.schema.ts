@@ -3,6 +3,11 @@ import { z } from 'zod';
 import { coownerSchema, noteEntrySchema } from './note-and-coowners.schema.js';
 import { DealStatus, PropertyType } from '@prisma/client';
 
+const documentSchema = z.object({
+  name: z.string(),
+  file: z.string(),
+});
+
 // Base schema for common deal fields
 export const dealBaseSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -20,6 +25,7 @@ export const dealBaseSchema = z.object({
   estimatedCommission: z.number().positive().nullish(),
   notes: noteEntrySchema.array().nullish(),
   coOwners: coownerSchema.array().nullish(),
+  documents: documentSchema.array().nullish(),
 });
 
 // Schema for creating a new deal

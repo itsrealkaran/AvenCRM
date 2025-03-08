@@ -10,6 +10,7 @@ import { CreateFormModal, type Form } from '@/components/meta-ads/create-form-mo
 import { FacebookConnectModal } from '@/components/meta-ads/facebook-connect-modal';
 import { FormsList } from '@/components/meta-ads/forms-list';
 import { MetricsCards } from '@/components/meta-ads/metrics-cards';
+import MetaAdsPlaceholder from '@/components/placeholders/meta-ads';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -20,7 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
-import MetaAdsPlaceholder from '@/components/placeholders/meta-ads';
 
 export default function MetaAdsPage() {
   const [showFacebookModal, setShowFacebookModal] = useState(false);
@@ -38,7 +38,7 @@ export default function MetaAdsPage() {
     setForms([...forms, newForm]);
   };
 
-  if (company?.planName !== "ENTERPRISE") {
+  if (company?.planName !== 'ENTERPRISE') {
     return <MetaAdsPlaceholder />;
   }
 

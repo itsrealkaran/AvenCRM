@@ -5,10 +5,10 @@ import { dealsApi } from '@/api/deals.service';
 import { Transaction } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Loader2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
-import { Loader2 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -224,6 +224,7 @@ export function EditTransactionDialog({
                         <SelectItem value='SELL'>Sell</SelectItem>
                         <SelectItem value='RENT'>Rent</SelectItem>
                         <SelectItem value='NOT_LISTED'>Not Listed</SelectItem>
+                        <SelectItem value='LISTED'>Listed</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -235,13 +236,10 @@ export function EditTransactionDialog({
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
-                disabled={editTransaction.isPending}
-              >
+              <Button type='submit' disabled={editTransaction.isPending}>
                 {editTransaction.isPending ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     Updating...
                   </>
                 ) : (
