@@ -215,14 +215,6 @@ export const adminColumns: MRT_ColumnDef<Lead>[] = [
     enableSorting: true,
   },
   {
-    accessorKey: 'agentName',
-    header: 'Created By',
-    Cell: ({ row }) => {
-      const agent = row.original.agent;
-      return agent?.name || 'N/A';
-    },
-  },
-  {
     accessorKey: 'assignedTo',
     header: 'Assigned To',
     Cell: function Cell({ row }) {

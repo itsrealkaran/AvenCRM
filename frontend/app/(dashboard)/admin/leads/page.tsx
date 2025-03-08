@@ -58,7 +58,6 @@ export default function AdminLeadsPage() {
   const [headers, setHeaders] = useState<string[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   const { data: agents } = useQuery({
     queryKey: ['agents'],
@@ -411,7 +410,6 @@ export default function AdminLeadsPage() {
                 <Trash2 className='size-4 mr-2' />
                 Delete({table.getFilteredSelectedRowModel().rows.length})
               </Button>
-              
               {agents && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -420,16 +418,7 @@ export default function AdminLeadsPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
-                        handleBulkAssign(selectedIds, 'unassigned');
-                        table.resetRowSelection();
-                      }}
-                    >
-                      Unassigned
-                    </DropdownMenuItem>
-                    {agents.data.map((agent: any) => (
+                    {agents.map((agent: any) => (
                       <DropdownMenuItem 
                         key={agent.id}
                         onClick={() => {
