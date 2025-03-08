@@ -1,20 +1,19 @@
 'use client';
 
-import {
-  AwaitedReactNode,
-  JSXElementConstructor,
-  Key,
-  ReactElement,
-  ReactNode,
-  ReactPortal,
-  useState,
-} from 'react';
-import { dealsApi } from '@/api/deals.service';
-import { Deal, DealStatus } from '@/types';
+import { useState } from 'react';
+import { leadsApi } from '@/api/leads.service';
+import { Lead, LeadStatus } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ArrowUpDown, CopyIcon, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  ArrowRightLeft,
+  ArrowUpDown,
+  CopyIcon,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -39,16 +38,17 @@ import {
 
 import { AITextarea } from '../ui/ai-textarea';
 
-const colors: Record<DealStatus, string> = {
-  NEW: 'bg-purple-100 text-purple-800',
-  DISCOVERY: 'bg-orange-100 text-orange-800',
-  PROPOSAL: 'bg-emerald-100 text-emerald-800',
-  UNDER_CONTRACT: 'bg-indigo-100 text-indigo-800',
-  NEGOTIATION: 'bg-yellow-100 text-yellow-800',
-  WON: 'bg-green-100 text-green-800',
-};
-
-const getStatusColor = (status: DealStatus): string => {
+const getStatusColor = (status: LeadStatus) => {
+  const colors = {
+    NEW: 'bg-blue-100 text-blue-800',
+    CONTACTED: 'bg-purple-100 text-purple-800',
+    QUALIFIED: 'bg-yellow-100 text-yellow-800',
+    PROPOSAL: 'bg-indigo-100 text-indigo-800',
+    NEGOTIATION: 'bg-orange-100 text-orange-800',
+    WON: 'bg-green-100 text-green-800',
+    LOST: 'bg-red-100 text-red-800',
+    FOLLOWUP: 'bg-teal-100 text-teal-800',
+  };
   return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
@@ -58,7 +58,11 @@ interface Note {
   author: string | null;
 }
 
-function NotesCell({ row }: any) {
+interface NotesCellProps {
+  row: any; // We'll properly type this later
+}
+
+function NotesCell({ row }: NotesCellProps) {
   const notes = row.original.notes || [];
   const noteCount = Array.isArray(notes) ? notes.length : 0;
   const [showTextArea, setShowTextArea] = useState(false);
@@ -66,11 +70,11 @@ function NotesCell({ row }: any) {
   const queryClient = useQueryClient();
 
   const addNoteMutation = useMutation({
-    mutationFn: async ({ dealId, note }: { dealId: string; note: Note[] }) => {
-      return dealsApi.addNote(dealId, note);
+    mutationFn: async ({ leadId, note }: { leadId: string; note: Note[] }) => {
+      return leadsApi.addNote(leadId, note);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deals'] });
+      queryClient.invalidateQueries({ queryKey: ['leads'] });
       toast.success('Note added successfully');
       setNewNote('');
       setShowTextArea(false);
@@ -89,7 +93,7 @@ function NotesCell({ row }: any) {
     };
 
     addNoteMutation.mutate({
-      dealId: row.original.id,
+      leadId: row.original.id,
       note: [...existingNotes, newNoteObj],
     });
   };
@@ -179,7 +183,7 @@ function NotesCell({ row }: any) {
   );
 }
 
-export const columns: ColumnDef<Deal>[] = [
+export const columns: ColumnDef<Lead>[] = [
   {
     id: 'select',
     header: ({ table }) => (
@@ -221,14 +225,6 @@ export const columns: ColumnDef<Deal>[] = [
     },
   },
   {
-    accessorKey: 'agent.name',
-    header: 'Created By',
-    cell: ({ row }) => {
-      const agent = row.original.agent;
-      return agent?.name || 'N/A';
-    },
-  },
-  {
     accessorKey: 'email',
     header: ({ column }) => {
       return (
@@ -257,6 +253,20 @@ export const columns: ColumnDef<Deal>[] = [
     },
   },
   {
+    accessorKey: 'source',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Source
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+  },
+  {
     accessorKey: 'status',
     header: ({ column }) => {
       return (
@@ -270,15 +280,17 @@ export const columns: ColumnDef<Deal>[] = [
       );
     },
     cell: ({ row, table }) => {
-      const status: DealStatus = row.getValue('status');
-      const deal = row.original as Deal;
+      const status: LeadStatus = row.getValue('status');
+      const lead = row.original as Lead;
       const meta = table.options.meta as {
-        onStatusChange?: (dealId: string, newStatus: DealStatus) => Promise<void>;
+        onEdit?: (lead: Lead) => void;
+        onDelete?: (leadId: string) => void;
+        onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
       };
 
       return (
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild disabled={status === 'WON'}>
             <Button variant='ghost' className='h-8 p-0'>
               <Badge className={`${getStatusColor(status)} cursor-pointer`}>{status}</Badge>
             </Button>
@@ -286,104 +298,27 @@ export const columns: ColumnDef<Deal>[] = [
           <DropdownMenuContent align='end' className='w-[200px]'>
             <DropdownMenuLabel>Change Status</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {Object.keys(DealStatus).map((statusOption) => (
+            {Object.values(LeadStatus).map((statusOption) => (
               <DropdownMenuItem
                 key={statusOption}
                 className={status === statusOption ? 'bg-accent' : ''}
                 onClick={async () => {
                   if (status !== statusOption && meta.onStatusChange) {
-                    await meta.onStatusChange(deal.id, statusOption as DealStatus);
+                    toast.promise(meta.onStatusChange(lead.id, statusOption), {
+                      loading: 'Updating status...',
+                      success: 'Status updated successfully',
+                      error: 'Failed to update status',
+                    });
                   }
                 }}
               >
-                <Badge className={`${getStatusColor(statusOption as DealStatus)} mr-2`}>
-                  {statusOption}
-                </Badge>
+                <Badge className={`${getStatusColor(statusOption)} mr-2`}>{statusOption}</Badge>
+                {/* {statusOption} */}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
       );
-    },
-  },
-  {
-    accessorKey: 'dealAmount',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Amount
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      const amount = row.getValue('dealAmount');
-      return amount ? `$${amount}` : '-';
-    },
-  },
-  {
-    accessorKey: 'coOwners',
-    header: 'Co-owners',
-    cell: ({ row }) => {
-      const coOwners = row.original.coOwners || [];
-      const coOwnerCount = coOwners.length;
-
-      return (
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='flex items-center gap-2 hover:bg-gray-100 transition duration-200'
-            >
-              <span className='font-medium text-gray-700'>{coOwnerCount}</span>
-              {coOwnerCount === 1 ? 'Co-owner' : 'Co-owners'}
-            </Button>
-          </DialogTrigger>
-          <DialogContent className='max-w-3xl max-h-[80vh] overflow-y-auto animate-fade-in bg-white rounded-lg shadow-lg p-6'>
-            <DialogHeader>
-              <DialogTitle>Co-owners</DialogTitle>
-            </DialogHeader>
-            <div className='space-y-4'>
-              {coOwners.length > 0 ? (
-                coOwners.map((coOwner: any, index: number) => (
-                  <div
-                    key={index}
-                    className='flex flex-col gap-2 p-4 rounded-lg border border-gray-200'
-                  >
-                    <div className='grid grid-cols-3 gap-4'>
-                      <div>
-                        <span className='text-sm font-medium text-gray-500'>Name</span>
-                        <p className='text-sm text-gray-900'>{coOwner.name || '-'}</p>
-                      </div>
-                      <div>
-                        <span className='text-sm font-medium text-gray-500'>Email</span>
-                        <p className='text-sm text-gray-900'>{coOwner.email || '-'}</p>
-                      </div>
-                      <div>
-                        <span className='text-sm font-medium text-gray-500'>Phone</span>
-                        <p className='text-sm text-gray-900'>{coOwner.phone || '-'}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className='text-center text-gray-500'>No co-owners found</p>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-      );
-    },
-  },
-  {
-    accessorKey: 'notes',
-    header: 'Notes',
-    cell: ({ row }) => {
-      return <NotesCell row={row} />;
     },
   },
   {
@@ -404,13 +339,31 @@ export const columns: ColumnDef<Deal>[] = [
     },
   },
   {
+    accessorKey: 'notes',
+    header: ({ column }) => {
+      return (
+        <Button
+          variant='ghost'
+          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+        >
+          Notes
+          <ArrowUpDown className='ml-2 h-4 w-4' />
+        </Button>
+      );
+    },
+    cell: ({ row }) => {
+      return <NotesCell row={row} />;
+    },
+  },
+  {
     id: 'actions',
     header: 'Actions',
     cell: ({ row, table }) => {
-      const deal = row.original as Deal;
+      const lead = row.original as Lead;
       const meta = table.options.meta as {
-        onEdit?: (deal: Deal) => void;
-        onDelete?: (dealId: string) => void;
+        onEdit?: (lead: Lead) => void;
+        onDelete?: (leadId: string) => void;
+        onConvertToDeal?: (lead: Lead) => void;
       };
 
       return (
@@ -424,19 +377,22 @@ export const columns: ColumnDef<Deal>[] = [
           <DropdownMenuContent align='end' className='w-[160px]'>
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(deal)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit deal
+            <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
+              <Pencil className='mr-2 h-4 w-4' /> Edit lead
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(deal.id)} className='text-red-600'>
-              <Trash2 className='mr-2 h-4 w-4' /> Delete deal
+            <DropdownMenuItem onClick={() => meta.onConvertToDeal?.(lead)}>
+              <ArrowRightLeft className='mr-2 h-4 w-4' /> Convert to Deal
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
+              <Trash2 className='mr-2 h-4 w-4' /> Delete lead
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => {
-                navigator.clipboard.writeText(deal.id);
-                toast.success('Deal ID copied to clipboard');
+                navigator.clipboard.writeText(lead.id);
+                toast.success('Lead ID copied to clipboard');
               }}
             >
-              <CopyIcon className='mr-2 h-4 w-4' /> Copy deal ID
+              <CopyIcon className='mr-2 h-4 w-4' /> Copy lead ID
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

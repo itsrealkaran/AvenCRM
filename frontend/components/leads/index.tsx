@@ -1,19 +1,43 @@
 'use client';
 
-import { SetStateAction, useCallback, useState } from 'react';
+import { SetStateAction, useCallback, useMemo, useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types';
+import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import {
+  CirclePlus,
+  Copy,
+  CopyIcon,
+  Download,
+  Filter,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Upload,
+  ArrowRightLeft,
+} from 'lucide-react';
+import {
+  MaterialReactTable,
+  MRT_GlobalFilterTextField,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+} from 'material-react-table';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 
-import { DataTable } from '../data-table';
 import { columns } from './columns';
 import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { CreateLeadDialog } from './create-lead-dialog';
@@ -26,6 +50,7 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [lead, setLead] = useState<Lead[] | null>(null);
   const [selectedRows, setSelectedRows] = useState<Lead[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
@@ -42,7 +67,7 @@ export default function LeadsPage() {
 
   const {
     data: response,
-    isLoading,
+    isLoading: isLeadsLoading,
     refetch,
   } = useQuery({
     queryKey: ['leads'],
@@ -123,6 +148,12 @@ export default function LeadsPage() {
     }
   };
 
+  const handleRefresh = async () => {
+    setIsLoading(true);
+    await refetch();
+    setIsLoading(false);
+  };
+
   const handleDownload = (format: 'csv' | 'xlsx') => {
     if (!lead || lead.length === 0) {
       toast.error('No data to download');
@@ -196,10 +227,183 @@ export default function LeadsPage() {
     setSelectedRows(leads);
   }, []);
 
+  const handleConvertToDeal = (lead: Lead) => {
+    setSelectedLead(lead);
+    setIsConvertDialogOpen(true);
+  };
+
+  const table = useMaterialReactTable({
+    //@ts-ignore
+    columns,
+    data: lead || [],
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      density: 'compact',
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
+    },
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '600px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={(theme) => ({
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        })}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search leads...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          {table.getSelectedRowModel().rows.length > 0 && (
+            <Button
+              size={'sm'}
+              variant={'outline'}
+              className='font-normal text-xs bg-red-600 text-white hover:bg-red-700 hover:text-white'
+              onClick={async () => {
+                const ok = confirm('Are you sure you want to delete these leads?');
+                if (ok) {
+                  handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
+                  table.resetRowSelection();
+                }
+              }}
+            >
+              <Trash2 className='size-4 mr-2' />
+              Delete({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+          )}
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant='outline' size='sm'>
+                <Upload className='h-4 w-4' />
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => handleDownload('csv')}>
+                Export as CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleDownload('xlsx')}>
+                Export as XLSX
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button variant='outline' size='sm' onClick={handleRefresh}>
+            <RefreshCw className='h-4 w-4' />
+            Refresh
+          </Button>
+          <Button size='sm' onClick={() => setIsCreateDialogOpen(true)}>
+            <CirclePlus className='h-4 w-4' /> Add New Lead
+          </Button>
+        </Box>
+      </Box>
+    ),
+    state: {
+      isLoading: isLoading || isLeadsLoading,
+    },
+    meta: {
+      onStatusChange: handleStatusChange,
+      onConvertToDeal: handleConvertToDeal,
+    },
+    renderRowActionMenuItems: ({ row, closeMenu }) => [
+      <MenuItem
+        key={0}
+        onClick={() => {
+          handleEdit(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <Pencil className='size-4'/>
+        </ListItemIcon>
+        Edit Lead
+      </MenuItem>,
+      <MenuItem
+        key={1}
+        onClick={() => {
+          handleDelete(row.original.id);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-red-600'
+      >
+        <ListItemIcon>
+          <Trash2 className='text-red-600 size-4' />
+        </ListItemIcon>
+        Delete Lead
+      </MenuItem>,
+      <MenuItem
+        key={2}
+        onClick={() => {
+          handleConvertToDeal(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <ArrowRightLeft className='size-4'/>
+        </ListItemIcon>
+        Convert to Deal
+      </MenuItem>,
+      <MenuItem
+        key={3}
+        onClick={() => {
+          navigator.clipboard.writeText(row.original.id);
+          toast.success('Lead ID copied to clipboard');
+          closeMenu();
+        }}
+      >
+        <ListItemIcon>
+          <CopyIcon className='size-4' />
+        </ListItemIcon>
+        Copy Lead ID
+      </MenuItem>,
+    ],
+  });
+
   return (
     <section className='h-full'>
       <Card className='h-full w-full p-6'>
-        <div className='flex justify-between items-center'>
+        <div className='flex justify-between items-center mb-2'>
           <div>
             <h1 className='text-2xl font-bold'>Leads Management</h1>
             <p className='text-sm text-muted-foreground'>
@@ -208,27 +412,7 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <div className='space-4 h-[calc(100%-50px)] flex-1'>
-          <DataTable
-            columns={columns}
-            data={lead || []}
-            onEdit={handleEdit}
-            onBulkDelete={async (row: any[]) => {
-              const leadIds = row.map((row: { original: { id: any } }) => row.original.id);
-              await handleBulkDelete(leadIds);
-            }}
-            onDelete={handleDelete}
-            onSelectionChange={handleSelectionChange}
-            onStatusChange={handleStatusChange}
-            onConvertToDeal={(lead: SetStateAction<Lead | null>) => {
-              setSelectedLead(lead);
-              setIsConvertDialogOpen(true);
-            }}
-            refetch={refetch}
-            onCreateLead={() => setIsCreateDialogOpen(true)}
-            onDownload={handleDownload}
-          />
-        </div>
+        <MaterialReactTable table={table} />
 
         <CreateLeadDialog
           open={isCreateDialogOpen}

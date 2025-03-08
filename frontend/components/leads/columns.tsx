@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { Lead, LeadStatus } from '@/types';
+import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import {
   ArrowRightLeft,
@@ -14,6 +14,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import { MRT_ColumnDef } from 'material-react-table';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -111,7 +112,7 @@ function NotesCell({ row }: NotesCellProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className='max-w-3xl max-h-[80vh] flex flex-col bg-white rounded-lg shadow-lg'>
-        <div className=' bg-white border-b'>
+        <div className='bg-white border-b'>
           <DialogHeader className='p-2'>
             <DialogTitle className='text-2xl font-semibold text-gray-800'>
               Notes Timeline
@@ -183,108 +184,44 @@ function NotesCell({ row }: NotesCellProps) {
   );
 }
 
-export const columns: ColumnDef<Lead>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && 'indeterminate')
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label='Select all'
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className='px-1'>
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label='Select row'
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+export const columns: MRT_ColumnDef<Lead>[] = [
   {
     accessorKey: 'name',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Name
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
+    header: 'Name',
+    enableSorting: true,
+  },
+  {
+    accessorKey: 'agent.name',
+    header: 'Created By',
+    Cell: ({ row }) => {
+      const agent = row.original.agent;
+      return agent?.name || 'N/A';
     },
   },
   {
     accessorKey: 'email',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Email
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Email',
+    enableClickToCopy: true,
   },
   {
     accessorKey: 'phone',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Phone
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
+    header: 'Phone',
   },
   {
     accessorKey: 'source',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Source
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
+    header: 'Source',
+    Cell: ({ row }) => {
+      const source = row.getValue('source') as string;
+      return source ? source.charAt(0).toUpperCase() + source.slice(1).toLowerCase() : '';
     },
   },
   {
     accessorKey: 'status',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Status
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row, table }) => {
+    header: 'Status',
+    Cell: ({ row, table }) => {
       const status: LeadStatus = row.getValue('status');
       const lead = row.original as Lead;
       const meta = table.options.meta as {
-        onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
         onStatusChange?: (leadId: string, newStatus: LeadStatus) => Promise<void>;
       };
 
@@ -298,104 +235,60 @@ export const columns: ColumnDef<Lead>[] = [
           <DropdownMenuContent align='end' className='w-[200px]'>
             <DropdownMenuLabel>Change Status</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {Object.values(LeadStatus).map((statusOption) => (
+            {Object.keys(LeadStatus).map((statusOption) => (
               <DropdownMenuItem
                 key={statusOption}
                 className={status === statusOption ? 'bg-accent' : ''}
                 onClick={async () => {
                   if (status !== statusOption && meta.onStatusChange) {
-                    toast.promise(meta.onStatusChange(lead.id, statusOption), {
-                      loading: 'Updating status...',
-                      success: 'Status updated successfully',
-                      error: 'Failed to update status',
-                    });
+                    await meta.onStatusChange(lead.id, statusOption as LeadStatus);
                   }
                 }}
               >
-                <Badge className={`${getStatusColor(statusOption)} mr-2`}>{statusOption}</Badge>
-                {/* {statusOption} */}
+                <Badge className={`${getStatusColor(statusOption as LeadStatus)} mr-2`}>
+                  {statusOption}
+                </Badge>
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
       );
     },
-  },
-  {
-    accessorKey: 'createdAt',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Created At
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
-      return format(new Date(row.getValue('createdAt')), 'dd/MM/yyyy');
-    },
+    filterVariant: 'select',
+    filterSelectOptions: Object.values(LeadStatus),
   },
   {
     accessorKey: 'notes',
-    header: ({ column }) => {
-      return (
-        <Button
-          variant='ghost'
-          onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-        >
-          Notes
-          <ArrowUpDown className='ml-2 h-4 w-4' />
-        </Button>
-      );
-    },
-    cell: ({ row }) => {
+    header: 'Notes',
+    Cell: ({ row }) => {
       return <NotesCell row={row} />;
     },
   },
   {
-    id: 'actions',
-    header: 'Actions',
-    cell: ({ row, table }) => {
-      const lead = row.original as Lead;
+    accessorKey: 'createdAt',
+    header: 'Created At',
+    Cell: ({ row }) => {
+      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
+    },
+  },
+  {
+    accessorKey: 'actions',
+    header: 'Convert',
+    Cell: ({ row, table }) => {
       const meta = table.options.meta as {
-        onEdit?: (lead: Lead) => void;
-        onDelete?: (leadId: string) => void;
         onConvertToDeal?: (lead: Lead) => void;
       };
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Open menu</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end' className='w-[160px]'>
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => meta.onEdit?.(lead)}>
-              <Pencil className='mr-2 h-4 w-4' /> Edit lead
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onConvertToDeal?.(lead)}>
-              <ArrowRightLeft className='mr-2 h-4 w-4' /> Convert to Deal
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => meta.onDelete?.(lead.id)} className='text-red-600'>
-              <Trash2 className='mr-2 h-4 w-4' /> Delete lead
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => {
-                navigator.clipboard.writeText(lead.id);
-                toast.success('Lead ID copied to clipboard');
-              }}
-            >
-              <CopyIcon className='mr-2 h-4 w-4' /> Copy lead ID
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button
+          variant='outline'
+          size='sm'
+          onClick={() => meta.onConvertToDeal && meta.onConvertToDeal(row.original)}
+          className='flex items-center gap-1'
+        >
+          <ArrowRightLeft className='h-4 w-4' />
+          <span>Convert</span>
+        </Button>
       );
     },
   },
