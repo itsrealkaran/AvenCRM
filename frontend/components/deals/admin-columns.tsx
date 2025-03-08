@@ -374,7 +374,7 @@ export const adminColumns: MRT_ColumnDef<Deal>[] = [
     accessorKey: 'createdAt',
     header: 'Created At',
     Cell: ({ row }) => {
-      return format(new Date(row.getValue('createdAt')), 'dd/MM/yyyy');
+      return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },
   },
 ];
