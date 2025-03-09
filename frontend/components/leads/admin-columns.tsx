@@ -329,6 +329,38 @@ export const adminColumns: MRT_ColumnDef<Lead>[] = [
     filterSelectOptions: Object.values(LeadStatus),
   },
   {
+    accessorKey: 'propertyType',
+    header: 'Property Type',
+    Cell: ({ row }) => {
+      const propertyType = row.getValue('propertyType') as string;
+      return propertyType ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase() : '';
+    },
+  },
+  {
+    accessorKey: 'role',
+    header: 'Property Status',
+    Cell: ({ row }) => {
+      const role = row.getValue('role') as string;
+      return role ? role.charAt(0).toUpperCase() + role.slice(1).toLowerCase() : '';
+    },
+  },
+  {
+    accessorKey: 'budget',
+    header: 'Budget',
+    Cell: ({ row }) => {
+      const budget = row.getValue('budget') as string;
+      return budget;
+    },
+  },
+  {
+    accessorKey: 'location',
+    header: 'Location',
+    Cell: ({ row }) => {
+      const location = row.getValue('location') as string
+      return location
+    }
+  },
+  {
     accessorKey: 'notes',
     header: 'Notes',
     Cell: ({ row }) => {
