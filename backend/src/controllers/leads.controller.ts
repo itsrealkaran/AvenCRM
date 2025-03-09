@@ -221,7 +221,7 @@ export const leadsController: Controller  = {
 
           const validationResult = createLeadSchema.safeParse(leadData);
 
-          const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+          const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
 
           if (validationResult.success) {
             validatedLeads.push({
@@ -308,7 +308,7 @@ export const leadsController: Controller  = {
         }
   
         const leadData = validationResult.data;
-        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
         
         const lead = await prisma.lead.update({
           where: { id: req.params.id },
@@ -396,7 +396,7 @@ export const leadsController: Controller  = {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+      const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
       note[note.length - 1].author = notesAuthor;
 
       let lead;

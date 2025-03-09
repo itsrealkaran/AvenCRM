@@ -368,7 +368,7 @@ export const dealsController: Controller = {
             .json({ errors: validationResult.error.flatten() });
         }
 
-        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
 
         const dealData = validationResult.data;
 
@@ -464,7 +464,7 @@ export const dealsController: Controller = {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+      const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
 
       //note is a array of objects append author to the last object
       note[note.length - 1].author = notesAuthor;
