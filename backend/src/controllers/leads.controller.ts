@@ -137,7 +137,7 @@ export const leadsController: Controller  = {
 
         const leadData = validationResult.data;
 
-        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Me'
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
 
         // Save the validated lead data to the database
         const lead = await prisma.lead.create({

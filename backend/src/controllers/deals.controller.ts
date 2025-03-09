@@ -235,6 +235,11 @@ export const dealsController: Controller = {
     upload.none(),
     async (req: Request, res: Response) => {
       try {
+        const user = req.user;
+        if (!user) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+
         const rawData = req.body.data;
         if (!rawData) {
           return res
@@ -270,6 +275,8 @@ export const dealsController: Controller = {
         const dealData = validationResult.data;
         console.log(dealData, 'dealData');
         // Save the validated deal data to the database
+
+        const notesAuthor = user.role === 'ADMIN' ? 'Admin' : user.role === 'TEAM_LEADER' ? 'Team Leader' : 'Agent'
         const deal = await prisma.deal.create({
           data: {
             ...dealData,
@@ -279,7 +286,7 @@ export const dealsController: Controller = {
             notes:  dealData.notes
               ? (dealData.notes
                   .filter((note) => note !== null)
-                  .map((note) => ({ time: note.time, note: note.note })) as
+                  .map((note) => ({ time: note.time, note: note.note, author: notesAuthor })) as
                   | InputJsonValue[]
                   | undefined)
               : undefined,
