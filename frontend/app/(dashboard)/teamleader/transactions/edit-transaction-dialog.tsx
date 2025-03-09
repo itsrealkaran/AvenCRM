@@ -31,11 +31,11 @@ import {
 import { api } from '@/lib/api';
 
 const transactionFormSchema = z.object({
-  amount: z.string().min(1, 'Amount is required'),
-  commissionRate: z.string().optional(),
-  transactionMethod: z.string().optional(),
-  date: z.string(),
-  propertyType: z.string().optional(),
+  amount: z.string().optional(),
+  commissionRate: z.string().min(1, 'Tax rate is required'),
+  transactionMethod: z.string().min(1, 'Transaction method is required'),
+  date: z.string().min(1, 'Transaction date is required'),
+  propertyType: z.string().min(1, 'Property type is required'),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -95,7 +95,7 @@ export function EditTransactionDialog({
       try {
         const payload = {
           ...values,
-          amount: parseFloat(values.amount),
+          amount: values.amount ? parseFloat(values.amount) : null,
           commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : null,
           date: new Date(values.date).toISOString(),
         };
@@ -236,7 +236,16 @@ export function EditTransactionDialog({
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type='submit' disabled={editTransaction.isPending}>
+              <Button 
+                type='submit' 
+                disabled={
+                  editTransaction.isPending ||
+                  !form.watch('commissionRate') ||
+                  !form.watch('transactionMethod') ||
+                  !form.watch('date') ||
+                  !form.watch('propertyType')
+                }
+              >
                 {editTransaction.isPending ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />

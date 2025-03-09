@@ -226,7 +226,13 @@ export function EditTransactionDialog({
               </Button>
               <Button
                 type='submit'
-                disabled={editTransaction.isPending || !form.formState.isValid}
+                disabled={
+                  editTransaction.isPending ||
+                  !form.watch('commissionRate') ||
+                  !form.watch('transactionMethod') ||
+                  !form.watch('date') ||
+                  !form.watch('propertyType')
+                }
                 className='min-w-[100px]'
               >
                 {editTransaction.isPending ? (

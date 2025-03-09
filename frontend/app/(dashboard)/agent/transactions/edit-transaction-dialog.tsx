@@ -236,7 +236,16 @@ export function EditTransactionDialog({
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type='submit' disabled={editTransaction.isPending}>
+              <Button
+                type='submit'
+                disabled={
+                  editTransaction.isPending ||
+                  !form.watch('commissionRate') ||
+                  !form.watch('transactionMethod') ||
+                  !form.watch('date') ||
+                  !form.watch('propertyType')
+                }
+              >
                 {editTransaction.isPending ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
