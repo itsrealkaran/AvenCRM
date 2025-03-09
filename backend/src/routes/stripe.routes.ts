@@ -131,7 +131,10 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
       return res.status(401).json({ error: 'Invalid currency' });
     }
 
-    const totalAmount = frequency[currencySymbol] * Number(userCount);
+    let totalAmount = frequency[currencySymbol] * Number(userCount);
+    if (billingFrequency === 'annually') {
+      totalAmount = totalAmount * 12;
+    }
 
     if (!totalAmount) {
       return res.status(401).json({ error: 'Price not found for selected currency' });
@@ -150,7 +153,7 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
             },
             unit_amount: Math.round(totalAmount * 100), // Convert to cents
             recurring: {
-              interval: 'month',
+              interval: billingFrequency === 'monthly' ? 'month' : 'year',
             },
           },
           quantity: 1,

@@ -154,7 +154,7 @@ export function StripeModal({ isOpen, onClose, planId, planName, price }: Stripe
               {formatPrice(
                 billingPeriod === 'monthly'
                   ? price.monthly[currency.code as keyof typeof price.monthly] * userCount
-                  : price.annually[currency.code as keyof typeof price.annually] * userCount
+                  : price.annually[currency.code as keyof typeof price.annually] * userCount * 12
               )}{' '}
               <span className='text-sm font-normal'>
                 /{billingPeriod === 'monthly' ? 'month' : 'year'}
