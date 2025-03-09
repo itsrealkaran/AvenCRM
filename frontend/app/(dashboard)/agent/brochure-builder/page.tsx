@@ -61,7 +61,7 @@ export default function Home() {
     );
   }
 
-  if (company?.planName !== 'PREMIUM') {
+  if (company?.planName !== 'PREMIUM' && company?.planName !== 'ENTERPRISE') {
     return <BrochurePlaceholder />;
   }
 
