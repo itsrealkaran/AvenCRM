@@ -158,6 +158,17 @@ app.get("/", (req: Request, res: Response, next: NextFunction) => {
   res.send("Hello from the root route!");
 });
 
+// Add a route to serve the Microsoft identity verification file
+app.get('/.well-known/microsoft-identity-association.json', (req, res) => {
+  res.json({
+    "associatedApplications": [
+      {
+        "applicationId": "f4d02e25-a5c7-46d2-b232-16da782dc021"
+      }
+    ]
+  });
+});
+
 // API Routes
 app.use('/auth', authRouter);
 app.use('/user', userRoutes);
