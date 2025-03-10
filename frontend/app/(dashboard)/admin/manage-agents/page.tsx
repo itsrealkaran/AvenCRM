@@ -168,35 +168,6 @@ export default function ManageAgentsPage() {
     setIsMetricsDialogOpen(true);
   };
 
-  const handleAddTeamMember = async (teamLeaderId: string) => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/team/add-member/${teamLeaderId}`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to add team member');
-      }
-
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-      toast.success('Team member added successfully');
-    } catch (error) {
-      console.error('Error adding team member:', error);
-      toast.error('Failed to add team member');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleRefresh = async () => {
     setIsLoading(true);
     await refetch();
