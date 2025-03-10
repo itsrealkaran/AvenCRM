@@ -39,47 +39,120 @@ export default function PropertyBrochure({ property, createdBy }: PropertyBrochu
   const handleDownloadPDF = async () => {
     if (!brochureRef.current) return;
 
+    // Calculate dimensions for 9:16 aspect ratio
+    const aspectRatio = 9 / 16;
+    const targetHeight = 1920;
+    const targetWidth = targetHeight * aspectRatio; // This will be 1080
+
+    // Temporarily adjust content for capture
+    brochureRef.current.style.width = `${targetWidth}px`;
+    brochureRef.current.style.height = `${targetHeight}px`;
+
     const canvas = await html2canvas(brochureRef.current, {
       scale: 2,
       useCORS: true,
       logging: false,
-      windowWidth: brochureRef.current.scrollWidth,
-      windowHeight: brochureRef.current.scrollHeight,
+      windowWidth: targetWidth,
+      windowHeight: targetHeight,
+      allowTaint: true,
+      backgroundColor: '#ffffff'
     });
 
-    const imgData = canvas.toDataURL('image/jpeg', 1.0);
+    // Reset the styles after capture
+    brochureRef.current.style.width = '';
+    brochureRef.current.style.height = '';
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+    
+    // Create PDF in portrait orientation
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: 'a4',
+      format: [210, 373.33], // A4 width and adjusted height for 9:16 ratio
     });
 
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
-    const imgWidth = canvas.width;
-    const imgHeight = canvas.height;
-    const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
-    const imgX = (pageWidth - imgWidth * ratio) / 2;
-    const imgY = 0;
 
-    pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-    pdf.save(`${property.title.replace(/\s+/g, '-').toLowerCase()}.pdf`);
+    // Calculate dimensions to maintain 9:16 ratio
+    const margin = 10;
+    const usableWidth = pageWidth - (margin * 2);
+    const usableHeight = (usableWidth / 9) * 16; // Maintain 9:16 ratio
+
+    // Center horizontally and vertically
+    const x = margin;
+    const y = (pageHeight - usableHeight) / 2;
+
+    pdf.addImage(
+      imgData,
+      'JPEG',
+      x,
+      y,
+      usableWidth,
+      usableHeight,
+      undefined,
+      'MEDIUM'
+    );
+
+    const filename = property.title
+      ? `${property.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`
+      : 'property-brochure.pdf';
+    
+    pdf.save(filename);
   };
 
   const handleDownloadImage = async () => {
     if (!brochureRef.current) return;
 
+    // Calculate dimensions for 9:16 aspect ratio
+    const aspectRatio = 9 / 16;
+    const targetHeight = 1920; // Use height as base dimension
+    const targetWidth = targetHeight * aspectRatio; // This will be 1080
+
     const canvas = await html2canvas(brochureRef.current, {
       scale: 2,
       useCORS: true,
       logging: false,
-      windowWidth: brochureRef.current.scrollWidth,
-      windowHeight: brochureRef.current.scrollHeight,
+      windowWidth: targetWidth,
+      windowHeight: targetHeight,
     });
 
+    // Create a new canvas with 9:16 ratio
+    const outputCanvas = document.createElement('canvas');
+    outputCanvas.width = targetWidth;
+    outputCanvas.height = targetHeight;
+    const ctx = outputCanvas.getContext('2d');
+
+    if (ctx) {
+      // Fill background with white
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+
+      // Calculate scaling to fit content while maintaining aspect ratio
+      const scale = Math.min(
+        targetWidth / canvas.width,
+        targetHeight / canvas.height
+      );
+
+      // Calculate position to center the content
+      const x = (targetWidth - canvas.width * scale) / 2;
+      const y = (targetHeight - canvas.height * scale) / 2;
+
+      // Draw the content centered in the 9:16 canvas
+      ctx.drawImage(
+        canvas,
+        x,
+        y,
+        canvas.width * scale,
+        canvas.height * scale
+      );
+    }
+
     const link = document.createElement('a');
-    link.download = `${property.title.replace(/\s+/g, '-').toLowerCase()}.jpg`;
-    link.href = canvas.toDataURL('image/jpeg', 0.8);
+    link.download = property.title
+      ? `${property.title.replace(/\s+/g, '-').toLowerCase()}.jpg`
+      : 'property.jpg';
+    link.href = outputCanvas.toDataURL('image/jpeg', 0.9);
     link.click();
   };
 
