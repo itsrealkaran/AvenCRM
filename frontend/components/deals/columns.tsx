@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { dealsApi } from '@/api/deals.service';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Deal, DealStatus } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -28,7 +29,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { AITextarea } from '../ui/ai-textarea';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 const colors: Record<DealStatus, string> = {
   NEW: 'bg-purple-100 text-purple-800',

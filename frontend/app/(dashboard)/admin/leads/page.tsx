@@ -7,6 +7,7 @@ import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import {
+  ArrowRightLeft,
   CirclePlus,
   Copy,
   CopyIcon,
@@ -17,7 +18,6 @@ import {
   RefreshCw,
   Trash2,
   Upload,
-  ArrowRightLeft,
 } from 'lucide-react';
 import {
   MaterialReactTable,
@@ -29,6 +29,11 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { read, utils } from 'xlsx';
 
+import FileImportModal from '@/components/data-table/file-import-modal';
+import { adminColumns } from '@/components/leads/admin-columns';
+import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
+import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
+import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -39,12 +44,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
-
-import { adminColumns } from '@/components/leads/admin-columns';
-import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
-import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
-import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
-import FileImportModal from '@/components/data-table/file-import-modal';
 
 export default function AdminLeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -402,7 +401,9 @@ export default function AdminLeadsPage() {
                 onClick={async () => {
                   const ok = confirm('Are you sure you want to delete these leads?');
                   if (ok) {
-                    handleBulkDelete(table.getSelectedRowModel().rows.map((row) => row.original.id));
+                    handleBulkDelete(
+                      table.getSelectedRowModel().rows.map((row) => row.original.id)
+                    );
                     table.resetRowSelection();
                   }
                 }}
@@ -419,10 +420,12 @@ export default function AdminLeadsPage() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent>
                     {agents.map((agent: any) => (
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         key={agent.id}
                         onClick={() => {
-                          const selectedIds = table.getSelectedRowModel().rows.map((row) => row.original.id);
+                          const selectedIds = table
+                            .getSelectedRowModel()
+                            .rows.map((row) => row.original.id);
                           handleBulkAssign(selectedIds, agent.id);
                           table.resetRowSelection();
                         }}
@@ -514,7 +517,7 @@ export default function AdminLeadsPage() {
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          <Pencil className='size-4'/>
+          <Pencil className='size-4' />
         </ListItemIcon>
         Edit Lead
       </MenuItem>,
@@ -541,7 +544,7 @@ export default function AdminLeadsPage() {
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          <ArrowRightLeft className='size-4'/>
+          <ArrowRightLeft className='size-4' />
         </ListItemIcon>
         Convert to Deal
       </MenuItem>,

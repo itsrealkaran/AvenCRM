@@ -209,10 +209,10 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
+              <Button
+                type='submit'
                 disabled={
-                  createTransaction.isPending || 
+                  createTransaction.isPending ||
                   !form.formState.isValid ||
                   Object.keys(form.formState.dirtyFields).length < 4
                 }

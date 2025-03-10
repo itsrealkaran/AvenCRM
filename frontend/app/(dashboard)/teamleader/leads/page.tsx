@@ -6,6 +6,7 @@ import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types'
 import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowRightLeft,
   CirclePlus,
   Copy,
   CopyIcon,
@@ -16,7 +17,6 @@ import {
   RefreshCw,
   Trash2,
   Upload,
-  ArrowRightLeft,
 } from 'lucide-react';
 import {
   MaterialReactTable,
@@ -28,6 +28,10 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { read, utils } from 'xlsx';
 
+import FileImportModal from '@/components/data-table/file-import-modal';
+import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
+import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
+import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -40,10 +44,6 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 
 import { columns } from './columns';
-import { ConvertToDealDialog } from '@/components/leads/convert-to-deal-dialog';
-import { CreateLeadDialog } from '@/components/leads/create-lead-dialog';
-import { EditLeadDialog } from '@/components/leads/edit-lead-dialog';
-import FileImportModal from '@/components/data-table/file-import-modal';
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -222,7 +222,7 @@ export default function LeadsPage() {
     try {
       // Filter out only the visible columns
       const visibleColumns = table.getAllColumns().filter((column) => column.getIsVisible());
-      
+
       // Get the data for the visible columns
       const exportData = leads.map((row: Lead) => {
         const rowData: Record<string, any> = {};
@@ -312,12 +312,7 @@ export default function LeadsPage() {
         </Box>
         <Box sx={{ display: 'flex', gap: '0.5rem' }}>
           {table.getSelectedRowModel().rows.length > 0 && (
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleBulkDelete}
-              className='text-red-600'
-            >
+            <Button variant='outline' size='sm' onClick={handleBulkDelete} className='text-red-600'>
               <Trash2 className='h-4 w-4 mr-2' />
               Delete Selected
             </Button>
@@ -400,7 +395,7 @@ export default function LeadsPage() {
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          <Pencil className='size-4'/>
+          <Pencil className='size-4' />
         </ListItemIcon>
         Edit Lead
       </MenuItem>,
@@ -427,7 +422,7 @@ export default function LeadsPage() {
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          <ArrowRightLeft className='size-4'/>
+          <ArrowRightLeft className='size-4' />
         </ListItemIcon>
         Convert to Deal
       </MenuItem>,

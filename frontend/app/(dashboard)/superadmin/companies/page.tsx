@@ -321,7 +321,9 @@ export default function CompaniesPage() {
                         <TableCell>
                           <div className='flex flex-col'>
                             <span className='font-medium'>
-                              {company.plan ? plans.find((plan) => plan.id === company.planId)?.name : 'N/A'}
+                              {company.plan
+                                ? plans.find((plan) => plan.id === company.planId)?.name
+                                : 'N/A'}
                             </span>
                             <span className='text-sm text-muted-foreground'>
                               Expires: {new Date(company.planEnd).toLocaleDateString()}

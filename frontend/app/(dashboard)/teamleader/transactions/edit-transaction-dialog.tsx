@@ -236,8 +236,8 @@ export function EditTransactionDialog({
               <Button type='button' variant='outline' onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button 
-                type='submit' 
+              <Button
+                type='submit'
                 disabled={
                   editTransaction.isPending ||
                   !form.watch('commissionRate') ||

@@ -5,6 +5,7 @@ import { leadsApi } from '@/api/leads.service';
 import { Lead, LeadStatus } from '@/types';
 import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { format } from 'date-fns';
 import {
   ArrowRightLeft,
@@ -17,6 +18,7 @@ import {
 import { MRT_ColumnDef } from 'material-react-table';
 import { toast } from 'sonner';
 
+import { AITextarea } from '@/components/ui/ai-textarea';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -36,9 +38,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import axios from 'axios';
-
-import { AITextarea } from '@/components/ui/ai-textarea';
 import {
   Select,
   SelectContent,
@@ -333,7 +332,9 @@ export const columns: MRT_ColumnDef<Lead>[] = [
     header: 'Property Type',
     Cell: ({ row }) => {
       const propertyType = row.getValue('propertyType') as string;
-      return propertyType ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase() : '';
+      return propertyType
+        ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase()
+        : '';
     },
   },
   {
@@ -356,9 +357,9 @@ export const columns: MRT_ColumnDef<Lead>[] = [
     accessorKey: 'location',
     header: 'Location',
     Cell: ({ row }) => {
-      const location = row.getValue('location') as string
-      return location
-    }
+      const location = row.getValue('location') as string;
+      return location;
+    },
   },
   {
     accessorKey: 'notes',

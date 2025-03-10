@@ -6,6 +6,7 @@ import { DealStatus, LeadResponse as Lead, LeadStatus, UserRole } from '@/types'
 import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  ArrowRightLeft,
   CirclePlus,
   Copy,
   CopyIcon,
@@ -16,7 +17,6 @@ import {
   RefreshCw,
   Trash2,
   Upload,
-  ArrowRightLeft,
 } from 'lucide-react';
 import {
   MaterialReactTable,
@@ -28,6 +28,7 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { read, utils } from 'xlsx';
 
+import FileImportModal from '@/components/data-table/file-import-modal';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -43,7 +44,6 @@ import { columns } from './columns';
 import { ConvertToDealDialog } from './convert-to-deal-dialog';
 import { CreateLeadDialog } from './create-lead-dialog';
 import { EditLeadDialog } from './edit-lead-dialog';
-import FileImportModal from '@/components/data-table/file-import-modal';
 
 export default function LeadsPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -448,7 +448,7 @@ export default function LeadsPage() {
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          <Pencil className='size-4'/>
+          <Pencil className='size-4' />
         </ListItemIcon>
         Edit Lead
       </MenuItem>,
@@ -475,7 +475,7 @@ export default function LeadsPage() {
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          <ArrowRightLeft className='size-4'/>
+          <ArrowRightLeft className='size-4' />
         </ListItemIcon>
         Convert to Deal
       </MenuItem>,

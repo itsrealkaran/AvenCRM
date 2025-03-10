@@ -5,6 +5,7 @@ import { leadsApi } from '@/api/leads.service';
 import { Lead, LeadStatus } from '@/types';
 import { Box, lighten, ListItemIcon, MenuItem, Typography } from '@mui/material';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { format } from 'date-fns';
 import {
   ArrowRightLeft,
@@ -36,9 +37,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import axios from 'axios';
-
-import { AITextarea } from '../ui/ai-textarea';
 import {
   Select,
   SelectContent,
@@ -46,6 +44,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
+import { AITextarea } from '../ui/ai-textarea';
 
 const getStatusColor = (status: LeadStatus) => {
   const colors = {
@@ -333,7 +333,9 @@ export const adminColumns: MRT_ColumnDef<Lead>[] = [
     header: 'Property Type',
     Cell: ({ row }) => {
       const propertyType = row.getValue('propertyType') as string;
-      return propertyType ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase() : '';
+      return propertyType
+        ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase()
+        : '';
     },
   },
   {
@@ -356,9 +358,9 @@ export const adminColumns: MRT_ColumnDef<Lead>[] = [
     accessorKey: 'location',
     header: 'Location',
     Cell: ({ row }) => {
-      const location = row.getValue('location') as string
-      return location
-    }
+      const location = row.getValue('location') as string;
+      return location;
+    },
   },
   {
     accessorKey: 'notes',
@@ -373,5 +375,5 @@ export const adminColumns: MRT_ColumnDef<Lead>[] = [
     Cell: ({ row }) => {
       return format(new Date(row.getValue('createdAt')), 'MMM d, yyyy');
     },
-  }
+  },
 ];

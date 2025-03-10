@@ -55,7 +55,7 @@ export default function PropertyBrochure({ property, createdBy }: PropertyBrochu
       windowWidth: targetWidth,
       windowHeight: targetHeight,
       allowTaint: true,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#ffffff',
     });
 
     // Reset the styles after capture
@@ -63,7 +63,7 @@ export default function PropertyBrochure({ property, createdBy }: PropertyBrochu
     brochureRef.current.style.height = '';
 
     const imgData = canvas.toDataURL('image/jpeg', 0.95);
-    
+
     // Create PDF in portrait orientation
     const pdf = new jsPDF({
       orientation: 'portrait',
@@ -76,28 +76,19 @@ export default function PropertyBrochure({ property, createdBy }: PropertyBrochu
 
     // Calculate dimensions to maintain 9:16 ratio
     const margin = 10;
-    const usableWidth = pageWidth - (margin * 2);
+    const usableWidth = pageWidth - margin * 2;
     const usableHeight = (usableWidth / 9) * 16; // Maintain 9:16 ratio
 
     // Center horizontally and vertically
     const x = margin;
     const y = (pageHeight - usableHeight) / 2;
 
-    pdf.addImage(
-      imgData,
-      'JPEG',
-      x,
-      y,
-      usableWidth,
-      usableHeight,
-      undefined,
-      'MEDIUM'
-    );
+    pdf.addImage(imgData, 'JPEG', x, y, usableWidth, usableHeight, undefined, 'MEDIUM');
 
     const filename = property.title
       ? `${property.title.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase()}.pdf`
       : 'property-brochure.pdf';
-    
+
     pdf.save(filename);
   };
 
@@ -129,23 +120,14 @@ export default function PropertyBrochure({ property, createdBy }: PropertyBrochu
       ctx.fillRect(0, 0, targetWidth, targetHeight);
 
       // Calculate scaling to fit content while maintaining aspect ratio
-      const scale = Math.min(
-        targetWidth / canvas.width,
-        targetHeight / canvas.height
-      );
+      const scale = Math.min(targetWidth / canvas.width, targetHeight / canvas.height);
 
       // Calculate position to center the content
       const x = (targetWidth - canvas.width * scale) / 2;
       const y = (targetHeight - canvas.height * scale) / 2;
 
       // Draw the content centered in the 9:16 canvas
-      ctx.drawImage(
-        canvas,
-        x,
-        y,
-        canvas.width * scale,
-        canvas.height * scale
-      );
+      ctx.drawImage(canvas, x, y, canvas.width * scale, canvas.height * scale);
     }
 
     const link = document.createElement('a');

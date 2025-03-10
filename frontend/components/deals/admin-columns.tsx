@@ -10,6 +10,7 @@ import {
   useState,
 } from 'react';
 import { dealsApi } from '@/api/deals.service';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { Deal, DealStatus } from '@/types';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -34,7 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useCurrency } from '@/contexts/CurrencyContext';
 
 import { AITextarea } from '../ui/ai-textarea';
 

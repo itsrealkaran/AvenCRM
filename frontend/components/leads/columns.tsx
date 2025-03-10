@@ -262,7 +262,9 @@ export const columns: MRT_ColumnDef<Lead>[] = [
     header: 'Property Type',
     Cell: ({ row }) => {
       const propertyType = row.getValue('propertyType') as string;
-      return propertyType ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase() : '';
+      return propertyType
+        ? propertyType.charAt(0).toUpperCase() + propertyType.slice(1).toLowerCase()
+        : '';
     },
   },
   {
@@ -285,9 +287,9 @@ export const columns: MRT_ColumnDef<Lead>[] = [
     accessorKey: 'location',
     header: 'Location',
     Cell: ({ row }) => {
-      const location = row.getValue('location') as string
-      return location
-    }
+      const location = row.getValue('location') as string;
+      return location;
+    },
   },
   {
     accessorKey: 'notes',
