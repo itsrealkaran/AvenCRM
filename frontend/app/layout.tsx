@@ -67,7 +67,8 @@ export default function RootLayout({
               FB.init({
                 appId: '2340954516269174',
                 xfbml: true,
-                version: 'v18.0'
+                version: 'v18.0',
+                config_id: '608691068704818'
               });
             };
           `}

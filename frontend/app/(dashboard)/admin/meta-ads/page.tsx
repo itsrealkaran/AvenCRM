@@ -45,7 +45,7 @@ export default function MetaAdsPage() {
     FB.login(
       (response: any) => {
         if (response.authResponse) {
-          console.log('Welcome! Fetching your information....'); //@ts-ignore
+          //@ts-ignore
           FB.api('/me', { fields: 'name, email' }, (userInfo) => {
             console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
             setIsConnected(true);
@@ -55,7 +55,12 @@ export default function MetaAdsPage() {
           console.log('User cancelled login or did not fully authorize.');
         }
       },
-      { scope: 'public_profile,email,ads_management' }
+      {
+        config_id: '608691068704818',
+        response_type: 'code',
+        override_default_response_type: true,
+        scope: 'public_profile,email,ads_management',
+      },
     );
   };
 
