@@ -141,7 +141,11 @@ export const teamController = {
         return res.status(403).json({ message: 'Insufficient permissions' });
       }
 
-     const users = await db.team.findMany({})
+     const users = await db.team.findMany({
+      where: {
+        companyId: authUser.companyId
+      }
+     })
 
       res.json(users);
     } catch (error) {

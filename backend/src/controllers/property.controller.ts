@@ -68,7 +68,7 @@ export const propertiesController: Controller = {
           email,
           notes,
           agentId,
-          source: 'Property Link',
+          source: 'PROPERTY',
           companyId: agent.companyId!,
         },
       });
