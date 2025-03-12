@@ -166,6 +166,13 @@ const FileImportModal = ({
         return mappedItem;
       });
 
+      //append source: IMPORT in every item of mappedData if the route is /leads
+      if (route === 'leads') {
+        mappedData.forEach((item: any) => {
+          item.source = 'IMPORT';
+        });
+      }
+
       // Process data in batches if it's the leads route
       if (route === 'leads' || route === 'manage-agents') {
         const BATCH_SIZE = 10;

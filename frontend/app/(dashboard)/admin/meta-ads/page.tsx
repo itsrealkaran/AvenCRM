@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, Facebook } from 'lucide-react';
+import FacebookLogin from 'react-facebook-login';
 
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
@@ -39,6 +40,25 @@ export default function MetaAdsPage() {
     setForms([...forms, newForm]);
   };
 
+  const handleFacebookLogin = () => {
+    //@ts-ignore
+    FB.login(
+      (response: any) => {
+        if (response.authResponse) {
+          console.log('Welcome! Fetching your information....'); //@ts-ignore
+          FB.api('/me', { fields: 'name, email' }, (userInfo) => {
+            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+            setIsConnected(true);
+            setShowFacebookModal(false);
+          });
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+        }
+      },
+      { scope: 'public_profile,email,ads_management' }
+    );
+  };
+
   if (company?.planName !== 'ENTERPRISE') {
     return <MetaAdsPlaceholder />;
   }
@@ -52,10 +72,7 @@ export default function MetaAdsPage() {
         </div>
 
         {!isConnected ? (
-          <Button
-            onClick={() => setShowFacebookModal(true)}
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-          >
+          <Button onClick={handleFacebookLogin} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
             <Facebook className='w-4 h-4 mr-2' />
             Connect Facebook
           </Button>
@@ -108,10 +125,7 @@ export default function MetaAdsPage() {
           <p className='text-muted-foreground mb-4'>
             Connect your Facebook account to start creating and managing ad campaigns
           </p>
-          <Button
-            onClick={() => setShowFacebookModal(true)}
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-          >
+          <Button onClick={handleFacebookLogin} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
             Connect Now
           </Button>
         </div>

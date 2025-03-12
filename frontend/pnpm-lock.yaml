@@ -110,6 +110,9 @@ importers:
       '@types/react-big-calendar':
         specifier: ^1.16.0
         version: 1.16.0
+      '@types/react-facebook-login':
+        specifier: ^4.1.11
+        version: 4.1.11
       axios:
         specifier: ^1.7.9
         version: 1.7.9
@@ -176,6 +179,9 @@ importers:
       react-dropzone:
         specifier: ^14.3.5
         version: 14.3.5(react@19.0.0-rc-66855b96-20241106)
+      react-facebook-login:
+        specifier: ^4.1.1
+        version: 4.1.1(react@19.0.0-rc-66855b96-20241106)
       react-hook-form:
         specifier: ^7.53.2
         version: 7.54.1(react@19.0.0-rc-66855b96-20241106)
@@ -1652,6 +1658,9 @@ packages:
     resolution: {integrity: sha512-P4t6saawp+b/dFrUr2cvkVsfvPguwsxtH6dNIYRllMsefqFzkZk5UIjzyDOv5g1dXIPdG4Sp1yCR4Z6RCUsG/Q==}
     peerDependencies:
       '@types/react': ^18.0.0
+
+  '@types/react-facebook-login@4.1.11':
+    resolution: {integrity: sha512-7S/qzQMrS/zyJupX1RTiP9YV8qA0RyjS+up19G28XM6C9IN3NYfkrbKJEHOAfc79HdFYgpt9qQd1IHNZxuH+eA==}
 
   '@types/react-transition-group@4.4.12':
     resolution: {integrity: sha512-8TV6R3h2j7a91c+1DXdJi3Syo69zzIZbz7Lg5tORM5LEJG7X/E6a1V3drRyBRZq7/utz7A+c4OgYLiLcYGHG6w==}
@@ -3226,6 +3235,11 @@ packages:
     engines: {node: '>= 10.13'}
     peerDependencies:
       react: '>= 16.8 || 18.0.0'
+
+  react-facebook-login@4.1.1:
+    resolution: {integrity: sha512-COnHEHlYGTKipz4963safFAK9PaNTcCiXfPXMS/yxo8El+/AJL5ye8kMJf23lKSSGGPgqFQuInskIHVqGqTvSw==}
+    peerDependencies:
+      react: ^16.0.0
 
   react-hook-form@7.54.1:
     resolution: {integrity: sha512-PUNzFwQeQ5oHiiTUO7GO/EJXGEtuun2Y1A59rLnZBBj+vNEOWt/3ERTiG1/zt7dVeJEM+4vDX/7XQ/qanuvPMg==}
@@ -5181,6 +5195,10 @@ snapshots:
     dependencies:
       '@types/react': 18.3.16
 
+  '@types/react-facebook-login@4.1.11':
+    dependencies:
+      '@types/react': 18.3.16
+
   '@types/react-transition-group@4.4.12(@types/react@18.3.16)':
     dependencies:
       '@types/react': 18.3.16
@@ -6864,6 +6882,10 @@ snapshots:
       attr-accept: 2.2.5
       file-selector: 2.1.2
       prop-types: 15.8.1
+      react: 19.0.0-rc-66855b96-20241106
+
+  react-facebook-login@4.1.1(react@19.0.0-rc-66855b96-20241106):
+    dependencies:
       react: 19.0.0-rc-66855b96-20241106
 
   react-hook-form@7.54.1(react@19.0.0-rc-66855b96-20241106):

@@ -113,7 +113,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                     name='role'
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Property Type</FormLabel>
+                        <FormLabel>Client Type</FormLabel>
                         <FormControl>
                           <Select
                             disabled={isLoading}
@@ -121,7 +121,7 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                             defaultValue={field.value}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder='Select property type' />
+                              <SelectValue placeholder='Select client type' />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value={'BUY'}>Buy</SelectItem>

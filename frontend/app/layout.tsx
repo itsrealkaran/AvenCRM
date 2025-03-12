@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import localFont from 'next/font/local';
+import Script from 'next/script';
 
 import 'react-datetime/css/react-datetime.css';
 import './globals.css';
@@ -55,6 +56,22 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${foundersGrotesk.variable} ${foundersGroteskMono.variable} antialiased bg-background`}
       >
+        <Script
+          strategy='lazyOnload'
+          id='facebook-jssdk'
+          src='https://connect.facebook.net/en_US/sdk.js'
+        />
+        <Script id='facebook-init'>
+          {`
+            window.fbAsyncInit = function() {
+              FB.init({
+                appId: '2340954516269174',
+                xfbml: true,
+                version: 'v18.0'
+              });
+            };
+          `}
+        </Script>
         {children}
         <Sonner />
         <Toaster />

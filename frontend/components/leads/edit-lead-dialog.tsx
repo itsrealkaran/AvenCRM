@@ -133,7 +133,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                   name='role'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Property Type</FormLabel>
+                      <FormLabel>Client Type</FormLabel>
                       <FormControl>
                         <Select
                           disabled={updateLead.isPending}
@@ -141,7 +141,7 @@ export function EditLeadDialog({ open, onOpenChange, lead }: EditLeadDialogProps
                           defaultValue={field.value}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder='Select property type' />
+                            <SelectValue placeholder='Select client type' />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value={'BUY'}>Buy</SelectItem>

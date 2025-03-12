@@ -269,7 +269,7 @@ export const columns: MRT_ColumnDef<Lead>[] = [
   },
   {
     accessorKey: 'role',
-    header: 'Property Status',
+    header: 'Client Type',
     Cell: ({ row }) => {
       const role = row.getValue('role') as string;
       return role ? role.charAt(0).toUpperCase() + role.slice(1).toLowerCase() : '';
