@@ -43,6 +43,30 @@ export default function MetaAdsPage() {
     return <MetaAdsPlaceholder />;
   }
 
+  const handleFacebookLogin = () => {
+    //@ts-ignore
+    FB.login(
+      (response: any) => {
+        if (response.authResponse) {
+          //@ts-ignore
+          FB.api('/me', { fields: 'name, email' }, (userInfo) => {
+            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+            setIsConnected(true);
+            setShowFacebookModal(false);
+          });
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+        }
+      },
+      {
+        config_id: '608691068704818',
+        response_type: 'code',
+        override_default_response_type: true,
+        scope: 'public_profile,email,ads_management',
+      },
+    );
+  };
+
   return (
     <Card className='p-6 space-y-6 min-h-full'>
       <div className='flex justify-between items-center'>
@@ -52,7 +76,7 @@ export default function MetaAdsPage() {
         </div>
         {!isConnected ? (
           <Button
-            onClick={() => setShowFacebookModal(true)}
+            onClick={handleFacebookLogin}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
           >
             <Facebook className='w-4 h-4 mr-2' />
@@ -108,7 +132,7 @@ export default function MetaAdsPage() {
             Connect your Facebook account to start creating and managing ad campaigns
           </p>
           <Button
-            onClick={() => setShowFacebookModal(true)}
+            onClick={handleFacebookLogin}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
           >
             Connect Now

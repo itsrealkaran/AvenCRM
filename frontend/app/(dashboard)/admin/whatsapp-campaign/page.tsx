@@ -36,6 +36,30 @@ export default function WhatsAppCampaignsPage() {
     return <WhatsAppPlaceholder />;
   }
 
+  const handleWhatsAppLogin = () => {
+    //@ts-ignore
+    FB.login(
+      (response: any) => {
+        if (response.authResponse) {
+          //@ts-ignore
+          FB.api('/me', { fields: 'name, email' }, (userInfo) => {
+            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+            setIsConnected(true);
+            setShowWhatsAppModal(false);
+          });
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+        }
+      },
+      {
+        config_id: '1931062140756222',
+        response_type: 'code',
+        override_default_response_type: true,
+        scope: 'public_profile,email,ads_management',
+      },
+    );
+  };
+
   return (
     <Card className='p-6 space-y-6 min-h-full'>
       <div className='flex justify-between items-center'>
@@ -45,7 +69,7 @@ export default function WhatsAppCampaignsPage() {
         </div>
         {!isConnected ? (
           <Button
-            onClick={() => setShowWhatsAppModal(true)}
+            onClick={handleWhatsAppLogin}
             className='bg-[#25D366] hover:bg-[#25D366]/90 text-white'
           >
             <FaWhatsapp className='w-4 h-4 mr-2' />
@@ -94,7 +118,7 @@ export default function WhatsAppCampaignsPage() {
             Connect your WhatsApp Business account to start creating and managing campaigns
           </p>
           <Button
-            onClick={() => setShowWhatsAppModal(true)}
+            onClick={handleWhatsAppLogin}
             className='bg-[#25D366] hover:bg-[#25D366]/90 text-white'
           >
             Connect Now

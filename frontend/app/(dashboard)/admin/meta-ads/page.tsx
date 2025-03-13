@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { ChevronDown, Facebook } from 'lucide-react';
-import FacebookLogin from 'react-facebook-login';
 
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
