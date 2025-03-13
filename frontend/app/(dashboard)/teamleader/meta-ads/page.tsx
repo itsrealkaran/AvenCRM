@@ -62,7 +62,7 @@ export default function MetaAdsPage() {
         response_type: 'code',
         override_default_response_type: true,
         scope: 'public_profile,email,ads_management',
-      },
+      }
     );
   };
 
@@ -74,10 +74,7 @@ export default function MetaAdsPage() {
           <p className='text-muted-foreground'>Manage your Facebook ad campaigns</p>
         </div>
         {!isConnected ? (
-          <Button
-            onClick={handleFacebookLogin}
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-          >
+          <Button onClick={handleFacebookLogin} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
             <Facebook className='w-4 h-4 mr-2' />
             Connect Facebook
           </Button>
@@ -130,10 +127,7 @@ export default function MetaAdsPage() {
           <p className='text-muted-foreground mb-4'>
             Connect your Facebook account to start creating and managing ad campaigns
           </p>
-          <Button
-            onClick={handleFacebookLogin}
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-          >
+          <Button onClick={handleFacebookLogin} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
             Connect Now
           </Button>
         </div>

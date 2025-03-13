@@ -56,7 +56,7 @@ export default function WhatsAppCampaignsPage() {
         response_type: 'code',
         override_default_response_type: true,
         scope: 'public_profile,email,ads_management',
-      },
+      }
     );
   };
 

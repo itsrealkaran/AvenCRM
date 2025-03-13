@@ -86,7 +86,7 @@ export default function WhatsAppCampaignsPage() {
         response_type: 'code',
         override_default_response_type: true,
         scope: 'public_profile,email,ads_management',
-      },
+      }
     );
   };
 
@@ -107,7 +107,7 @@ export default function WhatsAppCampaignsPage() {
           </Button>
         ) : (
           <Button
-              onClick={() => setShowCampaignModal(true)}
+            onClick={() => setShowCampaignModal(true)}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
           >
             Create Campaign
