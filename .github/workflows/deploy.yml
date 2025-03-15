@@ -61,7 +61,7 @@ jobs:
 
           # SSH into EC2 and run deployment commands
           ssh $EC2_USER@$EC2_HOST << 'EOF'
-            cd /path/to/your/project
+            cd AvenCRM
             
             # Pull latest changes
             git pull origin main
