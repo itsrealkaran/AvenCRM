@@ -32,11 +32,15 @@ jobs:
             # Pull latest changes
             git pull origin main
             
+            # Load NVM and Node environment
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+            
             # Backend deployment
             cd backend
-            /home/ubuntu/.nvm/versions/node/v22.13.1/bin/pnpm install
-            /home/ubuntu/.nvm/versions/node/v22.13.1/bin/pnpm build
-            /home/ubuntu/.nvm/versions/node/v22.13.1/bin/pm2 restart all
+            pnpm install
+            pnpm build
+            pm2 restart all
           EOF
 
   deploy-frontend:
@@ -65,10 +69,14 @@ jobs:
             
             # Pull latest changes
             git pull origin main
+
+            # Load NVM and Node environment
+            export NVM_DIR="$HOME/.nvm"
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
             
             # Frontend deployment
             cd frontend
-            /home/ubuntu/.nvm/versions/node/v22.13.0/bin/pnpm install
-            /home/ubuntu/.nvm/versions/node/v22.13.0/bin/pnpm build
-            /home/ubuntu/.nvm/versions/node/v22.13.0/bin/pm2 restart all
+            pnpm install
+            pnpm build
+            pm2 restart all
           EOF
