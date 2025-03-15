@@ -34,9 +34,9 @@ jobs:
             
             # Backend deployment
             cd backend
-            pnpm install
-            pnpm build
-            pm2 restart all
+            /home/ubuntu/.nvm/versions/node/v22.13.1/bin/pnpm install
+            /home/ubuntu/.nvm/versions/node/v22.13.1/bin/pnpm build
+            /home/ubuntu/.nvm/versions/node/v22.13.1/bin/pm2 restart all
           EOF
 
   deploy-frontend:
@@ -68,7 +68,7 @@ jobs:
             
             # Frontend deployment
             cd frontend
-            pnpm install
-            pnpm build
-            pm2 restart all
+            /home/ubuntu/.nvm/versions/node/v22.13.0/bin/pnpm install
+            /home/ubuntu/.nvm/versions/node/v22.13.0/bin/pnpm build
+            /home/ubuntu/.nvm/versions/node/v22.13.0/bin/pm2 restart all
           EOF
