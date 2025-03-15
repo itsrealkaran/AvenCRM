@@ -236,4 +236,36 @@ export const notificationService = {
   },
 };
 
+// OTP Service
+
+const OTP_KEY_PREFIX = 'otp:';
+const OTP_TTL = 60 * 15; // 15 minutes
+
+export const OTPService = {
+  async getCachedOTP(email: string) {
+    try {
+      const cachedOTP = await redisClient.get(`${OTP_KEY_PREFIX}${email}`);
+      return cachedOTP ? JSON.parse(cachedOTP) : null;
+    } catch (error) {
+      logger.error('Redis Get Error:', error);
+    }
+  },
+
+  async cacheUserOTP(email: string, otp: string) {
+    try {
+      await redisClient.setex(`${OTP_KEY_PREFIX}${email}`, OTP_TTL, otp); // Cache for 5 minutes
+    } catch (error) {
+      logger.error('Redis Cache Error:', error);
+    }
+  },
+
+  async deleteUserOTP(email: string) {
+    try {
+      await redisClient.del(`${OTP_KEY_PREFIX}${email}`);
+    } catch (error) {
+      logger.error('Redis Delete Error:', error);
+    }
+  }
+};
+
 export default redisClient;

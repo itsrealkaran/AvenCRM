@@ -9,8 +9,9 @@ import {
   AuthenticatedRequest,
   JWTPayload,
 } from "../middleware/auth.js";
-import { cacheUser, invalidateUserCache } from "../services/redis.js";
+import { cacheUser, invalidateUserCache, OTPService } from "../services/redis.js";
 import logger from "../utils/logger.js";
+import sendUserOTP from "../email-templates/forgot-password.js";
 
 const router: Router = Router();
 
@@ -457,5 +458,82 @@ router.get('/company', protect, async (req: AuthenticatedRequest, res: Response)
     res.status(500).json({ message: "Error fetching company data" });
   }
 });
+
+router.post('/forgot-password', async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  try {
+    const user = await db.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const oneTimePassword = Math.floor(100000 + Math.random() * 900000).toString();
+
+    await sendUserOTP(email, oneTimePassword);
+
+    await OTPService.cacheUserOTP(email, oneTimePassword);
+
+    res.json({ message: "OTP sent successfully" });
+    
+  } catch (error) {
+    logger.error("Forgot Password Error:", error);
+    res.status(500).json({ message: "Error sending reset email" });
+  }
+});
+
+router.post('/verify-otp', async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  const formattedOtp = Number(otp);
+
+  try {
+    const cachedOTP = await OTPService.getCachedOTP(email);
+    if (!cachedOTP) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (cachedOTP !== formattedOtp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    res.status(200).json({ message: "OTP verified successfully" });
+
+  } catch (err) {
+    logger.error("Verify OTP Error:", err);
+    res.status(500).json({ message: "Error verifying OTP" });
+  }
+});
+
+router.post('/reset-password', async (req: Request, res: Response) => {
+  const { email, otp, password } = req.body;
+  const formattedOtp = Number(otp);
+
+  try {
+    const cachedOTP = await OTPService.getCachedOTP(email);
+
+    if (!cachedOTP) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    if (cachedOTP !== formattedOtp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, Number(process.env.SALT_ROUNDS || 12));
+
+    await db.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+    res.status(200).json({ message: "Password reset successfully" });
+
+  } catch (err) {
+    logger.error("Reset Password Error:", err);
+    res.status(500).json({ message: "Error resetting password" });
+  }
+})
 
 export default router;
