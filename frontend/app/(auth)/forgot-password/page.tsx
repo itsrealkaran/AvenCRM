@@ -37,7 +37,7 @@ export default function ForgotPassword() {
             <div className='space-y-2'>
               <h1 className='text-3xl font-bold tracking-tight text-gray-900'>Forgot Password</h1>
               <p className='text-gray-500'>
-                Enter your email address and we&apos;ll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you temporary password.
               </p>
             </div>
 
@@ -52,7 +52,7 @@ export default function ForgotPassword() {
                 />
               </div>
               <Button className='w-full h-12 text-base bg-[#5932EA] hover:bg-[#4A2BC2] text-white'>
-                Send Reset Link
+                Send Temporary Password
               </Button>
             </div>
 
@@ -80,7 +80,7 @@ export default function ForgotPassword() {
             <div className='absolute -bottom-8 left-20 w-72 h-72 bg-[#FFC2B4] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000'></div>
             <div className='relative'>
               <Image
-                src='https://www.pngarts.com/files/4/House-PNG-Image.png'
+                src='/sign-in.svg'
                 alt='CRM Dashboard Preview'
                 width={800}
                 height={600}
