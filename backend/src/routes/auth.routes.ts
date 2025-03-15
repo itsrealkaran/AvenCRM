@@ -528,6 +528,9 @@ router.post('/reset-password', async (req: Request, res: Response) => {
       where: { email },
       data: { password: hashedPassword },
     });
+
+    await OTPService.deleteUserOTP(email);
+
     res.status(200).json({ message: "Password reset successfully" });
 
   } catch (err) {

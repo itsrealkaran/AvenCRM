@@ -15,10 +15,10 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 
+import CompanyForm from './company-form';
 import { NotificationForm } from './components/notification-form';
 import { PasswordForm } from './components/password-form';
 import { ProfileForm } from './components/profile-form';
-import CompanyForm from './company-form';
 
 const Page = () => {
   const { user, logout, updateUser } = useAuth();

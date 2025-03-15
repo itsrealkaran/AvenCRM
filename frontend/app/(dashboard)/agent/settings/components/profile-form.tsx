@@ -45,7 +45,7 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
   const { updateUser } = useAuth();
-  
+
   const { data: user } = useQuery({
     queryKey: ['user'],
     queryFn: () => usersApi.getProfile(),
@@ -162,7 +162,7 @@ export function ProfileForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder='Select gender' />

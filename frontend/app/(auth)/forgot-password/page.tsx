@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
@@ -11,14 +12,13 @@ import Logo from '@/components/logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
-import { useRouter } from 'next/navigation';
 
 const sendOtp = async (email: string) => {
   const response = await api.post('/auth/forgot-password', {
     email,
   });
   return response.data;
-}
+};
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('');
@@ -76,7 +76,7 @@ export default function ForgotPassword() {
     } catch (error) {
       toast.error('Failed to verify OTP');
     }
-  }
+  };
 
   const handleResendOtp = () => {
     setOtp('');
@@ -137,32 +137,31 @@ export default function ForgotPassword() {
                 </div>
               )}
 
-              <Button 
+              <Button
                 className='w-full h-12 text-base bg-[#5932EA] hover:bg-[#4A2BC2] text-white'
                 onClick={isOtpSent ? handleVerifyOtp : handleSendOtp}
                 disabled={isLoading || (!isOtpSent && !email) || (isOtpSent && !otp)}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     {isOtpSent ? 'Verifying...' : 'Sending...'}
                   </>
+                ) : isOtpSent ? (
+                  'Verify OTP'
                 ) : (
-                  isOtpSent ? 'Verify OTP' : 'Send OTP'
+                  'Send OTP'
                 )}
               </Button>
 
               {isOtpSent && (
-                <Button 
-                  variant="link" 
-                  className="w-full text-sm text-muted-foreground"
+                <Button
+                  variant='link'
+                  className='w-full text-sm text-muted-foreground'
                   onClick={handleResendOtp}
                   disabled={isLoading || isTimerActive}
                 >
-                  {isTimerActive 
-                    ? `Resend OTP in ${timer}s` 
-                    : "Didn't receive OTP? Send again"
-                  }
+                  {isTimerActive ? `Resend OTP in ${timer}s` : "Didn't receive OTP? Send again"}
                 </Button>
               )}
             </div>

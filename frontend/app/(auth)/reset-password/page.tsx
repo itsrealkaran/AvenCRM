@@ -1,29 +1,40 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { AlertCircle, Check, Loader2, X } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { api } from '@/lib/api';
-import { Input } from "@mui/material";
-import { Form, FormControl, FormField, FormItem, FormMessage, FormLabel } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Input } from '@mui/material';
+import { motion } from 'framer-motion';
+import { AlertCircle, Check, Loader2, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
-const resetPasswordSchema = z.object({
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .max(50, 'Password is too long'),
-  confirmPassword: z.string()
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
+import { Button } from '@/components/ui/button';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Label } from '@/components/ui/label';
+import { api } from '@/lib/api';
+
+const resetPasswordSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(50, 'Password is too long'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
 type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
 
@@ -35,7 +46,7 @@ const passwordRequirements = [
   { id: 'special', text: 'At least one special character' },
 ];
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMatch, setPasswordMatch] = useState(true);
   const [requirements, setRequirements] = useState<{ [key: string]: boolean }>({
@@ -96,13 +107,13 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-md">
+    <div className='flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8'>
+      <div className='w-full max-w-md'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
-          className="bg-white px-8 py-10 shadow-lg rounded-2xl"
+          className='bg-white px-8 py-10 shadow-lg rounded-2xl'
         >
           <div className='space-y-2 mb-8'>
             <h2 className='text-2xl font-semibold'>Reset Password</h2>
@@ -110,18 +121,18 @@ export default function ResetPasswordPage() {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
               <FormField
                 control={form.control}
-                name="password"
+                name='password'
                 render={({ field }) => (
-                  <FormItem className="space-y-2">
+                  <FormItem className='space-y-2'>
                     <FormLabel className='mr-2'>New Password</FormLabel>
                     <FormControl>
                       <Input
-                        type="password"
-                        placeholder="Enter new password"
-                        className="h-12"
+                        type='password'
+                        placeholder='Enter new password'
+                        className='h-12'
                         disabled={isLoading}
                         {...field}
                       />
@@ -133,15 +144,15 @@ export default function ResetPasswordPage() {
 
               <FormField
                 control={form.control}
-                name="confirmPassword"
+                name='confirmPassword'
                 render={({ field }) => (
-                  <FormItem className="space-y-2">
+                  <FormItem className='space-y-2'>
                     <FormLabel className='mr-2'>Confirm Password</FormLabel>
                     <FormControl>
                       <Input
-                        type="password"
-                        placeholder="Confirm new password"
-                        className="h-12"
+                        type='password'
+                        placeholder='Confirm new password'
+                        className='h-12'
                         disabled={isLoading}
                         {...field}
                       />
@@ -174,14 +185,14 @@ export default function ResetPasswordPage() {
                 </ul>
               </div>
 
-              <Button 
-                type="submit" 
+              <Button
+                type='submit'
                 className='w-full bg-gradient-to-r from-[#5932EA] to-[#9B32EA] hover:from-[#4A2BC2] hover:to-[#7B2BC2] text-white font-semibold py-3 rounded-lg shadow-lg transform transition-all duration-300 ease-in-out hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed'
                 disabled={isLoading || !passwordMatch || passwordStrength < 3}
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
                     Resetting Password...
                   </>
                 ) : (
@@ -189,12 +200,9 @@ export default function ResetPasswordPage() {
                 )}
               </Button>
 
-              <p className="text-center text-sm text-gray-600">
+              <p className='text-center text-sm text-gray-600'>
                 Remember your password?{' '}
-                <Link 
-                  href="/login" 
-                  className="font-medium text-[#5932EA] hover:text-[#4A2BC2]"
-                >
+                <Link href='/login' className='font-medium text-[#5932EA] hover:text-[#4A2BC2]'>
                   Back to login
                 </Link>
               </p>
@@ -203,5 +211,23 @@ export default function ResetPasswordPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='flex min-h-screen items-center justify-center bg-gray-50'>
+          <div className='w-full max-w-md p-8 bg-white rounded-2xl shadow-lg'>
+            <div className='flex items-center justify-center'>
+              <Loader2 className='h-8 w-8 animate-spin text-[#5932EA]' />
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

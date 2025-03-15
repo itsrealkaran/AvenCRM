@@ -118,7 +118,8 @@ export default function Topbar() {
             <DropdownMenuContent align='end' className='w-44'>
               <DropdownMenuItem
                 onClick={() => {
-                  const userRole = user?.role === "TEAM_LEADER" ? "teamleader" : user?.role.toLowerCase();
+                  const userRole =
+                    user?.role === 'TEAM_LEADER' ? 'teamleader' : user?.role.toLowerCase();
                   router.push(`/${userRole}/settings`);
                 }}
               >
