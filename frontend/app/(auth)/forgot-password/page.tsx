@@ -94,7 +94,7 @@ export default function ForgotPassword() {
                 <Logo />
               </div>
               <div className='text-[#5932ea] text-[1rem] md:text-[1.3rem] flex gap-[2px] items-end font-bold'>
-                <h1>AvenCRM</h1>
+                <h1>AvenCRM </h1>
               </div>
             </Link>
           </div>
