@@ -4,7 +4,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { usersApi } from '@/api/users';
 import { useMutation } from '@tanstack/react-query';
-import { Bell, Camera, Lock, LogOut, UserCircle } from 'lucide-react';
+import { Bell, Building, Camera, Lock, LogOut, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { NotificationForm } from './components/notification-form';
 import { PasswordForm } from './components/password-form';
 import { ProfileForm } from './components/profile-form';
+import CompanyForm from './company-form';
 
 const Page = () => {
   const { user, logout, updateUser } = useAuth();
@@ -123,13 +124,20 @@ const Page = () => {
             <Separator className='my-6' />
 
             <Tabs defaultValue='details' className='space-y-6'>
-              <TabsList className='grid w-full grid-cols-3 gap-4 p-1'>
+              <TabsList className='grid w-full grid-cols-4 gap-4 p-1'>
                 <TabsTrigger
                   value='details'
                   className='flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground'
                 >
                   <UserCircle className='w-4 h-4' />
                   Personal Details
+                </TabsTrigger>
+                <TabsTrigger
+                  value='company'
+                  className='flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground'
+                >
+                  <Building className='w-4 h-4' />
+                  Company Details
                 </TabsTrigger>
                 <TabsTrigger
                   value='password'
@@ -149,6 +157,10 @@ const Page = () => {
 
               <TabsContent value='details' className='space-y-6'>
                 <ProfileForm />
+              </TabsContent>
+
+              <TabsContent value='company' className='space-y-6'>
+                <CompanyForm />
               </TabsContent>
 
               <TabsContent value='password' className='space-y-6'>

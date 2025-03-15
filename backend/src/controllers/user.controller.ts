@@ -734,7 +734,7 @@ export const userController = {
           phone,
           dob: dob ? new Date(dob) : undefined,
           avatar,
-          designation,
+          designation: designation || "",
         },
       });
 
@@ -802,6 +802,7 @@ export const userController = {
           role: true,
           teamId: true,
           companyId: true,
+          designation: true,
           isActive: true,
           createdAt: true,
           updatedAt: true,

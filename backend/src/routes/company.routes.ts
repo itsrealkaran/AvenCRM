@@ -144,23 +144,25 @@ router.post("/notify-admin", async (req, res) => {
 });
 // Update company (SuperAdmin only)
 router.put("/:id",
-  verifyRoleAndCompany(["SUPERADMIN"]),
+  verifyRoleAndCompany(["SUPERADMIN", "ADMIN"]),
   async (req, res) => {
     const { id } = req.params;
     const data = req.body;
 
     try {
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (user.role === "ADMIN" && user.companyId !== id) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      
       const company = await prisma.company.update({
         where: { id },
         data: {
-          name: data.name,
-          email: data.email,
-          adminId: data.adminId,
-          planId: data.planId,
-          planEnd: new Date(data.planEnd),
-          address: data.address,
-          phone: data.phone,
-          website: data.website,
+          ...data,
         },
         include: {
           admin: {
@@ -176,6 +178,7 @@ router.put("/:id",
       
       res.json(company);
     } catch (error) {
+      console.log(error);
       res.status(500).json({ message: "Failed to update company" });
     }
   }
