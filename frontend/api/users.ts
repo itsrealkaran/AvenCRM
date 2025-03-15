@@ -26,9 +26,18 @@ export interface UpdateNotificationSettingsDTO {
 }
 
 export const usersApi = {
+  getProfile: async () => {
+    try {
+      const response = await api.get('/user/profile');
+      return response.data;
+    } catch (error: any) {
+      throw new Error(error.response?.data?.message || 'Failed to get profile');
+    }
+  },
+
   updateProfile: async (data: UpdateProfileDTO) => {
     try {
-      const response = await api.put<User>('/user/profile', data);
+      const response = await api.put('/user/profile', data);
       return response.data;
     } catch (error: any) {
       throw new Error(error.response?.data?.message || 'Failed to update profile');

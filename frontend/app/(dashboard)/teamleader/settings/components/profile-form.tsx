@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { usersApi } from '@/api/users';
 import { Gender } from '@/types/enums';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
@@ -44,7 +44,12 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export function ProfileForm() {
-  const { user, updateUser } = useAuth();
+  const { updateUser } = useAuth();
+
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: () => usersApi.getProfile(),
+  });
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -157,7 +162,7 @@ export function ProfileForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Gender</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ''}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder='Select gender' />
