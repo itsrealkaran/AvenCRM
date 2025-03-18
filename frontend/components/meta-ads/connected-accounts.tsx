@@ -1,15 +1,10 @@
+import { ActivityStatus, MetaAdAccount } from '@/types/meta-ads';
 import { Facebook } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-export function ConnectedAccounts() {
-  const accounts = [
-    { id: 1, name: 'Main Business Page', type: 'Page', status: 'Active' },
-    { id: 2, name: 'Ad Account 1', type: 'Ad Account', status: 'Active' },
-    { id: 3, name: 'Pixel 1', type: 'Pixel', status: 'Active' },
-  ];
-
+export function ConnectedAccounts({ metaAdAccounts }: { metaAdAccounts: MetaAdAccount[] }) {
   return (
     <Card>
       <CardHeader>
@@ -20,7 +15,7 @@ export function ConnectedAccounts() {
       </CardHeader>
       <CardContent>
         <div className='space-y-4'>
-          {accounts.map((account) => (
+          {metaAdAccounts.map((account) => (
             <div
               key={account.id}
               className='flex items-center justify-between p-4 bg-gray-50 rounded-lg'
@@ -29,13 +24,13 @@ export function ConnectedAccounts() {
                 <Facebook className='w-8 h-8 text-[#4F46E5]' />
                 <div>
                   <h3 className='font-medium'>{account.name}</h3>
-                  <p className='text-sm text-muted-foreground'>{account.type}</p>
+                  <p className='text-sm text-muted-foreground'>{account.email}</p>
                 </div>
               </div>
               <div className='flex items-center space-x-2'>
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
-                    account.status === 'Active'
+                    account.status === ActivityStatus.ACTIVE
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}

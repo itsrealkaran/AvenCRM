@@ -69,9 +69,9 @@ const sendPasswordResetEmail = async (email: string, otp: string) => {
                     © ${new Date().getFullYear()} AvenCRM. All rights reserved.
                   </p>
                   <p style="color: #6b7280; font-family: 'Arial', sans-serif; font-size: 12px; margin: 8px 0 0;">
-                    <a href="https://avencrm.com/privacy" style="color: #5932EA; text-decoration: none;">Privacy Policy</a> • 
-                    <a href="https://avencrm.com/terms" style="color: #5932EA; text-decoration: none;">Terms of Service</a> • 
-                    <a href="https://avencrm.com/contact" style="color: #5932EA; text-decoration: none;">Contact Support</a>
+                    <a href="https://avencrm.com/privacy-policy" style="color: #5932EA; text-decoration: none;">Privacy Policy</a> • 
+                    <a href="https://avencrm.com/terms-of-service" style="color: #5932EA; text-decoration: none;">Terms of Service</a> • 
+                    <a href="https://avencrm.com/" style="color: #5932EA; text-decoration: none;">Contact Support</a>
                   </p>
                 </div>
               </div>

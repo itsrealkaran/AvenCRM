@@ -1,7 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { ChevronDown, Facebook } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
@@ -20,7 +22,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+
+const getMetaAdAccounts = async () => {
+  const response = await api.get('/meta-ads/accounts');
+  return response.data;
+};
 
 export default function MetaAdsPage() {
   const [showFacebookModal, setShowFacebookModal] = useState(false);
@@ -30,6 +38,17 @@ export default function MetaAdsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [forms, setForms] = useState<Form[]>([]);
   const { company } = useAuth();
+
+  const { data: metaAdAccounts, isLoading } = useQuery({
+    queryKey: ['meta-ad-accounts'],
+    queryFn: () => getMetaAdAccounts(),
+  });
+
+  useEffect(() => {
+    if (metaAdAccounts?.length > 0) {
+      setIsConnected(true);
+    }
+  }, [metaAdAccounts]);
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
@@ -42,20 +61,35 @@ export default function MetaAdsPage() {
   const handleFacebookLogin = () => {
     //@ts-ignore
     FB.login(
-      (response: any) => {
+      async (response: any) => {
         if (response.authResponse) {
-          //@ts-ignore
-          FB.api('/me', { fields: 'name, email' }, (userInfo) => {
-            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-            setIsConnected(true);
-            setShowFacebookModal(false);
-          });
+          try {
+            //@ts-ignore
+            FB.api('/me', { fields: 'name, email' }, async (userInfo) => {
+              console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+              console.log(response, 'response');
+
+              // Save the Facebook connection status
+              // await api.post('/meta-ads/account', {
+              //   name: userInfo.name,
+              //   email: userInfo.email,
+              //   accessToken: response.authResponse.accessToken,
+              // });
+
+              setIsConnected(true);
+              setShowFacebookModal(false);
+            });
+          } catch (error) {
+            console.error('Error connecting Facebook:', error);
+            toast.error('Failed to connect Facebook account');
+          }
         } else {
           console.log('User cancelled login or did not fully authorize.');
+          toast.error('Facebook connection cancelled');
         }
       },
       {
-        config_id: '608691068704818',
+        config_id: process.env.NEXT_PUBLIC_FACEBOOK_APP_CONFIG_ID,
         response_type: 'code',
         override_default_response_type: true,
         scope: 'public_profile,email,ads_management',
@@ -75,12 +109,12 @@ export default function MetaAdsPage() {
           <p className='text-sm text-muted-foreground'>Manage your Facebook ad campaigns</p>
         </div>
 
-        {!isConnected ? (
-          <Button onClick={handleFacebookLogin} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
-            <Facebook className='w-4 h-4 mr-2' />
-            Connect Facebook
+        {isLoading ? (
+          <Button disabled className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
+            <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+            Loading...
           </Button>
-        ) : (
+        ) : isConnected && metaAdAccounts?.length > 0 ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
@@ -96,6 +130,11 @@ export default function MetaAdsPage() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        ) : (
+          <Button onClick={handleFacebookLogin} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
+            <Facebook className='w-4 h-4 mr-2' />
+            Connect Facebook
+          </Button>
         )}
       </div>
 
@@ -115,7 +154,7 @@ export default function MetaAdsPage() {
               />
             </TabsContent>
             <TabsContent value='accounts'>
-              <ConnectedAccounts />
+              <ConnectedAccounts metaAdAccounts={metaAdAccounts} />
             </TabsContent>
             <TabsContent value='forms'>
               <FormsList forms={forms} onCreateForm={() => setShowFormModal(true)} />

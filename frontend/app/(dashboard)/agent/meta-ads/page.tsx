@@ -114,6 +114,7 @@ export default function MetaAdsPage() {
               />
             </TabsContent>
             <TabsContent value='accounts'>
+              {/* @ts-ignore */}
               <ConnectedAccounts />
             </TabsContent>
             <TabsContent value='forms'>
