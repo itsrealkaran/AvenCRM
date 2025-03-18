@@ -94,7 +94,7 @@ export default function ForgotPassword() {
                 <Logo />
               </div>
               <div className='text-[#5932ea] text-[1rem] md:text-[1.3rem] flex gap-[2px] items-end font-bold'>
-                <h1>AvenCRM</h1>
+                <h1>AvenCRM </h1>
               </div>
             </Link>
           </div>
@@ -108,7 +108,7 @@ export default function ForgotPassword() {
             <div className='space-y-2'>
               <h1 className='text-3xl font-bold tracking-tight text-gray-900'>Forgot Password</h1>
               <p className='text-gray-500'>
-                Enter your email address and we&apos;ll send you a link to reset your password.
+                Enter your email address and we&apos;ll send you temporary password.
               </p>
             </div>
 
@@ -189,12 +189,7 @@ export default function ForgotPassword() {
             <div className='absolute top-0 -right-4 w-72 h-72 bg-[#9BF3F0] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000'></div>
             <div className='absolute -bottom-8 left-20 w-72 h-72 bg-[#FFC2B4] rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000'></div>
             <div className='relative'>
-              <Image
-                src='https://www.pngarts.com/files/4/House-PNG-Image.png'
-                alt='CRM Dashboard Preview'
-                width={800}
-                height={600}
-              />
+              <Image src='/sign-in.svg' alt='CRM Dashboard Preview' width={800} height={600} />
             </div>
           </div>
         </motion.div>
