@@ -8,6 +8,8 @@ import {
   Calendar,
   CheckSquare,
   CheckSquareIcon,
+  CreditCardIcon,
+  HomeIcon,
   Mail,
   RefreshCw,
   Search,
@@ -40,7 +42,7 @@ interface NotificationSchema {
   id: string;
   title: string;
   message: string;
-  type: 'calendar' | 'task' | 'lead' | 'upgrade';
+  type: 'calendar' | 'task' | 'lead' | 'upgrade' | 'property' | 'transaction';
   read: boolean;
   timestamp: string;
   link?: string;
@@ -58,6 +60,10 @@ const getIconByType = (type: NotificationSchema['type']) => {
       return <CheckSquare {...iconProps} />;
     case 'upgrade':
       return <Sparkles {...iconProps} />;
+    case 'property':
+      return <HomeIcon {...iconProps} />;
+    case 'transaction':
+      return <CreditCardIcon {...iconProps} />;
   }
 };
 
@@ -71,6 +77,10 @@ const getIconColor = (type: NotificationSchema['type']) => {
       return 'text-green-500';
     case 'upgrade':
       return 'text-purple-500';
+    case 'property':
+      return 'text-orange-500';
+    case 'transaction':
+      return 'text-yellow-500';
   }
 };
 
@@ -78,7 +88,9 @@ export default function NotificationsPage() {
   const [sortKey, setSortKey] = useState<keyof NotificationSchema>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filterValue, setFilterValue] = useState('');
-  const [filter, setFilter] = useState<'all' | 'email' | 'calendar' | 'task' | 'upgrade'>('all');
+  const [filter, setFilter] = useState<
+    'all' | 'email' | 'calendar' | 'task' | 'upgrade' | 'property' | 'transaction'
+  >('all');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const router = useRouter();
@@ -174,7 +186,16 @@ export default function NotificationsPage() {
             <Select
               value={filter}
               onValueChange={(value: string) =>
-                setFilter(value as 'all' | 'email' | 'calendar' | 'task' | 'upgrade')
+                setFilter(
+                  value as
+                    | 'all'
+                    | 'email'
+                    | 'calendar'
+                    | 'task'
+                    | 'upgrade'
+                    | 'property'
+                    | 'transaction'
+                )
               }
             >
               <SelectTrigger className='w-[180px]'>
@@ -186,6 +207,8 @@ export default function NotificationsPage() {
                 <SelectItem value='calendar'>Calendar</SelectItem>
                 <SelectItem value='task'>Task</SelectItem>
                 <SelectItem value='upgrade'>Upgrade</SelectItem>
+                <SelectItem value='property'>Property</SelectItem>
+                <SelectItem value='transaction'>Transaction</SelectItem>
               </SelectContent>
             </Select>
             <Button variant='outline' onClick={markAllAsRead}>

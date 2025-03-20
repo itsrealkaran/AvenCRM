@@ -15,6 +15,7 @@ import {
   generatePresignedUrl,
   generatePresignedDownloadUrl,
 } from "../utils/s3.js";
+import { notificationService } from "../services/redis.js";
 
 interface PropertyCardDetails {
   title: string;
@@ -440,7 +441,36 @@ export const propertiesController: Controller = {
             createdById: req.user.id,
             companyId: req.user.companyId,
           },
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+              },
+            },
+          },
         });
+
+        // send notification to the admin
+        try {
+          const admin = await prisma.user.findFirst({
+            where: {
+              companyId: req.user.companyId,
+              role: UserRole.ADMIN,
+            },
+          });
+          if (!admin) {
+            return res.status(404).json({ message: "Admin not found" });
+          }
+          await notificationService.createNotification(admin.id, {
+            title: `New Property Created`,
+            message: `A new property has been created by ${property.createdBy.name}`,
+            type: "property",
+            link: `/admin/property`,
+          });
+        } catch (error) {
+          logger.error("Error in sendNotification:", error);
+        }
+
         return res.json(property);
       } catch (error) {
         logger.error("Unexpected error in createProperty:", error);
