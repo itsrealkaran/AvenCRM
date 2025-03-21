@@ -70,15 +70,6 @@ export default function MetaAdsPage() {
             console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
             console.log(response, 'response');
             setFacebookCode(response.authResponse.code);
-            // Save the Facebook connection status
-            // await api.post('/meta-ads/account', {
-            //   name: userInfo.name,
-            //   email: userInfo.email,
-            //   accessToken: response.authResponse.accessToken,
-            // });
-
-            setIsConnected(true);
-            setShowFacebookModal(false);
           });
         } else {
           console.log('User cancelled login or did not fully authorize.');
@@ -98,8 +89,24 @@ export default function MetaAdsPage() {
       if (facebookCode) {
         const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
         const accessToken = response.data.access_token;
-        console.log('Access token:', accessToken);
-        console.log(response, 'access token response');
+        //@ts-ignore
+        FB.api(`/me?access_token=${accessToken}`, { fields: 'name, email' }, (userInfo) => {
+          console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+          console.log(response, 'response');
+
+          // Save the Facebook connection status
+          api.post('/meta-ads/account', {
+            name: userInfo.name,
+            email: userInfo.email,
+            accessToken: accessToken,
+          }).then(() => {
+            setIsConnected(true);
+            setShowFacebookModal(false);
+          })
+          .catch((error) => {
+            console.error('Error saving Facebook account:', error);
+          });
+        });
       }
     };
     fetchFacebookAccessToken();
