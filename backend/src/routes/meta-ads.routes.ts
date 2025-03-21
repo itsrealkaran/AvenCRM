@@ -6,6 +6,7 @@ const router: Router = Router();
 
 router.use(protect);
 
+router.get('/access-token/:code', MetaController.getFacebookAccessToken);
 router.get('/accounts', MetaController.getMetaAdAccounts);
 router.post('/account', MetaController.createMetaAdAccount);
 

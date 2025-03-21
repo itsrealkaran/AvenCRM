@@ -96,10 +96,7 @@ export default function MetaAdsPage() {
   useEffect(() => {
     const fetchFacebookAccessToken = async () => {
       if (facebookCode) {
-        const response = await axios.get(
-          `https://graph.facebook.com/v22.0/oauth/access_token?client_id=2340954516269174&client_secret=f4e6e0be6da039b2911c93fca67b0ded&code=${facebookCode}`
-        );
-        console.log('Response:', response);
+        const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
         const accessToken = response.data.access_token;
         console.log('Access token:', accessToken);
         console.log(response, 'access token response');
