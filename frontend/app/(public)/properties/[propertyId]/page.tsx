@@ -778,20 +778,23 @@ const PropertyDetails = () => {
           </div>
 
           <div className='flex flex-col  gap-2'>
-
             {/* Permit Number Card */}
-            {property?.permitNumber && <Card className='p-4 sm:p-6'>
-              <div className='space-y-6'>
-                <h2 className='text-xl sm:text-2xl font-semibold text-gray-900'>Permit Details</h2>
-                <div className='grid grid-cols-2 gap-8'>
-                  <div className='space-y-4 mt-2'>
-                    <p className='text-gray-600'>Permit Number: {property?.permitNumber}</p>
-                    <p className='text-gray-600'>Permit Type: {property?.permitType}</p>
+            {property?.permitNumber && (
+              <Card className='p-4 sm:p-6'>
+                <div className='space-y-6'>
+                  <h2 className='text-xl sm:text-2xl font-semibold text-gray-900'>
+                    Permit Details
+                  </h2>
+                  <div className='grid grid-cols-2 gap-8'>
+                    <div className='space-y-4 mt-2'>
+                      <p className='text-gray-600'>Permit Number: {property?.permitNumber}</p>
+                      <p className='text-gray-600'>Permit Type: {property?.permitType}</p>
+                    </div>
+                    <img src={property?.qrCodeUrl} alt='QR Code' className='w-24 h-24' />
                   </div>
-                  <img src={property?.qrCodeUrl} alt='QR Code' className='w-24 h-24' />
                 </div>
-              </div>
-            </Card>}
+              </Card>
+            )}
 
             {/* Agent Profile Card */}
             <Card className='p-4 sm:p-6'>

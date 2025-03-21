@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { PropertyFormProvider } from '@/contexts/PropertyFormContext';
 import { RefreshCcw } from 'lucide-react';
 
+import PermitNumberModal from '@/components/property/permit-number-modal';
 import PropertyCard from '@/components/property/PropertyCard';
 import PropertyFormModal from '@/components/property/PropertyFormModal';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import PermitNumberModal from '@/components/property/permit-number-modal';
 
 interface Property {
   id: string;
@@ -44,7 +44,11 @@ const Page: React.FC = () => {
   const { toast } = useToast();
   const [isPropertyFormModalOpen, setIsPropertyFormModalOpen] = useState(false);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
-  const [permitNumberInfo, setPermitNumberInfo] = useState<PermitNumberInfo>({ id: '', propertyName: '', isModalOpen: false });
+  const [permitNumberInfo, setPermitNumberInfo] = useState<PermitNumberInfo>({
+    id: '',
+    propertyName: '',
+    isModalOpen: false,
+  });
 
   useEffect(() => {
     fetchProperties();
@@ -204,7 +208,13 @@ const Page: React.FC = () => {
                     cardDetails={prop.cardDetails}
                     agent={prop.createdBy}
                     isVerified={prop.isVerified}
-                    onVerifyOrUnverify={() => setPermitNumberInfo({ id: prop.id, propertyName: prop.cardDetails.title, isModalOpen: true })}
+                    onVerifyOrUnverify={() =>
+                      setPermitNumberInfo({
+                        id: prop.id,
+                        propertyName: prop.cardDetails.title,
+                        isModalOpen: true,
+                      })
+                    }
                     onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop.id)}
                   />
@@ -225,20 +235,20 @@ const Page: React.FC = () => {
             <div className='flex flex-wrap gap-3' style={{ minWidth: 'max-content' }}>
               {isLoading
                 ? Array(6)
-                  .fill(0)
-                  .map((_, i) => <PropertySkeleton key={i} />)
+                    .fill(0)
+                    .map((_, i) => <PropertySkeleton key={i} />)
                 : verifiedProperties.map((prop: any) => (
-                  <PropertyCard
-                    key={prop.id}
-                    id={prop.id}
-                    cardDetails={prop.cardDetails}
-                    agent={prop.createdBy}
-                    isVerified={prop.isVerified}
-                    onVerifyOrUnverify={() => handleVerifyOrUnverify(prop.id, false)}
-                    onDelete={() => handleDeleteProperty(prop.id)}
-                    onShare={handleShare}
-                  />
-                ))}
+                    <PropertyCard
+                      key={prop.id}
+                      id={prop.id}
+                      cardDetails={prop.cardDetails}
+                      agent={prop.createdBy}
+                      isVerified={prop.isVerified}
+                      onVerifyOrUnverify={() => handleVerifyOrUnverify(prop.id, false)}
+                      onDelete={() => handleDeleteProperty(prop.id)}
+                      onShare={handleShare}
+                    />
+                  ))}
             </div>
           </div>
         </CardContent>

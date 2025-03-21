@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Bath, Bed, Building2, Car, Globe, Home, Loader2, MapPin, Maximize2 } from 'lucide-react';
 
@@ -8,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-import Image from 'next/image';
 
 interface Room {
   id: string;
@@ -290,11 +290,21 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                       <div className='border-t pt-4 flex flex-col'>
                         <h4 className='font-medium mb-3'>Permit Details</h4>
                         <div className='flex gap-x-6'>
-                          <div className="mt-4">
-                            <p className='text-sm text-gray-500'>Permit Number: {propertyDetails.features.permitNumber}</p>
-                            <p className='text-sm text-gray-500'>Permit Type: {propertyDetails.features.permitType}</p>
+                          <div className='mt-4'>
+                            <p className='text-sm text-gray-500'>
+                              Permit Number: {propertyDetails.features.permitNumber}
+                            </p>
+                            <p className='text-sm text-gray-500'>
+                              Permit Type: {propertyDetails.features.permitType}
+                            </p>
                           </div>
-                          <Image src={propertyDetails.features.qrCodeUrl} alt='QR Code' className='w-20 h-20' width={80} height={80} />
+                          <Image
+                            src={propertyDetails.features.qrCodeUrl}
+                            alt='QR Code'
+                            className='w-20 h-20'
+                            width={80}
+                            height={80}
+                          />
                         </div>
                       </div>
                     )}
