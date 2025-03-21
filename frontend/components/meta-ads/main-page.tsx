@@ -110,6 +110,22 @@ export default function MetaAdsPage() {
               console.error('Error saving Facebook account:', error);
             });
         });
+
+        //@ts-ignore
+        FB.api(`/me/adaccounts?access_token=${accessToken}`, (response) => {
+          if (response && !response.error) {
+            console.log('Ad Accounts:', response);
+            if (response.data.length > 0) {
+              const adAccountId = response.data[0].id; // First Ad Account ID
+              console.log('Ad Account ID:', adAccountId);
+              console.log(response.data, 'response.data');
+            } else {
+              console.log('No ad accounts found.');
+            }
+          } else {
+            console.error('Error fetching Ad Accounts:', response.error);
+          }
+        });
       }
     };
     fetchFacebookAccessToken();
