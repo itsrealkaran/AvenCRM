@@ -93,6 +93,7 @@ export default function MetaAdsPage() {
         FB.api(`/me?access_token=${accessToken}`, { fields: 'name, email' }, (userInfo) => {
           console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
           console.log(response, 'response');
+          console.log(userInfo, 'userInfo');
 
           // Save the Facebook connection status
           api
