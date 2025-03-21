@@ -95,17 +95,19 @@ export default function MetaAdsPage() {
           console.log(response, 'response');
 
           // Save the Facebook connection status
-          api.post('/meta-ads/account', {
-            name: userInfo.name,
-            email: userInfo.email,
-            accessToken: accessToken,
-          }).then(() => {
-            setIsConnected(true);
-            setShowFacebookModal(false);
-          })
-          .catch((error) => {
-            console.error('Error saving Facebook account:', error);
-          });
+          api
+            .post('/meta-ads/account', {
+              name: userInfo.name,
+              email: userInfo.email,
+              accessToken: accessToken,
+            })
+            .then(() => {
+              setIsConnected(true);
+              setShowFacebookModal(false);
+            })
+            .catch((error) => {
+              console.error('Error saving Facebook account:', error);
+            });
         });
       }
     };
