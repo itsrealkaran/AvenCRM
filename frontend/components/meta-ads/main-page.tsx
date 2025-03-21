@@ -69,7 +69,7 @@ export default function MetaAdsPage() {
           FB.api('/me', { fields: 'name, email' }, (userInfo) => {
             console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
             console.log(response, 'response');
-            setFacebookCode(response.code);
+            setFacebookCode(response.authResponse.code);
             // Save the Facebook connection status
             // await api.post('/meta-ads/account', {
             //   name: userInfo.name,
