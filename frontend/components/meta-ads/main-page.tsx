@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -36,8 +37,9 @@ export default function MetaAdsPage() {
   const [showFormModal, setShowFormModal] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [forms, setForms] = useState<Form[]>([]);
-  const { company } = useAuth();
+  const { company, user } = useAuth();
 
   const { data: metaAdAccounts, isLoading } = useQuery({
     queryKey: ['meta-ad-accounts'],
@@ -67,7 +69,7 @@ export default function MetaAdsPage() {
           FB.api('/me', { fields: 'name, email' }, (userInfo) => {
             console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
             console.log(response, 'response');
-
+            setFacebookCode(response.code);
             // Save the Facebook connection status
             // await api.post('/meta-ads/account', {
             //   name: userInfo.name,
@@ -87,10 +89,24 @@ export default function MetaAdsPage() {
         config_id: '608691068704818',
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'public_profile,email,ads_management',
       }
     );
   };
+
+  useEffect(() => {
+    const fetchFacebookAccessToken = async () => {
+      if (facebookCode) {
+        const response = await axios.get(
+          `https://graph.facebook.com/v22.0/oauth/access_token?client_id=2340954516269174&client_secret=f4e6e0be6da039b2911c93fca67b0ded&code=${facebookCode}`
+        );
+        console.log('Response:', response);
+        const accessToken = response.data.access_token;
+        console.log('Access token:', accessToken);
+        console.log(response, 'access token response');
+      }
+    };
+    fetchFacebookAccessToken();
+  }, [facebookCode]);
 
   if (company?.planName !== 'ENTERPRISE') {
     return <MetaAdsPlaceholder />;
