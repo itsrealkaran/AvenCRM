@@ -55,6 +55,7 @@ export function CampaignsList({
       }
     );
   };
+  getCampaigns();
 
   const columns: ColumnDef<Campaign>[] = [
     {

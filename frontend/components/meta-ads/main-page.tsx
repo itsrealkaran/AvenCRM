@@ -53,9 +53,9 @@ export default function MetaAdsPage() {
       if (response && !response.error) {
         console.log('Ad Accounts:', response);
         if (response.data.length > 0) {
-          const adAccountId = response.data[0].id; // First Ad Account ID
+          const adAccountId = response.data[0].account_id; // First Ad Account ID
           console.log('Ad Account ID:', adAccountId);
-          console.log(response.data, 'response.data');
+          console.log(response.data, 'response.data from getAdAccountId');
           setAdAccountId(adAccountId);
         } else {
           console.log('No ad accounts found.');
