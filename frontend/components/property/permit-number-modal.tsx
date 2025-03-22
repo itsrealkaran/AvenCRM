@@ -33,7 +33,7 @@ interface PermitNumberModalProps {
 // Define form schema
 const permitFormSchema = z.object({
   noPermit: z.boolean(),
-  permitType: z.enum(['tarkheesi', 'property_number']).optional(),
+  permitType: z.enum(['tarkheesi_permit_number', 'property_number']).optional(),
   permitNumber: z.string().optional(),
   qrCode: z.any().optional(), // For file upload
 });
@@ -192,8 +192,7 @@ const PermitNumberModal = ({ isOpen, onClose, id, propertyName }: PermitNumberMo
                     <div className='space-y-2'>
                       <p className='text-sm font-medium text-gray-700'>Permit Type</p>
                       <div className='grid grid-cols-2 gap-3'>
-                        {/* Radio buttons as before but with field.onChange */}
-                        {['tarkheesi', 'property_number'].map((type) => (
+                        {['tarkheesi_permit_number', 'property_number'].map((type) => (
                           <div key={type} className='relative'>
                             <input
                               type='radio'
@@ -215,7 +214,9 @@ const PermitNumberModal = ({ isOpen, onClose, id, propertyName }: PermitNumberMo
                                 )}
                               </div>
                               <span className='text-sm'>
-                                {type === 'tarkheesi' ? 'Tarkheesi permit' : 'Property number'}
+                                {type === 'tarkheesi_permit_number'
+                                  ? 'Tarkheesi Permit'
+                                  : 'Property Number'}
                               </span>
                             </label>
                           </div>

@@ -216,9 +216,20 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                         {formatPrice(propertyDetails.cardDetails.price)}
                       </h3>
                       <div className='flex gap-2 mt-2'>
-                        <Badge variant='outline'>{propertyDetails.features.propertyType}</Badge>
-                        <Badge variant='outline'>{propertyDetails.features.listingType}</Badge>
-                        <Badge variant='outline'>{propertyDetails.features.zoningType}</Badge>
+                        <Badge variant='outline'>
+                          {propertyDetails.features.propertyType.charAt(0).toUpperCase() +
+                            propertyDetails.features.propertyType.slice(1)}
+                        </Badge>
+                        <Badge variant='outline'>
+                          {propertyDetails.features.listingType
+                            .replace('_', ' ')
+                            .replace(/\b\w/g, (char) => char.toUpperCase())}
+                        </Badge>
+                        <Badge variant='outline'>
+                          {propertyDetails.features.zoningType
+                            .replace('_', ' ')
+                            .replace(/\b\w/g, (char) => char.toUpperCase())}
+                        </Badge>
                       </div>
                     </div>
 
@@ -292,10 +303,10 @@ const PropertyDetailsModal: React.FC<PropertyDetailsModalProps> = ({
                         <div className='flex gap-x-6'>
                           <div className='mt-4'>
                             <p className='text-sm text-gray-500'>
-                              Permit Number: {propertyDetails.features.permitNumber}
-                            </p>
-                            <p className='text-sm text-gray-500'>
-                              Permit Type: {propertyDetails.features.permitType}
+                              {propertyDetails.features.permitType
+                                .replace(/_/g, ' ')
+                                .replace(/\b\w/g, (char) => char.toUpperCase())}
+                              : {propertyDetails.features.permitNumber}
                             </p>
                           </div>
                           <Image
