@@ -39,12 +39,32 @@ export default function MetaAdsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [forms, setForms] = useState<Form[]>([]);
+  const [adAccountId, setAdAccountId] = useState<string[] | null>(null);
   const { company, user } = useAuth();
 
   const { data: metaAdAccounts, isLoading } = useQuery({
     queryKey: ['meta-ad-accounts'],
     queryFn: () => getMetaAdAccounts(),
   });
+
+  const getAdAccountId = async (accessToken: string) => {
+    //@ts-ignore
+    FB.api(`/me/adaccounts?access_token=${accessToken}`, (response) => {
+      if (response && !response.error) {
+        console.log('Ad Accounts:', response);
+        if (response.data.length > 0) {
+          const adAccountId = response.data[0].id; // First Ad Account ID
+          console.log('Ad Account ID:', adAccountId);
+          console.log(response.data, 'response.data');
+          setAdAccountId(adAccountId);
+        } else {
+          console.log('No ad accounts found.');
+        }
+      } else {
+        console.error('Error fetching Ad Accounts:', response.error);
+      }
+    });
+  };
 
   useEffect(() => {
     if (metaAdAccounts?.length > 0) {
@@ -110,26 +130,19 @@ export default function MetaAdsPage() {
               console.error('Error saving Facebook account:', error);
             });
         });
-
-        //@ts-ignore
-        FB.api(`/me/adaccounts?access_token=${accessToken}`, (response) => {
-          if (response && !response.error) {
-            console.log('Ad Accounts:', response);
-            if (response.data.length > 0) {
-              const adAccountId = response.data[0].id; // First Ad Account ID
-              console.log('Ad Account ID:', adAccountId);
-              console.log(response.data, 'response.data');
-            } else {
-              console.log('No ad accounts found.');
-            }
-          } else {
-            console.error('Error fetching Ad Accounts:', response.error);
-          }
-        });
+        getAdAccountId(accessToken);
       }
     };
     fetchFacebookAccessToken();
   }, [facebookCode]);
+
+  useEffect(() => {
+    if (metaAdAccounts?.length > 0) {
+      getAdAccountId(metaAdAccounts[0].accessToken);
+    }
+  }, [metaAdAccounts]);
+
+  console.log(adAccountId, 'adAccountId');
 
   if (company?.planName !== 'ENTERPRISE') {
     return <MetaAdsPlaceholder />;
@@ -183,6 +196,8 @@ export default function MetaAdsPage() {
             </TabsList>
             <TabsContent value='campaigns'>
               <CampaignsList
+                accessToken={metaAdAccounts[0].accessToken}
+                adAccountId={adAccountId}
                 campaigns={campaigns}
                 onCreateCampaign={() => setShowCampaignModal(true)}
               />
