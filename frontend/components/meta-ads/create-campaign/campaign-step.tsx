@@ -17,8 +17,6 @@ type CampaignData = {
   name: string;
   objective: string;
   special_ad_categories: string;
-  spend_cap: string;
-  daily_budget: string;
   start_time: string;
 };
 
@@ -62,8 +60,8 @@ export function CampaignStep({
                 <SelectValue placeholder='Select objective' />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value='BRAND_AWARENESS'>Brand Awareness</SelectItem>
-                <SelectItem value='LEAD_GENERATION'>Lead Generation</SelectItem>
+                <SelectItem value='OUTCOME_AWARENESS'>Brand Awareness</SelectItem>
+                <SelectItem value='OUTCOME_LEADS'>Lead Generation</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -83,30 +81,6 @@ export function CampaignStep({
                 <SelectItem value='HOUSING'>Housing</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className='grid gap-2'>
-            <Label htmlFor='spendCap'>Spend Cap</Label>
-            <Input
-              id='spend_cap'
-              name='spend_cap'
-              type='number'
-              value={data.spend_cap}
-              onChange={handleChange}
-              placeholder='Enter spend cap'
-            />
-          </div>
-
-          <div className='grid gap-2'>
-            <Label htmlFor='daily_budget'>Daily Budget</Label>
-            <Input
-              id='daily_budget'
-              name='daily_budget'
-              type='number'
-              value={data.daily_budget}
-              onChange={handleChange}
-              placeholder='Enter daily budget'
-            />
           </div>
 
           <div className='grid gap-2'>

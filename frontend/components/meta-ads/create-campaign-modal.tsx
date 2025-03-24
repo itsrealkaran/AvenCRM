@@ -35,8 +35,6 @@ export default function CreateCampaignForm({
       name: '',
       objective: '',
       special_ad_categories: '',
-      spend_cap: '',
-      daily_budget: '',
       start_time: '',
     },
     adset: {
@@ -84,8 +82,6 @@ export default function CreateCampaignForm({
         formData.campaign.name !== '' &&
         formData.campaign.objective !== '' &&
         formData.campaign.special_ad_categories !== '' &&
-        formData.campaign.spend_cap !== '' &&
-        formData.campaign.daily_budget !== '' &&
         formData.campaign.start_time !== ''
       ) {
         setCampaignData(formData.campaign);
