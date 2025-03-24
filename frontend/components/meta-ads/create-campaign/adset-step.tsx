@@ -23,7 +23,11 @@ type AdsetData = {
   targetAudience: {
     geo_location: {
       countries: string[];
-      cities: string[];
+      cities: Array<{
+        key: string;
+        radius: number;
+        distance_unit: string;
+      }>;
     };
     min_age: number;
     max_age: number;
@@ -59,8 +63,12 @@ export function AdsetStep({
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [cityLocations, setCityLocations] = useState<Location[]>([]);
+  const [isCityLoading, setIsCityLoading] = useState(false);
+  const [isCityDropdownOpen, setIsCityDropdownOpen] = useState(false);
 
   const debouncedSearch = useDebounce(countryInput, 500);
+  const debouncedCitySearch = useDebounce(cityInput, 500);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement> | CustomChangeEvent) => {
     if (e.target) {
@@ -106,28 +114,33 @@ export function AdsetStep({
     });
   };
 
-  const addCity = () => {
-    if (cityInput.trim() && !data.targetAudience.geo_location.cities.includes(cityInput.trim())) {
+  const addCity = (location: Location) => {
+    const newCity = {
+      key: location.key,
+      radius: 50, // default radius in kilometers
+      distance_unit: 'kilometer'
+    };
+
+    if (!data.targetAudience.geo_location.cities.some(city => city.key === location.key)) {
       updateData({
         targetAudience: {
           ...data.targetAudience,
           geo_location: {
             ...data.targetAudience.geo_location,
-            cities: [...data.targetAudience.geo_location.cities, cityInput.trim()],
+            cities: [...data.targetAudience.geo_location.cities, newCity],
           },
         },
       });
-      setCityInput('');
     }
   };
 
-  const removeCity = (city: string) => {
+  const removeCity = (cityKey: string) => {
     updateData({
       targetAudience: {
         ...data.targetAudience,
         geo_location: {
           ...data.targetAudience.geo_location,
-          cities: data.targetAudience.geo_location.cities.filter((c) => c !== city),
+          cities: data.targetAudience.geo_location.cities.filter((city) => city.key !== cityKey),
         },
       },
     });
@@ -160,6 +173,30 @@ export function AdsetStep({
 
     searchLocations();
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    const searchCities = async () => {
+      if (!debouncedCitySearch || debouncedCitySearch.length < 2) {
+        setCityLocations([]);
+        return;
+      }
+
+      setIsCityLoading(true);
+      try {
+        //@ts-ignore
+        FB.api(`/search?q=${debouncedCitySearch}&type=adgeolocation&location_types=["region"]&access_token=${accessToken}`, 'GET', {}, function (response: any) {
+          setCityLocations(response.data || []);
+          console.log(response.data, 'response from cities search')
+        });
+      } catch (error) {
+        console.error('Error fetching cities:', error);
+      } finally {
+        setIsCityLoading(false);
+      }
+    };
+
+    searchCities();
+  }, [debouncedCitySearch]);
 
   return (
     <Card>
@@ -220,21 +257,6 @@ export function AdsetStep({
                       </div>
                     )}
                   </div>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    onClick={() => {
-                      if (locations.length > 0) {
-                        addCountry(locations[0]);
-                        setCountryInput('');
-                        setIsOpen(false);
-                      }
-                    }}
-                    className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
-                    disabled={isLoading || locations.length === 0}
-                  >
-                    Add
-                  </Button>
                 </div>
 
                 {isOpen && (countryInput || isLoading) && (
@@ -280,35 +302,75 @@ export function AdsetStep({
 
             <div className='space-y-2'>
               <Label htmlFor='cities'>Cities</Label>
-              <div className='flex gap-2'>
-                <Input
-                  id='cities'
-                  value={cityInput}
-                  onChange={(e) => setCityInput(e.target.value)}
-                  placeholder='Enter city'
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      addCity();
-                    }
-                  }}
-                />
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={addCity}
-                  className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
-                >
-                  Add
-                </Button>
-              </div>
-              <div className='flex flex-wrap gap-2 mt-2'>
-                {data.targetAudience.geo_location.cities.map((city, index) => (
-                  <Badge key={index} variant='secondary' className='flex items-center gap-1'>
-                    {city}
-                    <X className='h-3 w-3 cursor-pointer' onClick={() => removeCity(city)} />
-                  </Badge>
-                ))}
+              <div className='relative'>
+                <div className='flex gap-2'>
+                  <div className='relative flex-1'>
+                    <Input
+                      id='cities'
+                      value={cityInput}
+                      onChange={(e) => {
+                        setCityInput(e.target.value);
+                        setIsCityDropdownOpen(true);
+                      }}
+                      placeholder='Search for cities'
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && cityLocations.length > 0) {
+                          e.preventDefault();
+                          const firstLocation = cityLocations[0];
+                          addCity(firstLocation);
+                          setCityInput('');
+                          setIsCityDropdownOpen(false);
+                        }
+                      }}
+                    />
+                    {isCityLoading && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {isCityDropdownOpen && (cityInput || isCityLoading) && (
+                  <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                    {cityLocations.length > 0 ? (
+                      <ul className="py-1">
+                        {cityLocations.map((location) => (
+                          <li
+                            key={location.key}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                            onClick={() => {
+                              addCity(location);
+                              setCityInput('');
+                              setIsCityDropdownOpen(false);
+                            }}
+                          >
+                            <div className="font-medium">{location.name}</div>
+                            <div className="text-xs text-gray-500">
+                              {location.country_code && `${location.country_code}`}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : !isCityLoading && cityInput ? (
+                      <div className="px-4 py-2 text-sm text-gray-500">
+                        No cities found
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
+                <div className='flex flex-wrap gap-2 mt-2'>
+                  {data.targetAudience.geo_location.cities.map((city) => (
+                    <Badge key={city.key} variant='secondary' className='flex items-center gap-1'>
+                      {city.key} ({city.radius}km)
+                      <X 
+                        className='h-3 w-3 cursor-pointer' 
+                        onClick={() => removeCity(city.key)} 
+                      />
+                    </Badge>
+                  ))}
+                </div>
               </div>
             </div>
 

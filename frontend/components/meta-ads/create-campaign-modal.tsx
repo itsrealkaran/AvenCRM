@@ -29,7 +29,7 @@ export default function CreateCampaignForm({
 }) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
+  const defaultValues = {
     campaign: {
       id: '',
       name: '',
@@ -57,7 +57,8 @@ export default function CreateCampaignForm({
       image: null,
       redirectUrl: '',
     },
-  });
+  };
+  const [formData, setFormData] = useState(defaultValues);
 
   const setCampaignData = async (data: any) => {
     //@ts-ignore
@@ -115,9 +116,7 @@ export default function CreateCampaignForm({
       } else if (
         step === 2 &&
         formData.adset.name !== '' &&
-        formData.adset.daily_budget !== '' &&
-        formData.adset.targetAudience.geo_location.countries.length > 0 &&
-        formData.adset.targetAudience.geo_location.cities.length > 0
+        formData.adset.daily_budget !== '' 
       ) {
         setAdsetData(formData.adset);
       }
