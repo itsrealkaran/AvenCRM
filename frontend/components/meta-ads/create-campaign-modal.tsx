@@ -68,11 +68,19 @@ export default function CreateCampaignForm({
         name: data.name,
         objective: data.objective,
         special_ad_categories: data.special_ad_categories,
-        spend_cap: data.spend_cap,
-        daily_budget: data.daily_budget,
+        start_time: data.start_time,
+      },
+      function (response: any) {
+        console.log(response, 'response from campaign step');
+        setFormData({
+          ...formData,
+          campaign: {
+            ...formData.campaign,
+            id: response.id,
+          },
+        });
       }
     );
-    console.log(response, 'response from campaign step');
   };
 
   const handleNext = () => {
@@ -124,7 +132,7 @@ export default function CreateCampaignForm({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className='sm:max-w-[800px] h-[80vh]'>
+      <DialogContent className='sm:max-w-[800px] max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Create Facebook Campaign - Step {step} of 3</DialogTitle>
         </DialogHeader>
