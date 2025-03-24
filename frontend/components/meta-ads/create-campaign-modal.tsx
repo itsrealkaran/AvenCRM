@@ -46,6 +46,7 @@ export default function CreateCampaignForm({
           countries: [],
           cities: [],
         },
+        facebook_positions: ['feed'],
         min_age: 18,
         max_age: 65,
       },
@@ -92,10 +93,12 @@ export default function CreateCampaignForm({
       {
         name: data.name,
         daily_budget: data.daily_budget,
-        target_audience: data.targetAudience,
+        targeting: data.targetAudience,
+        billing_event: 'LINK_CLICKS',
         campaign_id: formData.campaign.id,
       },
       function (response: any) {
+        console.log(formData, 'form data from adset step');
         console.log(response, 'response from adset step');
         setFormData({
           ...formData,
