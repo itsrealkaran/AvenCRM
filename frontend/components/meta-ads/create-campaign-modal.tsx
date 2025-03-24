@@ -113,11 +113,7 @@ export default function CreateCampaignForm({
         formData.campaign.start_time !== ''
       ) {
         setCampaignData(formData.campaign);
-      } else if (
-        step === 2 &&
-        formData.adset.name !== '' &&
-        formData.adset.daily_budget !== '' 
-      ) {
+      } else if (step === 2 && formData.adset.name !== '' && formData.adset.daily_budget !== '') {
         setAdsetData(formData.adset);
       }
       setStep(step + 1);

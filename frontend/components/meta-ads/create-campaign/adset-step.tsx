@@ -118,10 +118,10 @@ export function AdsetStep({
     const newCity = {
       key: location.key,
       radius: 50, // default radius in kilometers
-      distance_unit: 'kilometer'
+      distance_unit: 'kilometer',
     };
 
-    if (!data.targetAudience.geo_location.cities.some(city => city.key === location.key)) {
+    if (!data.targetAudience.geo_location.cities.some((city) => city.key === location.key)) {
       updateData({
         targetAudience: {
           ...data.targetAudience,
@@ -184,10 +184,15 @@ export function AdsetStep({
       setIsCityLoading(true);
       try {
         //@ts-ignore
-        FB.api(`/search?q=${debouncedCitySearch}&type=adgeolocation&location_types=["region"]&access_token=${accessToken}`, 'GET', {}, function (response: any) {
-          setCityLocations(response.data || []);
-          console.log(response.data, 'response from cities search')
-        });
+        FB.api(
+          `/search?q=${debouncedCitySearch}&type=adgeolocation&location_types=["region"]&access_token=${accessToken}`,
+          'GET',
+          {},
+          function (response: any) {
+            setCityLocations(response.data || []);
+            console.log(response.data, 'response from cities search');
+          }
+        );
       } catch (error) {
         console.error('Error fetching cities:', error);
       } finally {
@@ -324,38 +329,36 @@ export function AdsetStep({
                       }}
                     />
                     {isCityLoading && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                      <div className='absolute right-3 top-1/2 -translate-y-1/2'>
+                        <Loader2 className='h-4 w-4 animate-spin text-gray-500' />
                       </div>
                     )}
                   </div>
                 </div>
 
                 {isCityDropdownOpen && (cityInput || isCityLoading) && (
-                  <div className="absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                  <div className='absolute z-10 w-full mt-1 bg-white rounded-md shadow-lg border border-gray-200 max-h-60 overflow-auto'>
                     {cityLocations.length > 0 ? (
-                      <ul className="py-1">
+                      <ul className='py-1'>
                         {cityLocations.map((location) => (
                           <li
                             key={location.key}
-                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                            className='px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm'
                             onClick={() => {
                               addCity(location);
                               setCityInput('');
                               setIsCityDropdownOpen(false);
                             }}
                           >
-                            <div className="font-medium">{location.name}</div>
-                            <div className="text-xs text-gray-500">
+                            <div className='font-medium'>{location.name}</div>
+                            <div className='text-xs text-gray-500'>
                               {location.country_code && `${location.country_code}`}
                             </div>
                           </li>
                         ))}
                       </ul>
                     ) : !isCityLoading && cityInput ? (
-                      <div className="px-4 py-2 text-sm text-gray-500">
-                        No cities found
-                      </div>
+                      <div className='px-4 py-2 text-sm text-gray-500'>No cities found</div>
                     ) : null}
                   </div>
                 )}
@@ -364,10 +367,7 @@ export function AdsetStep({
                   {data.targetAudience.geo_location.cities.map((city) => (
                     <Badge key={city.key} variant='secondary' className='flex items-center gap-1'>
                       {city.key} ({city.radius}km)
-                      <X 
-                        className='h-3 w-3 cursor-pointer' 
-                        onClick={() => removeCity(city.key)} 
-                      />
+                      <X className='h-3 w-3 cursor-pointer' onClick={() => removeCity(city.key)} />
                     </Badge>
                   ))}
                 </div>
