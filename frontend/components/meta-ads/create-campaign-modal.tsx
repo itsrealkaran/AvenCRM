@@ -1,195 +1,203 @@
+'use client';
+
+import type React from 'react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
-import type { Form } from './create-form-modal';
-import { FacebookPreview } from './facebook-preview';
-import { SelectFormModal } from './select-form-modal';
+import { AdStep } from './create-campaign/ad-step';
+import { AdsetStep } from './create-campaign/adset-step';
+import { CampaignStep } from './create-campaign/campaign-step';
 
-interface CreateCampaignModalProps {
-  open: boolean;
-  onClose: () => void;
-  onOpenFormModal: () => void;
-  onCreateCampaign: (campaign: Campaign) => void;
-  forms: Form[];
-}
-
-export type Campaign = {
-  name: string;
-  type: 'leads' | 'traffic';
-  form?: Form;
-  budget: string;
-  adHeadline: string;
-  adDescription: string;
-  reach: string;
-  status: 'Active' | 'Paused';
-  createdAt: string;
-};
-
-export function CreateCampaignModal({
-  open,
+export default function CreateCampaignForm({
+  isOpen,
   onClose,
-  onOpenFormModal,
-  onCreateCampaign,
-  forms,
-}: CreateCampaignModalProps) {
-  const [campaignName, setCampaignName] = useState('');
-  const [campaignType, setCampaignType] = useState<'leads' | 'traffic'>('leads');
-  const [selectedForm, setSelectedForm] = useState<Form | undefined>();
-  const [budget, setBudget] = useState('');
-  const [adHeadline, setAdHeadline] = useState('');
-  const [adDescription, setAdDescription] = useState('');
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const [showSelectFormModal, setShowSelectFormModal] = useState(false);
+  adAccountId,
+  accessToken,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  adAccountId: string[] | null;
+  accessToken: string;
+}) {
+  const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    campaign: {
+      id: '',
+      name: '',
+      objective: '',
+      special_ad_categories: '',
+      spend_cap: '',
+      daily_budget: '',
+      start_time: '',
+    },
+    adset: {
+      id: '',
+      name: '',
+      optimizationGoal: '',
+      targetAudience: {
+        geo_location: {
+          countries: [],
+          cities: [],
+        },
+        min_age: 18,
+        max_age: 65,
+      },
+    },
+    ad: {
+      id: '',
+      name: '',
+      callToAction: '',
+      image: null,
+      redirectUrl: '',
+    },
+  });
 
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-    if (!campaignName.trim()) newErrors.name = 'Campaign name is required';
-    if (!budget.trim()) newErrors.budget = 'Budget is required';
-    if (!adHeadline.trim()) newErrors.adHeadline = 'Ad headline is required';
-    if (!adDescription.trim()) newErrors.adDescription = 'Ad description is required';
-    if (campaignType === 'leads' && !selectedForm) newErrors.form = 'Please select a form';
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const setCampaignData = async (data: any) => {
+    //@ts-ignore
+    const response = await FB.api(
+      `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
+      'POST',
+      {
+        name: data.name,
+        objective: data.objective,
+        special_ad_categories: data.special_ad_categories,
+        spend_cap: data.spend_cap,
+        daily_budget: data.daily_budget,
+      }
+    );
+    console.log(response, 'response from campaign step');
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      const newCampaign: Campaign = {
-        name: campaignName,
-        type: campaignType,
-        form: selectedForm,
-        budget,
-        adHeadline,
-        adDescription,
-        reach: '0', // Initialize with 0
-        status: 'Active',
-        createdAt: new Date().toISOString(),
-      };
-      onCreateCampaign(newCampaign);
+  const handleNext = () => {
+    if (step < 3) {
+      if (
+        step === 1 &&
+        formData.campaign.name !== '' &&
+        formData.campaign.objective !== '' &&
+        formData.campaign.special_ad_categories !== '' &&
+        formData.campaign.spend_cap !== '' &&
+        formData.campaign.daily_budget !== '' &&
+        formData.campaign.start_time !== ''
+      ) {
+        setCampaignData(formData.campaign);
+      }
+      setStep(step + 1);
+    }
+  };
+
+  const handlePrevious = () => {
+    if (step > 1) {
+      setStep(step - 1);
+    }
+  };
+
+  const updateFormData = (section: string, data: any) => {
+    setFormData({
+      ...formData,
+      [section]: {
+        ...formData[section as keyof typeof formData],
+        ...data,
+      },
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log('Form submitted:', formData);
       onClose();
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <>
-      <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className='sm:max-w-[900px]'>
-          <DialogHeader>
-            <DialogTitle>Create Campaign</DialogTitle>
-          </DialogHeader>
-          <div className='grid grid-cols-2 gap-6'>
-            <div className='space-y-6'>
-              <div className='space-y-2'>
-                <Label htmlFor='name'>Campaign Name</Label>
-                <Input
-                  id='name'
-                  placeholder='Enter campaign name'
-                  value={campaignName}
-                  onChange={(e) => setCampaignName(e.target.value)}
-                />
-                {errors.name && <p className='text-sm text-red-500'>{errors.name}</p>}
-              </div>
-
-              <div className='space-y-2'>
-                <Label>Campaign Type</Label>
-                <Tabs
-                  value={campaignType}
-                  onValueChange={(value) => setCampaignType(value as 'leads' | 'traffic')}
-                >
-                  <TabsList className='w-full'>
-                    <TabsTrigger value='leads' className='flex-1'>
-                      Lead Generation
-                    </TabsTrigger>
-                    <TabsTrigger value='traffic' className='flex-1'>
-                      Traffic
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
-              </div>
-
-              {campaignType === 'leads' && (
-                <div className='space-y-2'>
-                  <Label>Form</Label>
-                  <div className='flex gap-2'>
-                    <Button
-                      variant='outline'
-                      onClick={() => setShowSelectFormModal(true)}
-                      className='flex-1'
-                    >
-                      {selectedForm ? 'Change Form' : 'Select Form'}
-                    </Button>
-                    <Button variant='outline' onClick={onOpenFormModal} className='flex-1'>
-                      Create New Form
-                    </Button>
-                  </div>
-                  {selectedForm && (
-                    <p className='text-sm text-green-500'>
-                      Selected form: {selectedForm.name} ({selectedForm.fields.length} fields)
-                    </p>
-                  )}
-                  {errors.form && <p className='text-sm text-red-500'>{errors.form}</p>}
-                </div>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className='sm:max-w-[800px] h-[80vh]'>
+        <DialogHeader>
+          <DialogTitle>Create Facebook Campaign - Step {step} of 3</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className='space-y-4 overflow-y-auto'>
+          {step === 1 && (
+            <CampaignStep
+              data={formData.campaign}
+              updateData={(data) => updateFormData('campaign', data)}
+            />
+          )}
+          {step === 2 && (
+            <AdsetStep data={formData.adset} updateData={(data) => updateFormData('adset', data)} />
+          )}
+          {step === 3 && (
+            <AdStep data={formData.ad} updateData={(data) => updateFormData('ad', data)} />
+          )}
+        </form>
+        <DialogFooter>
+          {step > 1 && (
+            <Button type='button' variant='outline' onClick={handlePrevious}>
+              Previous
+            </Button>
+          )}
+          {step < 3 ? (
+            <Button
+              type='button'
+              className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
+              onClick={handleNext}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              type='submit'
+              className='bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <svg
+                    className='animate-spin -ml-1 mr-3 h-5 w-5 text-white'
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                  >
+                    <circle
+                      className='opacity-25'
+                      cx='12'
+                      cy='12'
+                      r='10'
+                      stroke='currentColor'
+                      strokeWidth='4'
+                    ></circle>
+                    <path
+                      className='opacity-75'
+                      fill='currentColor'
+                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                    ></path>
+                  </svg>
+                  Submitting...
+                </>
+              ) : (
+                'Submit'
               )}
-
-              <div className='space-y-2'>
-                <Label htmlFor='budget'>Budget</Label>
-                <Input
-                  id='budget'
-                  placeholder='Enter budget'
-                  value={budget}
-                  onChange={(e) => setBudget(e.target.value)}
-                />
-                {errors.budget && <p className='text-sm text-red-500'>{errors.budget}</p>}
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='adHeadline'>Ad Headline</Label>
-                <Input
-                  id='adHeadline'
-                  placeholder='Enter ad headline'
-                  value={adHeadline}
-                  onChange={(e) => setAdHeadline(e.target.value)}
-                />
-                {errors.adHeadline && <p className='text-sm text-red-500'>{errors.adHeadline}</p>}
-              </div>
-
-              <div className='space-y-2'>
-                <Label htmlFor='adDescription'>Ad Description</Label>
-                <Input
-                  id='adDescription'
-                  placeholder='Enter ad description'
-                  value={adDescription}
-                  onChange={(e) => setAdDescription(e.target.value)}
-                />
-                {errors.adDescription && (
-                  <p className='text-sm text-red-500'>{errors.adDescription}</p>
-                )}
-              </div>
-
-              <Button className='w-full bg-[#5932EA] hover:bg-[#5932EA]/90' onClick={handleSubmit}>
-                Create Campaign
-              </Button>
-            </div>
-
-            <FacebookPreview headline={adHeadline} description={adDescription} />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <SelectFormModal
-        open={showSelectFormModal}
-        onClose={() => setShowSelectFormModal(false)}
-        onSelectForm={(form) => {
-          setSelectedForm(form);
-          setShowSelectFormModal(false);
-        }}
-        forms={forms}
-      />
-    </>
+            </Button>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

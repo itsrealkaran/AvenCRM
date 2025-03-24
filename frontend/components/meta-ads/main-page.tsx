@@ -2,13 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
-import { CreateCampaignModal, type Campaign } from '@/components/meta-ads/create-campaign-modal';
+import CreateCampaignModal from '@/components/meta-ads/create-campaign-modal';
 import { CreateFormModal, type Form } from '@/components/meta-ads/create-form-modal';
 import { FacebookConnectModal } from '@/components/meta-ads/facebook-connect-modal';
 import { FormsList } from '@/components/meta-ads/forms-list';
@@ -36,7 +35,7 @@ export default function MetaAdsPage() {
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [forms, setForms] = useState<Form[]>([]);
   const [adAccountId, setAdAccountId] = useState<string[] | null>(null);
@@ -72,7 +71,7 @@ export default function MetaAdsPage() {
     }
   }, [metaAdAccounts]);
 
-  const handleCreateCampaign = (newCampaign: Campaign) => {
+  const handleCreateCampaign = (newCampaign: any) => {
     setCampaigns([...campaigns, newCampaign]);
   };
 
@@ -230,11 +229,10 @@ export default function MetaAdsPage() {
       />
 
       <CreateCampaignModal
-        open={showCampaignModal}
+        adAccountId={adAccountId}
+        accessToken={metaAdAccounts?.[0]?.accessToken}
+        isOpen={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
-        onOpenFormModal={() => setShowFormModal(true)}
-        onCreateCampaign={handleCreateCampaign}
-        forms={forms}
       />
 
       <CreateFormModal

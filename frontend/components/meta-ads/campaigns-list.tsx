@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 
-import type { Campaign } from './create-campaign-modal';
+import { Campaign } from '../whatsapp/create-campaign-modal';
 
 interface CampaignsListProps {
   campaigns: Campaign[];
@@ -43,7 +43,7 @@ export function CampaignsList({
   const getCampaigns = async () => {
     // @ts-ignore
     FB.api(
-      `/act_${adAccountId}/campaigns`,
+      `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
       {
         effective_status: '["ACTIVE","PAUSED"]',
         fields: 'name,objective',
