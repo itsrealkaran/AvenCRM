@@ -40,7 +40,7 @@ export default function CreateCampaignForm({
     adset: {
       id: '',
       name: '',
-      optimizationGoal: '',
+      daily_budget: '',
       targetAudience: {
         geo_location: {
           countries: [],
@@ -61,7 +61,7 @@ export default function CreateCampaignForm({
 
   const setCampaignData = async (data: any) => {
     //@ts-ignore
-    const response = await FB.api(
+    await FB.api(
       `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
       'POST',
       {
@@ -83,6 +83,25 @@ export default function CreateCampaignForm({
     );
   };
 
+  const setAdsetData = async (data: any) => {
+    //@ts-ignore
+    await FB.api(
+      `/act_${adAccountId}/adsets?access_token=${accessToken}`,
+      'POST',
+      data,
+      function (response: any) {
+        console.log(response, 'response from adset step');
+        setFormData({
+          ...formData,
+          adset: {
+            ...formData.adset,
+            id: response.id,
+          },
+        });
+      }
+    );
+  };
+
   const handleNext = () => {
     if (step < 3) {
       if (
@@ -93,6 +112,14 @@ export default function CreateCampaignForm({
         formData.campaign.start_time !== ''
       ) {
         setCampaignData(formData.campaign);
+      } else if (
+        step === 2 &&
+        formData.adset.name !== '' &&
+        formData.adset.daily_budget !== '' &&
+        formData.adset.targetAudience.geo_location.countries.length > 0 &&
+        formData.adset.targetAudience.geo_location.cities.length > 0
+      ) {
+        setAdsetData(formData.adset);
       }
       setStep(step + 1);
     }
@@ -144,7 +171,11 @@ export default function CreateCampaignForm({
             />
           )}
           {step === 2 && (
-            <AdsetStep data={formData.adset} updateData={(data) => updateFormData('adset', data)} />
+            <AdsetStep
+              data={formData.adset}
+              updateData={(data) => updateFormData('adset', data)}
+              accessToken={accessToken}
+            />
           )}
           {step === 3 && (
             <AdStep data={formData.ad} updateData={(data) => updateFormData('ad', data)} />
