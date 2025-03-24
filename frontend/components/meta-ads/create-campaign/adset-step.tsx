@@ -185,7 +185,7 @@ export function AdsetStep({
       try {
         //@ts-ignore
         FB.api(
-          `/search?q=${debouncedCitySearch}&type=adgeolocation&location_types=["region"]&access_token=${accessToken}`,
+          `/search?q=${debouncedCitySearch}&type=adgeolocation&location_types=["city"]&access_token=${accessToken}`,
           'GET',
           {},
           function (response: any) {

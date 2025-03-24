@@ -89,7 +89,12 @@ export default function CreateCampaignForm({
     await FB.api(
       `/act_${adAccountId}/adsets?access_token=${accessToken}`,
       'POST',
-      data,
+      {
+        name: data.name,
+        daily_budget: data.daily_budget,
+        target_audience: data.targetAudience,
+        campaign_id: formData.campaign.id,
+      },
       function (response: any) {
         console.log(response, 'response from adset step');
         setFormData({
