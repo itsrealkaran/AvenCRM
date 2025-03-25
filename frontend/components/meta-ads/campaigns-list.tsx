@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -41,23 +41,27 @@ export function CampaignsList({ onCreateCampaign, accessToken, adAccountId }: Ca
   const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
   const { toast } = useToast();
 
+  useEffect(() => {
+    if (accessToken && adAccountId) {
+      // @ts-ignore
+      FB.api(
+        `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
+        {
+          effective_status: '["ACTIVE","PAUSED"]',
+          fields: 'name,objective,status,created_time',
+        },
+        function (response: any) {
+          if (response && !response.error) {
+            console.log(response, 'response from get campaigns');
+            setAllCampaigns(response.data);
+          }
+        }
+      );
+    }
+  }, [accessToken, adAccountId]);
+
   console.log(accessToken);
   console.log(adAccountId, 'adAccountId from campaigns list');
-
-  // @ts-ignore
-  FB.api(
-    `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
-    {
-      effective_status: '["ACTIVE","PAUSED"]',
-      fields: 'name,objective,status,created_time',
-    },
-    function (response: any) {
-      if (response && !response.error) {
-        console.log(response, 'response from get campaigns');
-        setAllCampaigns(response.data);
-      }
-    }
-  );
 
   const onEditCampaign = (campaign: Campaign) => {
     console.log(campaign, 'campaign from edit');
@@ -124,6 +128,14 @@ export function CampaignsList({ onCreateCampaign, accessToken, adAccountId }: Ca
           </Button>
         );
       },
+      cell: ({ row }) => {
+        const value = row.getValue('budget') as string;
+        return (
+          <span className='px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap'>
+            {value ? `$${value}` : 'N/A'}
+          </span>
+        );
+      },
     },
     {
       accessorKey: 'reach',
@@ -147,7 +159,7 @@ export function CampaignsList({ onCreateCampaign, accessToken, adAccountId }: Ca
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full ${
-              value === 'Active' ? 'bg-[#E8FFF3] text-[#1C9E75]' : 'bg-[#FFF9E7] text-[#E5B800]'
+              value === 'ACTIVE' ? 'bg-[#E8FFF3] text-[#1C9E75]' : 'bg-[#FFF9E7] text-[#E5B800]'
             }`}
           >
             {value}
@@ -156,7 +168,7 @@ export function CampaignsList({ onCreateCampaign, accessToken, adAccountId }: Ca
       },
     },
     {
-      accessorKey: 'createdAt',
+      accessorKey: 'created_time',
       header: ({ column }) => {
         return (
           <Button
@@ -169,7 +181,7 @@ export function CampaignsList({ onCreateCampaign, accessToken, adAccountId }: Ca
         );
       },
       cell: ({ row }) => {
-        const date = new Date(row.getValue('createdAt'));
+        const date = new Date(row.getValue('created_time'));
         return date.toLocaleDateString();
       },
     },

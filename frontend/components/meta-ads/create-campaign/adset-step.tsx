@@ -13,6 +13,7 @@ import { useDebounce } from '@/hooks/useDebounce';
 type AdsetData = {
   name: string;
   daily_budget: string;
+  end_time: string;
   targetAudience: {
     geo_location: {
       countries: string[];
@@ -220,6 +221,17 @@ export function AdsetStep({
               value={data.daily_budget}
               onChange={handleChange}
               placeholder='Enter daily budget'
+            />
+          </div>
+
+          <div className='grid gap-2'>
+            <Label htmlFor='end_time'>End Time</Label>
+            <Input
+              id='end_time'
+              name='end_time'
+              type='datetime-local'
+              value={data.end_time}
+              onChange={handleChange}
             />
           </div>
 

@@ -41,6 +41,7 @@ export default function CreateCampaignForm({
       id: '',
       name: '',
       daily_budget: '',
+      end_time: '',
       targetAudience: {
         geo_location: {
           countries: [],
@@ -94,7 +95,9 @@ export default function CreateCampaignForm({
         name: data.name,
         daily_budget: data.daily_budget,
         targeting: data.targetAudience,
-        billing_event: 'LINK_CLICKS',
+        end_time: data.end_time,
+        billing_event: 'IMPRESSIONS',
+        optimization_goal: 'IMPRESSIONS',
         campaign_id: formData.campaign.id,
       },
       function (response: any) {
