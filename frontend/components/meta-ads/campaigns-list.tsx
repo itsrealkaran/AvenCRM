@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import { useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -20,42 +20,63 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
-import { Campaign } from '../whatsapp/create-campaign-modal';
+interface Campaign {
+  id: string;
+  name: string;
+  objective: string;
+  status: string;
+  createdAt: string;
+}
 
 interface CampaignsListProps {
-  campaigns: Campaign[];
   onCreateCampaign: () => void;
   accessToken: string;
   adAccountId: string[] | null;
 }
 
-export function CampaignsList({
-  campaigns,
-  onCreateCampaign,
-  accessToken,
-  adAccountId,
-}: CampaignsListProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+export function CampaignsList({ onCreateCampaign, accessToken, adAccountId }: CampaignsListProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [allCampaigns, setAllCampaigns] = useState<Campaign[]>([]);
+  const { toast } = useToast();
+
   console.log(accessToken);
   console.log(adAccountId, 'adAccountId from campaigns list');
 
-  const getCampaigns = async () => {
+  // @ts-ignore
+  FB.api(
+    `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
+    {
+      effective_status: '["ACTIVE","PAUSED"]',
+      fields: 'name,objective,status,created_time',
+    },
+    function (response: any) {
+      if (response && !response.error) {
+        console.log(response, 'response from get campaigns');
+        setAllCampaigns(response.data);
+      }
+    }
+  );
+
+  const onEditCampaign = (campaign: Campaign) => {
+    console.log(campaign, 'campaign from edit');
+  };
+
+  const onDeleteCampaign = (campaignId: string) => {
     // @ts-ignore
     FB.api(
-      `/act_${adAccountId}/campaigns?access_token=${accessToken}`,
-      {
-        effective_status: '["ACTIVE","PAUSED"]',
-        fields: 'name,objective',
-      },
+      `/act_${adAccountId}/campaigns/${campaignId}?access_token=${accessToken}`,
+      'DELETE',
       function (response: any) {
-        if (response && !response.error) {
-          console.log(response, 'response from get campaigns');
-        }
+        console.log(response, 'response from delete campaign');
+        toast({
+          title: 'Campaign deleted',
+          description: 'Campaign deleted successfully',
+        });
       }
     );
   };
-  getCampaigns();
 
   const columns: ColumnDef<Campaign>[] = [
     {
@@ -80,10 +101,12 @@ export function CampaignsList({
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
-              value === 'leads' ? 'bg-[#E8EFF7] text-[#2F6FED]' : 'bg-[#E8FFF3] text-[#1C9E75]'
+              value === 'LEAD_GENERATION'
+                ? 'bg-[#E8EFF7] text-[#2F6FED]'
+                : 'bg-[#E8FFF3] text-[#1C9E75]'
             }`}
           >
-            {value === 'leads' ? 'Lead Generation' : 'Traffic'}
+            {value === 'LEAD_GENERATION' ? 'Lead Generation' : 'Traffic'}
           </span>
         );
       },
@@ -152,16 +175,31 @@ export function CampaignsList({
     },
     {
       id: 'actions',
-      cell: () => (
-        <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
-          <MoreHorizontal className='h-4 w-4' />
-        </Button>
+      cell: ({ row }) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+              <MoreHorizontal className='h-4 w-4' />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align='end'>
+            <DropdownMenuItem onClick={() => onEditCampaign?.(row.original)}>
+              Edit Campaign
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => onDeleteCampaign?.(row.original.id)}
+              className='text-red-600'
+            >
+              Delete Campaign
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       ),
     },
   ];
 
   const table = useReactTable({
-    data: campaigns,
+    data: allCampaigns,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -197,7 +235,7 @@ export function CampaignsList({
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {campaigns.length > 0 && (
+        {allCampaigns.length > 0 && (
           <div className='overflow-auto'>
             <table className='w-full min-w-[1000px]'>
               <thead>
@@ -230,7 +268,7 @@ export function CampaignsList({
             </table>
           </div>
         )}
-        {campaigns.length === 0 && (
+        {allCampaigns.length === 0 && (
           <div className='text-center py-10'>
             <h3 className='text-lg font-semibold mb-2'>No campaigns yet</h3>
             <p className='text-muted-foreground mb-4'>Create your first campaign to get started</p>

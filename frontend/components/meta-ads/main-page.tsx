@@ -197,7 +197,6 @@ export default function MetaAdsPage() {
               <CampaignsList
                 accessToken={metaAdAccounts[0].accessToken}
                 adAccountId={adAccountId}
-                campaigns={campaigns}
                 onCreateCampaign={() => setShowCampaignModal(true)}
               />
             </TabsContent>
