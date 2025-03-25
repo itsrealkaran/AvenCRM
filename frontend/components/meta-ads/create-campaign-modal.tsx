@@ -35,6 +35,7 @@ export default function CreateCampaignForm({
       name: '',
       objective: '',
       special_ad_categories: '',
+      special_ad_category_country: '',
       start_time: '',
     },
     adset: {
@@ -71,6 +72,7 @@ export default function CreateCampaignForm({
         name: data.name,
         objective: data.objective,
         special_ad_categories: data.special_ad_categories,
+        special_ad_category_country: data.special_ad_category_country,
         start_time: data.start_time,
       },
       function (response: any) {
@@ -122,6 +124,7 @@ export default function CreateCampaignForm({
         formData.campaign.name !== '' &&
         formData.campaign.objective !== '' &&
         formData.campaign.special_ad_categories !== '' &&
+        formData.campaign.special_ad_category_country !== '' &&
         formData.campaign.start_time !== ''
       ) {
         setCampaignData(formData.campaign);
@@ -175,6 +178,7 @@ export default function CreateCampaignForm({
             <CampaignStep
               data={formData.campaign}
               updateData={(data) => updateFormData('campaign', data)}
+              accessToken={accessToken}
             />
           )}
           {step === 2 && (

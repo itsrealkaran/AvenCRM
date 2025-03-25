@@ -32,7 +32,7 @@ interface Location {
   key: string;
   name: string;
   type: string;
-  country_code?: string;
+  country_code: string;
 }
 
 // Define the change handler type
@@ -90,7 +90,7 @@ export function AdsetStep({
         ...data.targetAudience,
         geo_locations: {
           ...data.targetAudience.geo_locations,
-          countries: [...data.targetAudience.geo_locations.countries, location.name],
+          countries: [...data.targetAudience.geo_locations.countries, location.country_code],
         },
       },
     });
@@ -111,8 +111,8 @@ export function AdsetStep({
   const addCity = (location: Location) => {
     const newCity = {
       key: location.key,
-      radius: 50, // default radius in kilometers
-      distance_unit: 'kilometer',
+      radius: 16, // default radius in kilometers
+      distance_unit: 'mile ',
     };
 
     if (!data.targetAudience.geo_locations.cities.some((city) => city.key === location.key)) {
