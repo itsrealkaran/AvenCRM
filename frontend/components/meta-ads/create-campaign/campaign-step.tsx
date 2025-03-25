@@ -41,10 +41,8 @@ export function CampaignStep({
   updateData: (data: Partial<CampaignData>) => void;
   accessToken: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState('');
-  const debouncedSearch = useDebounce(searchValue, 300);
   const [countryInput, setCountryInput] = useState('');
+  const debouncedSearch = useDebounce(countryInput, 300);
   const [locations, setLocations] = useState<Location[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -64,6 +62,7 @@ export function CampaignStep({
           'GET',
           {},
           function (response: any) {
+            console.log(response, 'search response from campaign step');
             setLocations(response.data || []);
           }
         );
@@ -75,7 +74,7 @@ export function CampaignStep({
     };
 
     searchLocations();
-  }, [debouncedSearch, accessToken]);
+  }, [debouncedSearch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateData({ [e.target.name]: e.target.value });
