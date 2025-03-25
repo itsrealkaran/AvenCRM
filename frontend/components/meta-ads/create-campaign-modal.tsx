@@ -34,7 +34,6 @@ export default function CreateCampaignForm({
       id: '',
       name: '',
       objective: '',
-      special_ad_categories: '',
       start_time: '',
     },
     adset: {
@@ -70,7 +69,6 @@ export default function CreateCampaignForm({
       {
         name: data.name,
         objective: data.objective,
-        special_ad_categories: data.special_ad_categories,
         start_time: data.start_time,
       },
       function (response: any) {
@@ -98,6 +96,7 @@ export default function CreateCampaignForm({
         end_time: data.end_time,
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'IMPRESSIONS',
+        bid_amount: data.daily_budget,
         campaign_id: formData.campaign.id,
       },
       function (response: any) {
@@ -120,7 +119,6 @@ export default function CreateCampaignForm({
         step === 1 &&
         formData.campaign.name !== '' &&
         formData.campaign.objective !== '' &&
-        formData.campaign.special_ad_categories !== '' &&
         formData.campaign.start_time !== ''
       ) {
         setCampaignData(formData.campaign);
