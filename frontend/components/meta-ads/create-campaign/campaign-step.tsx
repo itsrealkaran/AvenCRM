@@ -172,7 +172,7 @@ export function CampaignStep({
                           key={location.key}
                           className='px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm'
                           onClick={() => {
-                            updateData({ special_ad_category_country: location.name });
+                            updateData({ special_ad_category_country: location.country_code });
                             setCountryInput('');
                             setIsOpen(false);
                           }}
@@ -193,7 +193,8 @@ export function CampaignStep({
               {data.special_ad_category_country && (
                 <div className='flex flex-wrap gap-2 mt-2'>
                   <Badge variant='secondary' className='flex items-center gap-1'>
-                    {data.special_ad_category_country}
+                    {locations.find((loc) => loc.country_code === data.special_ad_category_country)
+                      ?.name || data.special_ad_category_country}
                     <X
                       className='h-3 w-3 cursor-pointer'
                       onClick={() => updateData({ special_ad_category_country: '' })}
