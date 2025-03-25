@@ -16,6 +16,7 @@ import {
 type CampaignData = {
   name: string;
   objective: string;
+  special_ad_categories: string;
   start_time: string;
 };
 
@@ -61,6 +62,23 @@ export function CampaignStep({
               <SelectContent>
                 <SelectItem value='OUTCOME_AWARENESS'>Brand Awareness</SelectItem>
                 <SelectItem value='OUTCOME_LEADS'>Lead Generation</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className='grid gap-2'>
+            <Label htmlFor='special_ad_categories'>Ad Category</Label>
+            <Select
+              value={data.special_ad_categories}
+              onValueChange={(value) => handleSelectChange('special_ad_categories', value)}
+            >
+              <SelectTrigger id='special_ad_categories'>
+                <SelectValue placeholder='Select ad category' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='NONE'>None</SelectItem>
+                <SelectItem value='EMPLOYMENT'>Employment</SelectItem>
+                <SelectItem value='HOUSING'>Housing</SelectItem>
               </SelectContent>
             </Select>
           </div>
