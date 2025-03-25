@@ -43,13 +43,13 @@ export default function CreateCampaignForm({
       daily_budget: '',
       end_time: '',
       targetAudience: {
-        geo_location: {
+        geo_locations: {
           countries: [],
           cities: [],
         },
         facebook_positions: ['feed'],
-        min_age: 18,
-        max_age: 65,
+        age_min: 18,
+        age_max: 65,
       },
     },
     ad: {

@@ -15,7 +15,7 @@ type AdsetData = {
   daily_budget: string;
   end_time: string;
   targetAudience: {
-    geo_location: {
+    geo_locations: {
       countries: string[];
       cities: Array<{
         key: string;
@@ -23,8 +23,8 @@ type AdsetData = {
         distance_unit: string;
       }>;
     };
-    min_age: number;
-    max_age: number;
+    age_min: number;
+    age_max: number;
   };
 };
 
@@ -88,9 +88,9 @@ export function AdsetStep({
     updateData({
       targetAudience: {
         ...data.targetAudience,
-        geo_location: {
-          ...data.targetAudience.geo_location,
-          countries: [...data.targetAudience.geo_location.countries, location.name],
+        geo_locations: {
+          ...data.targetAudience.geo_locations,
+          countries: [...data.targetAudience.geo_locations.countries, location.name],
         },
       },
     });
@@ -100,9 +100,9 @@ export function AdsetStep({
     updateData({
       targetAudience: {
         ...data.targetAudience,
-        geo_location: {
-          ...data.targetAudience.geo_location,
-          countries: data.targetAudience.geo_location.countries.filter((c) => c !== country),
+        geo_locations: {
+          ...data.targetAudience.geo_locations,
+          countries: data.targetAudience.geo_locations.countries.filter((c) => c !== country),
         },
       },
     });
@@ -115,13 +115,13 @@ export function AdsetStep({
       distance_unit: 'kilometer',
     };
 
-    if (!data.targetAudience.geo_location.cities.some((city) => city.key === location.key)) {
+    if (!data.targetAudience.geo_locations.cities.some((city) => city.key === location.key)) {
       updateData({
         targetAudience: {
           ...data.targetAudience,
-          geo_location: {
-            ...data.targetAudience.geo_location,
-            cities: [...data.targetAudience.geo_location.cities, newCity],
+          geo_locations: {
+            ...data.targetAudience.geo_locations,
+            cities: [...data.targetAudience.geo_locations.cities, newCity],
           },
         },
       });
@@ -132,9 +132,9 @@ export function AdsetStep({
     updateData({
       targetAudience: {
         ...data.targetAudience,
-        geo_location: {
-          ...data.targetAudience.geo_location,
-          cities: data.targetAudience.geo_location.cities.filter((city) => city.key !== cityKey),
+        geo_locations: {
+          ...data.targetAudience.geo_locations,
+          cities: data.targetAudience.geo_locations.cities.filter((city) => city.key !== cityKey),
         },
       },
     });
@@ -297,7 +297,7 @@ export function AdsetStep({
                 )}
 
                 <div className='flex flex-wrap gap-2 mt-2'>
-                  {data.targetAudience.geo_location.countries.map((country, index) => (
+                  {data.targetAudience.geo_locations.countries.map((country, index) => (
                     <Badge key={index} variant='secondary' className='flex items-center gap-1'>
                       {country}
                       <X
@@ -369,7 +369,7 @@ export function AdsetStep({
                 )}
 
                 <div className='flex flex-wrap gap-2 mt-2'>
-                  {data.targetAudience.geo_location.cities.map((city) => (
+                  {data.targetAudience.geo_locations.cities.map((city) => (
                     <Badge key={city.key} variant='secondary' className='flex items-center gap-1'>
                       {city.key} ({city.radius}km)
                       <X className='h-3 w-3 cursor-pointer' onClick={() => removeCity(city.key)} />
@@ -381,26 +381,26 @@ export function AdsetStep({
 
             <div className='grid grid-cols-2 gap-4'>
               <div className='space-y-2'>
-                <Label htmlFor='min_age'>Minimum Age</Label>
+                <Label htmlFor='age_min'>Minimum Age</Label>
                 <Input
-                  id='min_age'
-                  name='min_age'
+                  id='age_min'
+                  name='age_min'
                   type='number'
                   min='13'
                   max='65'
-                  value={data.targetAudience.min_age}
+                  value={data.targetAudience.age_min}
                   onChange={handleAgeChange}
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='max_age'>Maximum Age</Label>
+                <Label htmlFor='age_max'>Maximum Age</Label>
                 <Input
-                  id='max_age'
-                  name='max_age'
+                  id='age_max'
+                  name='age_max'
                   type='number'
                   min='13'
                   max='65'
-                  value={data.targetAudience.max_age}
+                  value={data.targetAudience.age_max}
                   onChange={handleAgeChange}
                 />
               </div>
