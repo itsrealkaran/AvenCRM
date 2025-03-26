@@ -85,9 +85,8 @@ export default function MetaAdsPage() {
       (response: any) => {
         if (response.authResponse) {
           //@ts-ignore
-          FB.api('/me', { fields: 'name, email, accounts' }, (userInfo) => {
+          FB.api('/me', { fields: 'name, email' }, (userInfo) => {
             console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-            console.log(userInfo, 'userInfo');
             console.log(response, 'response');
             setFacebookCode(response.authResponse.code);
           });
@@ -110,26 +109,30 @@ export default function MetaAdsPage() {
         const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
         const accessToken = response.data.access_token;
         //@ts-ignore
-        FB.api(`/me?access_token=${accessToken}`, { fields: 'name, email' }, (userInfo) => {
-          console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-          console.log(response, 'response');
-          console.log(userInfo, 'userInfo');
+        FB.api(
+          `/me?access_token=${accessToken}`,
+          { fields: 'name, email, accounts' },
+          (userInfo: any) => {
+            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+            console.log(response, 'response');
+            console.log(userInfo, 'userInfo');
 
-          // Save the Facebook connection status
-          api
-            .post('/meta-ads/account', {
-              name: userInfo.name,
-              email: userInfo.email,
-              accessToken: accessToken,
-            })
-            .then(() => {
-              setIsConnected(true);
-              setShowFacebookModal(false);
-            })
-            .catch((error) => {
-              console.error('Error saving Facebook account:', error);
-            });
-        });
+            // Save the Facebook connection status
+            api
+              .post('/meta-ads/account', {
+                name: userInfo.name,
+                email: userInfo.email,
+                accessToken: accessToken,
+              })
+              .then(() => {
+                setIsConnected(true);
+                setShowFacebookModal(false);
+              })
+              .catch((error) => {
+                console.error('Error saving Facebook account:', error);
+              });
+          }
+        );
         getAdAccountId(accessToken);
       }
     };
