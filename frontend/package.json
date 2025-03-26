@@ -48,6 +48,7 @@
     "@types/date-fns": "^2.6.3",
     "@types/react-big-calendar": "^1.16.0",
     "@types/react-facebook-login": "^4.1.11",
+    "aven": "link:",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

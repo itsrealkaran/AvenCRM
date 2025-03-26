@@ -113,6 +113,9 @@ importers:
       '@types/react-facebook-login':
         specifier: ^4.1.11
         version: 4.1.11
+      aven:
+        specifier: 'link:'
+        version: 'link:'
       axios:
         specifier: ^1.7.9
         version: 1.7.9

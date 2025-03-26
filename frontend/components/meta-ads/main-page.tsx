@@ -85,8 +85,9 @@ export default function MetaAdsPage() {
       (response: any) => {
         if (response.authResponse) {
           //@ts-ignore
-          FB.api('/me', { fields: 'name, email' }, (userInfo) => {
+          FB.api('/me', { fields: 'name, email, accounts' }, (userInfo) => {
             console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+            console.log(userInfo, 'userInfo');
             console.log(response, 'response');
             setFacebookCode(response.authResponse.code);
           });

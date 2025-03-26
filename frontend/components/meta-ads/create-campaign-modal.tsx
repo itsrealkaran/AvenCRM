@@ -45,7 +45,6 @@ export default function CreateCampaignForm({
       end_time: '',
       targetAudience: {
         geo_locations: {
-          countries: [],
           cities: [],
         },
         facebook_positions: ['feed'],
