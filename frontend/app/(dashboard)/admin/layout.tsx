@@ -84,12 +84,12 @@ const menuItems = [
     path: '/admin/deals',
     description: 'Deal management',
   },
-  // {
-  //   heading: 'Page Builder',
-  //   icon: FileText,
-  //   path: '/admin/page-builder',
-  //   description: 'Build and manage pages',
-  // },
+  {
+    heading: 'Page Builder',
+    icon: FileText,
+    path: '/admin/page-builder',
+    description: 'Build and manage pages',
+  },
   // {
   //   heading: 'Marketing',
   //   icon: LineChart,

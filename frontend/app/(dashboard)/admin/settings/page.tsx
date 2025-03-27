@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/hooks/useAuth';
 
-import CompanyForm from './company-form';
+import CompanyForm from './components/company-form';
 import { NotificationForm } from './components/notification-form';
 import { PasswordForm } from './components/password-form';
 import { ProfileForm } from './components/profile-form';
@@ -60,9 +60,9 @@ const Page = () => {
   if (!user) return null;
 
   return (
-    <div className='min-h-screen h-full overflow-y-auto bg-gray-50/30'>
+    <div className='bg-gray-50/30'>
       {/* Header Section */}
-      <div className='relative h-[200px] bg-gradient-to-r from-blue-600 to-blue-800'>
+      <div className='relative h-[200px] bg-gradient-to-tr from-[#9BF3F0] via-[#DAFFED] to-[#FFC2B4]'>
         <div className='absolute top-4 right-4'>
           <Button
             variant='secondary'
