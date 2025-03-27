@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { api } from '@/lib/api';
+import { useCurrency } from '@/contexts/CurrencyContext';
 
 interface TopPerformer {
   name: string;
@@ -66,6 +67,7 @@ export function AdminDashboard() {
   });
 
   const [selectedRevenue, setSelectedRevenue] = useState<'commission' | 'total'>('commission');
+  const { formatPrice } = useCurrency()
 
   useEffect(() => {
     if (isError) {
@@ -308,9 +310,9 @@ export function AdminDashboard() {
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
               $
-              {dashboardData?.revenue[
+              {formatPrice(dashboardData?.revenue[
                 selectedRevenue === 'commission' ? 'commissionRevenue' : 'totalRevenue'
-              ].toLocaleString()}
+              ] || null)}
             </div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />

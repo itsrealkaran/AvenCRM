@@ -816,6 +816,7 @@ model MetaAdAccount {
   name        String?
   email       String?
   accessToken String
+  pageId      String?
   status      ActivityStatus? @default(ACTIVE)
 
   agentId     String

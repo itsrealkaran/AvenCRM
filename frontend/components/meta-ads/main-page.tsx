@@ -123,6 +123,7 @@ export default function MetaAdsPage() {
                 name: userInfo.name,
                 email: userInfo.email,
                 accessToken: accessToken,
+                pageId: userInfo.accounts.data[0].id,
               })
               .then(() => {
                 setIsConnected(true);

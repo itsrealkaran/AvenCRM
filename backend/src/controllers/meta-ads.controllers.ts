@@ -43,11 +43,11 @@ const MetaController = {
                 return res.status(401).json({ message: 'Unauthorized' });
             }
 
-            const { name, email, accessToken } = req.body;
+            const { name, email, accessToken, pageId } = req.body;
 
             const metaAdAccount = await prisma.metaAdAccount.create({
                 data: {
-                    name, email, accessToken, agentId: user.id,
+                    name, email, accessToken, pageId, agentId: user.id,
                 },
             });
 
