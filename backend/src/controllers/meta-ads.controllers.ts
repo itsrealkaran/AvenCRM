@@ -77,6 +77,46 @@ const MetaController = {
         } catch (error) {
             return res.status(500).json({ message: 'Internal server error' });
         }
+    },
+
+    async getLeadForms(req: Request, res: Response) {
+        try {
+            const user = req.user;
+            if (!user) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
+            const leadForms = await prisma.leadForm.findMany({
+                where: {
+                    agentId: user.id,
+                },
+            });
+
+            return res.status(200).json(leadForms);
+        } catch (error) {
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+
+    async createLeadForm(req: Request, res: Response) {
+        try {
+            const user = req.user;
+            if (!user) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+
+            const { name, questions } = req.body;
+
+            const leadForm = await prisma.leadForm.create({
+                data: {
+                    name, questions, agentId: user.id,
+                },
+            });
+
+            return res.status(201).json(leadForm);
+        } catch (error) {
+            return res.status(500).json({ message: 'Internal server error' });
+        }
     }
 }
 
