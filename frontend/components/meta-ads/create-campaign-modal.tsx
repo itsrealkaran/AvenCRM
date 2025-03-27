@@ -153,14 +153,6 @@ export default function CreateCampaignForm({
         setCampaignData(formData.campaign);
       } else if (step === 2 && formData.adset.name !== '' && formData.adset.daily_budget !== '') {
         setAdsetData(formData.adset);
-      } else if (
-        step === 3 &&
-        formData.ad.name !== '' &&
-        formData.ad.message !== '' &&
-        formData.ad.image !== null &&
-        formData.ad.redirectUrl !== ''
-      ) {
-        setAdCreative(formData.ad);
       }
       setStep(step + 1);
     }
@@ -187,10 +179,10 @@ export default function CreateCampaignForm({
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      console.log('Form submitted:', formData);
-      onClose();
+      if (formData.ad.name !== '' && formData.ad.message !== '' && formData.ad.image !== null && formData.ad.redirectUrl !== '') {
+        setAdCreative(formData.ad);
+        onClose();
+      }
     } catch (error) {
       console.error('Error submitting form:', error);
     } finally {
