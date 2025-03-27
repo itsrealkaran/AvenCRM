@@ -3,17 +3,16 @@
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import {
   Bell,
+  Briefcase,
   Building2,
   Calendar,
-  CheckSquare,
   Facebook,
+  FileCheck2,
   FileText,
-  Handshake,
   LayoutDashboard,
-  LineChart,
   Mail,
-  Monitor,
-  Store,
+  PanelsTopLeft,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -36,19 +35,19 @@ const menuItems = [
   },
   {
     heading: 'Tasks',
-    icon: CheckSquare,
+    icon: FileCheck2,
     path: '/agent/tasks',
     description: 'Task management',
   },
   {
     heading: 'Leads',
-    icon: Store,
+    icon: Users,
     path: '/agent/leads',
     description: 'Lead management',
   },
   {
     heading: 'Deals',
-    icon: Handshake,
+    icon: Briefcase,
     path: '/agent/deals',
     description: 'Deal management',
   },
@@ -90,7 +89,7 @@ const menuItems = [
   },
   {
     heading: 'Page Builder',
-    icon: FileText,
+    icon: PanelsTopLeft,
     path: '/agent/page-builder',
     description: 'Build and manage pages',
   },
@@ -105,12 +104,6 @@ const menuItems = [
   //   icon: Monitor,
   //   path: '/agent/monitoring',
   //   description: 'System monitoring',
-  // },
-  // {
-  //   heading: 'Marketing',
-  //   icon: LineChart,
-  //   path: '/agent/marketing',
-  //   description: 'Marketing management',
   // },
 ];
 
