@@ -25,6 +25,7 @@ router.get('/:id', propertiesController.getPropertyById);
 router.post('/', propertiesController.createProperty);
 router.post('/upload-file', upload.single('file'), propertiesController.uploadFile);
 router.put('/:id', propertiesController.updateProperty);
+router.patch('/:id/permit-number', propertiesController.updatePermitNumber);
 router.patch('/:id/status', propertiesController.updatePropertyStatus);
 router.delete('/:id', propertiesController.deleteProperty);
 router.delete('/', propertiesController.deleteMultipleProperties);

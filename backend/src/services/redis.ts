@@ -47,7 +47,7 @@ export interface Notification {
   userId: string;
   title: string;
   message: string;
-  type: 'calendar' | 'task' | 'lead' | 'upgrade';
+  type: 'calendar' | 'task' | 'lead' | 'upgrade' | 'property' | 'transaction';
   read: boolean;
   createdAt: number; // Unix timestamp
   link?: string; // Optional link to redirect when clicked

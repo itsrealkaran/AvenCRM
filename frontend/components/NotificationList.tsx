@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { CalendarIcon, CheckSquareIcon, Sparkles, UserIcon } from 'lucide-react';
+import {
+  CalendarIcon,
+  CheckSquareIcon,
+  CreditCardIcon,
+  HomeIcon,
+  Sparkles,
+  UserIcon,
+} from 'lucide-react';
 
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +20,7 @@ interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'calendar' | 'task' | 'lead' | 'upgrade';
+  type: 'calendar' | 'task' | 'lead' | 'upgrade' | 'property' | 'transaction';
   read: boolean;
   timestamp: string;
   link?: string;
@@ -66,7 +73,9 @@ export function NotificationList({
     }
   };
 
-  const getIconByType = (type: 'calendar' | 'task' | 'lead' | 'upgrade') => {
+  const getIconByType = (
+    type: 'calendar' | 'task' | 'lead' | 'upgrade' | 'property' | 'transaction'
+  ) => {
     switch (type) {
       case 'calendar':
         return <CalendarIcon className='w-4 h-4 text-white' />;
@@ -76,10 +85,16 @@ export function NotificationList({
         return <UserIcon className='w-4 h-4 text-white' />;
       case 'upgrade':
         return <Sparkles className='w-4 h-4 text-white' />;
+      case 'property':
+        return <HomeIcon className='w-4 h-4 text-white' />;
+      case 'transaction':
+        return <CreditCardIcon className='w-4 h-4 text-white' />;
     }
   };
 
-  const getIconBgColor = (type: 'calendar' | 'task' | 'lead' | 'upgrade') => {
+  const getIconBgColor = (
+    type: 'calendar' | 'task' | 'lead' | 'upgrade' | 'property' | 'transaction'
+  ) => {
     switch (type) {
       case 'calendar':
         return 'bg-blue-500';
@@ -89,6 +104,10 @@ export function NotificationList({
         return 'bg-red-500';
       case 'upgrade':
         return 'bg-purple-500';
+      case 'property':
+        return 'bg-orange-500';
+      case 'transaction':
+        return 'bg-yellow-500';
     }
   };
 

@@ -83,6 +83,9 @@ interface PropertyDetails {
   updatedAt: string;
   createdById: string;
   imageUrls: string[];
+  permitNumber: string;
+  permitType: string;
+  qrCodeUrl: string;
   agent: {
     id: string;
     name: string;
@@ -775,6 +778,28 @@ const PropertyDetails = () => {
           </div>
 
           <div className='flex flex-col  gap-2'>
+            {/* Permit Number Card */}
+            {property?.permitNumber && (
+              <Card className='p-4 sm:p-6'>
+                <div className='space-y-6'>
+                  <h2 className='text-xl sm:text-2xl font-semibold text-gray-900'>
+                    Permit Details
+                  </h2>
+                  <div className=''>
+                    <div className='space-y-4 mt-2'>
+                      <p className='text-gray-600'>
+                        <img src={property?.qrCodeUrl} alt='QR Code' className='w-32 h-32' />
+                        {property?.permitType
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (char) => char.toUpperCase())}
+                        : {property?.permitNumber}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Agent Profile Card */}
             <Card className='p-4 sm:p-6'>
               <div className='space-y-6'>

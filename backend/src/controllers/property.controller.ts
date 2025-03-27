@@ -15,6 +15,7 @@ import {
   generatePresignedUrl,
   generatePresignedDownloadUrl,
 } from "../utils/s3.js";
+import { notificationService } from "../services/redis.js";
 
 interface PropertyCardDetails {
   title: string;
@@ -134,7 +135,16 @@ export const propertiesController: Controller = {
           console.error("Error generating presigned URLs:", error);
         }
       }
-
+      // @ts-ignore
+      const qrCode = features?.qrCode;
+      console.log(qrCode, "qrCode")
+      if (qrCode) {
+        const qrCodeUrl = await generatePresignedDownloadUrl(qrCode); 
+        console.log(qrCodeUrl, "qrCodeUrl")
+        features.qrCodeUrl = qrCodeUrl;
+      } 
+      // @ts-ignore
+      console.log(features?.qrCodeUrl, "features?.qrCodeUrl")
       const propertyDetails = {
         ...cardDetails,
         ...features,
@@ -366,7 +376,13 @@ export const propertiesController: Controller = {
               return await generatePresignedDownloadUrl(document);
             })); //@ts-ignore
             property.features.documents = documentUrls;
+          } //@ts-ignore
+          const qrCode = property.features?.qrCode;
+          if (qrCode) {
+            const qrCodeUrl = await generatePresignedDownloadUrl(qrCode); //@ts-ignore
+            property.features.qrCodeUrl = qrCodeUrl;
           }
+          
         } catch (error) {
           console.error( 
             `Failed to generate URL for property image: `,
@@ -440,7 +456,36 @@ export const propertiesController: Controller = {
             createdById: req.user.id,
             companyId: req.user.companyId,
           },
+          include: {
+            createdBy: {
+              select: {
+                name: true,
+              },
+            },
+          },
         });
+
+        // send notification to the admin
+        try {
+          const admin = await prisma.user.findFirst({
+            where: {
+              companyId: req.user.companyId,
+              role: UserRole.ADMIN,
+            },
+          });
+          if (!admin) {
+            return res.status(404).json({ message: "Admin not found" });
+          }
+          await notificationService.createNotification(admin.id, {
+            title: `New Property Created`,
+            message: `A new property has been created by ${property.createdBy.name}`,
+            type: "property",
+            link: `/admin/property`,
+          });
+        } catch (error) {
+          logger.error("Error in sendNotification:", error);
+        }
+
         return res.json(property);
       } catch (error) {
         logger.error("Unexpected error in createProperty:", error);
@@ -477,6 +522,42 @@ export const propertiesController: Controller = {
       }
     },
   ],
+
+  updatePermitNumber: async (req: Request, res: Response) => {
+    try {
+      const { noPermit, permitType, permitNumber, qrCode } = req.body;
+      const propertyId = req.params.id;
+
+      console.log(propertyId, noPermit, permitType, permitNumber, qrCode, "req.body")
+
+      const property = await prisma.property.findFirst({
+        where: { id: propertyId },
+        select: {
+          features: true,
+        },
+      });
+      if (!property) {
+        return res.status(404).json({ message: "Property not found" });
+      }
+
+      const features = property.features as any;
+      features.permitNumber = permitNumber;
+      features.permitType = permitType;
+      features.qrCode = qrCode;
+
+      const updatedProperty = await prisma.property.update({
+        where: { id: propertyId },
+        data: {
+          features,
+          isVerified: true,
+        },
+      });
+      
+      return res.json(updatedProperty);
+    } catch (error) {
+      logger.error("Error in updatePermitNumber:", error);
+    }
+  },
 
   updatePropertyStatus: async (req: Request, res: Response) => {
     try {

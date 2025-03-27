@@ -26,10 +26,35 @@ import type { Campaign } from './create-campaign-modal';
 interface CampaignsListProps {
   campaigns: Campaign[];
   onCreateCampaign: () => void;
+  accessToken: string;
+  adAccountId: string[] | null;
 }
 
-export function CampaignsList({ campaigns, onCreateCampaign }: CampaignsListProps) {
+export function CampaignsList({
+  campaigns,
+  onCreateCampaign,
+  accessToken,
+  adAccountId,
+}: CampaignsListProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  console.log(accessToken);
+  console.log(adAccountId, 'adAccountId from campaigns list');
+
+  const getCampaigns = async () => {
+    // @ts-ignore
+    FB.api(
+      `/act_${adAccountId}/campaigns`,
+      {
+        effective_status: '["ACTIVE","PAUSED"]',
+        fields: 'name,objective',
+      },
+      function (response: any) {
+        if (response && !response.error) {
+          console.log(response, 'response from get campaigns');
+        }
+      }
+    );
+  };
 
   const columns: ColumnDef<Campaign>[] = [
     {

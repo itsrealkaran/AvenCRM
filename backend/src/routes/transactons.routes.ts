@@ -4,6 +4,7 @@ import { protect } from "../middleware/auth.js";
 import { Request } from "express";
 import { LeadRole, PlanTier, TransactionStatus, UserRole } from "@prisma/client";
 import { getAllTransactions } from "../controllers/transactions.controller.js";
+import { notificationService } from "../services/redis.js";
 
 const router: Router = Router();
 router.use(protect);
@@ -125,13 +126,36 @@ router.post("/", async (req: Request, res: Response) => {
             include: {
                 agent: {
                     select: {
-                        id: true,
                         name: true,
-                        email: true
+                        company: {
+                            select: {
+                                admin: {
+                                    select: {
+                                        id: true,
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         });
+
+        // send notification to the admin
+        try {
+            if(!transaction.agent.company?.admin?.id) {
+                console.log("Admin not found");
+                return;
+            }
+            await notificationService.createNotification(transaction.agent.company.admin.id, {
+                title: "New Transaction",
+                message: `A new transaction has been created by ${transaction.agent.name}`,
+                type: "transaction",
+                link: `/admin/transactions`
+            });
+        } catch (error) {
+            console.log("Create transaction error:", error);
+        }
         
         res.status(201).json(transaction);
     } catch (error) {

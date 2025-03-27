@@ -39,6 +39,7 @@ jobs:
             # Backend deployment
             cd backend
             pnpm install
+            pnpx prisma generate
             pnpm build
             pm2 restart all
           EOF

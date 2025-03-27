@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { PropertyFormProvider } from '@/contexts/PropertyFormContext';
 import { RefreshCcw } from 'lucide-react';
 
+import PermitNumberModal from '@/components/property/permit-number-modal';
 import PropertyCard from '@/components/property/PropertyCard';
 import PropertyFormModal from '@/components/property/PropertyFormModal';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,12 @@ interface Property {
   };
 }
 
+interface PermitNumberInfo {
+  id: string;
+  propertyName: string;
+  isModalOpen: boolean;
+}
+
 const Page: React.FC = () => {
   const [unverifiedProperties, setUnverifiedProperties] = useState<Property[]>([]);
   const [verifiedProperties, setVerifiedProperties] = useState<Property[]>([]);
@@ -37,6 +44,11 @@ const Page: React.FC = () => {
   const { toast } = useToast();
   const [isPropertyFormModalOpen, setIsPropertyFormModalOpen] = useState(false);
   const [propertyToEdit, setPropertyToEdit] = useState<Property | null>(null);
+  const [permitNumberInfo, setPermitNumberInfo] = useState<PermitNumberInfo>({
+    id: '',
+    propertyName: '',
+    isModalOpen: false,
+  });
 
   useEffect(() => {
     fetchProperties();
@@ -196,7 +208,13 @@ const Page: React.FC = () => {
                     cardDetails={prop.cardDetails}
                     agent={prop.createdBy}
                     isVerified={prop.isVerified}
-                    onVerifyOrUnverify={() => handleVerifyOrUnverify(prop.id, true)}
+                    onVerifyOrUnverify={() =>
+                      setPermitNumberInfo({
+                        id: prop.id,
+                        propertyName: prop.cardDetails.title,
+                        isModalOpen: true,
+                      })
+                    }
                     onDelete={() => handleDeleteProperty(prop.id)}
                     onEdit={() => handleEditProperty(prop.id)}
                   />
@@ -243,6 +261,12 @@ const Page: React.FC = () => {
           propertyToEdit={propertyToEdit}
         />
       </PropertyFormProvider>
+      <PermitNumberModal
+        isOpen={permitNumberInfo.isModalOpen}
+        onClose={() => setPermitNumberInfo({ id: '', propertyName: '', isModalOpen: false })}
+        id={permitNumberInfo.id}
+        propertyName={permitNumberInfo.propertyName}
+      />
     </Card>
   );
 };
