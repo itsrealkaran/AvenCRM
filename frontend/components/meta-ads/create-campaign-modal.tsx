@@ -146,7 +146,9 @@ export default function CreateCampaignForm({
         });
       }
     );
+  };
 
+  const setAd = async (data: any) => {
     //@ts-ignore
     await FB.api(
       `/act_${adAccountId}/ads?access_token=${accessToken}`,
@@ -210,8 +212,10 @@ export default function CreateCampaignForm({
         formData.ad.image !== null &&
         formData.ad.redirectUrl !== ''
       ) {
-        setAdCreative(formData.ad);
-        onClose();
+        setAdCreative(formData.ad).then(() => {
+          setAd(formData.ad);
+          onClose();
+        });
       }
     } catch (error) {
       console.error('Error submitting form:', error);
