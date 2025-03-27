@@ -29,34 +29,16 @@ const menuItems = [
     description: 'Overview of your CRM',
   },
   {
-    heading: 'Meta Ads',
-    icon: Facebook,
-    path: '/agent/meta-ads',
-    description: 'Manage Meta advertisements',
-  },
-  {
-    heading: 'WhatsApp',
-    icon: FaWhatsapp,
-    path: '/agent/whatsapp-campaign',
-    description: 'Manage WhatsApp campaigns',
-  },
-  // {
-  //   heading: 'Monitoring',
-  //   icon: Monitor,
-  //   path: '/agent/monitoring',
-  //   description: 'System monitoring',
-  // },
-  {
     heading: 'Properties',
     icon: Building2,
     path: '/agent/property',
     description: 'Property management',
   },
   {
-    heading: 'Brochure Builder',
-    icon: FileText,
-    path: '/agent/brochure-builder',
-    description: 'Create and manage brochures',
+    heading: 'Tasks',
+    icon: CheckSquare,
+    path: '/agent/tasks',
+    description: 'Task management',
   },
   {
     heading: 'Leads',
@@ -70,23 +52,11 @@ const menuItems = [
     path: '/agent/deals',
     description: 'Deal management',
   },
-  // {
-  //   heading: 'Page Builder',
-  //   icon: FileText,
-  //   path: '/agent/page-builder',
-  //   description: 'Build and manage pages',
-  // },
-  // {
-  //   heading: 'Marketing',
-  //   icon: LineChart,
-  //   path: '/agent/marketing',
-  //   description: 'Marketing management',
-  // },
   {
-    heading: 'Tasks',
-    icon: CheckSquare,
-    path: '/agent/tasks',
-    description: 'Task management',
+    heading: 'Transactions',
+    icon: Wallet,
+    path: '/agent/transactions',
+    description: 'Transaction history',
   },
   {
     heading: 'Calendar',
@@ -95,16 +65,34 @@ const menuItems = [
     description: 'Schedule and events',
   },
   {
+    heading: 'WhatsApp',
+    icon: FaWhatsapp,
+    path: '/agent/whatsapp-campaign',
+    description: 'Manage WhatsApp campaigns',
+  },
+  {
+    heading: 'Meta Ads',
+    icon: Facebook,
+    path: '/agent/meta-ads',
+    description: 'Manage Meta advertisements',
+  },
+  {
     heading: 'Email',
     icon: Mail,
     path: '/agent/email',
     description: 'Communication hub',
   },
   {
-    heading: 'Transactions',
-    icon: Wallet,
-    path: '/agent/transactions',
-    description: 'Transaction history',
+    heading: 'Brochure Builder',
+    icon: FileText,
+    path: '/agent/brochure-builder',
+    description: 'Create and manage brochures',
+  },
+  {
+    heading: 'Page Builder',
+    icon: FileText,
+    path: '/agent/page-builder',
+    description: 'Build and manage pages',
   },
   {
     heading: 'Notifications',
@@ -112,6 +100,18 @@ const menuItems = [
     path: '/agent/notification',
     description: 'Notification management',
   },
+  // {
+  //   heading: 'Monitoring',
+  //   icon: Monitor,
+  //   path: '/agent/monitoring',
+  //   description: 'System monitoring',
+  // },
+  // {
+  //   heading: 'Marketing',
+  //   icon: LineChart,
+  //   path: '/agent/marketing',
+  //   description: 'Marketing management',
+  // },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
