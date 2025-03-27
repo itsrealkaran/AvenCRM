@@ -166,7 +166,7 @@ export default function CreateCampaignForm({
             name: formData.ad.name,
             adset_id: formData.adset.id,
             creative: {
-              creative_id: formData.ad.adCreativeId, // Use the ID from the first response
+              creative_id: adCreativeResponse, // Use the ID from the first response
             },
             status: 'ACTIVE',
           },

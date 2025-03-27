@@ -8,7 +8,7 @@ import { toast } from 'react-hot-toast';
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
 import CreateCampaignModal from '@/components/meta-ads/create-campaign-modal';
-import { CreateFormModal, type Form } from '@/components/meta-ads/create-form-modal';
+import { CreateFormModal } from '@/components/meta-ads/create-form-modal';
 import { FacebookConnectModal } from '@/components/meta-ads/facebook-connect-modal';
 import { FormsList } from '@/components/meta-ads/forms-list';
 import { MetricsCards } from '@/components/meta-ads/metrics-cards';
@@ -37,7 +37,6 @@ export default function MetaAdsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
-  const [forms, setForms] = useState<Form[]>([]);
   const [adAccountId, setAdAccountId] = useState<string[] | null>(null);
   const { company, user } = useAuth();
 
@@ -75,9 +74,7 @@ export default function MetaAdsPage() {
     setCampaigns([...campaigns, newCampaign]);
   };
 
-  const handleCreateForm = (newForm: Form) => {
-    setForms([...forms, newForm]);
-  };
+  const handleCreateForm = () => {};
 
   const handleFacebookLogin = () => {
     //@ts-ignore
@@ -209,7 +206,10 @@ export default function MetaAdsPage() {
               <ConnectedAccounts metaAdAccounts={metaAdAccounts} />
             </TabsContent>
             <TabsContent value='forms'>
-              <FormsList forms={forms} onCreateForm={() => setShowFormModal(true)} />
+              <FormsList
+                accessToken={metaAdAccounts[0].accessToken}
+                onCreateForm={() => setShowFormModal(true)}
+              />
             </TabsContent>
           </Tabs>
         </>
