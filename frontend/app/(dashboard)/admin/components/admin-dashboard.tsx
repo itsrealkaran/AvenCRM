@@ -309,7 +309,6 @@ export function AdminDashboard() {
           </CardHeader>
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
-              $
               {formatPrice(
                 dashboardData?.revenue[
                   selectedRevenue === 'commission' ? 'commissionRevenue' : 'totalRevenue'
