@@ -120,51 +120,70 @@ export default function CreateCampaignForm({
   };
 
   const setAdCreative = async (data: any) => {
-    //@ts-ignore
-    await FB.api(
-      `/act_${adAccountId}/adcreatives?access_token=${accessToken}`,
-      'POST',
-      {
-        name: data.name,
-        image_url: data.image,
-        object_story_spec: {
-          link_data: {
-            link: data.redirectUrl,
-            message: data.message,
+    try {
+      // Create a Promise for the first API call
+      const adCreativeResponse = await new Promise((resolve, reject) => {
+        //@ts-ignore
+        FB.api(
+          `/act_${adAccountId}/adcreatives?access_token=${accessToken}`,
+          'POST',
+          {
+            name: data.name,
+            image_url: data.image,
+            object_story_spec: {
+              link_data: {
+                link: data.redirectUrl,
+                message: data.message,
+              },
+              page_id: pageId,
+            },
           },
-          page_id: pageId,
-        },
-      },
-      function (response: any) {
-        console.log(response, 'response from ad creative step');
-        setFormData({
-          ...formData,
-          ad: {
-            ...formData.ad,
-            adCreativeId: response.id,
-          },
-        });
-      }
-    );
-  };
+          function (response: any) {
+            if (response && !response.error) {
+              console.log(response, 'response from ad creative step');
+              setFormData({
+                ...formData,
+                ad: {
+                  ...formData.ad,
+                  adCreativeId: response.id,
+                },
+              });
+              resolve(response.id);
+            } else {
+              reject(response?.error || 'Failed to create ad creative');
+            }
+          }
+        );
+      });
 
-  const setAd = async (data: any) => {
-    //@ts-ignore
-    await FB.api(
-      `/act_${adAccountId}/ads?access_token=${accessToken}`,
-      'POST',
-      {
-        name: formData.ad.name,
-        adset_id: formData.adset.id,
-        creative: {
-          creative_id: formData.ad.adCreativeId,
-        },
-        status: 'ACTIVE',
-      },
-      function (response: any) {
-        console.log(response, 'response from ad step');
-      }
-    );
+      // Only proceed with the second API call after the first one succeeds
+      await new Promise((resolve, reject) => {
+        //@ts-ignore
+        FB.api(
+          `/act_${adAccountId}/ads?access_token=${accessToken}`,
+          'POST',
+          {
+            name: formData.ad.name,
+            adset_id: formData.adset.id,
+            creative: {
+              creative_id: formData.ad.adCreativeId, // Use the ID from the first response
+            },
+            status: 'ACTIVE',
+          },
+          function (response: any) {
+            if (response && !response.error) {
+              console.log(response, 'response from ad step');
+              resolve(response);
+            } else {
+              reject(response?.error || 'Failed to create ad');
+            }
+          }
+        );
+      });
+    } catch (error) {
+      console.error('Error in setAdCreative:', error);
+      throw error;
+    }
   };
 
   const handleNext = () => {
@@ -212,10 +231,7 @@ export default function CreateCampaignForm({
         formData.ad.image !== null &&
         formData.ad.redirectUrl !== ''
       ) {
-        setAdCreative(formData.ad).then(() => {
-          setAd(formData.ad);
-          onClose();
-        });
+        setAdCreative(formData.ad);
       }
     } catch (error) {
       console.error('Error submitting form:', error);
