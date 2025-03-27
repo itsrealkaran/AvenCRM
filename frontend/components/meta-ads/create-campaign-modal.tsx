@@ -179,7 +179,12 @@ export default function CreateCampaignForm({
     setIsSubmitting(true);
 
     try {
-      if (formData.ad.name !== '' && formData.ad.message !== '' && formData.ad.image !== null && formData.ad.redirectUrl !== '') {
+      if (
+        formData.ad.name !== '' &&
+        formData.ad.message !== '' &&
+        formData.ad.image !== null &&
+        formData.ad.redirectUrl !== ''
+      ) {
         setAdCreative(formData.ad);
         onClose();
       }
