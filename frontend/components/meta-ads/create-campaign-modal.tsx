@@ -56,6 +56,7 @@ export default function CreateCampaignForm({
     },
     ad: {
       id: '',
+      adCreativeId: '',
       name: '',
       message: '',
       image: null,
@@ -125,9 +126,9 @@ export default function CreateCampaignForm({
       'POST',
       {
         name: data.name,
+        image_url: data.image,
         object_story_spec: {
           link_data: {
-            image_url: data.image,
             link: data.redirectUrl,
             message: data.message,
           },
@@ -136,6 +137,30 @@ export default function CreateCampaignForm({
       },
       function (response: any) {
         console.log(response, 'response from ad creative step');
+        setFormData({
+          ...formData,
+          ad: {
+            ...formData.ad,
+            adCreativeId: response.id,
+          },
+        });
+      }
+    );
+
+    //@ts-ignore
+    await FB.api(
+      `/act_${adAccountId}/ads?access_token=${accessToken}`,
+      'POST',
+      {
+        name: formData.ad.name,
+        adset_id: formData.adset.id,
+        creative: {
+          creative_id: formData.ad.adCreativeId,
+        },
+        status: 'ACTIVE',
+      },
+      function (response: any) {
+        console.log(response, 'response from ad step');
       }
     );
   };
