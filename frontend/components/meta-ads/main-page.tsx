@@ -237,6 +237,7 @@ export default function MetaAdsPage() {
         accessToken={metaAdAccounts?.[0]?.accessToken}
         isOpen={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
+        pageId={metaAdAccounts?.[0]?.pageId}
       />
 
       <CreateFormModal

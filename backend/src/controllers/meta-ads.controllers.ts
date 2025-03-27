@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import axios from 'axios';
+import { uploadFile } from '../utils/s3.js';
 
 const MetaController = {
     async getFacebookAccessToken(req: Request, res: Response) {
@@ -52,6 +53,27 @@ const MetaController = {
             });
 
             return res.status(201).json(metaAdAccount);
+        } catch (error) {
+            return res.status(500).json({ message: 'Internal server error' });
+        }
+    },
+
+    async uploadImage(req: Request, res: Response) {
+        try {
+            const user = req.user;
+            if (!user) {
+                return res.status(401).json({ message: 'Unauthorized' });
+            }
+            const image = req.file;
+            console.log(image, 'image');
+
+            if (!image) {
+                return res.status(400).json({ message: 'No image provided' });
+            }
+
+            const imageUrl = await uploadFile(image.buffer, image.originalname + '-' + Date.now(), image.mimetype, 'public');
+
+            return res.status(200).json({ imageUrl });
         } catch (error) {
             return res.status(500).json({ message: 'Internal server error' });
         }

@@ -7,17 +7,11 @@ import { ImageIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { api } from '@/lib/api';
 
 type AdData = {
   name: string;
-  callToAction: string;
+  message: string;
   image: File | null;
   redirectUrl: string;
 };
@@ -40,17 +34,22 @@ export function AdStep({
     updateData({ [name]: value });
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      updateData({ image: file });
-
-      // Create preview URL
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      console.log(file, 'file');
+      const response = await api.post(
+        '/meta-ads/upload-image',
+        { image: file },
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      console.log(response);
+      updateData({ image: response.data.imageUrl.url });
+      setPreviewUrl(response.data.imageUrl.url);
     }
   };
 
@@ -76,23 +75,14 @@ export function AdStep({
           </div>
 
           <div className='grid gap-2'>
-            <Label htmlFor='callToAction'>Call To Action</Label>
-            <Select
-              value={data.callToAction}
-              onValueChange={(value) => handleSelectChange('callToAction', value)}
-            >
-              <SelectTrigger id='callToAction'>
-                <SelectValue placeholder='Select call to action' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='learn_more'>Learn More</SelectItem>
-                <SelectItem value='sign_up'>Sign Up</SelectItem>
-                <SelectItem value='shop_now'>Shop Now</SelectItem>
-                <SelectItem value='book_now'>Book Now</SelectItem>
-                <SelectItem value='contact_us'>Contact Us</SelectItem>
-                <SelectItem value='download'>Download</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor='message'>Description</Label>
+            <Input
+              id='message'
+              name='message'
+              value={data.message}
+              onChange={handleChange}
+              placeholder='Enter description'
+            />
           </div>
 
           <div className='grid gap-2'>

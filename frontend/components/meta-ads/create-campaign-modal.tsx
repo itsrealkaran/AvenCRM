@@ -21,11 +21,13 @@ export default function CreateCampaignForm({
   onClose,
   adAccountId,
   accessToken,
+  pageId,
 }: {
   isOpen: boolean;
   onClose: () => void;
   adAccountId: string[] | null;
   accessToken: string;
+  pageId: string;
 }) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,7 +57,7 @@ export default function CreateCampaignForm({
     ad: {
       id: '',
       name: '',
-      callToAction: '',
+      message: '',
       image: null,
       redirectUrl: '',
     },
@@ -116,6 +118,28 @@ export default function CreateCampaignForm({
     );
   };
 
+  const setAdCreative = async (data: any) => {
+    //@ts-ignore
+    await FB.api(
+      `/act_${adAccountId}/adcreatives?access_token=${accessToken}`,
+      'POST',
+      {
+        name: data.name,
+        object_story_spec: {
+          link_data: {
+            image_url: data.image,
+            link: data.redirectUrl,
+            message: data.message,
+          },
+          page_id: pageId,
+        },
+      },
+      function (response: any) {
+        console.log(response, 'response from ad creative step');
+      }
+    );
+  };
+
   const handleNext = () => {
     if (step < 3) {
       if (
@@ -129,6 +153,14 @@ export default function CreateCampaignForm({
         setCampaignData(formData.campaign);
       } else if (step === 2 && formData.adset.name !== '' && formData.adset.daily_budget !== '') {
         setAdsetData(formData.adset);
+      } else if (
+        step === 3 &&
+        formData.ad.name !== '' &&
+        formData.ad.message !== '' &&
+        formData.ad.image !== null &&
+        formData.ad.redirectUrl !== ''
+      ) {
+        setAdCreative(formData.ad);
       }
       setStep(step + 1);
     }
