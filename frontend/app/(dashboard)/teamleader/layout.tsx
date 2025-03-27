@@ -30,40 +30,16 @@ const menuItems = [
     description: 'Overview of your CRM',
   },
   {
-    heading: 'Manage Team',
-    icon: Users,
-    path: '/teamleader/manage-team',
-    description: 'Team management',
-  },
-  // {
-  //   heading: 'Team Monitoring',
-  //   icon: Monitor,
-  //   path: '/teamleader/team-monitoring',
-  //   description: 'Monitor team performance',
-  // },
-  {
-    heading: 'Meta Ads',
-    icon: Facebook,
-    path: '/teamleader/meta-ads',
-    description: 'Manage Meta advertisements',
-  },
-  {
-    heading: 'WhatsApp',
-    icon: FaWhatsapp,
-    path: '/teamleader/whatsapp-campaign',
-    description: 'Manage WhatsApp campaigns',
-  },
-  {
-    heading: 'Monitoring',
-    icon: Monitor,
-    path: '/teamleader/monitoring',
-    description: 'System monitoring',
-  },
-  {
     heading: 'Properties',
     icon: Building2,
     path: '/teamleader/property',
     description: 'Property management',
+  },
+  {
+    heading: 'Tasks',
+    icon: CheckSquare,
+    path: '/teamleader/tasks',
+    description: 'Task management',
   },
   {
     heading: 'Leads',
@@ -78,22 +54,10 @@ const menuItems = [
     description: 'Deal management',
   },
   {
-    heading: 'Page Builder',
-    icon: FileText,
-    path: '/teamleader/page-builder',
-    description: 'Build and manage pages',
-  },
-  {
-    heading: 'Brochure Builder',
-    icon: FileText,
-    path: '/teamleader/brochure-builder',
-    description: 'Create and manage brochures',
-  },
-  {
-    heading: 'Tasks',
-    icon: CheckSquare,
-    path: '/teamleader/tasks',
-    description: 'Task management',
+    heading: 'Transactions',
+    icon: Wallet,
+    path: '/teamleader/transactions',
+    description: 'Transaction history',
   },
   {
     heading: 'Calendar',
@@ -102,16 +66,46 @@ const menuItems = [
     description: 'Schedule and events',
   },
   {
+    heading: 'WhatsApp',
+    icon: FaWhatsapp,
+    path: '/teamleader/whatsapp-campaign',
+    description: 'Manage WhatsApp campaigns',
+  },
+  {
+    heading: 'Meta Ads',
+    icon: Facebook,
+    path: '/teamleader/meta-ads',
+    description: 'Manage Meta advertisements',
+  },
+  {
     heading: 'Email',
     icon: Mail,
     path: '/teamleader/email',
     description: 'Communication hub',
   },
   {
-    heading: 'Transactions',
-    icon: Wallet,
-    path: '/teamleader/transactions',
-    description: 'Transaction history',
+    heading: 'Brochure Builder',
+    icon: FileText,
+    path: '/teamleader/brochure-builder',
+    description: 'Create and manage brochures',
+  },
+  {
+    heading: 'Page Builder',
+    icon: FileText,
+    path: '/teamleader/page-builder',
+    description: 'Build and manage pages',
+  },
+  {
+    heading: 'Monitoring',
+    icon: Monitor,
+    path: '/teamleader/monitoring',
+    description: 'System monitoring',
+  },
+  {
+    heading: 'Team Manager',
+    icon: Users,
+    path: '/teamleader/manage-team',
+    description: 'Team management',
   },
   {
     heading: 'Notifications',
@@ -119,6 +113,12 @@ const menuItems = [
     path: '/teamleader/notification',
     description: 'Notification management',
   },
+  // {
+  //   heading: 'Team Monitoring',
+  //   icon: Monitor,
+  //   path: '/teamleader/team-monitoring',
+  //   description: 'Monitor team performance',
+  // },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
