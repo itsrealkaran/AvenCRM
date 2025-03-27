@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -20,16 +20,54 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { api } from '@/lib/api';
 
-import type { Form } from './create-form-modal';
+export type Form = {
+  id: string;
+  name: string;
+  questions: JSON[];
+  submissions: number;
+  createdAt: string;
+};
 
 interface FormsListProps {
-  forms: Form[];
   onCreateForm: () => void;
+  accessToken: string;
 }
 
-export function FormsList({ forms, onCreateForm }: FormsListProps) {
+export function FormsList({ onCreateForm, accessToken }: FormsListProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [forms, setForms] = useState<Form[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        setIsLoading(true);
+        const response = await api.get('/meta-ads/forms', {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch forms');
+        }
+
+        const data = response.data;
+        setForms(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch forms');
+        console.error('Error fetching forms:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchForms();
+  }, [accessToken]);
 
   const columns: ColumnDef<Form>[] = [
     {
@@ -47,27 +85,11 @@ export function FormsList({ forms, onCreateForm }: FormsListProps) {
       },
     },
     {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status || 'Active'; // Default to "Active" if status is not set
-        return (
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full ${
-              status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-            }`}
-          >
-            {status}
-          </span>
-        );
-      },
-    },
-    {
       accessorKey: 'fields',
       header: 'Fields',
       cell: ({ row }) => {
-        const fields = row.getValue('fields') as Form['fields'];
-        return fields.length;
+        const fields = row.original.questions as Form['questions'];
+        return Array.isArray(fields) ? fields.length : 0;
       },
     },
     {
@@ -151,7 +173,19 @@ export function FormsList({ forms, onCreateForm }: FormsListProps) {
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {forms.length === 0 && (
+        {isLoading ? (
+          <div className='text-center py-10'>
+            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#5932EA] mx-auto'></div>
+            <p className='mt-2 text-sm text-gray-500'>Loading forms...</p>
+          </div>
+        ) : error ? (
+          <div className='text-center py-10'>
+            <p className='text-red-500'>{error}</p>
+            <Button onClick={() => window.location.reload()} variant='outline' className='mt-2'>
+              Retry
+            </Button>
+          </div>
+        ) : forms.length === 0 ? (
           <div className='text-center py-10'>
             <h3 className='text-lg font-semibold mb-2'>No forms yet</h3>
             <p className='text-muted-foreground mb-4'>Create your first form to get started</p>
@@ -159,8 +193,7 @@ export function FormsList({ forms, onCreateForm }: FormsListProps) {
               Create Form
             </Button>
           </div>
-        )}
-        {forms.length > 0 && (
+        ) : (
           <div className='overflow-auto'>
             <table className='w-full min-w-[800px]'>
               <thead>

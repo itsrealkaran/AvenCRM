@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { useQuery } from '@tanstack/react-query';
 import { Activity, ArrowUpRight, Target, Trophy, Users } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
@@ -66,6 +67,7 @@ export function AdminDashboard() {
   });
 
   const [selectedRevenue, setSelectedRevenue] = useState<'commission' | 'total'>('commission');
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     if (isError) {
@@ -308,9 +310,11 @@ export function AdminDashboard() {
           <CardContent>
             <div className='text-2xl font-bold text-gray-900'>
               $
-              {dashboardData?.revenue[
-                selectedRevenue === 'commission' ? 'commissionRevenue' : 'totalRevenue'
-              ].toLocaleString()}
+              {formatPrice(
+                dashboardData?.revenue[
+                  selectedRevenue === 'commission' ? 'commissionRevenue' : 'totalRevenue'
+                ] || null
+              )}
             </div>
             <div className='flex items-center pt-1'>
               <ArrowUpRight className='h-4 w-4 text-green-500' />

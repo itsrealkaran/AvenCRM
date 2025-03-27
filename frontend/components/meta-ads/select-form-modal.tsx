@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 
-import type { Form } from './create-form-modal';
+import type { Form } from './forms-list';
 
 interface SelectFormModalProps {
   open: boolean;
@@ -41,7 +41,7 @@ export function SelectFormModal({ open, onClose, onSelectForm, forms }: SelectFo
               >
                 <div>
                   <h3 className='font-medium'>{form.name}</h3>
-                  <p className='text-sm text-gray-500'>{form.fields.length} fields</p>
+                  <p className='text-sm text-gray-500'>{form.questions.length} fields</p>
                 </div>
                 <Button variant='outline' size='sm'>
                   Select

@@ -2,14 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
 import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
-import { CreateCampaignModal, type Campaign } from '@/components/meta-ads/create-campaign-modal';
-import { CreateFormModal, type Form } from '@/components/meta-ads/create-form-modal';
+import CreateCampaignModal from '@/components/meta-ads/create-campaign-modal';
+import { CreateFormModal } from '@/components/meta-ads/create-form-modal';
 import { FacebookConnectModal } from '@/components/meta-ads/facebook-connect-modal';
 import { FormsList } from '@/components/meta-ads/forms-list';
 import { MetricsCards } from '@/components/meta-ads/metrics-cards';
@@ -36,9 +35,8 @@ export default function MetaAdsPage() {
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [showFormModal, setShowFormModal] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [campaigns, setCampaigns] = useState<any[]>([]);
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
-  const [forms, setForms] = useState<Form[]>([]);
   const [adAccountId, setAdAccountId] = useState<string[] | null>(null);
   const { company, user } = useAuth();
 
@@ -53,9 +51,9 @@ export default function MetaAdsPage() {
       if (response && !response.error) {
         console.log('Ad Accounts:', response);
         if (response.data.length > 0) {
-          const adAccountId = response.data[0].id; // First Ad Account ID
+          const adAccountId = response.data[0].account_id; // First Ad Account ID
           console.log('Ad Account ID:', adAccountId);
-          console.log(response.data, 'response.data');
+          console.log(response.data, 'response.data from getAdAccountId');
           setAdAccountId(adAccountId);
         } else {
           console.log('No ad accounts found.');
@@ -72,13 +70,11 @@ export default function MetaAdsPage() {
     }
   }, [metaAdAccounts]);
 
-  const handleCreateCampaign = (newCampaign: Campaign) => {
+  const handleCreateCampaign = (newCampaign: any) => {
     setCampaigns([...campaigns, newCampaign]);
   };
 
-  const handleCreateForm = (newForm: Form) => {
-    setForms([...forms, newForm]);
-  };
+  const handleCreateForm = () => {};
 
   const handleFacebookLogin = () => {
     //@ts-ignore
@@ -110,26 +106,31 @@ export default function MetaAdsPage() {
         const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
         const accessToken = response.data.access_token;
         //@ts-ignore
-        FB.api(`/me?access_token=${accessToken}`, { fields: 'name, email' }, (userInfo) => {
-          console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-          console.log(response, 'response');
-          console.log(userInfo, 'userInfo');
+        FB.api(
+          `/me?access_token=${accessToken}`,
+          { fields: 'name, email, accounts' },
+          (userInfo: any) => {
+            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+            console.log(response, 'response');
+            console.log(userInfo, 'userInfo');
 
-          // Save the Facebook connection status
-          api
-            .post('/meta-ads/account', {
-              name: userInfo.name,
-              email: userInfo.email,
-              accessToken: accessToken,
-            })
-            .then(() => {
-              setIsConnected(true);
-              setShowFacebookModal(false);
-            })
-            .catch((error) => {
-              console.error('Error saving Facebook account:', error);
-            });
-        });
+            // Save the Facebook connection status
+            api
+              .post('/meta-ads/account', {
+                name: userInfo.name,
+                email: userInfo.email,
+                accessToken: accessToken,
+                pageId: userInfo.accounts.data[0].id,
+              })
+              .then(() => {
+                setIsConnected(true);
+                setShowFacebookModal(false);
+              })
+              .catch((error) => {
+                console.error('Error saving Facebook account:', error);
+              });
+          }
+        );
         getAdAccountId(accessToken);
       }
     };
@@ -198,7 +199,6 @@ export default function MetaAdsPage() {
               <CampaignsList
                 accessToken={metaAdAccounts[0].accessToken}
                 adAccountId={adAccountId}
-                campaigns={campaigns}
                 onCreateCampaign={() => setShowCampaignModal(true)}
               />
             </TabsContent>
@@ -206,7 +206,10 @@ export default function MetaAdsPage() {
               <ConnectedAccounts metaAdAccounts={metaAdAccounts} />
             </TabsContent>
             <TabsContent value='forms'>
-              <FormsList forms={forms} onCreateForm={() => setShowFormModal(true)} />
+              <FormsList
+                accessToken={metaAdAccounts[0].accessToken}
+                onCreateForm={() => setShowFormModal(true)}
+              />
             </TabsContent>
           </Tabs>
         </>
@@ -230,11 +233,11 @@ export default function MetaAdsPage() {
       />
 
       <CreateCampaignModal
-        open={showCampaignModal}
+        adAccountId={adAccountId}
+        accessToken={metaAdAccounts?.[0]?.accessToken}
+        isOpen={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
-        onOpenFormModal={() => setShowFormModal(true)}
-        onCreateCampaign={handleCreateCampaign}
-        forms={forms}
+        pageId={metaAdAccounts?.[0]?.pageId}
       />
 
       <CreateFormModal

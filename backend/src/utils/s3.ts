@@ -5,6 +5,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 const bucketName = process.env.AWS_S3_BUCKET_NAME
+const publicBucketName = process.env.AWS_S3_PUBLIC_BUCKET_NAME
 const region = process.env.AWS_S3_REGION
 const accessKeyId = process.env.AWS_S3_ACCESS_KEY_ID
 const secretAccessKey = process.env.AWS_S3_SECRET_ACCESS_KEY
@@ -68,13 +69,15 @@ export async function generatePresignedUrl(
   }
 }
 
-export async function uploadFile(fileBuffer: Buffer, fileName: string, mimetype: string): Promise<UploadResult> {
-  if (!bucketName) {
+export async function uploadFile(fileBuffer: Buffer, fileName: string, mimetype: string, bucketType?: 'public' | 'private'): Promise<UploadResult> {
+  const currentBucketName = bucketType === 'public' ? publicBucketName : bucketName
+
+  if (!currentBucketName) {
     throw new Error('AWS S3 Bucket name is not configured');
   }
 
   const uploadParams = {
-    Bucket: bucketName,
+    Bucket: currentBucketName,
     Body: fileBuffer,
     Key: fileName,
     ContentType: mimetype
@@ -84,7 +87,7 @@ export async function uploadFile(fileBuffer: Buffer, fileName: string, mimetype:
     await s3Client.send(new PutObjectCommand(uploadParams));
 
     // Construct the S3 URL manually
-    const imageUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
+    const imageUrl = `https://${currentBucketName}.s3.${region}.amazonaws.com/${fileName}`;
 
     return {
       url: imageUrl,
