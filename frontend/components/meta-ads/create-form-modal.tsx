@@ -18,6 +18,8 @@ interface CreateFormModalProps {
   open: boolean;
   onClose: () => void;
   onCreateForm: (form: LeadForm) => void;
+  pageId: string;
+  accessToken: string;
 }
 
 interface FormQuestion {
@@ -41,7 +43,13 @@ const QUESTION_TYPES = [
   'LAST_NAME',
 ] as const;
 
-export function CreateFormModal({ open, onClose, onCreateForm }: CreateFormModalProps) {
+export function CreateFormModal({
+  open,
+  onClose,
+  onCreateForm,
+  pageId,
+  accessToken,
+}: CreateFormModalProps) {
   const [formName, setFormName] = useState('');
   const [questions, setQuestions] = useState<FormQuestion[]>([
     { type: 'FULL_NAME', key: 'question1' },
@@ -101,11 +109,43 @@ export function CreateFormModal({ open, onClose, onCreateForm }: CreateFormModal
 
   const handleSubmit = async () => {
     if (validateForm()) {
-      const response = await api.post('/meta-ads/form', {
-        name: formName,
-        questions,
-      });
-      console.log(response, 'response');
+      try {
+        return new Promise((resolve, reject) => {
+          // @ts-ignore
+          FB.api(
+            `/${pageId}/leadgen_forms`,
+            'POST',
+            {
+              access_token: accessToken,
+              name: formName,
+              questions: JSON.stringify(questions),
+              privacy_policy: {
+                url: 'https://avencrm.com/privacy-policy',
+              },
+              follow_up_action_url: 'https://avencrm.com',
+              block_display_for_non_targeted_viewer: false, // For Messenger compatibility
+            },
+            async function (response: any) {
+              if (response && !response.error) {
+                console.log('Lead form created:', response);
+                await api.post('/meta-ads/form', {
+                  name: formName,
+                  formId: response.id,
+                  questions,
+                });
+                console.log(response, 'response');
+                resolve(response.id);
+              } else {
+                console.error('Error creating lead form:', response?.error);
+                reject(response?.error);
+              }
+            }
+          );
+        });
+      } catch (error) {
+        console.error('Error in createFacebookLeadForm:', error);
+        throw error;
+      }
     }
   };
 

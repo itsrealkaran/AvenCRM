@@ -31,43 +31,13 @@ export type Form = {
 };
 
 interface FormsListProps {
+  data: Form[];
   onCreateForm: () => void;
   accessToken: string;
 }
 
-export function FormsList({ onCreateForm, accessToken }: FormsListProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [forms, setForms] = useState<Form[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchForms = async () => {
-      try {
-        setIsLoading(true);
-        const response = await api.get('/meta-ads/forms', {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (response.status !== 200) {
-          throw new Error('Failed to fetch forms');
-        }
-
-        const data = response.data;
-        setForms(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch forms');
-        console.error('Error fetching forms:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchForms();
-  }, [accessToken]);
+export function FormsList({ data, onCreateForm, accessToken }: FormsListProps) {
+  const [sorting, setSorting] = useState<SortingState>([]);
 
   const columns: ColumnDef<Form>[] = [
     {
@@ -137,7 +107,7 @@ export function FormsList({ onCreateForm, accessToken }: FormsListProps) {
   ];
 
   const table = useReactTable({
-    data: forms,
+    data: data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -173,19 +143,9 @@ export function FormsList({ onCreateForm, accessToken }: FormsListProps) {
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {isLoading ? (
-          <div className='text-center py-10'>
-            <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#5932EA] mx-auto'></div>
-            <p className='mt-2 text-sm text-gray-500'>Loading forms...</p>
-          </div>
-        ) : error ? (
-          <div className='text-center py-10'>
-            <p className='text-red-500'>{error}</p>
-            <Button onClick={() => window.location.reload()} variant='outline' className='mt-2'>
-              Retry
-            </Button>
-          </div>
-        ) : forms.length === 0 ? (
+        {data.length === 0 ? (
+          <p className='mt-2 text-sm text-gray-500'>Loading forms...</p>
+        ) : data.length === 0 ? (
           <div className='text-center py-10'>
             <h3 className='text-lg font-semibold mb-2'>No forms yet</h3>
             <p className='text-muted-foreground mb-4'>Create your first form to get started</p>

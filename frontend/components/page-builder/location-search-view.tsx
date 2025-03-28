@@ -5,7 +5,7 @@ import { ArrowLeft, RefreshCw, Share } from 'lucide-react';
 
 import LocationSearchTemplate from '@/components/page-builder/location-search-template';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card'; 
+import { Card } from '@/components/ui/card';
 
 // Sample property data
 const properties = [

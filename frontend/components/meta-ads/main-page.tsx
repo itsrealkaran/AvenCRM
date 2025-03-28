@@ -38,6 +38,7 @@ export default function MetaAdsPage() {
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [adAccountId, setAdAccountId] = useState<string[] | null>(null);
+  const [leadForms, setLeadForms] = useState<any[]>([]);
   const { company, user } = useAuth();
 
   const { data: metaAdAccounts, isLoading } = useQuery({
@@ -63,6 +64,30 @@ export default function MetaAdsPage() {
       }
     });
   };
+
+  useEffect(() => {
+    const fetchForms = async () => {
+      try {
+        const response = await api.get('/meta-ads/forms', {
+          headers: {
+            Authorization: `Bearer ${metaAdAccounts[0].accessToken}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.status !== 200) {
+          throw new Error('Failed to fetch forms');
+        }
+
+        const data = response.data;
+        setLeadForms(data);
+      } catch (err) {
+        console.error('Error fetching forms:', err);
+      }
+    };
+
+    fetchForms();
+  }, [metaAdAccounts]);
 
   useEffect(() => {
     if (metaAdAccounts?.length > 0) {
@@ -207,6 +232,7 @@ export default function MetaAdsPage() {
             </TabsContent>
             <TabsContent value='forms'>
               <FormsList
+                data={leadForms}
                 accessToken={metaAdAccounts[0].accessToken}
                 onCreateForm={() => setShowFormModal(true)}
               />
@@ -244,6 +270,8 @@ export default function MetaAdsPage() {
         open={showFormModal}
         onClose={() => setShowFormModal(false)}
         onCreateForm={handleCreateForm}
+        pageId={metaAdAccounts?.[0]?.pageId}
+        accessToken={metaAdAccounts?.[0]?.accessToken}
       />
     </Card>
   );

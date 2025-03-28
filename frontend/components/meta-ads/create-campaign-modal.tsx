@@ -39,6 +39,8 @@ export default function CreateCampaignForm({
       special_ad_categories: '',
       special_ad_category_country: '',
       start_time: '',
+      formId: '',
+      pageId: pageId,
     },
     adset: {
       id: '',
