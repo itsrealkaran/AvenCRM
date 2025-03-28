@@ -8,6 +8,13 @@ import * as z from 'zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -139,28 +146,30 @@ const CompanyForm = () => {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Currency</FormLabel>
-                  <FormControl>
-                    <select
-                      {...field}
-                      className='w-full rounded-md border border-input bg-background px-3 py-2'
-                    >
-                      <option value='USD'>USD ($)</option>
-                      <option value='EUR'>EUR (€)</option>
-                      <option value='GBP'>GBP (£)</option>
-                      <option value='JPY'>JPY (¥)</option>
-                      <option value='CAD'>CAD ($)</option>
-                      <option value='AUD'>AUD ($)</option>
-                      <option value='INR'>INR (₹)</option>
-                      <option value='AED'>AED (AED)</option>
-                    </select>
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder='Select currency' />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value='USD'>USD ($)</SelectItem>
+                      <SelectItem value='EUR'>EUR (€)</SelectItem>
+                      <SelectItem value='GBP'>GBP (£)</SelectItem>
+                      <SelectItem value='JPY'>JPY (¥)</SelectItem>
+                      <SelectItem value='CAD'>CAD ($)</SelectItem>
+                      <SelectItem value='AUD'>AUD ($)</SelectItem>
+                      <SelectItem value='INR'>INR (₹)</SelectItem>
+                      <SelectItem value='AED'>AED (AED)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </FormItem>
               )}
             />
           </div>
         </div>
 
-        <div className='flex justify-end mt-6'>
+        <div className='flex justify-start'>
           <Button type='submit' disabled={updateCompany.isPending || !form.formState.isDirty}>
             {updateCompany.isPending ? (
               <>

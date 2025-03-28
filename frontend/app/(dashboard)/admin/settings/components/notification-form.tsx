@@ -57,9 +57,9 @@ export function NotificationForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <div className='grid gap-6'>
-          <Card className='p-6'>
+      <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+        <div className='space-y-6'>
+          {/* <Card className='p-6'>
             <h3 className='text-lg font-medium mb-4'>Email Notifications</h3>
             <div className='space-y-4'>
               <FormField
@@ -97,7 +97,7 @@ export function NotificationForm() {
                 )}
               />
             </div>
-          </Card>
+          </Card> */}
 
           <Card className='p-6'>
             <h3 className='text-lg font-medium mb-4'>Push Notifications</h3>
@@ -140,7 +140,7 @@ export function NotificationForm() {
           </Card>
         </div>
 
-        <Button type='submit' disabled={isUpdatingNotifications}>
+        <Button type='submit' className='w-full md:w-auto' disabled={isUpdatingNotifications}>
           {isUpdatingNotifications ? 'Saving...' : 'Save Preferences'}
         </Button>
       </form>
