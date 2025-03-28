@@ -3,17 +3,16 @@
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import {
   Bell,
+  Briefcase,
   Building2,
   Calendar,
-  CheckSquare,
   Facebook,
+  FileCheck2,
   FileText,
-  Handshake,
   LayoutDashboard,
-  LineChart,
   Mail,
-  Monitor,
-  Store,
+  PanelsTopLeft,
+  Users,
   Wallet,
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -29,76 +28,28 @@ const menuItems = [
     description: 'Overview of your CRM',
   },
   {
-    heading: 'Meta Ads',
-    icon: Facebook,
-    path: '/agent/meta-ads',
-    description: 'Manage Meta advertisements',
-  },
-  {
-    heading: 'WhatsApp',
-    icon: FaWhatsapp,
-    path: '/agent/whatsapp-campaign',
-    description: 'Manage WhatsApp campaigns',
-  },
-  // {
-  //   heading: 'Monitoring',
-  //   icon: Monitor,
-  //   path: '/agent/monitoring',
-  //   description: 'System monitoring',
-  // },
-  {
     heading: 'Properties',
     icon: Building2,
     path: '/agent/property',
     description: 'Property management',
   },
   {
-    heading: 'Brochure Builder',
-    icon: FileText,
-    path: '/agent/brochure-builder',
-    description: 'Create and manage brochures',
+    heading: 'Tasks',
+    icon: FileCheck2,
+    path: '/agent/tasks',
+    description: 'Task management',
   },
   {
     heading: 'Leads',
-    icon: Store,
+    icon: Users,
     path: '/agent/leads',
     description: 'Lead management',
   },
   {
     heading: 'Deals',
-    icon: Handshake,
+    icon: Briefcase,
     path: '/agent/deals',
     description: 'Deal management',
-  },
-  // {
-  //   heading: 'Page Builder',
-  //   icon: FileText,
-  //   path: '/agent/page-builder',
-  //   description: 'Build and manage pages',
-  // },
-  // {
-  //   heading: 'Marketing',
-  //   icon: LineChart,
-  //   path: '/agent/marketing',
-  //   description: 'Marketing management',
-  // },
-  {
-    heading: 'Tasks',
-    icon: CheckSquare,
-    path: '/agent/tasks',
-    description: 'Task management',
-  },
-  {
-    heading: 'Calendar',
-    icon: Calendar,
-    path: '/agent/calendar',
-    description: 'Schedule and events',
-  },
-  {
-    heading: 'Email',
-    icon: Mail,
-    path: '/agent/email',
-    description: 'Communication hub',
   },
   {
     heading: 'Transactions',
@@ -107,11 +58,53 @@ const menuItems = [
     description: 'Transaction history',
   },
   {
+    heading: 'Calendar',
+    icon: Calendar,
+    path: '/agent/calendar',
+    description: 'Schedule and events',
+  },
+  {
+    heading: 'WhatsApp',
+    icon: FaWhatsapp,
+    path: '/agent/whatsapp-campaign',
+    description: 'Manage WhatsApp campaigns',
+  },
+  {
+    heading: 'Meta Ads',
+    icon: Facebook,
+    path: '/agent/meta-ads',
+    description: 'Manage Meta advertisements',
+  },
+  {
+    heading: 'Email',
+    icon: Mail,
+    path: '/agent/email',
+    description: 'Communication hub',
+  },
+  {
+    heading: 'Brochure Builder',
+    icon: FileText,
+    path: '/agent/brochure-builder',
+    description: 'Create and manage brochures',
+  },
+  {
+    heading: 'Page Builder',
+    icon: PanelsTopLeft,
+    path: '/agent/page-builder',
+    description: 'Build and manage pages',
+  },
+  {
     heading: 'Notifications',
     icon: Bell,
     path: '/agent/notification',
     description: 'Notification management',
   },
+  // {
+  //   heading: 'Monitoring',
+  //   icon: Monitor,
+  //   path: '/agent/monitoring',
+  //   description: 'System monitoring',
+  // },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
