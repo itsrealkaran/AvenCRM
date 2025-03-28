@@ -3,18 +3,18 @@
 import { CurrencyProvider } from '@/contexts/CurrencyContext';
 import {
   Bell,
+  Briefcase,
   Building2,
   Calendar,
   CheckSquare,
-  Briefcase,
   Facebook,
   FileText,
+  Handshake,
   LayoutDashboard,
   Mail,
   Monitor,
   PanelsTopLeft,
   Users,
-  Handshake,
   Wallet,
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
