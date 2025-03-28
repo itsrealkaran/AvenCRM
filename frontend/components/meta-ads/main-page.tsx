@@ -270,6 +270,8 @@ export default function MetaAdsPage() {
         open={showFormModal}
         onClose={() => setShowFormModal(false)}
         onCreateForm={handleCreateForm}
+        pageId={metaAdAccounts?.[0]?.pageId}
+        accessToken={metaAdAccounts?.[0]?.accessToken}
       />
     </Card>
   );

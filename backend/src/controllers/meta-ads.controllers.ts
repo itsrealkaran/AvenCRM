@@ -105,11 +105,11 @@ const MetaController = {
                 return res.status(401).json({ message: 'Unauthorized' });
             }
 
-            const { name, questions } = req.body;
+            const { name, questions, formId } = req.body;
 
             const leadForm = await prisma.leadForm.create({
                 data: {
-                    name, questions, agentId: user.id,
+                    name, questions, agentId: user.id, formId,
                 },
             });
 

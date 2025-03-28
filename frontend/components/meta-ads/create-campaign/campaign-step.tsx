@@ -128,6 +128,10 @@ export function CampaignStep({
             access_token: accessToken,
             name: selectedForm.name,
             questions: JSON.stringify(selectedForm.questions),
+            privacy_policy: {
+              url: 'https://avencrm.com/privacy-policy',
+            },
+            follow_up_action_url: 'https://avencrm.com',
             block_display_for_non_targeted_viewer: false, // For Messenger compatibility
           },
           function (response: any) {
@@ -368,6 +372,8 @@ export function CampaignStep({
           setForms(updatedForms);
           setIsCreateFormOpen(false);
         }}
+        pageId={data.pageId}
+        accessToken={accessToken}
       />
     </>
   );

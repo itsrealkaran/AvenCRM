@@ -832,6 +832,8 @@ model LeadForm {
   name String
   questions Json
 
+  formId String?
+
   agentId String
   agent   User   @relation(fields: [agentId], references: [id])
 
