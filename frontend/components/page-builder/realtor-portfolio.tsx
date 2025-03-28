@@ -206,7 +206,7 @@ export default function RealtorPortfolio({ realtorData }: { realtorData: any }) 
                         <Star className='h-5 w-5 fill-primary' />
                         <Star className='h-5 w-5 fill-primary' />
                       </div>
-                      <p className='mb-4 italic'>"{testimonial.text}"</p>
+                      <p className='mb-4 italic'>&quot;{testimonial.text}&quot;</p>
                       <div className='flex items-center gap-3'>
                         <Avatar className='border-2 border-primary'>
                           <AvatarImage src={`/placeholder.svg?height=40&width=40&text=${i}`} />
@@ -243,7 +243,7 @@ export default function RealtorPortfolio({ realtorData }: { realtorData: any }) 
                 Get in Touch
               </h2>
               <p className='text-lg text-muted-foreground'>
-                Ready to find your dream home or sell your property? Let's connect!
+                Ready to find your dream home or sell your property? Let&apos;s connect!
               </p>
             </div>
             <div className='grid md:grid-cols-2 gap-8 items-center'>

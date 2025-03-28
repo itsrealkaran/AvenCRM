@@ -6,6 +6,7 @@ import { ArrowLeft, RefreshCw, Share } from 'lucide-react';
 import DocumentDownloadTemplate from '@/components/page-builder/document-download-template';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+
 // Sample document data
 const documents = [
   {
