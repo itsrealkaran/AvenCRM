@@ -117,40 +117,6 @@ export function CampaignStep({
     updateData({ [name]: value });
   };
 
-  const createFacebookLeadForm = async (selectedForm: any) => {
-    try {
-      return new Promise((resolve, reject) => {
-        // @ts-ignore
-        FB.api(
-          `/${data.pageId}/leadgen_forms`,
-          'POST',
-          {
-            access_token: accessToken,
-            name: selectedForm.name,
-            questions: JSON.stringify(selectedForm.questions),
-            privacy_policy: {
-              url: 'https://avencrm.com/privacy-policy',
-            },
-            follow_up_action_url: 'https://avencrm.com',
-            block_display_for_non_targeted_viewer: false, // For Messenger compatibility
-          },
-          function (response: any) {
-            if (response && !response.error) {
-              console.log('Lead form created:', response);
-              resolve(response.id);
-            } else {
-              console.error('Error creating lead form:', response?.error);
-              reject(response?.error);
-            }
-          }
-        );
-      });
-    } catch (error) {
-      console.error('Error in createFacebookLeadForm:', error);
-      throw error;
-    }
-  };
-
   return (
     <>
       <Card>
@@ -199,22 +165,15 @@ export function CampaignStep({
                         onValueChange={(value) => {
                           handleSelectChange('formId', value);
 
-                          const selectedForm = forms.find((form) => form.id === value);
+                          const selectedForm = forms.find((form) => form.formId === value);
 
                           if (!selectedForm) return;
 
-                          createFacebookLeadForm(selectedForm)
-                            .then((fbFormId) => {
-                              handleSelectChange('formId', fbFormId as string);
-                              handleSelectChange(
-                                'formQuestions',
-                                JSON.stringify(selectedForm.questions)
-                              );
-                            })
-                            .catch((error) => {
-                              console.error('Error creating Facebook form:', error);
-                              handleSelectChange('formId', '');
-                            });
+                          handleSelectChange(
+                            'formQuestions',
+                            JSON.stringify(selectedForm.questions)
+                          );
+                          handleSelectChange('formId', selectedForm.formId || '');
                         }}
                         disabled={forms.length === 0}
                       >

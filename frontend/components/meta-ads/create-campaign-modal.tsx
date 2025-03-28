@@ -134,6 +134,12 @@ export default function CreateCampaignForm({
             image_url: data.image,
             object_story_spec: {
               link_data: {
+                ...(formData.campaign.formId && {
+                  call_to_action: {
+                    type: 'LEARN_MORE',
+                    lead_gen_form_id: formData.campaign.formId,
+                  },
+                }),
                 link: data.redirectUrl,
                 message: data.message,
               },

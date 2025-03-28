@@ -26,6 +26,7 @@ export type Form = {
   id: string;
   name: string;
   questions: JSON[];
+  formId?: string;
   submissions: number;
   createdAt: string;
 };
