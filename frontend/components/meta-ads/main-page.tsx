@@ -40,8 +40,7 @@ export default function MetaAdsPage() {
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [adAccountId, setAdAccountId] = useState<string | null>(null);
   const [leadForms, setLeadForms] = useState<any[]>([]);
-  const { company, user } = useAuth();
-  const router = useRouter();
+  const { company } = useAuth();
   const { data: metaAdAccounts, isLoading } = useQuery({
     queryKey: ['meta-ad-accounts'],
     queryFn: () => getMetaAdAccounts(),
@@ -166,7 +165,7 @@ export default function MetaAdsPage() {
               .then(() => {
                 setIsConnected(true);
                 setShowFacebookModal(false);
-                router.refresh();
+                window.location.reload();
               })
               .catch((error) => {
                 console.error('Error saving Facebook account:', error);

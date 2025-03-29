@@ -7,14 +7,24 @@ const MetaController = {
     async getFacebookAccessToken(req: Request, res: Response) {
         try {
             const { code } = req.params;
-            console.log('Code:', code);
             const response = await axios.get(
-            `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}`
+                `https://graph.facebook.com/v22.0/oauth/access_token`,
+                {
+                    params: {
+                        client_id: process.env.META_ADS_CLIENT_ID,
+                        client_secret: process.env.META_ADS_CLIENT_SECRET,
+                        code: code
+                    },
+                    timeout: 5000 
+                }
             );
-            console.log('Response:', response);
-            return res.status(200).json({access_token: response.data.access_token});
-        } catch (error) {
-            return res.status(500).json({ message: 'Internal server error' });
+            return res.status(200).json({ access_token: response.data.access_token });
+        } catch (error: any) {
+            console.error('Facebook API Error:', error.message);
+            return res.status(500).json({ 
+                error: error.message,
+                code: error.code || 'UNKNOWN_ERROR'
+            });
         }
     },
 
