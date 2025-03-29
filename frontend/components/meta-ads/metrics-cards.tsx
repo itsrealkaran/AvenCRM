@@ -1,33 +1,48 @@
+import { useCurrency } from '@/contexts/CurrencyContext';
 import { DollarSign, Target, Trophy, Users } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
 
-export function MetricsCards() {
+interface MetricsCardsProps {
+  totalCampaigns: number;
+  activeCampaigns: number;
+  successfulCampaigns: number;
+  totalSpend: number;
+}
+
+export function MetricsCards({
+  totalCampaigns,
+  activeCampaigns,
+  successfulCampaigns,
+  totalSpend,
+}: MetricsCardsProps) {
+  const { formatPrice } = useCurrency();
+
   const metrics = [
     {
       title: 'Total Campaigns',
-      value: '12',
+      value: totalCampaigns,
       change: '+12%',
       icon: Target,
       iconColor: 'text-blue-500',
     },
     {
       title: 'Active Campaigns',
-      value: '8',
+      value: activeCampaigns,
       change: '+8%',
       icon: Users,
       iconColor: 'text-green-500',
     },
     {
       title: 'Successful Campaigns',
-      value: '24',
+      value: successfulCampaigns,
       change: '+15%',
       icon: Trophy,
       iconColor: 'text-purple-500',
     },
     {
       title: 'Total Spend',
-      value: '$2,400',
+      value: formatPrice(totalSpend),
       change: '+20%',
       icon: DollarSign,
       iconColor: 'text-yellow-500',

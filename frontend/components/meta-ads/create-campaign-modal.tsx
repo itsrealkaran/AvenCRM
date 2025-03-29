@@ -137,7 +137,9 @@ export default function CreateCampaignForm({
                 ...(formData.campaign.formId && {
                   call_to_action: {
                     type: 'LEARN_MORE',
-                    lead_gen_form_id: formData.campaign.formId,
+                    value: {
+                      lead_gen_form_id: formData.campaign.formId,
+                    },
                   },
                 }),
                 link: data.redirectUrl,

@@ -185,7 +185,7 @@ export function CampaignStep({
                         </SelectTrigger>
                         <SelectContent>
                           {forms.map((form) => (
-                            <SelectItem key={form.id} value={form.id}>
+                            <SelectItem key={form.formId} value={form.formId || ''}>
                               {form.name}
                             </SelectItem>
                           ))}

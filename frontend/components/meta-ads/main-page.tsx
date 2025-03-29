@@ -95,9 +95,24 @@ export default function MetaAdsPage() {
     }
   }, [metaAdAccounts]);
 
-  const handleCreateCampaign = (newCampaign: any) => {
-    setCampaigns([...campaigns, newCampaign]);
-  };
+  useEffect(() => {
+    if (metaAdAccounts?.length > 0) {
+      // @ts-ignore
+      FB.api(
+        `/act_${adAccountId}/campaigns?access_token=${metaAdAccounts[0].accessToken}`,
+        {
+          effective_status: '["ACTIVE","PAUSED"]',
+          fields: 'name,objective,status,created_time',
+        },
+        function (response: any) {
+          if (response && !response.error) {
+            console.log(response, 'response from get campaigns');
+            setCampaigns(response.data);
+          }
+        }
+      );
+    }
+  }, [metaAdAccounts, adAccountId]);
 
   const handleCreateForm = () => {};
 
@@ -213,7 +228,14 @@ export default function MetaAdsPage() {
 
       {isConnected ? (
         <>
-          <MetricsCards />
+          <MetricsCards
+            totalCampaigns={campaigns.length}
+            activeCampaigns={campaigns.filter((campaign) => campaign.status === 'ACTIVE').length}
+            successfulCampaigns={
+              campaigns.filter((campaign) => campaign.status === 'ACTIVE').length
+            }
+            totalSpend={2000}
+          />
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
@@ -225,6 +247,7 @@ export default function MetaAdsPage() {
                 accessToken={metaAdAccounts[0].accessToken}
                 adAccountId={adAccountId}
                 onCreateCampaign={() => setShowCampaignModal(true)}
+                campaigns={campaigns}
               />
             </TabsContent>
             <TabsContent value='accounts'>
