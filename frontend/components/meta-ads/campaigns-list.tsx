@@ -34,7 +34,7 @@ interface Campaign {
 interface CampaignsListProps {
   onCreateCampaign: () => void;
   accessToken: string;
-  adAccountId: string[] | null;
+  adAccountId: string | null;
   campaigns: Campaign[];
 }
 
@@ -50,7 +50,21 @@ export function CampaignsList({
   const { toast } = useToast();
 
   const onEditCampaign = (campaign: Campaign) => {
-    console.log(campaign, 'campaign from edit');
+    //@ts-ignore
+    FB.api(
+      `/${campaign.id}?access_token=${accessToken}`,
+      'POST',
+      {
+        status: campaign.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE',
+      },
+      function (response: any) {
+        console.log(response, 'response from edit campaign');
+        toast({
+          title: 'Campaign updated',
+          description: 'Campaign updated successfully',
+        });
+      }
+    );
   };
 
   const onDeleteCampaign = (campaignId: string) => {
@@ -343,8 +357,16 @@ export function CampaignsList({
                 {/* Add more campaign details as needed */}
 
                 <div className='col-span-2 pt-4 flex justify-end space-x-2'>
-                  <Button variant='outline' onClick={() => onEditCampaign(selectedCampaign)}>
-                    Edit Campaign
+                  <Button
+                    variant='outline'
+                    className={`${
+                      selectedCampaign.status !== 'ACTIVE'
+                        ? 'bg-[#E8FFF3] hover:bg-[#E8FFF3]/90'
+                        : 'bg-[#fef2cd] hover:bg-[#FFF9E7]/90'
+                    } border-gray-100`}
+                    onClick={() => onEditCampaign(selectedCampaign)}
+                  >
+                    {selectedCampaign.status === 'ACTIVE' ? 'Pause Campaign' : 'Resume Campaign'}
                   </Button>
                   <Button
                     variant='destructive'

@@ -1,12 +1,19 @@
 'use client';
 
 import type React from 'react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ImageIcon } from 'lucide-react';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { api } from '@/lib/api';
 
 type AdData = {
@@ -14,25 +21,71 @@ type AdData = {
   message: string;
   image: File | null;
   redirectUrl: string;
+  callToAction: string;
 };
 
 export function AdStep({
   data,
   updateData,
+  adAccountId,
+  accessToken,
+  formData,
+  pageId,
 }: {
   data: AdData;
   updateData: (data: Partial<AdData>) => void;
+  adAccountId: string;
+  accessToken: string;
+  formData: any;
+  pageId: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewIFrame, setPreviewIFrame] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateData({ [e.target.name]: e.target.value });
   };
 
-  const handleSelectChange = (name: string, value: string) => {
-    updateData({ [name]: value });
-  };
+  useEffect(() => {
+    if (data.image) {
+      const creative = {
+        ...(data.name ? { name: data.name } : {}),
+        image_url: data.image,
+        ...(data.redirectUrl ? { link: data.redirectUrl } : {}),
+        ...(data.message ? { message: data.message } : {}),
+        object_story_spec: {
+          link_data: {
+            picture: data.image,
+            call_to_action: {
+              type: data.callToAction,
+            },
+            ...(formData.campaign.formId && {
+              call_to_action: {
+                type: 'LEARN_MORE',
+                value: {
+                  lead_gen_form_id: formData.campaign.formId,
+                },
+              },
+            }),
+            link: data.redirectUrl,
+            message: data.message,
+          },
+          page_id: pageId,
+        },
+      };
+      console.log(JSON.stringify(creative), 'creative');
+      //@ts-ignore
+      FB.api(
+        `/act_${adAccountId}/generatepreviews?access_token=${accessToken}&ad_format=MOBILE_FEED_STANDARD&creative=${JSON.stringify(creative)}`,
+        'GET',
+        (response: any) => {
+          console.log(response, 'response');
+          setPreviewIFrame(response.data[0].body);
+        }
+      );
+    }
+  }, [data.name, data.message, data.image, data.redirectUrl, data.callToAction]);
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -60,8 +113,8 @@ export function AdStep({
   };
 
   return (
-    <Card>
-      <CardContent className='pt-6'>
+    <Card className='flex'>
+      <CardContent className='pt-6 flex-1 w-[50%]'>
         <div className='space-y-4'>
           <div className='grid gap-2'>
             <Label htmlFor='adName'>Ad Name</Label>
@@ -83,6 +136,26 @@ export function AdStep({
               onChange={handleChange}
               placeholder='Enter description'
             />
+          </div>
+
+          {/* make a dropdown for the call to action with the options OPEN_LINK, WHATSAPP_MESSAGE, MAKE_AN_APPOINTMENT, LEARN_MORE */}
+          <div className='grid gap-2'>
+            <Label htmlFor='callToAction'>Call to Action</Label>
+            <Select
+              name='callToAction'
+              value={data.callToAction}
+              onValueChange={(value) => updateData({ callToAction: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder='Select a call to action' />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value='OPEN_LINK'>OPEN_LINK</SelectItem>
+                <SelectItem value='WHATSAPP_MESSAGE'>WHATSAPP_MESSAGE</SelectItem>
+                <SelectItem value='MAKE_AN_APPOINTMENT'>MAKE_AN_APPOINTMENT</SelectItem>
+                <SelectItem value='LEARN_MORE'>LEARN_MORE</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className='grid gap-2'>
@@ -136,6 +209,15 @@ export function AdStep({
             />
           </div>
         </div>
+      </CardContent>
+      <CardContent className='pt-6 w-[50%]'>
+        {previewIFrame ? (
+          <div className='overflow-x-auto' dangerouslySetInnerHTML={{ __html: previewIFrame }} />
+        ) : (
+          <div className='flex items-center justify-center h-full'>
+            <p className='text-muted-foreground'>No preview available</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

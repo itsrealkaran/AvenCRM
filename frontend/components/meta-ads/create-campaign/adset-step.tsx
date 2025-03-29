@@ -144,7 +144,7 @@ export function AdsetStep({
       <CardContent className='pt-6'>
         <div className='space-y-4'>
           <div className='grid gap-2'>
-            <Label htmlFor='adsetName'>Ad Name</Label>
+            <Label htmlFor='adsetName'>AdSet Name</Label>
             <Input
               id='adsetName'
               name='name'

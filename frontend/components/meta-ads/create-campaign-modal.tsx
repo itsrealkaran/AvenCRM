@@ -25,7 +25,7 @@ export default function CreateCampaignForm({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  adAccountId: string[] | null;
+  adAccountId: string | null;
   accessToken: string;
   pageId: string;
 }) {
@@ -63,6 +63,7 @@ export default function CreateCampaignForm({
       message: '',
       image: null,
       redirectUrl: '',
+      callToAction: 'LEARN_MORE',
     },
   };
   const [formData, setFormData] = useState(defaultValues);
@@ -134,6 +135,10 @@ export default function CreateCampaignForm({
             image_url: data.image,
             object_story_spec: {
               link_data: {
+                picture: data.image,
+                call_to_action: {
+                  type: data.callToAction,
+                },
                 ...(formData.campaign.formId && {
                   call_to_action: {
                     type: 'LEARN_MORE',
@@ -272,7 +277,14 @@ export default function CreateCampaignForm({
             />
           )}
           {step === 3 && (
-            <AdStep data={formData.ad} updateData={(data) => updateFormData('ad', data)} />
+            <AdStep
+              pageId={pageId}
+              formData={formData}
+              data={formData.ad}
+              updateData={(data) => updateFormData('ad', data)}
+              adAccountId={adAccountId ?? ''}
+              accessToken={accessToken}
+            />
           )}
         </form>
         <DialogFooter>
