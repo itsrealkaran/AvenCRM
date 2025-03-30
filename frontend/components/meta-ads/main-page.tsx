@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -40,10 +39,19 @@ export default function MetaAdsPage() {
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [adAccountId, setAdAccountId] = useState<string | null>(null);
   const [leadForms, setLeadForms] = useState<any[]>([]);
+  const [insights, setInsights] = useState<any[]>([]);
   const { company } = useAuth();
-  const { data: metaAdAccounts, isLoading } = useQuery({
+
+  const {
+    data: metaAdAccounts,
+    isLoading,
+    refetch: refetchMetaAdAccounts,
+  } = useQuery({
     queryKey: ['meta-ad-accounts'],
     queryFn: () => getMetaAdAccounts(),
+    retry: 3,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 
   const getAdAccountId = async (accessToken: string) => {
@@ -111,6 +119,16 @@ export default function MetaAdsPage() {
           }
         }
       );
+      //@ts-ignore
+      FB.api(
+        `/act_${adAccountId}/insights?access_token=${metaAdAccounts[0].accessToken}`,
+        function (response: any) {
+          if (response && !response.error) {
+            console.log(response, 'response from get insights');
+            setInsights(response.data);
+          }
+        }
+      );
     }
   }, [metaAdAccounts, adAccountId]);
 
@@ -143,36 +161,42 @@ export default function MetaAdsPage() {
   useEffect(() => {
     const fetchFacebookAccessToken = async () => {
       if (facebookCode) {
-        const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
-        const accessToken = response.data.access_token;
-        //@ts-ignore
-        FB.api(
-          `/me?access_token=${accessToken}`,
-          { fields: 'name, email, accounts' },
-          (userInfo: any) => {
-            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-            console.log(response, 'response');
-            console.log(userInfo, 'userInfo');
+        try {
+          const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
+          const accessToken = response.data.access_token;
 
-            // Save the Facebook connection status
-            api
-              .post('/meta-ads/account', {
-                name: userInfo.name,
-                email: userInfo.email,
-                accessToken: accessToken,
-                pageId: userInfo.accounts.data[0].id,
-              })
-              .then(() => {
+          //@ts-ignore
+          FB.api(
+            `/me?access_token=${accessToken}`,
+            { fields: 'name, email, accounts' },
+            async (userInfo: any) => {
+              try {
+                await api.post('/meta-ads/account', {
+                  name: userInfo.name,
+                  email: userInfo.email,
+                  accessToken: accessToken,
+                  pageId: userInfo.accounts.data[0].id,
+                });
+
                 setIsConnected(true);
                 setShowFacebookModal(false);
-                window.location.reload();
-              })
-              .catch((error) => {
+
+                // Wait for the backend to process
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                // Refetch meta ad accounts
+                await refetchMetaAdAccounts();
+
+                // Only call getAdAccountId after we have the updated data
+                getAdAccountId(accessToken);
+              } catch (error) {
                 console.error('Error saving Facebook account:', error);
-              });
-          }
-        );
-        getAdAccountId(accessToken);
+              }
+            }
+          );
+        } catch (error) {
+          console.error('Error fetching access token:', error);
+        }
       }
     };
     fetchFacebookAccessToken();
@@ -190,6 +214,12 @@ export default function MetaAdsPage() {
     return <MetaAdsPlaceholder />;
   }
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const accessToken = metaAdAccounts?.[0]?.accessToken;
+
   return (
     <Card className='p-6 space-y-6 min-h-full'>
       <div className='flex justify-between items-center'>
@@ -203,7 +233,7 @@ export default function MetaAdsPage() {
             <Loader2 className='w-4 h-4 mr-2 animate-spin' />
             Loading...
           </Button>
-        ) : isConnected && metaAdAccounts?.length > 0 ? (
+        ) : accessToken ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
@@ -227,9 +257,10 @@ export default function MetaAdsPage() {
         )}
       </div>
 
-      {isConnected ? (
+      {accessToken ? (
         <>
           <MetricsCards
+            insights={insights}
             totalCampaigns={campaigns.length}
             activeCampaigns={campaigns.filter((campaign) => campaign.status === 'ACTIVE').length}
             successfulCampaigns={
