@@ -20,5 +20,6 @@ router.get('/forms', MetaController.getLeadForms);
 router.post('/account', MetaController.createMetaAdAccount);
 router.post('/upload-image', upload.single('image'), MetaController.uploadImage);
 router.post('/form', MetaController.createLeadForm);
+router.delete('/account/:id', MetaController.deleteMetaAdAccount);
 
 export default router;

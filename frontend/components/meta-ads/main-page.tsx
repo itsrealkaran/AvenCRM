@@ -43,7 +43,11 @@ export default function MetaAdsPage() {
   const { company } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: metaAdAccounts, isLoading } = useQuery({
+  const {
+    data: metaAdAccounts,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ['meta-ad-accounts'],
     queryFn: () => getMetaAdAccounts(),
   });
@@ -177,7 +181,7 @@ export default function MetaAdsPage() {
               .then(() => {
                 setIsConnected(true);
                 setShowFacebookModal(false);
-                queryClient.invalidateQueries({ queryKey: ['meta-ad-accounts'] });
+                refetch();
               })
               .catch((error) => {
                 console.error('Error saving Facebook account:', error);
