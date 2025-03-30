@@ -14,35 +14,21 @@ interface ContactProps {
 export default function Contact({ navigateTo }: ContactProps) {
   const [isLoading, setIsLoading] = useState(false);
 
-  // Contact information data
-  const contactInfo = {
-    address: {
-      street: '123 Real Estate Blvd, Suite 100',
-      city: 'Los Angeles',
-      state: 'CA',
-      zip: '90001',
-    },
-    phone: '(213) 555-1234',
-    email: 'info@realestate.com',
-    hours: {
-      weekdays: 'Monday - Friday: 9:00 AM - 6:00 PM',
-      saturday: 'Saturday: 10:00 AM - 4:00 PM',
-      sunday: 'Sunday: Closed',
-    },
+  const [contactSettings, setContactSettings] = useState({
+    bgImage:
+      'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1973&q=80',
+    title: 'Get in Touch',
+    subtitle: "Let's find your dream home together",
+    description:
+      "Ready to start your real estate journey? I'm here to help you every step of the way.",
+    buttonText: 'Send Message',
+    color: '#D97706',
     social: {
       facebook: 'https://facebook.com/realestate',
       instagram: 'https://instagram.com/realestate',
       linkedin: 'https://linkedin.com/company/realestate',
       twitter: 'https://twitter.com/realestate',
     },
-  };
-
-  // Update the contact form settings
-  const [contactSettings, setContactSettings] = useState({
-    title: 'Get in Touch With Our Team',
-    description:
-      'Have questions about buying or selling a property? Our team of experts is here to help you every step of the way.',
-    backgroundImage: '/placeholder.svg?height=800&width=1600',
   });
 
   // In useEffect, add code to load settings from localStorage
@@ -52,8 +38,12 @@ export default function Contact({ navigateTo }: ContactProps) {
       const parsedData = JSON.parse(savedData);
       setContactSettings({
         title: parsedData.contactFormTitle || contactSettings.title,
+        subtitle: parsedData.contactFormSubtitle || contactSettings.subtitle,
         description: parsedData.contactFormDescription || contactSettings.description,
-        backgroundImage: parsedData.contactFormBackgroundImage || contactSettings.backgroundImage,
+        buttonText: parsedData.contactFormButtonText || contactSettings.buttonText,
+        bgImage: parsedData.contactFormBgImage || contactSettings.bgImage,
+        social: parsedData.contactFormSocial || contactSettings.social,
+        color: parsedData.contactFormColor || contactSettings.color,
       });
     }
   }, []);
@@ -116,10 +106,13 @@ export default function Contact({ navigateTo }: ContactProps) {
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
           <div className='h-[calc(100vh-8rem)] overflow-y-auto'>
             <ContactFormTemplate
-              contactInfo={contactInfo}
               title={contactSettings.title}
+              subtitle={contactSettings.subtitle}
               description={contactSettings.description}
-              backgroundImage={contactSettings.backgroundImage}
+              buttonText={contactSettings.buttonText}
+              bgImage={contactSettings.bgImage}
+              social={contactSettings.social}
+              accentColor={contactSettings.color}
             />
           </div>
         </div>

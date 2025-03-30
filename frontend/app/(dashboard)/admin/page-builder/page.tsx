@@ -21,7 +21,7 @@ export default function PageBuilder() {
   };
 
   return (
-    <div className='h-full'>
+    <div className='min-h-full'>
       {currentView === 'dashboard' && <Dashboard navigateTo={navigateTo} />}
       {currentView === 'portfolio' && <PortfolioPage navigateTo={navigateTo} />}
       {currentView === 'location-search' && <LocationSearch navigateTo={navigateTo} />}
