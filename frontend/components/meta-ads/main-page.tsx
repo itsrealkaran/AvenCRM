@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -42,6 +41,8 @@ export default function MetaAdsPage() {
   const [leadForms, setLeadForms] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
   const { company } = useAuth();
+  const queryClient = useQueryClient();
+
   const { data: metaAdAccounts, isLoading } = useQuery({
     queryKey: ['meta-ad-accounts'],
     queryFn: () => getMetaAdAccounts(),
@@ -176,7 +177,7 @@ export default function MetaAdsPage() {
               .then(() => {
                 setIsConnected(true);
                 setShowFacebookModal(false);
-                window.location.reload();
+                queryClient.invalidateQueries({ queryKey: ['meta-ad-accounts'] });
               })
               .catch((error) => {
                 console.error('Error saving Facebook account:', error);
