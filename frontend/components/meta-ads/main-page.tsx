@@ -41,15 +41,17 @@ export default function MetaAdsPage() {
   const [leadForms, setLeadForms] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
   const { company } = useAuth();
-  const queryClient = useQueryClient();
 
   const {
     data: metaAdAccounts,
     isLoading,
-    refetch,
+    refetch: refetchMetaAdAccounts,
   } = useQuery({
     queryKey: ['meta-ad-accounts'],
     queryFn: () => getMetaAdAccounts(),
+    retry: 3,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 
   const getAdAccountId = async (accessToken: string) => {
@@ -159,36 +161,42 @@ export default function MetaAdsPage() {
   useEffect(() => {
     const fetchFacebookAccessToken = async () => {
       if (facebookCode) {
-        const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
-        const accessToken = response.data.access_token;
-        //@ts-ignore
-        FB.api(
-          `/me?access_token=${accessToken}`,
-          { fields: 'name, email, accounts' },
-          (userInfo: any) => {
-            console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-            console.log(response, 'response');
-            console.log(userInfo, 'userInfo');
+        try {
+          const response = await api.get(`/meta-ads/access-token/${facebookCode}`);
+          const accessToken = response.data.access_token;
 
-            // Save the Facebook connection status
-            api
-              .post('/meta-ads/account', {
-                name: userInfo.name,
-                email: userInfo.email,
-                accessToken: accessToken,
-                pageId: userInfo.accounts.data[0].id,
-              })
-              .then(() => {
+          //@ts-ignore
+          FB.api(
+            `/me?access_token=${accessToken}`,
+            { fields: 'name, email, accounts' },
+            async (userInfo: any) => {
+              try {
+                await api.post('/meta-ads/account', {
+                  name: userInfo.name,
+                  email: userInfo.email,
+                  accessToken: accessToken,
+                  pageId: userInfo.accounts.data[0].id,
+                });
+
                 setIsConnected(true);
                 setShowFacebookModal(false);
-                refetch();
-              })
-              .catch((error) => {
+
+                // Wait for the backend to process
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+
+                // Refetch meta ad accounts
+                await refetchMetaAdAccounts();
+
+                // Only call getAdAccountId after we have the updated data
+                getAdAccountId(accessToken);
+              } catch (error) {
                 console.error('Error saving Facebook account:', error);
-              });
-          }
-        );
-        getAdAccountId(accessToken);
+              }
+            }
+          );
+        } catch (error) {
+          console.error('Error fetching access token:', error);
+        }
       }
     };
     fetchFacebookAccessToken();
@@ -204,6 +212,15 @@ export default function MetaAdsPage() {
 
   if (company?.planName !== 'ENTERPRISE') {
     return <MetaAdsPlaceholder />;
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  const accessToken = metaAdAccounts?.[0]?.accessToken;
+  if (!accessToken && !facebookCode) {
+    return <div>Please connect your Facebook account</div>;
   }
 
   return (
