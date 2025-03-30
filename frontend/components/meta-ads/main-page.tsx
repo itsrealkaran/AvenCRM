@@ -40,6 +40,7 @@ export default function MetaAdsPage() {
   const [facebookCode, setFacebookCode] = useState<string | null>(null);
   const [adAccountId, setAdAccountId] = useState<string | null>(null);
   const [leadForms, setLeadForms] = useState<any[]>([]);
+  const [insights, setInsights] = useState<any[]>([]);
   const { company } = useAuth();
   const { data: metaAdAccounts, isLoading } = useQuery({
     queryKey: ['meta-ad-accounts'],
@@ -108,6 +109,16 @@ export default function MetaAdsPage() {
           if (response && !response.error) {
             console.log(response, 'response from get campaigns');
             setCampaigns(response.data);
+          }
+        }
+      );
+      //@ts-ignore
+      FB.api(
+        `/act_${adAccountId}/insights?access_token=${metaAdAccounts[0].accessToken}`,
+        function (response: any) {
+          if (response && !response.error) {
+            console.log(response, 'response from get insights');
+            setInsights(response.data);
           }
         }
       );
@@ -230,6 +241,7 @@ export default function MetaAdsPage() {
       {isConnected ? (
         <>
           <MetricsCards
+            insights={insights}
             totalCampaigns={campaigns.length}
             activeCampaigns={campaigns.filter((campaign) => campaign.status === 'ACTIVE').length}
             successfulCampaigns={

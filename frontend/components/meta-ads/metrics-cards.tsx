@@ -4,6 +4,7 @@ import { DollarSign, Target, Trophy, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface MetricsCardsProps {
+  insights: any[];
   totalCampaigns: number;
   activeCampaigns: number;
   successfulCampaigns: number;
@@ -11,6 +12,7 @@ interface MetricsCardsProps {
 }
 
 export function MetricsCards({
+  insights,
   totalCampaigns,
   activeCampaigns,
   successfulCampaigns,
@@ -42,12 +44,13 @@ export function MetricsCards({
     },
     {
       title: 'Total Spend',
-      value: formatPrice(totalSpend),
+      value: insights?.[0]?.spend ?? 'N/A',
       change: '+20%',
       icon: DollarSign,
       iconColor: 'text-yellow-500',
     },
   ];
+  console.log(insights, 'insights');
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
