@@ -219,9 +219,6 @@ export default function MetaAdsPage() {
   }
 
   const accessToken = metaAdAccounts?.[0]?.accessToken;
-  if (!accessToken && !facebookCode) {
-    return <div>Please connect your Facebook account</div>;
-  }
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
@@ -236,7 +233,7 @@ export default function MetaAdsPage() {
             <Loader2 className='w-4 h-4 mr-2 animate-spin' />
             Loading...
           </Button>
-        ) : isConnected && metaAdAccounts?.length > 0 ? (
+        ) : accessToken ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
@@ -260,7 +257,7 @@ export default function MetaAdsPage() {
         )}
       </div>
 
-      {isConnected ? (
+      {accessToken ? (
         <>
           <MetricsCards
             insights={insights}
