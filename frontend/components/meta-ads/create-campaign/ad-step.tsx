@@ -4,7 +4,16 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { ImageIcon } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 
 type AdData = {
   name: string;
@@ -31,6 +41,7 @@ export function AdStep({
   accessToken,
   formData,
   pageId,
+  currency,
 }: {
   data: AdData;
   updateData: (data: Partial<AdData>) => void;
@@ -38,6 +49,7 @@ export function AdStep({
   accessToken: string;
   formData: any;
   pageId: string;
+  currency: string;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -57,12 +69,15 @@ export function AdStep({
         object_story_spec: {
           link_data: {
             picture: data.image,
-            call_to_action: {
-              type: data.callToAction,
-            },
+            ...(!formData.campaign.formId &&
+              data.callToAction && {
+                call_to_action: {
+                  type: data.callToAction,
+                },
+              }),
             ...(formData.campaign.formId && {
               call_to_action: {
-                type: 'LEARN_MORE',
+                ...(data.callToAction && { type: data.callToAction }),
                 value: {
                   lead_gen_form_id: formData.campaign.formId,
                 },
@@ -74,18 +89,47 @@ export function AdStep({
           page_id: pageId,
         },
       };
-      console.log(JSON.stringify(creative), 'creative');
+
       //@ts-ignore
       FB.api(
         `/act_${adAccountId}/generatepreviews?access_token=${accessToken}&ad_format=MOBILE_FEED_STANDARD&creative=${JSON.stringify(creative)}`,
         'GET',
         (response: any) => {
-          console.log(response, 'response');
-          setPreviewIFrame(response.data[0].body);
+          if (response && !response.error) {
+            setPreviewIFrame(response.data[0].body);
+          } else {
+            toast({
+              title: response.error.error_user_title || 'Error creating ad',
+              description: response.error.error_user_msg || response.error.message,
+            });
+          }
         }
       );
     }
-  }, [data.name, data.message, data.image, data.redirectUrl, data.callToAction]);
+  }, [data]);
+
+  if (!currency) {
+    return (
+      //make a modal with the title "No currency selected" and the message "Please select a currency"
+      <Dialog open={true} onOpenChange={() => {}}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Something went wrong</DialogTitle>
+          </DialogHeader>
+          <DialogDescription>Try reloading the page</DialogDescription>
+          <DialogFooter>
+            <Button
+              onClick={() => {
+                window.location.reload();
+              }}
+            >
+              Reload
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
