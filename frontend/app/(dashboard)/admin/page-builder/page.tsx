@@ -27,10 +27,6 @@ export default function PageBuilder() {
       {currentView === 'location-search' && <LocationSearch navigateTo={navigateTo} />}
       {currentView === 'document-download' && <DocumentDownload navigateTo={navigateTo} />}
       {currentView === 'contact' && <Contact navigateTo={navigateTo} />}
-      {currentView === 'update-portfolio' && <SetupForm navigateTo={navigateTo} />}
-      {currentView === 'update-location' && <UpdateLocationSearch navigateTo={navigateTo} />}
-      {currentView === 'update-document' && <UpdateDocumentDownload navigateTo={navigateTo} />}
-      {currentView === 'update-contact' && <UpdateContact navigateTo={navigateTo} />}
     </div>
   );
 }

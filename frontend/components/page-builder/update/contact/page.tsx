@@ -1,238 +1,427 @@
 'use client';
 
-import type React from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ImageIcon, Save, Type } from 'lucide-react';
+import {
+  Building,
+  Globe,
+  ImageIcon,
+  Mail,
+  MapPin,
+  Palette,
+  Phone,
+  Share2,
+  Type,
+} from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { api } from '@/lib/api';
+import { BaseEntityDialog } from '@/components/entity-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-interface SetupFormProps {
-  navigateTo: (view: string) => void;
+interface ContactFormProps {
+  pageId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
-export default function UpdateContact({ navigateTo }: SetupFormProps) {
-  const router = useRouter();
+// Form validation schema
+const contactFormSchema = z.object({
+  // Page configuration
+  slug: z.string().min(3, 'Slug must be at least 3 characters').optional(),
+  isPublic: z.boolean().default(false),
+  
+  // Template configuration
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  bgImage: z.string().url('Please enter a valid URL').optional(),
+  buttonText: z.string().optional(),
+  accentColor: z.string().optional(),
+  
+  // Social links
+  social: z.object({
+    facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    twitter: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  }),
+});
 
-  const [formData, setFormData] = useState({
-    contactFormTitle: 'Get in Touch With Our Team',
-    contactFormDescription:
+type ContactFormValues = z.infer<typeof contactFormSchema>;
+
+export default function ContactForm({ pageId, open, onOpenChange, isLoading }: ContactFormProps) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  // Default values for the form
+  const defaultValues: ContactFormValues = {
+    slug: '',
+    isPublic: false,
+    title: 'Get in Touch With Our Team',
+    subtitle: "We're here to help with all your real estate needs",
+    description:
       'Have questions about buying or selling a property? Our team of experts is here to help you every step of the way.',
-    contactFormBackgroundImage: '',
+    bgImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+    buttonText: 'Send Message',
+    accentColor: '#4f46e5',
+    social: {
+      facebook: 'https://facebook.com',
+      instagram: 'https://instagram.com',
+      linkedin: 'https://linkedin.com',
+      twitter: 'https://twitter.com',
+    }
+  };
+
+  // Mutation for saving the form
+  const savePage = useMutation({
+    mutationFn: async (values: ContactFormValues) => {
+      const pageData = {
+        title: values.title,
+        templateType: 'contact',
+        content: values,
+        isPublic: values.isPublic,
+        slug: values.slug || `contact-${Date.now()}`,
+      };
+      
+      if (pageId) {
+        return await api.put(`/page-builder/${pageId}`, pageData);
+      } else {
+        return await api.post('/page-builder', pageData);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      onOpenChange(false);
+      toast.success(`Contact page ${pageId ? 'updated' : 'created'} successfully`);
+    },
+    onError: () => {
+      toast.error(`Failed to ${pageId ? 'update' : 'create'} contact page`);
+    },
   });
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Load existing data if available
-  useEffect(() => {
-    const savedData = localStorage.getItem('realtorData');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setFormData({
-        contactFormTitle: parsedData.contactFormTitle || formData.contactFormTitle,
-        contactFormDescription:
-          parsedData.contactFormDescription || formData.contactFormDescription,
-        contactFormBackgroundImage:
-          parsedData.contactFormBackgroundImage || formData.contactFormBackgroundImage,
-      });
-    }
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      // Get existing data
-      const existingData = localStorage.getItem('realtorData');
-      const parsedData = existingData ? JSON.parse(existingData) : {};
-
-      // Update only the contact form fields
-      const updatedData = {
-        ...parsedData,
-        contactFormTitle: formData.contactFormTitle,
-        contactFormDescription: formData.contactFormDescription,
-        contactFormBackgroundImage: formData.contactFormBackgroundImage,
-      };
-
-      // Save back to localStorage
-      localStorage.setItem('realtorData', JSON.stringify(updatedData));
-
-      setIsSaving(false);
-      setSaveSuccess(true);
-
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    }, 1000);
-  };
-
-  const handlePreview = () => {
-    router.push('/contact/preview');
-  };
-
   return (
-    <div className='container mx-auto py-10 px-4'>
-      <div className='max-w-3xl mx-auto'>
-        <div className='flex items-center justify-between mb-8'>
-          <div className='flex items-center'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='mr-2'
-              onClick={() => router.push('/dashboard')}
-            >
-              <ArrowLeft className='h-5 w-5' />
-            </Button>
-            <h1 className='text-3xl font-bold bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent'>
-              Update Contact Form
-            </h1>
-          </div>
-          <div className='flex gap-2'>
-            <Button variant='outline' onClick={handlePreview}>
-              Preview
-            </Button>
-          </div>
-        </div>
-
-        <Tabs defaultValue='content' className='w-full'>
-          <TabsList className='grid grid-cols-2 mb-8'>
-            <TabsTrigger value='content' className='flex items-center gap-1'>
-              <Type className='h-4 w-4' /> Content
+    <BaseEntityDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={pageId ? 'Update Contact Page' : 'Create Contact Page'}
+      schema={contactFormSchema}
+      defaultValues={defaultValues}
+      onSubmit={(values) => {
+        savePage.mutate(values);
+      }}
+      isLoading={isLoading || savePage.isPending}
+    >
+      {(form) => (
+        <Tabs defaultValue="content" className="w-full">
+          <TabsList className="grid grid-cols-4 mb-4">
+            <TabsTrigger value="content">
+              <Type className="h-4 w-4 mr-2" />
+              Content
             </TabsTrigger>
-            <TabsTrigger value='appearance' className='flex items-center gap-1'>
-              <ImageIcon className='h-4 w-4' /> Appearance
+            <TabsTrigger value="appearance">
+              <Palette className="h-4 w-4 mr-2" />
+              Appearance
+            </TabsTrigger>
+            <TabsTrigger value="social">
+              <Globe className="h-4 w-4 mr-2" />
+              Social
+            </TabsTrigger>
+            <TabsTrigger value="settings">
+              <Share2 className="h-4 w-4 mr-2" />
+              Page Settings
             </TabsTrigger>
           </TabsList>
-
-          <form onSubmit={handleSubmit}>
-            <Card className='border-none shadow-xl mb-6'>
-              <CardHeader>
-                <CardTitle className='text-xl'>Contact Form Settings</CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <TabsContent value='content' className='space-y-6 mt-0'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='contactFormTitle'>Form Title</Label>
-                    <Input
-                      id='contactFormTitle'
-                      name='contactFormTitle'
-                      value={formData.contactFormTitle}
-                      onChange={handleChange}
-                      placeholder='e.g. Get in Touch With Our Team'
-                      required
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      This title appears at the top of your contact form page.
-                    </p>
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='contactFormDescription'>Form Description</Label>
-                    <Textarea
-                      id='contactFormDescription'
-                      name='contactFormDescription'
-                      value={formData.contactFormDescription}
-                      onChange={handleChange}
-                      placeholder='e.g. Have questions about buying or selling a property?...'
-                      rows={4}
-                      required
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      This description appears below the title and helps explain the purpose of the
-                      contact form.
-                    </p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value='appearance' className='space-y-6 mt-0'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='contactFormBackgroundImage'>Background Image URL</Label>
-                    <Input
-                      id='contactFormBackgroundImage'
-                      name='contactFormBackgroundImage'
-                      value={formData.contactFormBackgroundImage}
-                      onChange={handleChange}
-                      placeholder='e.g. https://example.com/background-image.jpg'
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      This image will be used as the background for the contact form section. Leave
-                      empty to use the default image.
-                    </p>
-                  </div>
-
-                  {formData.contactFormBackgroundImage && (
-                    <div className='border rounded-md p-4'>
-                      <p className='text-sm font-medium mb-2'>Background Image Preview</p>
-                      <div className='aspect-video relative rounded-md overflow-hidden bg-gray-100'>
-                        <img
-                          src={formData.contactFormBackgroundImage || '/placeholder.svg'}
-                          alt='Background preview'
-                          className='object-cover w-full h-full'
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder.svg?height=400&width=600';
-                            e.currentTarget.classList.add('border', 'border-red-300');
-                          }}
+          
+          <div className="h-[60vh] overflow-y-auto pr-2">
+            <TabsContent value="content" className="mt-0">
+              <div className="space-y-4 p-2">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Page Title</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter page title" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
                         />
-                      </div>
-                      <p className='text-xs text-muted-foreground mt-2'>
-                        For best results, use a high-resolution image (at least 1600px wide).
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="subtitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subtitle</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter subtitle" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter page description" 
+                          disabled={isLoading || savePage.isPending} 
+                          className="min-h-[100px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="buttonText"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Button Text</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter button text" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="appearance" className="mt-0">
+              <div className="space-y-4 p-2">
+                <FormField
+                  control={form.control}
+                  name="bgImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Background Image URL</FormLabel>
+                      <FormControl>
+                        <div className="flex space-x-2">
+                          <Input 
+                            placeholder="Enter image URL" 
+                            disabled={isLoading || savePage.isPending} 
+                            {...field} 
+                            className="flex-1"
+                          />
+                          {field.value && (
+                            <div 
+                              className="h-10 w-10 rounded border overflow-hidden bg-cover bg-center" 
+                              style={{ backgroundImage: `url(${field.value})` }}
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="accentColor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Accent Color</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center space-x-2">
+                          <Input 
+                            placeholder="#4f46e5" 
+                            disabled={isLoading || savePage.isPending} 
+                            {...field} 
+                          />
+                          <div 
+                            className="h-10 w-10 rounded border"
+                            style={{ backgroundColor: field.value }}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="social" className="mt-0">
+              <div className="space-y-4 p-2">
+                <FormField
+                  control={form.control}
+                  name="social.facebook"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Facebook URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://facebook.com/yourpage" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="social.instagram"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://instagram.com/yourpage" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="social.twitter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Twitter URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://twitter.com/yourpage" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="social.linkedin"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn URL</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="https://linkedin.com/in/yourpage" 
+                          disabled={isLoading || savePage.isPending} 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="settings" className="mt-0">
+              <div className="space-y-4 p-2">
+                <FormField
+                  control={form.control}
+                  name="slug"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Page URL Slug</FormLabel>
+                      <FormControl>
+                        <div className="flex items-center gap-2">
+                          <span className="text-muted-foreground text-sm">yoursite.com/p/</span>
+                          <Input
+                            placeholder="contact-us"
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        This will be used in the public URL for your contact page
                       </p>
-                    </div>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </TabsContent>
-              </CardContent>
-
-              <CardFooter className='flex justify-between'>
-                <div>
-                  {saveSuccess && (
-                    <span className='text-green-600 text-sm'>✓ Changes saved successfully</span>
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="isPublic"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 mt-6">
+                      <div className="space-y-0.5">
+                        <FormLabel className="text-base">
+                          Publish Page
+                        </FormLabel>
+                        <p className="text-xs text-muted-foreground">
+                          When published, your page will be accessible to the public
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isLoading || savePage.isPending}
+                        />
+                      </FormControl>
+                    </FormItem>
                   )}
-                </div>
-                <Button
-                  type='submit'
-                  className='bg-amber-600 hover:bg-amber-700'
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <>Saving...</>
-                  ) : (
-                    <>
-                      <Save className='mr-2 h-4 w-4' />
-                      Save Changes
-                    </>
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
-          </form>
+                />
+              </div>
+            </TabsContent>
+          </div>
+          
+          <div className="flex justify-end space-x-4 mt-6">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={savePage.isPending}
+              onClick={() => onOpenChange(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={savePage.isPending || !form.formState.isValid}
+              className="bg-amber-600 hover:bg-amber-700 min-w-[100px]"
+            >
+              {savePage.isPending ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
+            </Button>
+          </div>
         </Tabs>
-
-        <div className='flex justify-between mt-8'>
-          <Button variant='outline' onClick={() => router.push('/update/document-download')}>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Document Center
-          </Button>
-          <Button variant='outline' onClick={() => router.push('/update/location-search')}>
-            Location Search
-            <ArrowLeft className='ml-2 h-4 w-4 rotate-180' />
-          </Button>
-        </div>
-      </div>
-    </div>
+      )}
+    </BaseEntityDialog>
   );
 }

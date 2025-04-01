@@ -10,8 +10,6 @@ import {
   Star,
   Users,
 } from 'lucide-react';
-
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -173,58 +171,6 @@ export default function RealtorPortfolio({ realtorData }: { realtorData: any }) 
                 <h3 className='text-xl font-semibold text-primary'>Education</h3>
                 <p>{realtorData.education}</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonials Section */}
-        <section id='testimonials' className='py-12 md:py-24 bg-white relative overflow-hidden'>
-          <div className='absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-[#f3f0ff]/50 to-transparent'></div>
-          <div className='absolute bottom-0 left-0 w-1/2 h-1/3 bg-gradient-to-t from-[#f3f0ff]/50 to-transparent'></div>
-          <div className='container mx-auto px-4 relative z-10'>
-            <div className='text-center mb-12'>
-              <div className='inline-flex items-center px-3 py-1 rounded-full bg-accent text-primary text-sm font-medium mb-4'>
-                Testimonials
-              </div>
-              <h2 className='text-3xl font-bold bg-gradient-to-r from-primary to-purple-700 bg-clip-text text-transparent'>
-                What My Clients Say
-              </h2>
-            </div>
-            <div className='grid md:grid-cols-3 gap-6'>
-              {realtorData.testimonials
-                .filter((t: any) => t.text && t.client)
-                .map((testimonial: any, i: number) => (
-                  <Card
-                    key={i}
-                    className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 hover:translate-y-[-5px]'
-                  >
-                    <CardContent className='p-6'>
-                      <div className='flex items-center gap-1 mb-4 text-primary'>
-                        <Star className='h-5 w-5 fill-primary' />
-                        <Star className='h-5 w-5 fill-primary' />
-                        <Star className='h-5 w-5 fill-primary' />
-                        <Star className='h-5 w-5 fill-primary' />
-                        <Star className='h-5 w-5 fill-primary' />
-                      </div>
-                      <p className='mb-4 italic'>&quot;{testimonial.text}&quot;</p>
-                      <div className='flex items-center gap-3'>
-                        <Avatar className='border-2 border-primary'>
-                          <AvatarImage src={`/placeholder.svg?height=40&width=40&text=${i}`} />
-                          <AvatarFallback className='bg-primary/10 text-primary'>
-                            {testimonial.client
-                              .split(' ')
-                              .map((n: string) => n[0])
-                              .join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className='font-medium'>{testimonial.client}</p>
-                          <p className='text-sm text-muted-foreground'>{testimonial.location}</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
             </div>
           </div>
         </section>
