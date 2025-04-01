@@ -78,28 +78,51 @@ export default function WhatsAppCampaignsPage() {
           console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
           setIsConnected(true);
           setShowWhatsAppModal(false);
+
+          // @ts-ignore
+          FB.api(
+            `/debug_token?input_token=${accessToken}&access_token=${accessToken}`,
+            (debugInfo: any) => {
+              console.log('Debug info:', debugInfo);
+              const wabaId = debugInfo.data.granular_scopes.find(
+                (scope: any) => scope.scope === 'whatsapp_business_management'
+              )?.target_id;
+              console.log('WABA ID:', wabaId);
+              console.log('debug info:', debugInfo);
+
+              // @ts-ignore
+              FB.api(
+                `/${wabaId}/phone_numbers?access_token=${accessToken}`,
+                (phoneNumbers: any) => {
+                  console.log('Phone numbers:', phoneNumbers);
+
+                  const phoneNumberData = phoneNumbers.data.map((phoneNumber: any) => ({
+                    phoneNumberId: phoneNumber.id,
+                    name: phoneNumber.verified_name,
+                    phoneNumber: phoneNumber.display_phone_number,
+                    codeVerificationStatus: phoneNumber.code_verification_status,
+                  }));
+
+                  api
+                    .post('/whatsapp/accounts', {
+                      displayName: userInfo.name,
+                      phoneNumberData: phoneNumberData,
+                      wabaid: wabaId,
+                      accessToken: accessToken,
+                    })
+                    .then((response: any) => {
+                      console.log('API response:', response);
+                      setIsConnected(true);
+                      setShowWhatsAppModal(false);
+                    });
+
+                  setIsConnected(true);
+                  setShowWhatsAppModal(false);
+                }
+              );
+            }
+          );
         });
-
-        // @ts-ignore
-        FB.api(
-          `/debug_token?input_token=${accessToken}&access_token=${accessToken}`,
-          (debugInfo: any) => {
-            console.log('Debug info:', debugInfo);
-            const wabaId = debugInfo.data.granular_scopes.find(
-              (scope: any) => scope.scope === 'whatsapp_business_management'
-            )?.target_id;
-            console.log('WABA ID:', wabaId);
-            console.log('debug info:', debugInfo);
-
-            // @ts-ignore
-            FB.api(`/${wabaId}/phone_numbers?access_token=${accessToken}`, (userInfo) => {
-              console.log('User info:', userInfo);
-              console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-              setIsConnected(true);
-              setShowWhatsAppModal(false);
-            });
-          }
-        );
       };
       fetchAccessToken();
     }
