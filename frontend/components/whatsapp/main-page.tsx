@@ -86,7 +86,7 @@ export default function WhatsAppCampaignsPage() {
               console.log('Debug info:', debugInfo);
               const wabaId = debugInfo.data.granular_scopes.find(
                 (scope: any) => scope.scope === 'whatsapp_business_management'
-              )?.target_id;
+              )?.target_ids[0];
               console.log('WABA ID:', wabaId);
               console.log('debug info:', debugInfo);
 
