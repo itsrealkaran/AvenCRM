@@ -66,6 +66,40 @@ export default function WhatsAppCampaignsPage() {
         const response = await api.get(`/whatsapp/access-token/${whatsAppCode}`);
         const accessToken = response.data.access_token;
         console.log('Access token:', accessToken);
+
+        if (!accessToken) {
+          console.log('No access token found');
+          return;
+        }
+
+        // @ts-ignore
+        FB.api(`/me?access_token=${accessToken}`, (userInfo) => {
+          console.log('User info:', userInfo);
+          console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+          setIsConnected(true);
+          setShowWhatsAppModal(false);
+        });
+
+        // @ts-ignore
+        FB.api(
+          `/debug_token?input_token=${accessToken}&access_token=${accessToken}`,
+          (debugInfo: any) => {
+            console.log('Debug info:', debugInfo);
+            const wabaId = debugInfo.data.granular_scopes.find(
+              (scope: any) => scope.scope === 'whatsapp_business_management'
+            )?.target_id;
+            console.log('WABA ID:', wabaId);
+            console.log('debug info:', debugInfo);
+
+            // @ts-ignore
+            FB.api(`/${wabaId}/phone_numbers?access_token=${accessToken}`, (userInfo) => {
+              console.log('User info:', userInfo);
+              console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
+              setIsConnected(true);
+              setShowWhatsAppModal(false);
+            });
+          }
+        );
       };
       fetchAccessToken();
     }
