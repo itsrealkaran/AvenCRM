@@ -18,7 +18,7 @@ interface DashboardProps {
 
 export default function Dashboard({ navigateTo }: DashboardProps) {
   return (
-    <Card className='min-h-full p-6'>
+    <Card className='min-h-full w-full p-6'>
       <div className='space-y-6'>
         <div className='flex justify-between items-center'>
           <div>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, RefreshCw, Share } from 'lucide-react';
 
 import RealtorPortfolio from '@/components/page-builder/realtor-portfolio';
+import SetupForm from '@/components/page-builder/update/portfolio/page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -14,6 +15,7 @@ interface PortfolioViewProps {
 export default function PortfolioView({ navigateTo }: PortfolioViewProps) {
   const [realtorData, setRealtorData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
   useEffect(() => {
     fetchLandingData();
@@ -49,23 +51,6 @@ export default function PortfolioView({ navigateTo }: PortfolioViewProps) {
       phone: '(415) 555-0123',
       email: 'sarah@sarahjohnsonrealty.com',
       officeLocation: '123 Market Street, San Francisco, CA 94105',
-      testimonials: [
-        {
-          text: "Sarah's expertise and dedication made our home buying process smooth and enjoyable.",
-          client: 'John and Mary Smith',
-          location: 'Homeowners in Palo Alto',
-        },
-        {
-          text: 'Thanks to Sarah, we got top dollar for our property in record time!',
-          client: 'The Johnsons',
-          location: 'Sellers in San Francisco',
-        },
-        {
-          text: "Sarah's market knowledge is unparalleled. She found us the perfect investment property.",
-          client: 'Alex Chen',
-          location: 'Investor in San Jose',
-        },
-      ],
     });
     setIsLoading(false);
   };
@@ -76,7 +61,7 @@ export default function PortfolioView({ navigateTo }: PortfolioViewProps) {
   };
 
   const handleUpdate = () => {
-    navigateTo('update-portfolio');
+    setIsUpdateModalOpen(true);
   };
 
   if (isLoading) {
@@ -98,6 +83,12 @@ export default function PortfolioView({ navigateTo }: PortfolioViewProps) {
 
   return (
     <Card className='h-full flex flex-col'>
+      <SetupForm
+        open={isUpdateModalOpen}
+        onOpenChange={setIsUpdateModalOpen}
+        isLoading={isLoading}
+      />
+
       <header className='bg-white shadow-sm p-4'>
         <div className='container mx-auto flex justify-between items-center'>
           <div className='flex items-center'>

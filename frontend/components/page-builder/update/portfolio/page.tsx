@@ -147,15 +147,6 @@ export default function SetupForm({ navigateTo }: SetupFormProps) {
   return (
     <div className='container mx-auto py-10 px-4'>
       <div className='max-w-3xl mx-auto'>
-        <div className='mb-8 text-center'>
-          <h1 className='text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-purple-700 bg-clip-text text-transparent'>
-            Create Your Realtor Portfolio
-          </h1>
-          <p className='text-muted-foreground'>
-            Complete the form below to set up your personalized realtor portfolio
-          </p>
-        </div>
-
         <div className='mb-8'>
           <div className='flex justify-between mb-2'>
             <span className='text-sm font-medium'>
