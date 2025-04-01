@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
 
 import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
@@ -23,6 +24,12 @@ export default function WhatsAppCampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
   const [whatsAppCode, setWhatsAppCode] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const whatsAppAccount = useQuery({
+    queryKey: ['whatsapp-account'],
+    queryFn: () => api.get('/whatsapp/accounts'),
+  });
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
@@ -114,10 +121,9 @@ export default function WhatsAppCampaignsPage() {
                       console.log('API response:', response);
                       setIsConnected(true);
                       setShowWhatsAppModal(false);
+                      // Invalidate and refetch the whatsapp-account query
+                      queryClient.invalidateQueries({ queryKey: ['whatsapp-account'] });
                     });
-
-                  setIsConnected(true);
-                  setShowWhatsAppModal(false);
                 }
               );
             }
@@ -126,11 +132,21 @@ export default function WhatsAppCampaignsPage() {
       };
       fetchAccessToken();
     }
-  }, [whatsAppCode]);
+  }, [whatsAppCode, queryClient]);
 
   if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
+
+  if (whatsAppAccount.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (whatsAppAccount.isError) {
+    return <div>Error loading WhatsApp account</div>;
+  }
+
+  const hasWhatsAppAccount = whatsAppAccount.data && Object.keys(whatsAppAccount.data).length > 0;
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
@@ -139,7 +155,7 @@ export default function WhatsAppCampaignsPage() {
           <h1 className='text-2xl font-bold'>WhatsApp Campaigns</h1>
           <p className='text-muted-foreground text-sm'>Manage your WhatsApp business campaigns</p>
         </div>
-        {!isConnected ? (
+        {!hasWhatsAppAccount ? (
           <Button
             onClick={handleWhatsAppLogin}
             className='bg-[#25D366] hover:bg-[#25D366]/90 text-white'
@@ -157,7 +173,7 @@ export default function WhatsAppCampaignsPage() {
         )}
       </div>
 
-      {isConnected ? (
+      {hasWhatsAppAccount ? (
         <>
           <MetricsCards />
           <Tabs defaultValue='campaigns' className='space-y-4'>

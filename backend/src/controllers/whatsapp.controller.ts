@@ -68,11 +68,11 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const accounts = await prisma.whatsAppAccount.findMany({
+      const account = await prisma.whatsAppAccount.findFirst({
         where: { userId: req.user.id }
       });
 
-      return res.status(200).json(accounts);
+      return res.status(200).json(account);
     } catch (error) {
       logger.error('Error getting WhatsApp accounts:', error);
       return res.status(500).json({ message: 'Internal server error' });
