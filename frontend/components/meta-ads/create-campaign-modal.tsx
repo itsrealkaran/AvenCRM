@@ -3,6 +3,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import { offsetCurrency } from '@/utils/offset-currency';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from '@/hooks/use-toast';
 
 import { AdStep } from './create-campaign/ad-step';
 import { AdsetStep } from './create-campaign/adset-step';
@@ -96,10 +96,7 @@ export default function CreateCampaignForm({
             },
           });
         } else {
-          toast({
-            title: 'Error creating campaign',
-            description: response.error.message,
-          });
+          toast.error(response.error.message);
         }
       }
     );
@@ -132,10 +129,7 @@ export default function CreateCampaignForm({
             },
           });
         } else {
-          toast({
-            title: response.error.error_user_title || 'Error creating adset',
-            description: response.error.error_user_msg || response.error.message,
-          });
+          toast.error(response.error.error_user_msg || response.error.message);
         }
       }
     );
@@ -186,10 +180,7 @@ export default function CreateCampaignForm({
               });
               resolve(response.id);
             } else {
-              toast({
-                title: 'Error creating ad creative',
-                description: response.error.message,
-              });
+              toast.error(response.error.message);
               reject(response?.error || 'Failed to create ad creative');
             }
           }
@@ -215,10 +206,7 @@ export default function CreateCampaignForm({
               console.log(response, 'response from ad step');
               resolve(response);
             } else {
-              toast({
-                title: response.error.error_user_title || 'Error creating adset',
-                description: response.error.error_user_msg || response.error.message,
-              });
+              toast.error(response.error.error_user_msg || response.error.message);
               reject(response?.error || 'Failed to create ad');
             }
           }

@@ -3,6 +3,7 @@
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,7 +25,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { toast } from '@/hooks/use-toast';
 
 type AdData = {
   name: string;
@@ -98,10 +98,7 @@ export function AdStep({
           if (response && !response.error) {
             setPreviewIFrame(response.data[0].body);
           } else {
-            toast({
-              title: response.error.error_user_title || 'Error creating ad',
-              description: response.error.error_user_msg || response.error.message,
-            });
+            toast.error(response.error.error_user_msg || response.error.message);
           }
         }
       );
@@ -197,6 +194,7 @@ export function AdStep({
                 <SelectItem value='OPEN_LINK'>OPEN_LINK</SelectItem>
                 <SelectItem value='WHATSAPP_MESSAGE'>WHATSAPP_MESSAGE</SelectItem>
                 <SelectItem value='MAKE_AN_APPOINTMENT'>MAKE_AN_APPOINTMENT</SelectItem>
+                <SelectItem value='CONTACT_US'>CONTACT_US</SelectItem>
                 <SelectItem value='LEARN_MORE'>LEARN_MORE</SelectItem>
               </SelectContent>
             </Select>

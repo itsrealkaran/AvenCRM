@@ -9,12 +9,13 @@ const MetaController = {
             for (let i = 0; i < 3; i++) {
                 try {
                     const { code } = req.params;
-                    const response = await axios.get(
+                    const response = await fetch(
                         `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}`,
                     );
-                    return res.status(200).json({ access_token: response.data.access_token });
+                    const data: any = await response.json();
+                    return res.status(200).json({ access_token: data.access_token });
                 } catch (error: any) {
-                    console.error('Facebook API Error:', error.message);
+                    console.error('Facebook API Error:', error);
                 }
             }
             return res.status(500).json({ 
