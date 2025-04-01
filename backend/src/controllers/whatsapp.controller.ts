@@ -42,9 +42,9 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { phoneNumberId, wabaid, accessToken, phoneNumber, displayName } = req.body;
+      const { phoneNumberId, wabaid, accessToken, phoneNumberData, displayName } = req.body;
 
-      if (!phoneNumberId || !wabaid || !accessToken || !phoneNumber || !displayName) {
+      if (!phoneNumberId || !wabaid || !accessToken || !phoneNumberData || !displayName) {
         return res.status(400).json({ message: 'Missing required fields' });
       }
 
@@ -52,8 +52,9 @@ export class WhatsAppController extends BaseController {
         phoneNumberId,
         wabaid,
         accessToken,
-        phoneNumber,
-        displayName
+        phoneNumberData,
+        displayName,
+        userId: req.user.id
       });
 
       return res.status(201).json(account);
@@ -720,7 +721,7 @@ export class WhatsAppController extends BaseController {
         include: {
           account: {
             select: {
-              phoneNumber: true,
+              phoneNumberData: true,
               displayName: true
             }
           },

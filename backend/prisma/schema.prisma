@@ -715,23 +715,22 @@ model Task {
 
 // Store WhatsApp Business API credentials per user
 model WhatsAppAccount {
-  id            String             @id @default(cuid())
-  userId        String
-  user          User               @relation(fields: [userId], references: [id])
-  phoneNumberId String // WhatsApp Business API Phone Number ID
-  wabaid        String // WhatsApp Business Account ID  
-  accessToken   String // Encrypted access token
-  phoneNumber   String // Display phone number
-  displayName   String
-  verified      Boolean            @default(false)
-  status        String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  audiences     WhatsAppAudience[]
-  campaigns     WhatsAppCampaign[]
-  templates     WhatsAppTemplate[]
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id])
+  wabaid          String // WhatsApp Business Account ID  
+  accessToken     String // Encrypted access token
+  phoneNumberData Json[] // [ {phoneNumberId: string, name: string, phoneNumber: string, codeVerificationStatus: string} ]
+  displayName     String
+  verified        Boolean            @default(false)
+  status          String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  audiences       WhatsAppAudience[]
+  campaigns       WhatsAppCampaign[]
+  templates       WhatsAppTemplate[]
 
-  @@unique([userId, phoneNumberId])
+  @@unique([userId])
 }
 
 // Store audience groups
@@ -813,23 +812,23 @@ model WhatsAppMessage {
 }
 
 model MetaAdAccount {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String?
   email       String?
   accessToken String
   pageId      String?
   status      ActivityStatus? @default(ACTIVE)
 
-  agentId     String
-  agent       User     @relation(fields: [agentId], references: [id])
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  agentId String
+  agent   User   @relation(fields: [agentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model LeadForm {
-  id String @id @default(cuid())
-  name String
+  id        String @id @default(cuid())
+  name      String
   questions Json
 
   formId String?

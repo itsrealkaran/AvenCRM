@@ -38,10 +38,9 @@ export class WhatsAppService {
     return prisma.whatsAppAccount.create({
       data: {
         userId,
-        phoneNumberId: accountData.phoneNumberId,
+        phoneNumberData: accountData.phoneNumberData,
         wabaid: accountData.wabaid,
         accessToken: encryptedToken,
-        phoneNumber: accountData.phoneNumber,
         displayName: accountData.displayName
       }
     });
@@ -58,8 +57,8 @@ export class WhatsAppService {
 
     try {
       const accessToken = this.decrypt(account.accessToken);
-      const response = await axios.get(
-        `${WHATSAPP_API_URL}/${WHATSAPP_API_VERSION}/${account.phoneNumberId}`,
+      const response = await axios.get( //@ts-ignore
+        `${WHATSAPP_API_URL}/${WHATSAPP_API_VERSION}/${account.phoneNumberData[0]!.phone_number_id}`,
         {
           headers: {
             'Authorization': `Bearer ${accessToken}`
@@ -90,8 +89,8 @@ export class WhatsAppService {
       throw new Error('Account not found');
     }
     
-    const accessToken = this.decrypt(account.accessToken);
-    const url = `${WHATSAPP_API_URL}/${WHATSAPP_API_VERSION}/${account.phoneNumberId}/messages`;
+    const accessToken = this.decrypt(account.accessToken); //@ts-ignore
+    const url = `${WHATSAPP_API_URL}/${WHATSAPP_API_VERSION}/${account.phoneNumberData[0]!.phone_number_id}/messages`;
     
     try {
       let payload;
