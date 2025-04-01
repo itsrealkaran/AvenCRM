@@ -2,6 +2,8 @@
 
 import type React from 'react';
 import { useState } from 'react';
+import { offsetCurrency } from '@/utils/offset-currency';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -22,12 +24,14 @@ export default function CreateCampaignForm({
   adAccountId,
   accessToken,
   pageId,
+  currency,
 }: {
   isOpen: boolean;
   onClose: () => void;
   adAccountId: string | null;
   accessToken: string;
   pageId: string;
+  currency: string;
 }) {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,6 +71,7 @@ export default function CreateCampaignForm({
     },
   };
   const [formData, setFormData] = useState(defaultValues);
+  const offset = offsetCurrency(currency);
 
   const setCampaignData = async (data: any) => {
     //@ts-ignore
@@ -81,14 +86,18 @@ export default function CreateCampaignForm({
         start_time: data.start_time,
       },
       function (response: any) {
-        console.log(response, 'response from campaign step');
-        setFormData({
-          ...formData,
-          campaign: {
-            ...formData.campaign,
-            id: response.id,
-          },
-        });
+        if (response && !response.error) {
+          console.log(response, 'response from campaign step');
+          setFormData({
+            ...formData,
+            campaign: {
+              ...formData.campaign,
+              id: response.id,
+            },
+          });
+        } else {
+          toast.error(response.error.message);
+        }
       }
     );
   };
@@ -100,27 +109,33 @@ export default function CreateCampaignForm({
       'POST',
       {
         name: data.name,
-        daily_budget: data.daily_budget,
+        daily_budget: Number(data.daily_budget) * offset,
         targeting: data.targetAudience,
         end_time: data.end_time,
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'IMPRESSIONS',
-        bid_amount: data.daily_budget,
+        bid_amount: Number(data.daily_budget) * offset,
         campaign_id: formData.campaign.id,
       },
       function (response: any) {
-        console.log(formData, 'form data from adset step');
-        console.log(response, 'response from adset step');
-        setFormData({
-          ...formData,
-          adset: {
-            ...formData.adset,
-            id: response.id,
-          },
-        });
+        if (response && !response.error) {
+          console.log(formData, 'form data from adset step');
+          console.log(response, 'response from adset step');
+          setFormData({
+            ...formData,
+            adset: {
+              ...formData.adset,
+              id: response.id,
+            },
+          });
+        } else {
+          toast.error(response.error.error_user_msg || response.error.message);
+        }
       }
     );
   };
+
+  console.log(currency, 'currency from create campaign modal');
 
   const setAdCreative = async (data: any) => {
     try {
@@ -165,6 +180,7 @@ export default function CreateCampaignForm({
               });
               resolve(response.id);
             } else {
+              toast.error(response.error.message);
               reject(response?.error || 'Failed to create ad creative');
             }
           }
@@ -190,11 +206,13 @@ export default function CreateCampaignForm({
               console.log(response, 'response from ad step');
               resolve(response);
             } else {
+              toast.error(response.error.error_user_msg || response.error.message);
               reject(response?.error || 'Failed to create ad');
             }
           }
         );
       });
+      onClose();
     } catch (error) {
       console.error('Error in setAdCreative:', error);
       throw error;
@@ -284,6 +302,7 @@ export default function CreateCampaignForm({
               updateData={(data) => updateFormData('ad', data)}
               adAccountId={adAccountId ?? ''}
               accessToken={accessToken}
+              currency={currency}
             />
           )}
         </form>

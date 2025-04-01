@@ -7,6 +7,8 @@ const router: Router = Router();
 // Use authentication for all routes except webhook
 router.use(['/accounts', '/audiences', '/templates', '/campaigns'], protect);
 
+router.get('/access-token/:code', whatsAppController.getAccessToken);
+
 // WhatsApp Account Management
 router.post('/accounts', whatsAppController.createAccount);
 router.get('/accounts', whatsAppController.getAccounts);

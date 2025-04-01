@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, Facebook, Loader2 } from 'lucide-react';
-import { toast } from 'react-hot-toast';
 
 import { CampaignsList } from '@/components/meta-ads/campaigns-list';
 import { ConnectedAccounts } from '@/components/meta-ads/connected-accounts';
@@ -23,6 +22,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api } from '@/lib/api';
+import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
 const getMetaAdAccounts = async () => {
@@ -40,6 +40,7 @@ export default function MetaAdsPage() {
   const [adAccountId, setAdAccountId] = useState<string | null>(null);
   const [leadForms, setLeadForms] = useState<any[]>([]);
   const [insights, setInsights] = useState<any[]>([]);
+  const [currency, setCurrency] = useState<string | null>(null);
   const { company } = useAuth();
 
   const {
@@ -62,7 +63,6 @@ export default function MetaAdsPage() {
         if (response.data.length > 0) {
           const adAccountId = response.data[0].account_id; // First Ad Account ID
           console.log('Ad Account ID:', adAccountId);
-          console.log(response.data, 'response.data from getAdAccountId');
           setAdAccountId(adAccountId);
         } else {
           console.log('No ad accounts found.');
@@ -129,6 +129,19 @@ export default function MetaAdsPage() {
           }
         }
       );
+
+      //@ts-ignore
+      FB.api(
+        `/act_${adAccountId}?fields=currency&access_token=${metaAdAccounts[0].accessToken}`,
+        (response: any) => {
+          if (response && !response.error) {
+            console.log(response.currency, 'response from get leads');
+            setCurrency(response.currency);
+          } else if (response.error) {
+            console.log(response.error, 'response from get leads');
+          }
+        }
+      );
     }
   }, [metaAdAccounts, adAccountId]);
 
@@ -147,7 +160,9 @@ export default function MetaAdsPage() {
           });
         } else {
           console.log('User cancelled login or did not fully authorize.');
-          toast.error('Facebook connection cancelled');
+          toast({
+            title: 'Facebook connection cancelled',
+          });
         }
       },
       {
@@ -319,6 +334,7 @@ export default function MetaAdsPage() {
         isOpen={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
         pageId={metaAdAccounts?.[0]?.pageId}
+        currency={currency || ''}
       />
 
       <CreateFormModal

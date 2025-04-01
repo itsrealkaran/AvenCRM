@@ -17,8 +17,7 @@ declare global {
 
 const router: Router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  //@ts-ignore
-  apiVersion: '2024-11-20.acacia'
+  apiVersion: '2024-12-18.acacia'
 });
 
 // Webhook handler for Stripe events
@@ -27,7 +26,7 @@ router.post(
   express.raw({ type: 'application/json' }),
   async (req: Request, res: Response) => {
     const sig = req.headers['stripe-signature'];
-
+    console.log('sig', sig);
     if (!sig) {
       return res.status(400).json({ error: 'No Stripe signature found' });
     }
@@ -38,6 +37,7 @@ router.post(
         sig,
         process.env.STRIPE_WEBHOOK_SECRET!
       );
+      console.log('event', event);
       // Handle the event
       switch (event.type) {
         case 'checkout.session.completed':
@@ -66,7 +66,7 @@ router.post(
 router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { planId, planName, accountType, billingFrequency, currency, userCount, email } = req.body;
-    const planTier = planId as PlanTier;
+    const planType = planId.toUpperCase() as PlanTier;
 
     let token = req.cookies.Authorization;
     
@@ -163,7 +163,7 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
       success_url: `${process.env.FRONTEND_URL}/admin/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.FRONTEND_URL}/admin/subscription?canceled=true`,
       metadata: {
-        planTier,
+        planId,
         userId,
         companyId,
         billingFrequency,
@@ -194,9 +194,8 @@ router.get('/sessions/:sessionId', async (req: Request, res: Response) => {
 async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
   const metadata = session.metadata || {};
   
-  if (!metadata.planType || !metadata.userId || !metadata.companyId || !metadata.billingFrequency) {
+  if (!metadata.planId || !metadata.userId || !metadata.companyId || !metadata.billingFrequency) {
     console.error('Missing metadata:', {
-      planType: metadata.planType,
       userId: metadata.userId,
       companyId: metadata.companyId,
       billingFrequency: metadata.billingFrequency
@@ -225,7 +224,7 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
         data: {
           amount: session.amount_total / 100,
           companyId: metadata.companyId,
-          planType: metadata.planTier as PlanTier,
+          planType: metadata.planId.toUpperCase() as PlanTier,
           isSuccessfull: true,
           transactionMethod: 'STRIPE',
           receiptUrl,
@@ -238,7 +237,7 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
         data: {
           planStart: new Date(),
           planEnd: new Date(Date.now() + timePeriod * 24 * 60 * 60 * 1000),
-          planName: metadata.planTier as PlanTier,
+          planName: metadata.planId.toUpperCase() as PlanTier,
           billingFrequency: metadata.billingFrequency as BillingFrequency,
           planType: metadata.accountType as PlanType || 'company',
         },
