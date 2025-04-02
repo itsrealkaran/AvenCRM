@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
-import { WhatsAppAccount } from '@/types/whatsapp.types';
+import { WhatsAppAccount, WhatsAppPhoneNumberData } from '@/types/whatsapp.types';
 import { FaCheck, FaEdit, FaTrash, FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
 
@@ -13,35 +13,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 
-export function ConnectedAccounts() {
-  const [accounts, setAccounts] = useState<WhatsAppAccount[]>([]);
+export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberData[] }) {
   const [loading, setLoading] = useState(true);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<WhatsAppAccount | null>(null);
+  const [editingAccount, setEditingAccount] = useState<WhatsAppPhoneNumberData | null>(null);
   const [displayName, setDisplayName] = useState('');
   const [verifyingAccount, setVerifyingAccount] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAccounts();
-  }, []);
-
-  const fetchAccounts = async () => {
-    try {
-      setLoading(true);
-      const data = await whatsAppService.getAccounts();
-      setAccounts(data);
-    } catch (error) {
-      console.error('Error fetching WhatsApp accounts:', error);
-      toast.error('Failed to load WhatsApp accounts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditAccount = (account: WhatsAppAccount) => {
+  const handleEditAccount = (account: WhatsAppPhoneNumberData) => {
     setEditingAccount(account);
-    setDisplayName(account.displayName);
+    setDisplayName(account.name);
     setShowEditModal(true);
   };
 
@@ -49,10 +31,9 @@ export function ConnectedAccounts() {
     if (!editingAccount) return;
 
     try {
-      await whatsAppService.updateAccount(editingAccount.id, { displayName });
+      await whatsAppService.updateAccount(editingAccount.phoneNumberId, { displayName });
       toast.success('Account updated successfully');
       setShowEditModal(false);
-      fetchAccounts();
     } catch (error) {
       console.error('Error updating account:', error);
       toast.error('Failed to update account');
@@ -67,7 +48,6 @@ export function ConnectedAccounts() {
     try {
       await whatsAppService.deleteAccount(accountId);
       toast.success('Account deleted successfully');
-      fetchAccounts();
     } catch (error) {
       console.error('Error deleting account:', error);
       toast.error('Failed to delete account');
@@ -79,13 +59,6 @@ export function ConnectedAccounts() {
     try {
       await whatsAppService.verifyAccount(accountId);
       toast.success('Account verified successfully');
-
-      // Update the local state to reflect the verification
-      setAccounts(
-        accounts.map((account) =>
-          account.id === accountId ? { ...account, verified: true } : account
-        )
-      );
     } catch (error: any) {
       console.error('Error verifying account:', error);
       const errorMessage = error.response?.data?.message || 'Failed to verify account';
@@ -108,11 +81,7 @@ export function ConnectedAccounts() {
         </Button>
       </div>
 
-      {loading ? (
-        <div className='flex justify-center py-8'>
-          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-[#5932EA]'></div>
-        </div>
-      ) : accounts.length === 0 ? (
+      {accounts.length === 0 ? (
         <Card className='border border-dashed'>
           <CardContent className='flex flex-col items-center justify-center py-8'>
             <FaWhatsapp className='w-12 h-12 text-[#25D366] mb-4' />
@@ -132,14 +101,14 @@ export function ConnectedAccounts() {
       ) : (
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
           {accounts.map((account) => (
-            <Card key={account.id}>
+            <Card key={account.phoneNumberId}>
               <CardHeader className='pb-2'>
                 <CardTitle className='flex justify-between items-center'>
                   <div className='flex items-center'>
                     <FaWhatsapp className='w-5 h-5 text-[#25D366] mr-2' />
-                    <span>{account.displayName}</span>
+                    <span>{account.name}</span>
                   </div>
-                  {account.verified && (
+                  {account.codeVerificationStatus === 'VERIFIED' && (
                     <span className='bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center'>
                       <FaCheck className='w-3 h-3 mr-1' /> Verified
                     </span>
@@ -153,14 +122,14 @@ export function ConnectedAccounts() {
                     <Button variant='outline' size='sm' onClick={() => handleEditAccount(account)}>
                       <FaEdit className='w-3 h-3 mr-1' /> Edit
                     </Button>
-                    {!account.verified && (
+                    {account.codeVerificationStatus === 'NOT_VERIFIED' && (
                       <Button
                         variant='outline'
                         size='sm'
-                        onClick={() => handleVerifyAccount(account.id)}
-                        disabled={verifyingAccount === account.id}
+                        onClick={() => handleVerifyAccount(account.phoneNumberId)}
+                        disabled={verifyingAccount === account.phoneNumberId}
                       >
-                        {verifyingAccount === account.id ? (
+                        {verifyingAccount === account.phoneNumberId ? (
                           <>
                             <span className='animate-spin h-3 w-3 mr-1 border-2 border-t-transparent border-blue-600 rounded-full'></span>
                             Verifying...
@@ -176,7 +145,7 @@ export function ConnectedAccounts() {
                       variant='outline'
                       size='sm'
                       className='text-red-500 hover:text-red-700'
-                      onClick={() => handleDeleteAccount(account.id)}
+                      onClick={() => handleDeleteAccount(account.phoneNumberId)}
                     >
                       <FaTrash className='w-3 h-3 mr-1' /> Delete
                     </Button>
@@ -192,7 +161,7 @@ export function ConnectedAccounts() {
         open={showConnectModal}
         onClose={() => setShowConnectModal(false)}
         onConnect={() => {
-          fetchAccounts();
+          // fetchAccounts();
         }}
       />
 

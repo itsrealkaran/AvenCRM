@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type React from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
+import { WhatsAppAccount } from '@/types/whatsapp.types';
 import { Plus } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
@@ -84,13 +85,14 @@ export function CreateCampaignModal({
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<WhatsAppAccount>();
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [templates, setTemplates] = useState<any[]>(SAMPLE_TEMPLATES);
 
   // Ensure audiences is always an array
   const safeAudiences = audiences || [];
-
+  console.log(audiences, 'audiences');
+  console.log(safeAudiences, 'safeAudiences');
   // Fetch accounts when modal opens
   useEffect(() => {
     if (open) {
@@ -105,8 +107,8 @@ export function CreateCampaignModal({
       setAccounts(accountsData);
 
       // Set default account if available
-      if (accountsData.length > 0 && !selectedAccountId) {
-        setSelectedAccountId(accountsData[0].id);
+      if (accountsData && !selectedAccountId) {
+        setSelectedAccountId(accountsData.id);
       }
     } catch (error) {
       console.error('Error fetching WhatsApp accounts:', error);
@@ -191,18 +193,38 @@ export function CreateCampaignModal({
       };
 
       // Call API to create or update campaign
-      let result;
-      if (editingCampaign?.id) {
-        result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
-        toast.success('Campaign updated successfully');
-      } else {
-        // @ts-ignore
-        result = await whatsAppService.createCampaign(campaignData);
-        toast.success('Campaign created successfully');
-      }
+      // let result;
+      // if (editingCampaign?.id) {
+      //   result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
+      //   toast.success('Campaign updated successfully');
+      // } else {
+      //   // @ts-ignore
+      //   result = await whatsAppService.createCampaign(campaignData);
+      //   toast.success('Campaign created successfully');
+      // }
 
       // Pass the result to parent component
-      onCreateCampaign(result);
+      // onCreateCampaign(result);
+
+      // @ts-ignore
+      FB.api(
+        `/${selectedAccountId}/messages?access_token=${accounts?.accessToken}`,
+        'POST',
+        {
+          recipient_type: 'individual',
+          messaging_product: 'whatsapp',
+          to: selectedAudience?.recipients?.[0].phoneNumber,
+          type: 'text',
+          text: {
+            preview_url: true,
+            body: message,
+          },
+        },
+        (phoneNumbers: any) => {
+          console.log('Phone numbers:', phoneNumbers);
+        }
+      );
+
       onClose();
     } catch (error) {
       console.error('Error saving campaign:', error);
@@ -403,9 +425,9 @@ export function CreateCampaignModal({
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.displayName || account.phoneNumber}
+                  {accounts?.phoneNumberData.map((account: any) => (
+                    <SelectItem key={account.phoneNumberId} value={account.phoneNumberId}>
+                      {account.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -447,7 +469,7 @@ export function CreateCampaignModal({
                   <SelectContent>
                     {safeAudiences.map((audience) => (
                       <SelectItem key={audience.id} value={audience.id}>
-                        {audience.name} ({audience.phoneNumbers?.length || 0} recipients)
+                        {audience.name} ({audience.recipients?.length || 0} recipients)
                       </SelectItem>
                     ))}
                   </SelectContent>

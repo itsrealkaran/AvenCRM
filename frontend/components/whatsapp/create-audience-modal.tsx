@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
+import { WhatsAppAccount } from '@/types/whatsapp.types';
 import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -43,7 +44,7 @@ export function CreateAudienceModal({
   const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<WhatsAppAccount>();
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
 
   // Reset form when modal opens/closes
@@ -63,7 +64,7 @@ export function CreateAudienceModal({
     if (editingAudience) {
       setName(editingAudience.name);
       setPhoneNumbers(editingAudience.phoneNumbers || []);
-      setSelectedAccountId(editingAudience.accountId || '');
+      setSelectedAccountId(editingAudience.id || '');
     } else if (open) {
       // Only reset if modal is open to prevent unnecessary state updates
       resetForm();
@@ -80,12 +81,12 @@ export function CreateAudienceModal({
 
   const fetchAccounts = async () => {
     try {
-      const accountsData = await whatsAppService.getAccounts();
+      const accountsData: WhatsAppAccount = await whatsAppService.getAccounts();
       setAccounts(accountsData);
 
       // If there's only one account, select it automatically (only for new audiences)
-      if (accountsData.length === 1 && !editingAudience) {
-        setSelectedAccountId(accountsData[0].id);
+      if (accountsData && !editingAudience) {
+        setSelectedAccountId(accountsData.id);
       }
     } catch (error) {
       console.error('Error fetching WhatsApp accounts:', error);
@@ -231,26 +232,6 @@ export function CreateAudienceModal({
           </div>
         </DialogHeader>
         <div className='grid gap-4 py-4'>
-          <div className='grid gap-2'>
-            <Label htmlFor='account'>WhatsApp Account</Label>
-            <Select
-              value={selectedAccountId}
-              onValueChange={setSelectedAccountId}
-              disabled={editingAudience !== null}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder='Select WhatsApp account' />
-              </SelectTrigger>
-              <SelectContent>
-                {accounts.map((account) => (
-                  <SelectItem key={account.id} value={account.id}>
-                    {account.displayName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.account && <p className='text-sm text-red-500'>{errors.account}</p>}
-          </div>
           <div className='grid gap-2'>
             <Label htmlFor='name'>Audience Name</Label>
             <Input

@@ -256,6 +256,8 @@ export class WhatsAppController extends BaseController {
           }
         },
         include: {
+          account: true,
+          recipients: true,
           _count: {
             select: {
               recipients: true

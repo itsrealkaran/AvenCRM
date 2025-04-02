@@ -31,6 +31,21 @@ export interface AudienceGroup {
   id: string;
   name: string;
   phoneNumbers?: string[];
+  recipients?: {
+    id: string;
+    phoneNumber: string;
+    name: string;
+  }[];
+  account?: {
+    id: string;
+    name: string;
+    phoneNumberData: {
+      id: string;
+      phoneNumber: string;
+      name: string;
+      codeVerificationStatus: string;
+    }[];
+  };
   _count?: {
     recipients: number;
   };

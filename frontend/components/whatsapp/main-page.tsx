@@ -1,6 +1,7 @@
 'use client';
 
 import { use, useEffect, useState } from 'react';
+import { whatsAppService } from '@/api/whatsapp.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
 
@@ -31,12 +32,26 @@ export default function WhatsAppCampaignsPage() {
     queryFn: () => api.get('/whatsapp/accounts'),
   });
 
+  const whatsAppAudiences = useQuery({
+    queryKey: ['whatsapp-audiences'],
+    queryFn: () => whatsAppService.getAudiences(),
+    enabled: !!whatsAppAccount.data,
+  });
+
+  useEffect(() => {
+    if (whatsAppAudiences.data) {
+      setAudiences(whatsAppAudiences.data);
+    }
+  }, [whatsAppAudiences.data]);
+
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
   };
 
   const handleCreateAudience = (newAudience: AudienceGroup) => {
     setAudiences([...audiences, newAudience]);
+    // Invalidate and refetch audiences
+    queryClient.invalidateQueries({ queryKey: ['whatsapp-audiences'] });
   };
 
   const { company } = useAuth();
@@ -146,7 +161,7 @@ export default function WhatsAppCampaignsPage() {
     return <div>Error loading WhatsApp account</div>;
   }
 
-  const hasWhatsAppAccount = whatsAppAccount.data && Object.keys(whatsAppAccount.data).length > 0;
+  const hasWhatsAppAccount = whatsAppAccount.data?.data;
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
@@ -186,12 +201,12 @@ export default function WhatsAppCampaignsPage() {
               <CampaignsList
                 campaigns={campaigns}
                 onCreateCampaign={() => setShowCampaignModal(true)}
-                audiences={[]}
+                audiences={audiences}
                 onUpdateCampaign={() => {}}
               />
             </TabsContent>
             <TabsContent value='accounts'>
-              <ConnectedAccounts />
+              <ConnectedAccounts accounts={whatsAppAccount.data?.data?.phoneNumberData} />
             </TabsContent>
             <TabsContent value='audience'>
               <AudienceList audiences={audiences} onCreateAudience={handleCreateAudience} />

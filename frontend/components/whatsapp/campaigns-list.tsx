@@ -24,15 +24,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 
+import type { AudienceGroup } from './audience-list';
 import type { Campaign } from './create-campaign-modal';
 import { CreateCampaignModal } from './create-campaign-modal';
-
-interface AudienceGroup {
-  id: string;
-  name: string;
-  phoneNumbers: string[];
-  createdAt: string;
-}
 
 interface CampaignsListProps {
   campaigns: Campaign[];
