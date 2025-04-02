@@ -46,5 +46,6 @@ router.get('/campaigns/:id/statistics', whatsAppController.getCampaignStatistics
 
 // Webhook for delivery status updates (no auth needed for external webhook)
 router.post('/webhook', whatsAppController.handleWebhook);
+router.get('/webhook', whatsAppController.getWebhook);
 
 export { router as whatsAppRoutes }; 
