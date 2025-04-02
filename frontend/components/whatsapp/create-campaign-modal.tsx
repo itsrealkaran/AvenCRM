@@ -190,11 +190,9 @@ export function CreateCampaignModal({
     setIsLoading(true);
 
     try {
-      let campaignData;
-
       if (campaignType === 'text') {
         selectedAudience?.recipients?.map((recipient) => {
-          campaignData = {
+          const campaignData = {
             recipient_type: 'individual',
             messaging_product: 'whatsapp',
             to: recipient.phoneNumber.toString(),
@@ -204,8 +202,9 @@ export function CreateCampaignModal({
               body: message,
             },
           };
+
+          sendMessage(campaignData);
         });
-        sendMessage(campaignData);
       }
 
       // Call API to create or update campaign

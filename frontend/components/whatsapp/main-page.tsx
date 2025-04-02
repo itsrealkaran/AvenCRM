@@ -14,6 +14,7 @@ import { CampaignsList } from '@/components/whatsapp/campaigns-list';
 import { ConnectedAccounts } from '@/components/whatsapp/connected-accounts';
 import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create-campaign-modal';
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
+import { TemplatesList } from '@/components/whatsapp/templates-list';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +25,7 @@ export default function WhatsAppCampaignsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [whatsAppCode, setWhatsAppCode] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -38,11 +40,20 @@ export default function WhatsAppCampaignsPage() {
     enabled: !!whatsAppAccount.data,
   });
 
+  const whatsAppTemplates = useQuery({
+    queryKey: ['whatsapp-templates'],
+    queryFn: () => whatsAppService.getTemplates(),
+    enabled: !!whatsAppAccount.data,
+  });
+
   useEffect(() => {
     if (whatsAppAudiences.data) {
       setAudiences(whatsAppAudiences.data);
     }
-  }, [whatsAppAudiences.data]);
+    if (whatsAppTemplates.data) {
+      setTemplates(whatsAppTemplates.data);
+    }
+  }, [whatsAppAudiences.data, whatsAppTemplates.data]);
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
@@ -52,6 +63,15 @@ export default function WhatsAppCampaignsPage() {
     setAudiences([...audiences, newAudience]);
     // Invalidate and refetch audiences
     queryClient.invalidateQueries({ queryKey: ['whatsapp-audiences'] });
+  };
+
+  const handleCreateTemplate = () => {
+    // Invalidate and refetch templates
+    queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
+  };
+
+  const handleUpdateTemplate = (template: any) => {
+    setTemplates(templates.map((t) => (t.id === template.id ? template : t)));
   };
 
   const { company } = useAuth();
@@ -196,6 +216,7 @@ export default function WhatsAppCampaignsPage() {
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
               <TabsTrigger value='accounts'>Connected Accounts</TabsTrigger>
               <TabsTrigger value='audience'>Audience</TabsTrigger>
+              <TabsTrigger value='templates'>Templates</TabsTrigger>
             </TabsList>
             <TabsContent value='campaigns'>
               <CampaignsList
@@ -210,6 +231,13 @@ export default function WhatsAppCampaignsPage() {
             </TabsContent>
             <TabsContent value='audience'>
               <AudienceList audiences={audiences} onCreateAudience={handleCreateAudience} />
+            </TabsContent>
+            <TabsContent value='templates'>
+              <TemplatesList
+                templates={templates}
+                onCreateTemplate={handleCreateTemplate}
+                onUpdateTemplate={handleUpdateTemplate}
+              />
             </TabsContent>
           </Tabs>
         </>
