@@ -130,6 +130,18 @@ export function CreateCampaignModal({
     }
   };
 
+  const sendMessage = async (campaignData: any) => {
+    // @ts-ignore
+    FB.api(
+      `/${selectedAccountId}/messages?access_token=${accounts?.accessToken}`,
+      'POST',
+      campaignData,
+      (phoneNumbers: any) => {
+        console.log('Phone numbers:', phoneNumbers);
+      }
+    );
+  };
+
   useEffect(() => {
     if (editingCampaign) {
       setCampaignName(editingCampaign.name);
@@ -178,19 +190,23 @@ export function CreateCampaignModal({
     setIsLoading(true);
 
     try {
-      const campaignData: Campaign = {
-        id: editingCampaign?.id,
-        name: campaignName,
-        type: campaignType,
-        message: campaignType === 'template' ? selectedTemplate.content : message,
-        imageUrl: campaignType === 'image' ? imageUrl : undefined,
-        templateId: campaignType === 'template' ? selectedTemplate.id : undefined,
-        templateParams: campaignType === 'template' ? templateParams : undefined,
-        audience: selectedAudience!,
-        status: editingCampaign?.status || 'Active',
-        createdAt: editingCampaign?.createdAt || new Date().toISOString(),
-        accountId: selectedAccountId,
-      };
+      let campaignData;
+
+      if (campaignType === 'text') {
+        selectedAudience?.recipients?.map((recipient) => {
+          campaignData = {
+            recipient_type: 'individual',
+            messaging_product: 'whatsapp',
+            to: recipient.phoneNumber.toString(),
+            type: 'text',
+            text: {
+              preview_url: true,
+              body: message,
+            },
+          };
+        });
+        sendMessage(campaignData);
+      }
 
       // Call API to create or update campaign
       // let result;
@@ -205,25 +221,6 @@ export function CreateCampaignModal({
 
       // Pass the result to parent component
       // onCreateCampaign(result);
-
-      // @ts-ignore
-      FB.api(
-        `/${selectedAccountId}/messages?access_token=${accounts?.accessToken}`,
-        'POST',
-        {
-          recipient_type: 'individual',
-          messaging_product: 'whatsapp',
-          to: selectedAudience?.recipients?.[0].phoneNumber,
-          type: 'text',
-          text: {
-            preview_url: true,
-            body: message,
-          },
-        },
-        (phoneNumbers: any) => {
-          console.log('Phone numbers:', phoneNumbers);
-        }
-      );
 
       onClose();
     } catch (error) {

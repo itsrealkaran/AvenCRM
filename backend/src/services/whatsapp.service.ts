@@ -32,15 +32,13 @@ export class WhatsAppService {
     return decrypted.toString();
   }
 
-  async createAccount(userId: string, accountData: any) {
-    const encryptedToken = this.encrypt(accountData.accessToken);
-    
+  async createAccount(userId: string, accountData: any) {    
     return prisma.whatsAppAccount.create({
       data: {
         userId,
         phoneNumberData: accountData.phoneNumberData,
         wabaid: accountData.wabaid,
-        accessToken: encryptedToken,
+        accessToken: accountData.accessToken,
         displayName: accountData.displayName
       }
     });

@@ -77,7 +77,7 @@ export default function WhatsAppCampaignsPage() {
         config_id: '1931062140756222',
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'public_profile,email,ads_management',
+        scope: 'ads_management',
       }
     );
   };

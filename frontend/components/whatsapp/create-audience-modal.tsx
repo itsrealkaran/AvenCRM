@@ -139,6 +139,9 @@ export function CreateAudienceModal({
     try {
       let audience;
 
+      // Clean phone numbers by removing '+' prefix
+      const cleanPhoneNumbers = phoneNumbers.map((number) => number.replace('+', ''));
+
       if (editingAudience) {
         audience = await whatsAppService.updateAudience(editingAudience.id, {
           name,
@@ -147,7 +150,7 @@ export function CreateAudienceModal({
         const existingRecipients = await whatsAppService.getAudienceRecipients(editingAudience.id);
         const existingPhoneNumbers = existingRecipients.map((r: any) => r.phoneNumber);
 
-        const newPhoneNumbers = phoneNumbers.filter(
+        const newPhoneNumbers = cleanPhoneNumbers.filter(
           (number) => !existingPhoneNumbers.includes(number)
         );
 
@@ -160,7 +163,7 @@ export function CreateAudienceModal({
         }
 
         const removedRecipients = existingRecipients.filter(
-          (r: any) => !phoneNumbers.includes(r.phoneNumber)
+          (r: any) => !cleanPhoneNumbers.includes(r.phoneNumber)
         );
 
         for (const recipient of removedRecipients) {
@@ -171,7 +174,7 @@ export function CreateAudienceModal({
 
         audience = {
           ...updatedAudience,
-          phoneNumbers: phoneNumbers,
+          phoneNumbers: cleanPhoneNumbers,
         };
 
         toast.success('Audience updated successfully');
@@ -181,8 +184,8 @@ export function CreateAudienceModal({
           accountId: selectedAccountId,
         });
 
-        if (phoneNumbers.length > 0) {
-          const recipients = phoneNumbers.map((phoneNumber) => ({
+        if (cleanPhoneNumbers.length > 0) {
+          const recipients = cleanPhoneNumbers.map((phoneNumber) => ({
             phoneNumber,
           }));
 
@@ -193,7 +196,7 @@ export function CreateAudienceModal({
 
         audience = {
           ...createdAudience,
-          phoneNumbers: phoneNumbers,
+          phoneNumbers: cleanPhoneNumbers,
         };
 
         toast.success('Audience created successfully');
