@@ -19,6 +19,8 @@ import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-mod
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
+import MessagesList from './messages-list';
+
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
@@ -46,6 +48,12 @@ export default function WhatsAppCampaignsPage() {
     enabled: !!whatsAppAccount.data,
   });
 
+  const whatsAppCampaigns = useQuery({
+    queryKey: ['whatsapp-campaigns'],
+    queryFn: () => api.get('/whatsapp/campaigns'),
+    enabled: !!whatsAppAccount.data,
+  });
+
   useEffect(() => {
     if (whatsAppAudiences.data) {
       setAudiences(whatsAppAudiences.data);
@@ -53,7 +61,10 @@ export default function WhatsAppCampaignsPage() {
     if (whatsAppTemplates.data) {
       setTemplates(whatsAppTemplates.data);
     }
-  }, [whatsAppAudiences.data, whatsAppTemplates.data]);
+    if (whatsAppCampaigns.data) {
+      setCampaigns(whatsAppCampaigns.data.data);
+    }
+  }, [whatsAppAudiences.data, whatsAppTemplates.data, whatsAppCampaigns.data]);
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
@@ -214,17 +225,23 @@ export default function WhatsAppCampaignsPage() {
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
+              <TabsTrigger value='messages'>Messages</TabsTrigger>
               <TabsTrigger value='accounts'>Connected Accounts</TabsTrigger>
               <TabsTrigger value='audience'>Audience</TabsTrigger>
               <TabsTrigger value='templates'>Templates</TabsTrigger>
             </TabsList>
             <TabsContent value='campaigns'>
               <CampaignsList
-                campaigns={campaigns}
+                campaigns={whatsAppCampaigns.data?.data || []}
                 onCreateCampaign={() => setShowCampaignModal(true)}
                 audiences={audiences}
-                onUpdateCampaign={() => {}}
+                onUpdateCampaign={() => {
+                  queryClient.invalidateQueries({ queryKey: ['whatsapp-campaigns'] });
+                }}
               />
+            </TabsContent>
+            <TabsContent value='messages'>
+              <MessagesList />
             </TabsContent>
             <TabsContent value='accounts'>
               <ConnectedAccounts accounts={whatsAppAccount.data?.data?.phoneNumberData} />

@@ -48,6 +48,7 @@ export type Campaign = {
   templateId?: string;
   templateParams?: { [key: string]: string };
   audience: AudienceGroup;
+  audienceId: string;
   status: 'Active' | 'Paused';
   createdAt: string;
   accountId?: string;
@@ -195,7 +196,7 @@ export function CreateCampaignModal({
           const campaignData = {
             recipient_type: 'individual',
             messaging_product: 'whatsapp',
-            to: recipient.phoneNumber.toString(),
+            to: `${recipient.phoneNumber}`,
             type: 'text',
             text: {
               preview_url: true,
@@ -207,19 +208,34 @@ export function CreateCampaignModal({
         });
       }
 
+      const campaignData: Campaign = {
+        id: editingCampaign?.id,
+        name: campaignName,
+        type: campaignType,
+        message: campaignType === 'template' ? selectedTemplate.content : message,
+        imageUrl: campaignType === 'image' ? imageUrl : undefined,
+        templateId: campaignType === 'template' ? selectedTemplate.id : undefined,
+        templateParams: campaignType === 'template' ? templateParams : undefined,
+        audience: selectedAudience!,
+        audienceId: selectedAudience!.id,
+        status: editingCampaign?.status || 'Active',
+        createdAt: editingCampaign?.createdAt || new Date().toISOString(),
+        accountId: selectedAccountId,
+      };
+
       // Call API to create or update campaign
-      // let result;
-      // if (editingCampaign?.id) {
-      //   result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
-      //   toast.success('Campaign updated successfully');
-      // } else {
-      //   // @ts-ignore
-      //   result = await whatsAppService.createCampaign(campaignData);
-      //   toast.success('Campaign created successfully');
-      // }
+      let result;
+      if (editingCampaign?.id) {
+        result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
+        toast.success('Campaign updated successfully');
+      } else {
+        // @ts-ignore
+        result = await whatsAppService.createCampaign(campaignData);
+        toast.success('Campaign created successfully');
+      }
 
       // Pass the result to parent component
-      // onCreateCampaign(result);
+      onCreateCampaign(result);
 
       onClose();
     } catch (error) {

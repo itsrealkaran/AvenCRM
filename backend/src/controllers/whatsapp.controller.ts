@@ -653,22 +653,14 @@ export class WhatsAppController extends BaseController {
         return res.status(400).json({ message: 'Template ID is required for template campaigns' });
       }
 
-      // Verify account belongs to user
       const account = await prisma.whatsAppAccount.findUnique({
-        where: { id: accountId }
+        where: {
+          userId: req.user.id
+        }
       });
 
-      if (!account || account.userId !== req.user.id) {
+      if (!account) {
         return res.status(403).json({ message: 'Forbidden' });
-      }
-
-      // Verify audience belongs to account
-      const audience = await prisma.whatsAppAudience.findUnique({
-        where: { id: audienceId }
-      });
-
-      if (!audience || audience.accountId !== accountId) {
-        return res.status(403).json({ message: 'Invalid audience for this account' });
       }
 
       // If template is specified, verify it belongs to account
@@ -692,11 +684,25 @@ export class WhatsAppController extends BaseController {
           templateParams: templateParams
             ? templateParams
             : Prisma.JsonNull,
-          accountId,
+          accountId: account.id,
           audienceId,
           scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
           status: WhatsAppCampaignStatus.DRAFT
         }
+      });
+
+      // Get all recipients from the audience
+      const recipients = await prisma.whatsAppRecipient.findMany({
+        where: { audienceId }
+      });
+
+      // Create messages for each recipient
+      const messages = await prisma.whatsAppMessage.createMany({
+        data: recipients.map(recipient => ({
+          recipientId: recipient.id,
+          status: 'SENT',
+          campaignId: campaign.id
+        }))
       });
 
       return res.status(201).json(campaign);
@@ -1034,11 +1040,6 @@ export class WhatsAppController extends BaseController {
   // Webhook handler
   async handleWebhook(req: Request, res: Response) {
     try {
-      // Return the hub challenge to verify the webhook
-      if (req.query['hub.mode'] === 'subscribe' && req.query['hub.challenge']) {
-        return res.status(200).send(req.query['hub.challenge']);
-      }
-
       const data = req.body;
       logger.info('WhatsApp webhook received:', JSON.stringify(data));
 
