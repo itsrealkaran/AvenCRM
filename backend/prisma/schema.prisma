@@ -187,6 +187,7 @@ model User {
   pageBuilders   PageBuilder[]
   supportTickets SupportTicket[] // Tickets created by user
   leadForms      LeadForm[]
+  whatsappMessages WhatsAppMessage[]
 
   // Admin specific relations
   allowedPages PageBuilder[] @relation("AllowedAdmins")
@@ -715,23 +716,22 @@ model Task {
 
 // Store WhatsApp Business API credentials per user
 model WhatsAppAccount {
-  id            String             @id @default(cuid())
-  userId        String
-  user          User               @relation(fields: [userId], references: [id])
-  phoneNumberId String // WhatsApp Business API Phone Number ID
-  wabaid        String // WhatsApp Business Account ID  
-  accessToken   String // Encrypted access token
-  phoneNumber   String // Display phone number
-  displayName   String
-  verified      Boolean            @default(false)
-  status        String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  audiences     WhatsAppAudience[]
-  campaigns     WhatsAppCampaign[]
-  templates     WhatsAppTemplate[]
+  id              String             @id @default(cuid())
+  userId          String
+  user            User               @relation(fields: [userId], references: [id])
+  wabaid          String // WhatsApp Business Account ID  
+  accessToken     String // Encrypted access token
+  phoneNumberData Json[] // [ {phoneNumberId: string, name: string, phoneNumber: string, codeVerificationStatus: string} ]
+  displayName     String
+  verified        Boolean            @default(false)
+  status          String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  audiences       WhatsAppAudience[]
+  campaigns       WhatsAppCampaign[]
+  templates       WhatsAppTemplate[]
 
-  @@unique([userId, phoneNumberId])
+  @@unique([userId])
 }
 
 // Store audience groups
@@ -755,7 +755,6 @@ model WhatsAppRecipient {
   audience    WhatsAppAudience  @relation(fields: [audienceId], references: [id])
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  messages    WhatsAppMessage[]
 
   @@unique([audienceId, phoneNumber])
 }
@@ -774,12 +773,11 @@ model WhatsAppCampaign {
   account        WhatsAppAccount   @relation(fields: [accountId], references: [id])
   audienceId     String
   audience       WhatsAppAudience  @relation(fields: [audienceId], references: [id])
-  status         String            @default("DRAFT") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
+  status         String            @default("COMPLETED") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
   scheduledAt    DateTime?
   completedAt    DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
-  messages       WhatsAppMessage[]
 }
 
 // Store message templates
@@ -798,38 +796,38 @@ model WhatsAppTemplate {
 // Store individual messages
 model WhatsAppMessage {
   id           String            @id @default(cuid())
-  campaignId   String
-  campaign     WhatsAppCampaign  @relation(fields: [campaignId], references: [id])
-  recipientId  String
-  recipient    WhatsAppRecipient @relation(fields: [recipientId], references: [id])
   wamid        String? // WhatsApp Message ID for delivery tracking
   status       String            @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  message      String?
   errorMessage String?
+  phoneNumber  String?
   sentAt       DateTime?
   deliveredAt  DateTime?
   readAt       DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+  userId       String?
+  user         User?             @relation(fields: [userId], references: [id])
 }
 
 model MetaAdAccount {
-  id          String   @id @default(cuid())
+  id          String          @id @default(cuid())
   name        String?
   email       String?
   accessToken String
   pageId      String?
   status      ActivityStatus? @default(ACTIVE)
 
-  agentId     String
-  agent       User     @relation(fields: [agentId], references: [id])
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  agentId String
+  agent   User   @relation(fields: [agentId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model LeadForm {
-  id String @id @default(cuid())
-  name String
+  id        String @id @default(cuid())
+  name      String
   questions Json
 
   formId String?

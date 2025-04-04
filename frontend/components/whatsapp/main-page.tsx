@@ -1,6 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
+import { whatsAppService } from '@/api/whatsapp.service';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
 
 import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
@@ -12,9 +14,12 @@ import { CampaignsList } from '@/components/whatsapp/campaigns-list';
 import { ConnectedAccounts } from '@/components/whatsapp/connected-accounts';
 import { CreateCampaignModal, type Campaign } from '@/components/whatsapp/create-campaign-modal';
 import { MetricsCards } from '@/components/whatsapp/metrics-cards';
+import { TemplatesList } from '@/components/whatsapp/templates-list';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+
+import MessagesList from './messages-list';
 
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
@@ -22,7 +27,44 @@ export default function WhatsAppCampaignsPage() {
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
+  const [templates, setTemplates] = useState<any[]>([]);
   const [whatsAppCode, setWhatsAppCode] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const whatsAppAccount = useQuery({
+    queryKey: ['whatsapp-account'],
+    queryFn: () => api.get('/whatsapp/accounts'),
+  });
+
+  const whatsAppAudiences = useQuery({
+    queryKey: ['whatsapp-audiences'],
+    queryFn: () => whatsAppService.getAudiences(),
+    enabled: !!whatsAppAccount.data,
+  });
+
+  const whatsAppTemplates = useQuery({
+    queryKey: ['whatsapp-templates'],
+    queryFn: () => whatsAppService.getTemplates(),
+    enabled: !!whatsAppAccount.data,
+  });
+
+  const whatsAppCampaigns = useQuery({
+    queryKey: ['whatsapp-campaigns'],
+    queryFn: () => api.get('/whatsapp/campaigns'),
+    enabled: !!whatsAppAccount.data,
+  });
+
+  useEffect(() => {
+    if (whatsAppAudiences.data) {
+      setAudiences(whatsAppAudiences.data);
+    }
+    if (whatsAppTemplates.data) {
+      setTemplates(whatsAppTemplates.data);
+    }
+    if (whatsAppCampaigns.data) {
+      setCampaigns(whatsAppCampaigns.data.data);
+    }
+  }, [whatsAppAudiences.data, whatsAppTemplates.data, whatsAppCampaigns.data]);
 
   const handleCreateCampaign = (newCampaign: Campaign) => {
     setCampaigns([...campaigns, newCampaign]);
@@ -30,6 +72,17 @@ export default function WhatsAppCampaignsPage() {
 
   const handleCreateAudience = (newAudience: AudienceGroup) => {
     setAudiences([...audiences, newAudience]);
+    // Invalidate and refetch audiences
+    queryClient.invalidateQueries({ queryKey: ['whatsapp-audiences'] });
+  };
+
+  const handleCreateTemplate = () => {
+    // Invalidate and refetch templates
+    queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
+  };
+
+  const handleUpdateTemplate = (template: any) => {
+    setTemplates(templates.map((t) => (t.id === template.id ? template : t)));
   };
 
   const { company } = useAuth();
@@ -55,7 +108,7 @@ export default function WhatsAppCampaignsPage() {
         config_id: '1931062140756222',
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'public_profile,email,ads_management',
+        scope: 'ads_management',
       }
     );
   };
@@ -78,36 +131,68 @@ export default function WhatsAppCampaignsPage() {
           console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
           setIsConnected(true);
           setShowWhatsAppModal(false);
+
+          // @ts-ignore
+          FB.api(
+            `/debug_token?input_token=${accessToken}&access_token=${accessToken}`,
+            (debugInfo: any) => {
+              console.log('Debug info:', debugInfo);
+              const wabaId = debugInfo.data.granular_scopes.find(
+                (scope: any) => scope.scope === 'whatsapp_business_management'
+              )?.target_ids[0];
+              console.log('WABA ID:', wabaId);
+              console.log('debug info:', debugInfo);
+
+              // @ts-ignore
+              FB.api(
+                `/${wabaId}/phone_numbers?access_token=${accessToken}`,
+                (phoneNumbers: any) => {
+                  console.log('Phone numbers:', phoneNumbers);
+
+                  const phoneNumberData = phoneNumbers.data.map((phoneNumber: any) => ({
+                    phoneNumberId: phoneNumber.id,
+                    name: phoneNumber.verified_name,
+                    phoneNumber: phoneNumber.display_phone_number,
+                    codeVerificationStatus: phoneNumber.code_verification_status,
+                  }));
+
+                  api
+                    .post('/whatsapp/accounts', {
+                      displayName: userInfo.name,
+                      phoneNumberData: phoneNumberData,
+                      wabaid: wabaId,
+                      accessToken: accessToken,
+                    })
+                    .then((response: any) => {
+                      console.log('API response:', response);
+                      setIsConnected(true);
+                      setShowWhatsAppModal(false);
+                      // Invalidate and refetch the whatsapp-account query
+                      queryClient.invalidateQueries({ queryKey: ['whatsapp-account'] });
+                    });
+                }
+              );
+            }
+          );
         });
-
-        // @ts-ignore
-        FB.api(
-          `/debug_token?input_token=${accessToken}&access_token=${accessToken}`,
-          (debugInfo: any) => {
-            console.log('Debug info:', debugInfo);
-            const wabaId = debugInfo.data.granular_scopes.find(
-              (scope: any) => scope.scope === 'whatsapp_business_management'
-            )?.target_id;
-            console.log('WABA ID:', wabaId);
-            console.log('debug info:', debugInfo);
-
-            // @ts-ignore
-            FB.api(`/${wabaId}/phone_numbers?access_token=${accessToken}`, (userInfo) => {
-              console.log('User info:', userInfo);
-              console.log('Logged in as:', userInfo.name, 'Email:', userInfo.email);
-              setIsConnected(true);
-              setShowWhatsAppModal(false);
-            });
-          }
-        );
       };
       fetchAccessToken();
     }
-  }, [whatsAppCode]);
+  }, [whatsAppCode, queryClient]);
 
   if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
+
+  if (whatsAppAccount.isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (whatsAppAccount.isError) {
+    return <div>Error loading WhatsApp account</div>;
+  }
+
+  const hasWhatsAppAccount = whatsAppAccount.data?.data;
 
   return (
     <Card className='p-6 space-y-6 min-h-full'>
@@ -116,7 +201,7 @@ export default function WhatsAppCampaignsPage() {
           <h1 className='text-2xl font-bold'>WhatsApp Campaigns</h1>
           <p className='text-muted-foreground text-sm'>Manage your WhatsApp business campaigns</p>
         </div>
-        {!isConnected ? (
+        {!hasWhatsAppAccount ? (
           <Button
             onClick={handleWhatsAppLogin}
             className='bg-[#25D366] hover:bg-[#25D366]/90 text-white'
@@ -134,28 +219,42 @@ export default function WhatsAppCampaignsPage() {
         )}
       </div>
 
-      {isConnected ? (
+      {hasWhatsAppAccount ? (
         <>
           <MetricsCards />
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
+              <TabsTrigger value='messages'>Messages</TabsTrigger>
               <TabsTrigger value='accounts'>Connected Accounts</TabsTrigger>
               <TabsTrigger value='audience'>Audience</TabsTrigger>
+              <TabsTrigger value='templates'>Templates</TabsTrigger>
             </TabsList>
             <TabsContent value='campaigns'>
               <CampaignsList
-                campaigns={campaigns}
+                campaigns={whatsAppCampaigns.data?.data || []}
                 onCreateCampaign={() => setShowCampaignModal(true)}
-                audiences={[]}
-                onUpdateCampaign={() => {}}
+                audiences={audiences}
+                onUpdateCampaign={() => {
+                  queryClient.invalidateQueries({ queryKey: ['whatsapp-campaigns'] });
+                }}
               />
             </TabsContent>
+            <TabsContent value='messages'>
+              <MessagesList />
+            </TabsContent>
             <TabsContent value='accounts'>
-              <ConnectedAccounts />
+              <ConnectedAccounts accounts={whatsAppAccount.data?.data?.phoneNumberData} />
             </TabsContent>
             <TabsContent value='audience'>
               <AudienceList audiences={audiences} onCreateAudience={handleCreateAudience} />
+            </TabsContent>
+            <TabsContent value='templates'>
+              <TemplatesList
+                templates={templates}
+                onCreateTemplate={handleCreateTemplate}
+                onUpdateTemplate={handleUpdateTemplate}
+              />
             </TabsContent>
           </Tabs>
         </>

@@ -13,12 +13,19 @@ export enum WhatsAppCampaignStatus {
   FAILED = 'FAILED',
 }
 
+export interface WhatsAppPhoneNumberData {
+  phoneNumberId: string;
+  name: string;
+  phoneNumber: string;
+  codeVerificationStatus: string;
+}
+
 export interface WhatsAppAccount {
   id: string;
   userId: string;
-  phoneNumberId: string;
+  accessToken: string;
+  phoneNumberData: WhatsAppPhoneNumberData[];
   wabaid: string;
-  phoneNumber: string;
   displayName: string;
   verified: boolean;
   createdAt: string;

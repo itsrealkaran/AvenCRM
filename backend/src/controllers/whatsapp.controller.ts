@@ -42,18 +42,17 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { phoneNumberId, wabaid, accessToken, phoneNumber, displayName } = req.body;
+      const { wabaid, accessToken, phoneNumberData, displayName } = req.body;
 
-      if (!phoneNumberId || !wabaid || !accessToken || !phoneNumber || !displayName) {
+      if (!wabaid || !accessToken || !phoneNumberData || !displayName) {
         return res.status(400).json({ message: 'Missing required fields' });
       }
 
       const account = await whatsAppService.createAccount(req.user.id, {
-        phoneNumberId,
         wabaid,
         accessToken,
-        phoneNumber,
-        displayName
+        phoneNumberData,
+        displayName,
       });
 
       return res.status(201).json(account);
@@ -69,11 +68,11 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const accounts = await prisma.whatsAppAccount.findMany({
+      const account = await prisma.whatsAppAccount.findFirst({
         where: { userId: req.user.id }
       });
 
-      return res.status(200).json(accounts);
+      return res.status(200).json(account);
     } catch (error) {
       logger.error('Error getting WhatsApp accounts:', error);
       return res.status(500).json({ message: 'Internal server error' });
@@ -257,6 +256,8 @@ export class WhatsAppController extends BaseController {
           }
         },
         include: {
+          account: true,
+          recipients: true,
           _count: {
             select: {
               recipients: true
@@ -652,22 +653,14 @@ export class WhatsAppController extends BaseController {
         return res.status(400).json({ message: 'Template ID is required for template campaigns' });
       }
 
-      // Verify account belongs to user
       const account = await prisma.whatsAppAccount.findUnique({
-        where: { id: accountId }
+        where: {
+          userId: req.user.id
+        }
       });
 
-      if (!account || account.userId !== req.user.id) {
+      if (!account) {
         return res.status(403).json({ message: 'Forbidden' });
-      }
-
-      // Verify audience belongs to account
-      const audience = await prisma.whatsAppAudience.findUnique({
-        where: { id: audienceId }
-      });
-
-      if (!audience || audience.accountId !== accountId) {
-        return res.status(403).json({ message: 'Invalid audience for this account' });
       }
 
       // If template is specified, verify it belongs to account
@@ -691,11 +684,24 @@ export class WhatsAppController extends BaseController {
           templateParams: templateParams
             ? templateParams
             : Prisma.JsonNull,
-          accountId,
+          accountId: account.id,
           audienceId,
           scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
           status: WhatsAppCampaignStatus.DRAFT
         }
+      });
+
+      // Get all recipients from the audience
+      const recipients = await prisma.whatsAppRecipient.findMany({
+        where: { audienceId }
+      });
+
+      // Create messages for each recipient
+      const messages = await prisma.whatsAppMessage.createMany({
+        data: recipients.map(recipient => ({
+          recipientId: recipient.id,
+          status: 'SENT',
+        }))
       });
 
       return res.status(201).json(campaign);
@@ -720,7 +726,7 @@ export class WhatsAppController extends BaseController {
         include: {
           account: {
             select: {
-              phoneNumber: true,
+              phoneNumberData: true,
               displayName: true
             }
           },
@@ -739,11 +745,6 @@ export class WhatsAppController extends BaseController {
               name: true
             }
           },
-          _count: {
-            select: {
-              messages: true
-            }
-          }
         }
       });
 
@@ -772,22 +773,6 @@ export class WhatsAppController extends BaseController {
             }
           },
           template: true,
-          messages: {
-            select: {
-              id: true,
-              status: true,
-              sentAt: true,
-              deliveredAt: true,
-              readAt: true,
-              errorMessage: true,
-              recipient: {
-                select: {
-                  phoneNumber: true,
-                  name: true
-                }
-              }
-            }
-          }
         }
       });
 
@@ -981,63 +966,52 @@ export class WhatsAppController extends BaseController {
   }
 
   async getCampaignStatistics(req: Request, res: Response) {
-    try {
-      if (!req.user) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
+    // try {
+    //   if (!req.user) {
+    //     return res.status(401).json({ message: 'Unauthorized' });
+    //   }
 
-      const campaignId = req.params.id;
+    //   const campaignId = req.params.id;
 
-      const campaign = await prisma.whatsAppCampaign.findUnique({
-        where: { id: campaignId },
-        include: {
-          account: true,
-          messages: true
-        }
-      });
+    //   const campaign = await prisma.whatsAppCampaign.findUnique({
+    //     where: { id: campaignId },
+    //     include: {
+    //       account: true,
+    //     }
+    //   });
 
-      if (!campaign) {
-        return res.status(404).json({ message: 'Campaign not found' });
-      }
+    //   if (!campaign) {
+    //     return res.status(404).json({ message: 'Campaign not found' });
+    //   }
 
-      if (campaign.account.userId !== req.user.id) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
+    //   if (campaign.account.userId !== req.user.id) {
+    //     return res.status(403).json({ message: 'Forbidden' });
+    //   }
 
-      const totalMessages = campaign.messages.length;
-      const sent = campaign.messages.filter(m => m.status === 'SENT').length;
-      const delivered = campaign.messages.filter(m => m.status === 'DELIVERED').length;
-      const read = campaign.messages.filter(m => m.status === 'READ').length;
-      const failed = campaign.messages.filter(m => m.status === 'FAILED').length;
-      const pending = campaign.messages.filter(m => m.status === 'PENDING').length;
+      
 
-      const stats = {
-        totalMessages,
-        sent,
-        delivered,
-        read,
-        failed,
-        pending,
-        deliveryRate: totalMessages > 0 ? (delivered / totalMessages) * 100 : 0,
-        readRate: delivered > 0 ? (read / delivered) * 100 : 0,
-        failureRate: totalMessages > 0 ? (failed / totalMessages) * 100 : 0
-      };
+    //   const stats = {
+    //     totalMessages,
+    //     sent,
+    //     delivered,
+    //     read,
+    //     failed,
+    //     pending,
+    //     deliveryRate: totalMessages > 0 ? (delivered / totalMessages) * 100 : 0,
+    //     readRate: delivered > 0 ? (read / delivered) * 100 : 0,
+    //     failureRate: totalMessages > 0 ? (failed / totalMessages) * 100 : 0
+    //   };
 
-      return res.status(200).json(stats);
-    } catch (error) {
-      logger.error('Error getting WhatsApp campaign statistics:', error);
-      return res.status(500).json({ message: 'Internal server error' });
-    }
+    //   return res.status(200).json(stats);
+    // } catch (error) {
+    //   logger.error('Error getting WhatsApp campaign statistics:', error);
+    //   return res.status(500).json({ message: 'Internal server error' });
+    // }
   }
 
   // Webhook handler
   async handleWebhook(req: Request, res: Response) {
     try {
-      // Return the hub challenge to verify the webhook
-      if (req.query['hub.mode'] === 'subscribe' && req.query['hub.challenge']) {
-        return res.status(200).send(req.query['hub.challenge']);
-      }
-
       const data = req.body;
       logger.info('WhatsApp webhook received:', JSON.stringify(data));
 
@@ -1073,6 +1047,22 @@ export class WhatsAppController extends BaseController {
     }
   }
 
+  async getWebhook(req: Request, res: Response) {
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+
+    // check the mode and token sent are correct
+    if (mode === "subscribe" && token === process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN) {
+      // respond with 200 OK and challenge token from the request
+      res.status(200).send(challenge);
+      console.log("Webhook verified successfully!");
+    } else {
+      // respond with '403 Forbidden' if verify tokens do not match
+      res.sendStatus(403);
+    }
+  }
+
   // Add this new method to get all recipients of an audience
   async getAudienceRecipients(req: Request, res: Response) {
     try {
@@ -1104,6 +1094,93 @@ export class WhatsAppController extends BaseController {
       return res.status(200).json(recipients);
     } catch (error) {
       logger.error('Error getting audience recipients:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+  
+  async saveMessage(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+      const { wamid, campaignData, message, sentAt } = req.body;
+      
+      await prisma.whatsAppMessage.create({
+        data: {
+          wamid,
+          message,
+          sentAt,
+          userId: req.user?.id,
+        }
+      });
+      return res.status(200).json({ message: 'Message saved successfully' });
+    } catch (error) {
+      logger.error('Error saving WhatsApp message:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getMessages(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      // Fetch all messages for the current user
+      const messages = await prisma.whatsAppMessage.findMany({
+        where: {
+          userId: req.user.id,
+          phoneNumber: { not: null }
+        },
+        orderBy: {
+          createdAt: 'desc'
+        }
+      });
+
+      // Group messages by phone number
+      const groupedMessages = messages.reduce((acc, message) => {
+        if (!message.phoneNumber) return acc;
+        
+        if (!acc[message.phoneNumber]) {
+          acc[message.phoneNumber] = [];
+        }
+        
+        acc[message.phoneNumber].push(message);
+        return acc;
+      }, {} as Record<string, typeof messages>);
+
+      // Format the response
+      const formattedResponse = Object.entries(groupedMessages).map(([phoneNumber, msgs]) => {
+        // Sort messages by date (newest first)
+        const sortedMessages = msgs.sort((a, b) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        
+        // Get the last message
+        const lastMessage = sortedMessages[0];
+        
+        // Count unread messages (assuming status 'PENDING' means unread)
+        const unreadCount = msgs.filter(msg => msg.status === 'PENDING').length;
+        
+        return {
+          id: phoneNumber, // Using phone number as ID for simplicity
+          phoneNumber,
+          lastMessage: lastMessage.message || '',
+          timestamp: lastMessage.createdAt,
+          unread: unreadCount,
+          messages: sortedMessages.map(msg => ({
+            id: msg.id,
+            text: msg.message || '',
+            timestamp: msg.createdAt,
+            isOutbound: msg.status !== 'PENDING', // Assuming outbound messages have a different status
+            status: msg.status
+          }))
+        };
+      });
+
+      return res.status(200).json(formattedResponse);
+    } catch (error) {
+      logger.error('Error fetching WhatsApp messages:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

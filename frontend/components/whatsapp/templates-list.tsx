@@ -11,7 +11,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import { ArrowUpDown, MoreHorizontal, Search } from 'lucide-react';
-import { FaEdit, FaPause, FaPlay, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -23,86 +23,66 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { CreateTemplateModal } from '@/components/whatsapp/create-template-modal';
 
-import type { AudienceGroup } from './audience-list';
-import type { Campaign } from './create-campaign-modal';
-import { CreateCampaignModal } from './create-campaign-modal';
-
-interface CampaignsListProps {
-  campaigns: Campaign[];
-  onCreateCampaign: () => void;
-  audiences: AudienceGroup[];
-  onUpdateCampaign: (campaignId: string, data: Partial<Campaign>) => void;
+interface Template {
+  id: string;
+  name: string;
+  content: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  createdAt: string;
+  updatedAt: string;
 }
 
-export function CampaignsList({
-  campaigns = [],
-  onCreateCampaign,
-  audiences,
-  onUpdateCampaign,
-}: CampaignsListProps) {
+interface TemplatesListProps {
+  templates?: Template[];
+  onCreateTemplate: () => void;
+  onUpdateTemplate: (template: Template) => void;
+}
+
+export function TemplatesList({
+  templates = [],
+  onCreateTemplate,
+  onUpdateTemplate,
+}: TemplatesListProps) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [filterValue, setFilterValue] = useState('');
 
-  const handleEditCampaign = (campaign: Campaign) => {
-    setEditingCampaign(campaign);
-    setShowCampaignModal(true);
+  const handleEditTemplate = (template: Template) => {
+    setEditingTemplate(template);
+    setShowTemplateModal(true);
   };
 
-  const handleToggleCampaignStatus = async (campaign: Campaign) => {
+  const handleDeleteTemplate = async (template: Template) => {
+    if (!template.id) return;
+
     try {
       setIsLoading(true);
-      const newStatus = campaign.status === 'Active' ? 'Paused' : 'Active';
+      await whatsAppService.deleteTemplate(template.id);
 
-      // Call the appropriate API method based on the status change
-      if (newStatus === 'Active') {
-        await whatsAppService.startCampaign(campaign.id!);
-      } else {
-        await whatsAppService.pauseCampaign(campaign.id!);
-      }
+      // Notify parent component to refresh templates
+      onCreateTemplate();
 
-      // Update the campaign in the local state
-      onUpdateCampaign(campaign.id!, { status: newStatus });
-
-      toast.success(`Campaign ${newStatus === 'Active' ? 'started' : 'paused'} successfully`);
+      toast.success('Template deleted successfully');
     } catch (error) {
-      console.error('Error toggling campaign status:', error);
-      toast.error(`Failed to ${campaign.status === 'Active' ? 'pause' : 'start'} campaign`);
+      console.error('Error deleting template:', error);
+      toast.error('Failed to delete template');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteCampaign = async (campaign: Campaign) => {
-    if (!campaign.id) return;
-
-    try {
-      setIsLoading(true);
-      await whatsAppService.deleteCampaign(campaign.id);
-
-      // Notify parent component to refresh campaigns
-      onCreateCampaign();
-
-      toast.success('Campaign deleted successfully');
-    } catch (error) {
-      console.error('Error deleting campaign:', error);
-      toast.error('Failed to delete campaign');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const filteredCampaigns = campaigns.filter(
-    (campaign) =>
-      campaign.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      campaign.audience.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      campaign.type.toLowerCase().includes(filterValue.toLowerCase())
+  const filteredTemplates = templates.filter(
+    (template) =>
+      template.name.toLowerCase().includes(filterValue.toLowerCase()) ||
+      template.content.toLowerCase().includes(filterValue.toLowerCase()) ||
+      template.status.toLowerCase().includes(filterValue.toLowerCase())
   );
 
-  const columns: ColumnDef<Campaign>[] = [
+  const columns: ColumnDef<Template>[] = [
     {
       accessorKey: 'name',
       header: ({ column }) => {
@@ -118,30 +98,11 @@ export function CampaignsList({
       },
     },
     {
-      accessorKey: 'type',
-      header: 'Type',
+      accessorKey: 'content',
+      header: 'Content',
       cell: ({ row }) => {
-        const value = row.getValue('type') as string;
-        const typeColors = {
-          text: 'bg-blue-100 text-blue-800',
-          image: 'bg-green-100 text-green-800',
-          template: 'bg-purple-100 text-purple-800',
-        };
-        return (
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${typeColors[value as keyof typeof typeColors]}`}
-          >
-            {value.charAt(0).toUpperCase() + value.slice(1)}
-          </span>
-        );
-      },
-    },
-    {
-      accessorKey: 'audience',
-      header: 'Audience',
-      cell: ({ row }) => {
-        const audience = row.getValue('audience') as AudienceGroup;
-        return audience.name;
+        const content = row.getValue('content') as string;
+        return <div className='max-w-md truncate'>{content}</div>;
       },
     },
     {
@@ -149,10 +110,15 @@ export function CampaignsList({
       header: 'Status',
       cell: ({ row }) => {
         const value = row.getValue('status') as string;
+        const statusColors = {
+          PENDING: 'bg-yellow-100 text-yellow-800',
+          APPROVED: 'bg-green-100 text-green-800',
+          REJECTED: 'bg-red-100 text-red-800',
+        };
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full ${
-              value === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              statusColors[value as keyof typeof statusColors]
             }`}
           >
             {value}
@@ -188,7 +154,7 @@ export function CampaignsList({
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => {
-        const campaign = row.original;
+        const template = row.original;
         return (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -197,24 +163,11 @@ export function CampaignsList({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={() => handleEditCampaign(campaign)}>
+              <DropdownMenuItem onClick={() => handleEditTemplate(template)}>
                 <FaEdit className='mr-2 h-4 w-4' />
                 Edit
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleToggleCampaignStatus(campaign)}>
-                {campaign.status === 'Active' ? (
-                  <>
-                    <FaPause className='mr-2 h-4 w-4' />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <FaPlay className='mr-2 h-4 w-4' />
-                    Resume
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDeleteCampaign(campaign)}>
+              <DropdownMenuItem onClick={() => handleDeleteTemplate(template)}>
                 <FaTrash className='mr-2 h-4 w-4' />
                 Delete
               </DropdownMenuItem>
@@ -226,7 +179,7 @@ export function CampaignsList({
   ];
 
   const table = useReactTable({
-    data: filteredCampaigns,
+    data: filteredTemplates,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -241,15 +194,15 @@ export function CampaignsList({
       <CardHeader className='border-b'>
         <div className='flex items-center justify-between'>
           <div>
-            <CardTitle className='text-xl'>Campaigns</CardTitle>
-            <CardDescription>View and manage your WhatsApp campaigns</CardDescription>
+            <CardTitle className='text-xl'>Templates</CardTitle>
+            <CardDescription>View and manage your WhatsApp message templates</CardDescription>
           </div>
         </div>
         <div className='mt-4 flex justify-between items-center'>
           <div className='relative max-w-sm'>
             <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
             <Input
-              placeholder='Filter campaigns...'
+              placeholder='Filter templates...'
               className='pl-8'
               value={filterValue}
               onChange={(e) => setFilterValue(e.target.value)}
@@ -257,18 +210,18 @@ export function CampaignsList({
           </div>
           <Button
             onClick={() => {
-              setEditingCampaign(null);
-              setShowCampaignModal(true);
+              setEditingTemplate(null);
+              setShowTemplateModal(true);
             }}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
             disabled={isLoading}
           >
-            Create Campaign
+            Create Template
           </Button>
         </div>
       </CardHeader>
       <CardContent className='p-0'>
-        {campaigns && campaigns.length > 0 ? (
+        {templates && templates.length > 0 ? (
           <div className='overflow-auto'>
             <table className='w-full min-w-[800px]'>
               <thead>
@@ -302,37 +255,31 @@ export function CampaignsList({
           </div>
         ) : (
           <div className='text-center py-10'>
-            <h3 className='text-lg font-semibold mb-2'>No campaigns yet</h3>
+            <h3 className='text-lg font-semibold mb-2'>No templates yet</h3>
             <p className='text-muted-foreground mb-4'>
-              Create your first WhatsApp campaign to get started
+              Create your first WhatsApp message template to get started
             </p>
             <Button
               onClick={() => {
-                setEditingCampaign(null);
-                setShowCampaignModal(true);
+                setEditingTemplate(null);
+                setShowTemplateModal(true);
               }}
               className='bg-[#5932EA] hover:bg-[#5932EA]/90'
               disabled={isLoading}
             >
-              Create Campaign
+              Create Template
             </Button>
           </div>
         )}
       </CardContent>
-      <CreateCampaignModal
-        open={showCampaignModal}
-        onClose={() => setShowCampaignModal(false)}
-        onCreateCampaign={(campaign) => {
-          onUpdateCampaign(campaign.id!, campaign);
-          setShowCampaignModal(false);
-        }} // @ts-ignore
-        onCreateAudience={(audience: AudienceGroup): AudienceGroup => {
-          // This is a placeholder. The actual audience creation is handled in the parent component.
-          console.log('New audience created:', audience);
-          return audience;
+      <CreateTemplateModal
+        open={showTemplateModal}
+        onClose={() => {
+          setShowTemplateModal(false);
+          setEditingTemplate(null);
         }}
-        editingCampaign={editingCampaign}
-        audiences={audiences}
+        onCreateTemplate={onCreateTemplate}
+        editingTemplate={editingTemplate}
       />
     </Card>
   );

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
+import { WhatsAppAccount } from '@/types/whatsapp.types';
 import { Plus } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
@@ -25,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { api } from '@/lib/api';
 
 import type { AudienceGroup } from './audience-list';
 import { CreateAudienceModal } from './create-audience-modal';
@@ -47,6 +49,7 @@ export type Campaign = {
   templateId?: string;
   templateParams?: { [key: string]: string };
   audience: AudienceGroup;
+  audienceId: string;
   status: 'Active' | 'Paused';
   createdAt: string;
   accountId?: string;
@@ -55,13 +58,9 @@ export type Campaign = {
 const SAMPLE_TEMPLATES = [
   {
     id: 'template1',
-    name: 'Welcome Message',
-    content: "Welcome, {{1}}! We're glad to have you on board.",
-  },
-  {
-    id: 'template2',
-    name: 'Order Confirmation',
-    content: 'Your order #{{1}} has been confirmed. Total: {{2}}',
+    name: 'Hello World',
+    content:
+      'Welcome and congratulations!! This message demonstrates your ability to send a WhatsApp message notification from the Cloud API, hosted by Meta. Thank you for taking the time to test with us.',
   },
 ];
 
@@ -84,12 +83,12 @@ export function CreateCampaignModal({
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<WhatsAppAccount>();
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [templates, setTemplates] = useState<any[]>(SAMPLE_TEMPLATES);
 
   // Ensure audiences is always an array
-  const safeAudiences = audiences || [];
+  const safeAudiences = useMemo(() => audiences || [], [audiences]);
 
   // Fetch accounts when modal opens
   useEffect(() => {
@@ -105,8 +104,8 @@ export function CreateCampaignModal({
       setAccounts(accountsData);
 
       // Set default account if available
-      if (accountsData.length > 0 && !selectedAccountId) {
-        setSelectedAccountId(accountsData[0].id);
+      if (accountsData && !selectedAccountId) {
+        setSelectedAccountId(accountsData.id);
       }
     } catch (error) {
       console.error('Error fetching WhatsApp accounts:', error);
@@ -126,6 +125,25 @@ export function CreateCampaignModal({
       console.error('Error fetching templates:', error);
       toast.error('Failed to load message templates');
     }
+  };
+
+  const sendMessage = async (campaignData: any) => {
+    // @ts-ignore
+    FB.api(
+      `/${selectedAccountId}/messages?access_token=${accounts?.accessToken}`,
+      'POST',
+      campaignData,
+      (phoneNumbers: any) => {
+        api.post('/whatsapp/campaigns/saveMessage', {
+          recipientId: phoneNumbers.recipientId,
+          campaignData: campaignData,
+          message: campaignData.text.body,
+          wamid: phoneNumbers.messages[0].id,
+          phoneNumber: phoneNumbers.contacts[0].input,
+          sentAt: new Date().toISOString(),
+        });
+      }
+    );
   };
 
   useEffect(() => {
@@ -176,6 +194,23 @@ export function CreateCampaignModal({
     setIsLoading(true);
 
     try {
+      if (campaignType === 'text') {
+        selectedAudience?.recipients?.map((recipient) => {
+          const campaignData = {
+            recipient_type: 'individual',
+            messaging_product: 'whatsapp',
+            to: `${recipient.phoneNumber}`,
+            type: 'text',
+            text: {
+              preview_url: true,
+              body: message,
+            },
+          };
+
+          sendMessage(campaignData);
+        });
+      }
+
       const campaignData: Campaign = {
         id: editingCampaign?.id,
         name: campaignName,
@@ -185,11 +220,22 @@ export function CreateCampaignModal({
         templateId: campaignType === 'template' ? selectedTemplate.id : undefined,
         templateParams: campaignType === 'template' ? templateParams : undefined,
         audience: selectedAudience!,
+        audienceId: selectedAudience!.id,
         status: editingCampaign?.status || 'Active',
         createdAt: editingCampaign?.createdAt || new Date().toISOString(),
         accountId: selectedAccountId,
       };
 
+      if (campaignType === 'template') {
+        selectedAudience?.recipients?.map((recipient) => {
+          const campaignData = {
+            recipient_type: 'individual',
+          };
+        });
+        toast.success('Template sent successfully');
+        onClose();
+        return;
+      }
       // Call API to create or update campaign
       let result;
       if (editingCampaign?.id) {
@@ -203,6 +249,7 @@ export function CreateCampaignModal({
 
       // Pass the result to parent component
       onCreateCampaign(result);
+
       onClose();
     } catch (error) {
       console.error('Error saving campaign:', error);
@@ -403,9 +450,9 @@ export function CreateCampaignModal({
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>
                 <SelectContent>
-                  {accounts.map((account) => (
-                    <SelectItem key={account.id} value={account.id}>
-                      {account.displayName || account.phoneNumber}
+                  {accounts?.phoneNumberData.map((account: any) => (
+                    <SelectItem key={account.phoneNumberId} value={account.phoneNumberId}>
+                      {account.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -447,7 +494,7 @@ export function CreateCampaignModal({
                   <SelectContent>
                     {safeAudiences.map((audience) => (
                       <SelectItem key={audience.id} value={audience.id}>
-                        {audience.name} ({audience.phoneNumbers?.length || 0} recipients)
+                        {audience.name} ({audience.recipients?.length || 0} recipients)
                       </SelectItem>
                     ))}
                   </SelectContent>
