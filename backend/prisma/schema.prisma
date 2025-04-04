@@ -187,6 +187,7 @@ model User {
   pageBuilders   PageBuilder[]
   supportTickets SupportTicket[] // Tickets created by user
   leadForms      LeadForm[]
+  whatsappMessages WhatsAppMessage[]
 
   // Admin specific relations
   allowedPages PageBuilder[] @relation("AllowedAdmins")
@@ -754,7 +755,6 @@ model WhatsAppRecipient {
   audience    WhatsAppAudience  @relation(fields: [audienceId], references: [id])
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-  messages    WhatsAppMessage[]
 
   @@unique([audienceId, phoneNumber])
 }
@@ -773,12 +773,11 @@ model WhatsAppCampaign {
   account        WhatsAppAccount   @relation(fields: [accountId], references: [id])
   audienceId     String
   audience       WhatsAppAudience  @relation(fields: [audienceId], references: [id])
-  status         String            @default("DRAFT") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
+  status         String            @default("COMPLETED") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
   scheduledAt    DateTime?
   completedAt    DateTime?
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
-  messages       WhatsAppMessage[]
 }
 
 // Store message templates
@@ -797,18 +796,18 @@ model WhatsAppTemplate {
 // Store individual messages
 model WhatsAppMessage {
   id           String            @id @default(cuid())
-  campaignId   String
-  campaign     WhatsAppCampaign  @relation(fields: [campaignId], references: [id])
-  recipientId  String
-  recipient    WhatsAppRecipient @relation(fields: [recipientId], references: [id])
   wamid        String? // WhatsApp Message ID for delivery tracking
   status       String            @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  message      String?
   errorMessage String?
+  phoneNumber  String?
   sentAt       DateTime?
   deliveredAt  DateTime?
   readAt       DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+  userId       String?
+  user         User?             @relation(fields: [userId], references: [id])
 }
 
 model MetaAdAccount {

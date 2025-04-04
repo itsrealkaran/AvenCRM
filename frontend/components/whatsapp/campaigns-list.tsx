@@ -32,7 +32,7 @@ interface CampaignsListProps {
   campaigns: Campaign[];
   onCreateCampaign: () => void;
   audiences: AudienceGroup[];
-  onUpdateCampaign: (campaign: Campaign) => void;
+  onUpdateCampaign: (campaignId: string, data: Partial<Campaign>) => void;
 }
 
 export function CampaignsList({
@@ -65,8 +65,7 @@ export function CampaignsList({
       }
 
       // Update the campaign in the local state
-      const updatedCampaign = { ...campaign, status: newStatus }; // @ts-ignore
-      onUpdateCampaign(updatedCampaign);
+      onUpdateCampaign(campaign.id!, { status: newStatus });
 
       toast.success(`Campaign ${newStatus === 'Active' ? 'started' : 'paused'} successfully`);
     } catch (error) {
@@ -324,7 +323,7 @@ export function CampaignsList({
         open={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
         onCreateCampaign={(campaign) => {
-          onUpdateCampaign(campaign);
+          onUpdateCampaign(campaign.id!, campaign);
           setShowCampaignModal(false);
         }} // @ts-ignore
         onCreateAudience={(audience: AudienceGroup): AudienceGroup => {

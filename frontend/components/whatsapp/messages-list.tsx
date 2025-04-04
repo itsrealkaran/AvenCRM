@@ -12,38 +12,17 @@ import { cn } from '@/lib/utils';
 const mockChats = [
   {
     id: 1,
-    phoneNumber: '+91 98765 43210',
-    lastMessage: 'I would like to schedule a viewing for the 3BHK apartment in Andheri',
+    phoneNumber: '+91 77381 21979',
+    lastMessage: 'Welcome and congratulations!',
     timestamp: '2:30 PM',
-    unread: 2,
+    unread: 0,
   },
   {
     id: 2,
-    phoneNumber: '+91 87654 32109',
-    lastMessage: 'What is the maintenance cost for the property?',
+    phoneNumber: '+91 77103 35863',
+    lastMessage: 'Test',
     timestamp: '1:45 PM',
     unread: 0,
-  },
-  {
-    id: 3,
-    phoneNumber: '+91 76543 21098',
-    lastMessage: 'Thank you for the property details. When can I visit?',
-    timestamp: '12:15 PM',
-    unread: 1,
-  },
-  {
-    id: 4,
-    phoneNumber: '+91 65432 10987',
-    lastMessage: 'Is parking available for 2 cars?',
-    timestamp: '11:30 AM',
-    unread: 0,
-  },
-  {
-    id: 5,
-    phoneNumber: '+91 54321 09876',
-    lastMessage: 'I am interested in the commercial space in Bandra',
-    timestamp: '10:45 AM',
-    unread: 3,
   },
 ];
 
@@ -51,83 +30,17 @@ const mockMessages = {
   1: [
     {
       id: 1,
-      text: 'Hello, I saw the listing for the 3BHK apartment in Andheri',
+      text: `Welcome and congratulations!! This message demonstrates your ability to send a WhatsApp message notification from the Cloud API, hosted by Meta. Thank you for taking the time to test with us.`,
       timestamp: '2:25 PM',
       isOutbound: false,
-    },
-    {
-      id: 2,
-      text: 'Hi! Yes, that property is still available. Would you like to know more details about it?',
-      timestamp: '2:26 PM',
-      isOutbound: true,
-    },
-    {
-      id: 3,
-      text: 'Yes, I would like to schedule a viewing for the 3BHK apartment in Andheri',
-      timestamp: '2:27 PM',
-      isOutbound: false,
-    },
-    {
-      id: 4,
-      text: 'I can arrange a viewing tomorrow between 11 AM to 6 PM. What time works best for you?',
-      timestamp: '2:30 PM',
-      isOutbound: true,
     },
   ],
   2: [
     {
       id: 1,
-      text: 'What is the maintenance cost for the property?',
+      text: 'Welcome and congratulations!! This message demonstrates your ability to send a WhatsApp message notification from the Cloud API, hosted by Meta. Thank you for taking the time to test with us.',
       timestamp: '1:40 PM',
       isOutbound: false,
-    },
-    {
-      id: 2,
-      text: 'The maintenance cost is ₹5,000 per month which includes water, security, and common area maintenance.',
-      timestamp: '1:45 PM',
-      isOutbound: true,
-    },
-  ],
-  3: [
-    {
-      id: 1,
-      text: 'Thank you for the property details. When can I visit?',
-      timestamp: '12:10 PM',
-      isOutbound: false,
-    },
-    {
-      id: 2,
-      text: 'You can visit today between 3 PM to 7 PM. Would you like me to schedule a viewing?',
-      timestamp: '12:15 PM',
-      isOutbound: true,
-    },
-  ],
-  4: [
-    {
-      id: 1,
-      text: 'Is parking available for 2 cars?',
-      timestamp: '11:25 AM',
-      isOutbound: false,
-    },
-    {
-      id: 2,
-      text: 'Yes, the property comes with 2 dedicated parking spots in the basement.',
-      timestamp: '11:30 AM',
-      isOutbound: true,
-    },
-  ],
-  5: [
-    {
-      id: 1,
-      text: 'I am interested in the commercial space in Bandra',
-      timestamp: '10:40 AM',
-      isOutbound: false,
-    },
-    {
-      id: 2,
-      text: 'Great! The commercial space is 2000 sq ft with high ceilings and excellent connectivity. Would you like to know the price?',
-      timestamp: '10:45 AM',
-      isOutbound: true,
     },
   ],
 };
@@ -159,6 +72,24 @@ const MessagesList = () => {
     const newMessage: Message = {
       id: messages[selectedChat].length + 1,
       text: inputMessage,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isOutbound: true,
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [selectedChat]: [...prev[selectedChat], newMessage],
+    }));
+
+    setInputMessage('');
+  };
+
+  const handleHidden = () => {
+    if (!selectedChat) return;
+
+    const newMessage: Message = {
+      id: messages[selectedChat].length + 1,
+      text: 'Hii',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isOutbound: true,
     };
@@ -203,7 +134,7 @@ const MessagesList = () => {
                 <div className='ml-4 flex-1 min-w-0'>
                   <div className='flex justify-between items-baseline'>
                     <p className='font-medium truncate text-sm'>{chat.phoneNumber}</p>
-                    <span className='text-xs text-muted-foreground ml-2'>{chat.timestamp}</span>
+                    {/* <span className='text-xs text-muted-foreground ml-2'>{chat.timestamp}</span> */}
                   </div>
                   <div className='flex justify-between items-center'>
                     <p className='text-sm w-[50%] text-muted-foreground truncate'>
@@ -237,6 +168,12 @@ const MessagesList = () => {
                 </p>
                 <p className='text-sm text-muted-foreground'>Online</p>
               </div>
+              <div className='ml-auto'>
+                <button
+                  className='text-muted-foreground h-4 w-4 cursor-pointer'
+                  onClick={handleHidden}
+                ></button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -254,7 +191,6 @@ const MessagesList = () => {
                       )}
                     >
                       <p className='text-sm'>{message.text}</p>
-                      <span className='text-xs opacity-70 mt-1 block'>{message.timestamp}</span>
                     </div>
                   </div>
                 ))}

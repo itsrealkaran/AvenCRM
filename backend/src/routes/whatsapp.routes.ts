@@ -5,7 +5,7 @@ import { whatsAppController } from '../controllers/whatsapp.controller.js';
 const router: Router = Router();
 
 // Use authentication for all routes except webhook
-router.use(['/accounts', '/audiences', '/templates', '/campaigns'], protect);
+router.use(['/accounts', '/audiences', '/templates', '/campaigns', '/messages'], protect);
 
 router.get('/access-token/:code', whatsAppController.getAccessToken);
 
@@ -16,6 +16,11 @@ router.get('/accounts/:id', whatsAppController.getAccount);
 router.put('/accounts/:id', whatsAppController.updateAccount);
 router.delete('/accounts/:id', whatsAppController.deleteAccount);
 router.post('/accounts/:id/verify', whatsAppController.verifyAccount);
+
+router.post('/campaigns/saveMessage', whatsAppController.saveMessage);
+
+// Message Management
+router.get('/messages', whatsAppController.getMessages);
 
 // Audience Management
 router.post('/audiences', whatsAppController.createAudience);

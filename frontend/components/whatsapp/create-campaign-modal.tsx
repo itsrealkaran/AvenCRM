@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { WhatsAppAccount } from '@/types/whatsapp.types';
@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { api } from '@/lib/api';
 
 import type { AudienceGroup } from './audience-list';
 import { CreateAudienceModal } from './create-audience-modal';
@@ -57,13 +58,9 @@ export type Campaign = {
 const SAMPLE_TEMPLATES = [
   {
     id: 'template1',
-    name: 'Welcome Message',
-    content: "Welcome, {{1}}! We're glad to have you on board.",
-  },
-  {
-    id: 'template2',
-    name: 'Order Confirmation',
-    content: 'Your order #{{1}} has been confirmed. Total: {{2}}',
+    name: 'Hello World',
+    content:
+      'Welcome and congratulations!! This message demonstrates your ability to send a WhatsApp message notification from the Cloud API, hosted by Meta. Thank you for taking the time to test with us.',
   },
 ];
 
@@ -91,9 +88,8 @@ export function CreateCampaignModal({
   const [templates, setTemplates] = useState<any[]>(SAMPLE_TEMPLATES);
 
   // Ensure audiences is always an array
-  const safeAudiences = audiences || [];
-  console.log(audiences, 'audiences');
-  console.log(safeAudiences, 'safeAudiences');
+  const safeAudiences = useMemo(() => audiences || [], [audiences]);
+
   // Fetch accounts when modal opens
   useEffect(() => {
     if (open) {
@@ -138,7 +134,14 @@ export function CreateCampaignModal({
       'POST',
       campaignData,
       (phoneNumbers: any) => {
-        console.log('Phone numbers:', phoneNumbers);
+        api.post('/whatsapp/campaigns/saveMessage', {
+          recipientId: phoneNumbers.recipientId,
+          campaignData: campaignData,
+          message: campaignData.text.body,
+          wamid: phoneNumbers.messages[0].id,
+          phoneNumber: phoneNumbers.contacts[0].input,
+          sentAt: new Date().toISOString(),
+        });
       }
     );
   };
@@ -223,6 +226,16 @@ export function CreateCampaignModal({
         accountId: selectedAccountId,
       };
 
+      if (campaignType === 'template') {
+        selectedAudience?.recipients?.map((recipient) => {
+          const campaignData = {
+            recipient_type: 'individual',
+          };
+        });
+        toast.success('Template sent successfully');
+        onClose();
+        return;
+      }
       // Call API to create or update campaign
       let result;
       if (editingCampaign?.id) {
