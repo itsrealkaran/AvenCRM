@@ -84,7 +84,13 @@ export function CreateCampaignModal({
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<WhatsAppAccount>();
-  const [selectedAccountId, setSelectedAccountId] = useState('');
+  const [selectedAccountId, setSelectedAccountId] = useState<{
+    phoneNumberId: string;
+    phoneNumber: string;
+  }>({
+    phoneNumberId: accounts?.phoneNumberData[0]?.phoneNumberId || '',
+    phoneNumber: accounts?.phoneNumberData[0]?.phoneNumber || '',
+  });
   const [templates, setTemplates] = useState<any[]>(SAMPLE_TEMPLATES);
 
   // Ensure audiences is always an array
@@ -126,17 +132,18 @@ export function CreateCampaignModal({
       toast.error('Failed to load message templates');
     }
   };
-
   const sendMessage = async (campaignData: any) => {
     // @ts-ignore
     FB.api(
-      `/${selectedAccountId}/messages?access_token=${accounts?.accessToken}`,
+      `/${selectedAccountId.phoneNumberId}/messages?access_token=${accounts?.accessToken}`,
       'POST',
       campaignData,
       (phoneNumbers: any) => {
         api.post('/whatsapp/campaigns/saveMessage', {
-          phoneNumber: phoneNumbers.contacts[0].input,
+          phoneNumberId: selectedAccountId.phoneNumberId,
+          phoneNumber: selectedAccountId.phoneNumber,
           campaignData: campaignData,
+          recipientNumber: campaignData.to,
           message: campaignData.text.body,
           wamid: phoneNumbers.messages[0].id,
           sentAt: new Date().toISOString(),
@@ -156,7 +163,10 @@ export function CreateCampaignModal({
       );
       setTemplateParams(editingCampaign.templateParams || {});
       setSelectedAudience(editingCampaign.audience);
-      setSelectedAccountId(editingCampaign.accountId || '');
+      setSelectedAccountId({
+        phoneNumberId: editingCampaign.accountId || '',
+        phoneNumber: editingCampaign.audience.phoneNumbers?.[0] || '',
+      });
     } else {
       // Reset form fields
       setCampaignName('');
@@ -222,7 +232,7 @@ export function CreateCampaignModal({
         audienceId: selectedAudience!.id,
         status: editingCampaign?.status || 'Active',
         createdAt: editingCampaign?.createdAt || new Date().toISOString(),
-        accountId: selectedAccountId,
+        accountId: selectedAccountId.phoneNumberId,
       };
 
       if (campaignType === 'template') {
@@ -444,7 +454,20 @@ export function CreateCampaignModal({
 
             <div className='space-y-2'>
               <Label htmlFor='account'>WhatsApp Account</Label>
-              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+              <Select
+                value={selectedAccountId.phoneNumberId}
+                onValueChange={(value) => {
+                  const selectedAccount = accounts?.phoneNumberData.find(
+                    (acc) => acc.phoneNumberId === value
+                  );
+                  if (selectedAccount) {
+                    setSelectedAccountId({
+                      phoneNumberId: selectedAccount.phoneNumberId,
+                      phoneNumber: selectedAccount.phoneNumber,
+                    });
+                  }
+                }}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>

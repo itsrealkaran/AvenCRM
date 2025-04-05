@@ -715,25 +715,41 @@ model Task {
 
 // Store WhatsApp Business API credentials per user
 model WhatsAppAccount {
-  id              String             @id @default(cuid())
+  id              String                @id @default(cuid())
   userId          String
-  user            User               @relation(fields: [userId], references: [id])
+  user            User                  @relation(fields: [userId], references: [id])
   wabaid          String // WhatsApp Business Account ID  
   accessToken     String // Encrypted access token
   phoneNumberData Json[] // [ {phoneNumberId: string, name: string, phoneNumber: string, codeVerificationStatus: string} ]
-  phoneNumberIds  String[]           @default([]) // [phoneNumberId]
+  phoneNumberIds  String[]              @default([]) // [phoneNumberId]
   displayName     String
-  verified        Boolean            @default(false)
-  status          String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
+  verified        Boolean               @default(false)
+  status          String                @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
   audiences       WhatsAppAudience[]
   campaigns       WhatsAppCampaign[]
   templates       WhatsAppTemplate[]
-  recipients      WhatsAppRecipient[]
-  messages        WhatsAppMessage[]
+  phoneNumbers    WhatsAppPhoneNumber[]
 
   @@unique([userId])
+}
+
+model WhatsAppPhoneNumber {
+  id                     String  @id @default(cuid())
+  phoneNumberId          String
+  phoneNumber            String
+  name                   String?
+  codeVerificationStatus String?
+
+  accountId String
+  account   WhatsAppAccount @relation(fields: [accountId], references: [id])
+
+  recipients WhatsAppRecipient[]
+  messages   WhatsAppMessage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // Store audience groups
@@ -756,12 +772,13 @@ model WhatsAppRecipient {
   audienceId  String?
   audience    WhatsAppAudience? @relation(fields: [audienceId], references: [id])
 
-  whatsappAccountId String?
-  whatsappAccount   WhatsAppAccount? @relation(fields: [whatsappAccountId], references: [id])
+  whatsAppPhoneNumberId String?
+  whatsAppPhoneNumber   WhatsAppPhoneNumber? @relation(fields: [whatsAppPhoneNumberId], references: [id])
 
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  messages    WhatsAppMessage[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  messages  WhatsAppMessage[]
+
   @@unique([audienceId, phoneNumber])
 }
 
@@ -813,9 +830,9 @@ model WhatsAppMessage {
   readAt       DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
-  accountId    String
-  account      WhatsAppAccount   @relation(fields: [accountId], references: [id])
-  recipientId String
+  whatsAppPhoneNumberId String?
+  whatsAppPhoneNumber   WhatsAppPhoneNumber? @relation(fields: [whatsAppPhoneNumberId], references: [id])
+  recipientId  String
   recipient    WhatsAppRecipient @relation(fields: [recipientId], references: [id])
 }
 

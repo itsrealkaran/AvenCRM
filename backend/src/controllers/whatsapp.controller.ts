@@ -70,7 +70,10 @@ export class WhatsAppController extends BaseController {
       }
 
       const account = await prisma.whatsAppAccount.findFirst({
-        where: { userId: req.user.id }
+        where: { userId: req.user.id },
+        include: {
+          phoneNumbers: true
+        }
       });
 
       return res.status(200).json(account);
@@ -1009,19 +1012,17 @@ export class WhatsAppController extends BaseController {
           for (const change of entry.changes) {
             const phoneNumberId = change.value.metadata.phone_number_id;
 
-            const whatsAppAccount = await prisma.whatsAppAccount.findFirst({
+            const whatsAppPhoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
               where: {
-                phoneNumberIds: {
-                  has: phoneNumberId
-                }
+                phoneNumberId
               },
               include: {
                 recipients: true
               }
             });
 
-            if (!whatsAppAccount) {
-              logger.error('WhatsApp account not found');
+            if (!whatsAppPhoneNumber) {
+              logger.error('WhatsApp phone number not found');
               continue;
             }
             if (change.field === 'messages' && change.value && change.value.statuses) {
@@ -1042,7 +1043,7 @@ export class WhatsAppController extends BaseController {
               }
             } else if (change.field === 'messages' && change.value && !change.value.statuses) {
               for (const message of change.value.messages) {
-                const recipient = whatsAppAccount.recipients.find(recipient => recipient.phoneNumber === message.from);
+                const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
                 if (recipient) {
                   await prisma.whatsAppMessage.create({
                     data: {
@@ -1051,7 +1052,7 @@ export class WhatsAppController extends BaseController {
                       message: message.text.body,
                       sentAt: new Date(message.timestamp * 1000),
                       status: 'PENDING',
-                      accountId: whatsAppAccount.id,
+                      whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
                     }
                   });
                 } else {
@@ -1059,7 +1060,7 @@ export class WhatsAppController extends BaseController {
                     const recipient = await tx.whatsAppRecipient.create({
                       data: {
                         phoneNumber: message.from,
-                      whatsappAccountId: whatsAppAccount.id,
+                        whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
                     }
                     });
                     await prisma.whatsAppMessage.create({
@@ -1069,7 +1070,7 @@ export class WhatsAppController extends BaseController {
                         message: message.text.body,
                         sentAt: new Date(message.timestamp * 1000),
                         status: 'PENDING',
-                        accountId: whatsAppAccount.id,
+                        whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
                       }
                     });
                   });
@@ -1143,28 +1144,36 @@ export class WhatsAppController extends BaseController {
       if (!req.user) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
-      const { wamid, campaignData, message, sentAt, phoneNumber } = req.body;
+      const { wamid, message, sentAt, phoneNumberId, recipientNumber } = req.body;
 
       const whatsAppAccount = await prisma.whatsAppAccount.findUnique({
         where: {
           userId: req.user.id
         },
-        include: {
-          recipients: true
+        select: {
+          phoneNumbers: {
+            where: {
+              phoneNumberId
+            },
+            select: {
+              id: true,
+              recipients: true
+            }
+          }
         }
       });
 
-      if (!whatsAppAccount) {
+      if (!whatsAppAccount || whatsAppAccount.phoneNumbers.length === 0) {
         return res.status(404).json({ message: 'WhatsApp account not found' });
       }
 
-      let recipient = whatsAppAccount.recipients.find(recipient => recipient.phoneNumber === phoneNumber);
+      let recipient = whatsAppAccount.phoneNumbers[0].recipients.find(recipient => recipient.phoneNumber === recipientNumber);
 
       if (!recipient) {
         recipient = await prisma.whatsAppRecipient.create({
           data: {
-            phoneNumber,
-            whatsappAccountId: whatsAppAccount.id
+            phoneNumber: recipientNumber,
+            whatsAppPhoneNumberId: whatsAppAccount.phoneNumbers[0].id
           }
         });
       }
@@ -1173,10 +1182,11 @@ export class WhatsAppController extends BaseController {
         data: {
           recipientId: recipient.id,
           isOutbound: true,
+          phoneNumber: recipientNumber,
           wamid,
           message,
           sentAt,
-          accountId: whatsAppAccount.id,
+          whatsAppPhoneNumberId: whatsAppAccount.phoneNumbers[0].id,
         }
       });
       return res.status(200).json({ message: 'Message saved successfully' });
@@ -1195,7 +1205,11 @@ export class WhatsAppController extends BaseController {
       // Fetch all messages for the current user
       const messages = await prisma.whatsAppMessage.findMany({
         where: {
-          accountId: req.user.id,
+          whatsAppPhoneNumber: {
+            account: {
+              userId: req.user.id
+            }
+          },
           phoneNumber: { not: null }
         },
         orderBy: {
@@ -1250,6 +1264,138 @@ export class WhatsAppController extends BaseController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
+
+  async getPhoneNumbers(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const phoneNumberId = req.query.phoneNumberId as string;
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 20;
+      const skip = (page - 1) * limit;
+
+      const whatsAppPhoneNumbers = await prisma.whatsAppPhoneNumber.findMany({
+        where: {
+          account: {
+            userId: req.user.id
+          },
+          phoneNumberId
+        },
+        skip,
+        take: limit,
+        select: {
+          id: true,
+          phoneNumber: true,
+          name: true,
+          recipients: {
+            select: {
+              phoneNumber: true,
+              messages: {
+                orderBy: {
+                  createdAt: 'desc'
+                },
+                take: 1,
+                distinct: ['recipientId']
+              }
+            }
+          }
+        },
+        orderBy: {
+          updatedAt: 'desc'
+        }
+      });
+
+      const totalCount = await prisma.whatsAppPhoneNumber.count({
+        where: {
+          account: {
+            userId: req.user.id
+          }
+        }
+      });
+
+      const phoneNumbers = whatsAppPhoneNumbers[0].recipients.map(recipient => ({
+        phoneNumber: recipient.phoneNumber,
+        name: whatsAppPhoneNumbers[0].name,
+        latestMessage: recipient.messages[0]
+      }));
+
+      const totalPages = Math.ceil(totalCount / limit);
+      
+      return res.status(200).json({
+        data: phoneNumbers,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: totalCount,
+          hasMore: page < totalPages
+        }
+      });
+    } catch (error) {
+      logger.error('Error fetching WhatsApp phone numbers:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async getPhoneNumberChats(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const phoneNumber = req.params.phoneNumber;
+      const originPhoneNumberId = req.query.originPhoneNumberId as string;
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 50;
+      const skip = (page - 1) * limit;
+
+      const whatsAppPhoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
+        where: {
+          phoneNumberId: originPhoneNumberId,
+          account: {
+            userId: req.user.id
+          }
+        },
+        include: {
+          messages: {
+            orderBy: {
+              createdAt: 'asc'
+            },
+            skip,
+            take: limit
+          },
+          _count: {
+            select: {
+              messages: true
+            }
+          }
+        }
+      });
+
+      if (!whatsAppPhoneNumber) {
+        return res.status(404).json({ message: 'Phone number not found' });
+      }
+
+      const totalMessages = whatsAppPhoneNumber._count.messages;
+      const totalPages = Math.ceil(totalMessages / limit);
+
+      return res.status(200).json({
+        data: whatsAppPhoneNumber.messages,
+        pagination: {
+          currentPage: page,
+          totalPages,
+          totalItems: totalMessages,
+          hasMore: page < totalPages
+        }
+      });
+    } catch (error) {
+      logger.error('Error fetching WhatsApp messages:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+  
 }
 
 export const whatsAppController = new WhatsAppController(); 
