@@ -146,88 +146,89 @@ const MessagesList = ({
         console.log(event.data, 'event data');
         try {
           const data = JSON.parse(event.data) as SSEMessage;
-          
+
           if (data.type === 'connected') {
             console.log('Connected to SSE with userId:', data.userId);
             return;
           }
-          
+
           if (data.type === 'new_message' && data.data.message && data.data.phoneNumberId) {
             const { message, phoneNumberId } = data.data;
             const recipientPhoneNumber = message.phoneNumber;
-            
+
             console.log('New message received:', message);
             console.log('Phone numbers:', phoneNumbers);
             console.log('Recipient phone number:', recipientPhoneNumber);
-            
+
             // Update conversation cache
-            setConversationCache(prev => {
+            setConversationCache((prev) => {
               const currentCache = { ...prev };
-              
+
               // If the conversation doesn't exist yet, create it
               if (!currentCache[recipientPhoneNumber]) {
                 currentCache[recipientPhoneNumber] = [];
               }
-              
+
               // Add the new message to the conversation
-              currentCache[recipientPhoneNumber] = [
-                ...currentCache[recipientPhoneNumber],
-                message
-              ];
-              
+              currentCache[recipientPhoneNumber] = [...currentCache[recipientPhoneNumber], message];
+
               console.log('Updated cache:', currentCache);
               return currentCache;
             });
 
             // Update current messages if this is the selected chat
             if (selectedChat === recipientPhoneNumber) {
-              setMessages(prev => {
+              setMessages((prev) => {
                 const currentMessages = { ...prev };
-                
+
                 // If the conversation doesn't exist yet, create it
                 if (!currentMessages[selectedChat]) {
                   currentMessages[selectedChat] = [];
                 }
-                
+
                 // Add the new message to the conversation
-                currentMessages[selectedChat] = [
-                  ...currentMessages[selectedChat],
-                  message
-                ];
-                
+                currentMessages[selectedChat] = [...currentMessages[selectedChat], message];
+
                 console.log('Updated messages:', currentMessages);
                 return currentMessages;
               });
             }
-          } else if (data.type === 'status_update' && data.data.wamid && data.data.status && data.data.phoneNumberId) {
+          } else if (
+            data.type === 'status_update' &&
+            data.data.wamid &&
+            data.data.status &&
+            data.data.phoneNumberId
+          ) {
             const { wamid, status, phoneNumberId } = data.data;
-            
+
             // Update message status in cache
-            setConversationCache(prev => {
+            setConversationCache((prev) => {
               const currentCache = { ...prev };
-              const phoneNumber = phoneNumbers.find(pn => pn.phoneNumberId === phoneNumberId)?.phoneNumber;
-              
+              const phoneNumber = phoneNumbers.find(
+                (pn) => pn.phoneNumberId === phoneNumberId
+              )?.phoneNumber;
+
               if (phoneNumber && currentCache[phoneNumber]) {
-                currentCache[phoneNumber] = currentCache[phoneNumber].map(msg => 
+                currentCache[phoneNumber] = currentCache[phoneNumber].map((msg) =>
                   msg.wamid === wamid ? { ...msg, status } : msg
                 );
               }
-              
+
               console.log('Updated cache with status:', currentCache);
               return currentCache;
             });
 
             // Update current messages if this is the selected chat
             if (selectedChat) {
-              setMessages(prev => {
+              setMessages((prev) => {
                 const currentMessages = { ...prev };
-                
+
                 if (currentMessages[selectedChat]) {
-                  currentMessages[selectedChat] = currentMessages[selectedChat].map(msg => 
+                  currentMessages[selectedChat] = currentMessages[selectedChat].map((msg) =>
                     msg.wamid === wamid ? { ...msg, status } : msg
                   );
                 }
-                
+
                 console.log('Updated messages with status:', currentMessages);
                 return currentMessages;
               });
