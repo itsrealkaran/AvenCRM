@@ -187,7 +187,6 @@ model User {
   pageBuilders   PageBuilder[]
   supportTickets SupportTicket[] // Tickets created by user
   leadForms      LeadForm[]
-  whatsappMessages WhatsAppMessage[]
 
   // Admin specific relations
   allowedPages PageBuilder[] @relation("AllowedAdmins")
@@ -730,6 +729,8 @@ model WhatsAppAccount {
   audiences       WhatsAppAudience[]
   campaigns       WhatsAppCampaign[]
   templates       WhatsAppTemplate[]
+  recipients      WhatsAppRecipient[]
+  messages        WhatsAppMessage[]
 
   @@unique([userId])
 }
@@ -751,11 +752,15 @@ model WhatsAppRecipient {
   id          String            @id @default(cuid())
   phoneNumber String
   name        String?
-  audienceId  String
-  audience    WhatsAppAudience  @relation(fields: [audienceId], references: [id])
+  audienceId  String?
+  audience    WhatsAppAudience? @relation(fields: [audienceId], references: [id])
+
+  whatsappAccountId String?
+  whatsappAccount   WhatsAppAccount? @relation(fields: [whatsappAccountId], references: [id])
+
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt
-
+  messages    WhatsAppMessage[]
   @@unique([audienceId, phoneNumber])
 }
 
@@ -799,15 +804,18 @@ model WhatsAppMessage {
   wamid        String? // WhatsApp Message ID for delivery tracking
   status       String            @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
   message      String?
+  isOutbound   Boolean           @default(false)
   errorMessage String?
   phoneNumber  String?
   sentAt       DateTime?
-  deliveredAt  DateTime?
+  deliveredAt  DateTime?         @default(now())
   readAt       DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
-  userId       String?
-  user         User?             @relation(fields: [userId], references: [id])
+  accountId    String
+  account      WhatsAppAccount   @relation(fields: [accountId], references: [id])
+  recipientId String
+  recipient    WhatsAppRecipient @relation(fields: [recipientId], references: [id])
 }
 
 model MetaAdAccount {

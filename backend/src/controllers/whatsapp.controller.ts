@@ -691,19 +691,6 @@ export class WhatsAppController extends BaseController {
         }
       });
 
-      // Get all recipients from the audience
-      const recipients = await prisma.whatsAppRecipient.findMany({
-        where: { audienceId }
-      });
-
-      // Create messages for each recipient
-      const messages = await prisma.whatsAppMessage.createMany({
-        data: recipients.map(recipient => ({
-          recipientId: recipient.id,
-          status: 'SENT',
-        }))
-      });
-
       return res.status(201).json(campaign);
     } catch (error) {
       logger.error('Error creating WhatsApp campaign:', error);
@@ -1020,6 +1007,25 @@ export class WhatsAppController extends BaseController {
         for (const entry of data.entry) {
           for (const change of entry.changes) {
             if (change.field === 'messages' && change.value && change.value.statuses) {
+
+              const phoneNumberId = change.value.metadata.phone_number_id;
+
+              const whatsAppAccount = await prisma.whatsAppAccount.findFirst({
+                where: {
+                  phoneNumberData: {
+                    has: {
+                      phoneNumberId: phoneNumberId
+                    }
+                  }
+                }
+              });
+
+              if (!whatsAppAccount) {
+                logger.error('WhatsApp account not found');
+                continue;
+              }
+              
+              
               for (const status of change.value.statuses) {
                 const wamid = status.id;
                 const statusValue = status.status; // sent, delivered, read, failed
@@ -1103,14 +1109,40 @@ export class WhatsAppController extends BaseController {
       if (!req.user) {
         return res.status(401).json({ message: 'Unauthorized' });
       }
-      const { wamid, campaignData, message, sentAt } = req.body;
+      const { wamid, campaignData, message, sentAt, phoneNumber } = req.body;
+
+      const whatsAppAccount = await prisma.whatsAppAccount.findUnique({
+        where: {
+          userId: req.user.id
+        },
+        include: {
+          recipients: true
+        }
+      });
+
+      if (!whatsAppAccount) {
+        return res.status(404).json({ message: 'WhatsApp account not found' });
+      }
+
+      let recipient = whatsAppAccount.recipients.find(recipient => recipient.phoneNumber === phoneNumber);
+
+      if (!recipient) {
+        recipient = await prisma.whatsAppRecipient.create({
+          data: {
+            phoneNumber,
+            whatsappAccountId: whatsAppAccount.id
+          }
+        });
+      }
       
       await prisma.whatsAppMessage.create({
         data: {
+          recipientId: recipient.id,
+          isOutbound: true,
           wamid,
           message,
           sentAt,
-          userId: req.user?.id,
+          accountId: whatsAppAccount.id,
         }
       });
       return res.status(200).json({ message: 'Message saved successfully' });
@@ -1129,7 +1161,7 @@ export class WhatsAppController extends BaseController {
       // Fetch all messages for the current user
       const messages = await prisma.whatsAppMessage.findMany({
         where: {
-          userId: req.user.id,
+          accountId: req.user.id,
           phoneNumber: { not: null }
         },
         orderBy: {
