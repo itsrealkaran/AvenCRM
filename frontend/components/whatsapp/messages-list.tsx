@@ -156,25 +156,37 @@ const MessagesList = ({
             const { message, phoneNumberId } = data.data;
             const recipientPhoneNumber = message.phoneNumber;
 
+            console.log('New message received:', message);
+
             // Update conversation cache
             setConversationCache((prev) => {
+              // Find the phone number that matches the recipient
               const phoneNumber = phoneNumbers.find(
-                (pn) => pn.phoneNumber === recipientPhoneNumber
+                (pn) => pn.phoneNumberId === phoneNumberId
               )?.phoneNumber;
-              if (!phoneNumber) return prev;
+              if (!phoneNumber) {
+                console.log('Phone number not found for ID:', phoneNumberId);
+                return prev;
+              }
 
-              return {
+              const updatedCache = {
                 ...prev,
-                [phoneNumber]: [...(prev[phoneNumber] || []), message],
+                [recipientPhoneNumber]: [...(prev[recipientPhoneNumber] || []), message],
               };
+              console.log('Updated cache:', updatedCache);
+              return updatedCache;
             });
 
             // Update current messages if this is the selected chat
             if (selectedChat === recipientPhoneNumber) {
-              setMessages((prev) => ({
-                ...prev,
-                [selectedChat]: [...(prev[selectedChat] || []), message],
-              }));
+              setMessages((prev) => {
+                const updatedMessages = {
+                  ...prev,
+                  [selectedChat]: [...(prev[selectedChat] || []), message],
+                };
+                console.log('Updated messages:', updatedMessages);
+                return updatedMessages;
+              });
             }
           } else if (
             data.type === 'status_update' &&
@@ -191,24 +203,30 @@ const MessagesList = ({
               )?.phoneNumber;
               if (!phoneNumber) return prev;
 
-              return {
+              const updatedCache = {
                 ...prev,
                 [phoneNumber]:
                   prev[phoneNumber]?.map((msg) =>
                     msg.wamid === wamid ? { ...msg, status } : msg
                   ) || [],
               };
+              console.log('Updated cache with status:', updatedCache);
+              return updatedCache;
             });
 
             // Update current messages if this is the selected chat
             if (selectedChat) {
-              setMessages((prev) => ({
-                ...prev,
-                [selectedChat]:
-                  prev[selectedChat]?.map((msg) =>
-                    msg.wamid === wamid ? { ...msg, status } : msg
-                  ) || [],
-              }));
+              setMessages((prev) => {
+                const updatedMessages = {
+                  ...prev,
+                  [selectedChat]:
+                    prev[selectedChat]?.map((msg) =>
+                      msg.wamid === wamid ? { ...msg, status } : msg
+                    ) || [],
+                };
+                console.log('Updated messages with status:', updatedMessages);
+                return updatedMessages;
+              });
             }
           }
         } catch (error) {
