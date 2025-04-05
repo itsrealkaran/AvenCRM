@@ -156,10 +156,15 @@ export default function WhatsAppCampaignsPage() {
                     codeVerificationStatus: phoneNumber.code_verification_status,
                   }));
 
+                  const phoneNumberIds = phoneNumberData.map(
+                    (phoneNumber: any) => phoneNumber.phoneNumberId
+                  );
+
                   api
                     .post('/whatsapp/accounts', {
                       displayName: userInfo.name,
                       phoneNumberData: phoneNumberData,
+                      phoneNumberIds: phoneNumberIds,
                       wabaid: wabaId,
                       accessToken: accessToken,
                     })

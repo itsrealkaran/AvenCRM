@@ -42,7 +42,7 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const { wabaid, accessToken, phoneNumberData, displayName } = req.body;
+      const { wabaid, accessToken, phoneNumberData, phoneNumberIds, displayName } = req.body;
 
       if (!wabaid || !accessToken || !phoneNumberData || !displayName) {
         return res.status(400).json({ message: 'Missing required fields' });
@@ -52,6 +52,7 @@ export class WhatsAppController extends BaseController {
         wabaid,
         accessToken,
         phoneNumberData,
+        phoneNumberIds,
         displayName,
       });
 
@@ -1006,26 +1007,24 @@ export class WhatsAppController extends BaseController {
       if (data.entry && data.entry.length > 0) {
         for (const entry of data.entry) {
           for (const change of entry.changes) {
-            if (change.field === 'messages' && change.value && change.value.statuses) {
+            const phoneNumberId = change.value.metadata.phone_number_id;
 
-              const phoneNumberId = change.value.metadata.phone_number_id;
-
-              const whatsAppAccount = await prisma.whatsAppAccount.findFirst({
-                where: {
-                  phoneNumberData: {
-                    has: {
-                      phoneNumberId: phoneNumberId
-                    }
-                  }
+            const whatsAppAccount = await prisma.whatsAppAccount.findFirst({
+              where: {
+                phoneNumberIds: {
+                  has: phoneNumberId
                 }
-              });
-
-              if (!whatsAppAccount) {
-                logger.error('WhatsApp account not found');
-                continue;
+              },
+              include: {
+                recipients: true
               }
-              
-              
+            });
+
+            if (!whatsAppAccount) {
+              logger.error('WhatsApp account not found');
+              continue;
+            }
+            if (change.field === 'messages' && change.value && change.value.statuses) {
               for (const status of change.value.statuses) {
                 const wamid = status.id;
                 const statusValue = status.status; // sent, delivered, read, failed
@@ -1040,6 +1039,41 @@ export class WhatsAppController extends BaseController {
                     errorMessage: status.errors ? JSON.stringify(status.errors) : null
                   }
                 });
+              }
+            } else if (change.field === 'messages' && change.value && !change.value.statuses) {
+              for (const message of change.value.messages) {
+                const recipient = whatsAppAccount.recipients.find(recipient => recipient.phoneNumber === message.from);
+                if (recipient) {
+                  await prisma.whatsAppMessage.create({
+                    data: {
+                      recipientId: recipient.id,
+                      wamid: message.id,
+                      message: message.text.body,
+                      sentAt: new Date(message.timestamp * 1000),
+                      status: 'PENDING',
+                      accountId: whatsAppAccount.id,
+                    }
+                  });
+                } else {
+                  await prisma.$transaction(async (tx) => {
+                    const recipient = await tx.whatsAppRecipient.create({
+                      data: {
+                        phoneNumber: message.from,
+                      whatsappAccountId: whatsAppAccount.id,
+                    }
+                    });
+                    await prisma.whatsAppMessage.create({
+                      data: {
+                        recipientId: recipient.id,
+                        wamid: message.id,
+                        message: message.text.body,
+                        sentAt: new Date(message.timestamp * 1000),
+                        status: 'PENDING',
+                        accountId: whatsAppAccount.id,
+                      }
+                    });
+                  });
+                }
               }
             }
           }

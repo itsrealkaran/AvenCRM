@@ -721,6 +721,7 @@ model WhatsAppAccount {
   wabaid          String // WhatsApp Business Account ID  
   accessToken     String // Encrypted access token
   phoneNumberData Json[] // [ {phoneNumberId: string, name: string, phoneNumber: string, codeVerificationStatus: string} ]
+  phoneNumberIds  String[]           @default([]) // [phoneNumberId]
   displayName     String
   verified        Boolean            @default(false)
   status          String             @default("ACTIVE") // ACTIVE, SUSPENDED, DELETED
