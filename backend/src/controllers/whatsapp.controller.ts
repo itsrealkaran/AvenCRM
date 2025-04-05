@@ -6,6 +6,18 @@ import logger from '../utils/logger.js';
 import { BaseController } from './base.controllers.js';
 import { Prisma } from '@prisma/client';
 
+interface SSEClient {
+  userId: string;
+  res: Response;
+}
+
+declare global {
+  var sseClients: SSEClient[];
+}
+
+// Initialize the global variable
+global.sseClients = [];
+
 export class WhatsAppController extends BaseController {
 
   async getAccessToken(req: Request, res: Response) {
@@ -1017,7 +1029,8 @@ export class WhatsAppController extends BaseController {
                 phoneNumberId
               },
               include: {
-                recipients: true
+                recipients: true,
+                account: true // Include account to get userId
               }
             });
 
@@ -1025,13 +1038,15 @@ export class WhatsAppController extends BaseController {
               logger.error('WhatsApp phone number not found');
               continue;
             }
+
+            // Emit event for status updates
             if (change.field === 'messages' && change.value && change.value.statuses) {
               for (const status of change.value.statuses) {
                 const wamid = status.id;
-                const statusValue = status.status; // sent, delivered, read, failed
+                const statusValue = status.status;
 
                 // Update message status
-                await prisma.whatsAppMessage.updateMany({
+                const updatedMessage = await prisma.whatsAppMessage.updateMany({
                   where: { wamid },
                   data: {
                     status: statusValue.toUpperCase(),
@@ -1040,12 +1055,31 @@ export class WhatsAppController extends BaseController {
                     errorMessage: status.errors ? JSON.stringify(status.errors) : null
                   }
                 });
+
+                // Emit status update event
+                const eventData = {
+                  type: 'status_update',
+                  userId: whatsAppPhoneNumber.account.userId,
+                  data: {
+                    wamid,
+                    status: statusValue.toUpperCase(),
+                    phoneNumberId
+                  }
+                };
+                global.sseClients.forEach(client => {
+                  console.log(client.userId, whatsAppPhoneNumber.account.userId, "webhook test");
+                  if (client.userId === whatsAppPhoneNumber.account.userId) {
+                    client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                  }
+                });
               }
             } else if (change.field === 'messages' && change.value && !change.value.statuses) {
               for (const message of change.value.messages) {
                 const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
+                let newMessage;
+                
                 if (recipient) {
-                  await prisma.whatsAppMessage.create({
+                  newMessage = await prisma.whatsAppMessage.create({
                     data: {
                       recipientId: recipient.id,
                       wamid: message.id,
@@ -1057,15 +1091,15 @@ export class WhatsAppController extends BaseController {
                   });
                 } else {
                   await prisma.$transaction(async (tx) => {
-                    const recipient = await tx.whatsAppRecipient.create({
+                    const newRecipient = await tx.whatsAppRecipient.create({
                       data: {
                         phoneNumber: message.from,
                         whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
-                    }
+                      }
                     });
-                    await prisma.whatsAppMessage.create({
+                    newMessage = await prisma.whatsAppMessage.create({
                       data: {
-                        recipientId: recipient.id,
+                        recipientId: newRecipient.id,
                         wamid: message.id,
                         message: message.text.body,
                         sentAt: new Date(message.timestamp * 1000),
@@ -1075,6 +1109,21 @@ export class WhatsAppController extends BaseController {
                     });
                   });
                 }
+
+                // Emit new message event
+                const eventData = {
+                  type: 'new_message',
+                  userId: whatsAppPhoneNumber.account.userId,
+                  data: {
+                    message: newMessage,
+                    phoneNumberId
+                  }
+                };
+                global.sseClients.forEach(client => {
+                  if (client.userId === whatsAppPhoneNumber.account.userId) {
+                    client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                  }
+                });
               }
             }
           }
@@ -1085,6 +1134,42 @@ export class WhatsAppController extends BaseController {
     } catch (error) {
       logger.error('Error handling WhatsApp webhook:', error);
       return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  // Add SSE endpoint
+  async streamMessages(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const headers = {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': process.env.FRONTEND_URL || 'http://localhost:3000',
+        'Access-Control-Allow-Credentials': 'true',
+      };
+      res.writeHead(200, headers);
+
+      // Add client to global list
+      const client = {
+        userId: req.user.id,
+        res
+      };
+      global.sseClients.push(client);
+
+      // Send initial connection message
+      res.write(`data: ${JSON.stringify({ type: 'connected', userId: req.user.id })}\n\n`);
+
+      // Remove client when connection closes
+      req.on('close', () => {
+        global.sseClients = global.sseClients.filter(c => c !== client);
+      });
+    } catch (error) {
+      logger.error('Error setting up SSE connection:', error);
+      res.end();
     }
   }
 
@@ -1360,6 +1445,11 @@ export class WhatsAppController extends BaseController {
         },
         include: {
           messages: {
+            where: {
+              recipient: {
+                phoneNumber: phoneNumber
+              }
+            },
             orderBy: {
               createdAt: 'asc'
             },

@@ -23,6 +23,7 @@ router.post('/campaigns/saveMessage', whatsAppController.saveMessage);
 
 // Message Management
 router.get('/messages', whatsAppController.getMessages);
+router.get('/messages/stream', whatsAppController.streamMessages);
 
 // Audience Management
 router.post('/audiences', whatsAppController.createAudience);

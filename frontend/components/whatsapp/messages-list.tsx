@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { MessageSquare, Phone, Search, Send } from 'lucide-react';
 
@@ -34,6 +34,9 @@ type Message = {
   status: string;
   isOutbound: boolean;
   wamid: string;
+  recipient: {
+    phoneNumber: string;
+  };
 };
 
 type PaginatedResponse<T> = {
@@ -59,6 +62,17 @@ type Messages = {
   [key: string]: Message[];
 };
 
+interface SSEMessage {
+  type: 'new_message' | 'status_update' | 'connected';
+  userId: string;
+  data: {
+    message?: Message;
+    wamid?: string;
+    status?: string;
+    phoneNumberId?: string;
+  };
+}
+
 const MessagesList = ({
   phoneNumbers,
   accessToken,
@@ -82,6 +96,8 @@ const MessagesList = ({
   const [hasMoreChats, setHasMoreChats] = useState(true);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [phoneNumberId, setPhoneNumberId] = useState<string>(phoneNumbers[0].phoneNumberId);
+  const [conversationCache, setConversationCache] = useState<Record<string, Message[]>>({});
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -105,6 +121,115 @@ const MessagesList = ({
 
     fetchChats();
   }, []);
+
+  useEffect(() => {
+    // Set up SSE connection
+    const setupSSE = () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+
+      const eventSource = new EventSource(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/whatsapp/messages/stream`,
+        {
+          withCredentials: true,
+        }
+      );
+      eventSourceRef.current = eventSource;
+
+      eventSource.onopen = () => {
+        console.log('SSE Connection established');
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as SSEMessage;
+
+          if (data.type === 'connected') {
+            console.log('Connected to SSE with userId:', data.userId);
+            return;
+          }
+
+          if (data.type === 'new_message' && data.data.message && data.data.phoneNumberId) {
+            const { message, phoneNumberId } = data.data;
+            const recipientPhoneNumber = message.recipient.phoneNumber;
+
+            // Update conversation cache
+            setConversationCache((prev) => {
+              const phoneNumber = phoneNumbers.find(
+                (pn) => pn.phoneNumberId === phoneNumberId
+              )?.phoneNumber;
+              if (!phoneNumber) return prev;
+
+              return {
+                ...prev,
+                [phoneNumber]: [...(prev[phoneNumber] || []), message],
+              };
+            });
+
+            // Update current messages if this is the selected chat
+            if (selectedChat === recipientPhoneNumber) {
+              setMessages((prev) => ({
+                ...prev,
+                [selectedChat]: [...(prev[selectedChat] || []), message],
+              }));
+            }
+          } else if (
+            data.type === 'status_update' &&
+            data.data.wamid &&
+            data.data.status &&
+            data.data.phoneNumberId
+          ) {
+            const { wamid, status, phoneNumberId } = data.data;
+
+            // Update message status in cache
+            setConversationCache((prev) => {
+              const phoneNumber = phoneNumbers.find(
+                (pn) => pn.phoneNumberId === phoneNumberId
+              )?.phoneNumber;
+              if (!phoneNumber) return prev;
+
+              return {
+                ...prev,
+                [phoneNumber]:
+                  prev[phoneNumber]?.map((msg) =>
+                    msg.wamid === wamid ? { ...msg, status } : msg
+                  ) || [],
+              };
+            });
+
+            // Update current messages if this is the selected chat
+            if (selectedChat) {
+              setMessages((prev) => ({
+                ...prev,
+                [selectedChat]:
+                  prev[selectedChat]?.map((msg) =>
+                    msg.wamid === wamid ? { ...msg, status } : msg
+                  ) || [],
+              }));
+            }
+          }
+        } catch (error) {
+          console.error('Error processing SSE message:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE Error:', error);
+        // Attempt to reconnect after 5 seconds
+        setTimeout(setupSSE, 5000);
+      };
+    };
+
+    setupSSE();
+
+    // Cleanup on unmount
+    return () => {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+    };
+  }, [phoneNumbers, selectedChat]);
 
   const loadMoreChats = async () => {
     if (!hasMoreChats || isLoadingMore) return;
@@ -139,30 +264,37 @@ const MessagesList = ({
     }
   };
 
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!selectedChat) return;
+  const fetchMessages = async (phoneNumber: string) => {
+    if (!phoneNumber) return;
 
-      setIsLoadingMessages(true);
-      try {
-        const response = await whatsAppService.getPhoneNumberChats(selectedChat, phoneNumberId, 1);
-        setMessages((prev) => ({
-          ...prev,
-          [selectedChat]: response.data,
-        }));
-        setHasMoreMessages(response.pagination.hasMore);
-        setMessagePage(1);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
-      } finally {
-        setIsLoadingMessages(false);
-      }
-    };
-
-    if (selectedChat) {
-      fetchMessages();
+    // Check if messages exist in cache
+    if (conversationCache[phoneNumber]) {
+      setMessages((prev) => ({
+        ...prev,
+        [phoneNumber]: conversationCache[phoneNumber],
+      }));
+      return;
     }
-  }, [selectedChat]);
+
+    setIsLoadingMessages(true);
+    try {
+      const response = await whatsAppService.getPhoneNumberChats(phoneNumber, phoneNumberId, 1);
+      setConversationCache((prev) => ({
+        ...prev,
+        [phoneNumber]: response.data,
+      }));
+      setMessages((prev) => ({
+        ...prev,
+        [phoneNumber]: response.data,
+      }));
+      setHasMoreMessages(response.pagination.hasMore);
+      setMessagePage(1);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setIsLoadingMessages(false);
+    }
+  };
 
   const loadMoreMessages = async () => {
     if (!selectedChat || !hasMoreMessages || isLoadingMore) return;
@@ -209,7 +341,20 @@ const MessagesList = ({
       status: 'PENDING',
       isOutbound: true,
       wamid: String(Date.now()),
+      recipient: {
+        phoneNumber: selectedChat,
+      },
     };
+
+    // Update cache and messages state
+    setConversationCache((prev) => ({
+      ...prev,
+      [selectedChat]: [...(prev[selectedChat] || []), newMessage],
+    }));
+    setMessages((prev) => ({
+      ...prev,
+      [selectedChat]: [...(prev[selectedChat] || []), newMessage],
+    }));
 
     const campaignData = {
       recipient_type: 'individual',
@@ -238,11 +383,6 @@ const MessagesList = ({
       }
     );
 
-    setMessages((prev) => ({
-      ...prev,
-      [selectedChat]: [...prev[selectedChat], newMessage],
-    }));
-
     setInputMessage('');
   };
 
@@ -255,7 +395,7 @@ const MessagesList = ({
         <div className='p-4 border-b'>
           <Select onValueChange={handleSelectPhoneNumber}>
             <SelectTrigger className='w-full'>
-              <SelectValue placeholder='Select a phone number' />
+              <SelectValue defaultValue={phoneNumbers[0].phoneNumberId} />
             </SelectTrigger>
             <SelectContent>
               {phoneNumbers?.map((phoneNumber) => (
@@ -301,7 +441,10 @@ const MessagesList = ({
                       'flex items-center p-4 cursor-pointer hover:bg-accent transition-colors',
                       selectedChat === chat.phoneNumber && 'bg-accent'
                     )}
-                    onClick={() => setSelectedChat(chat.phoneNumber)}
+                    onClick={() => {
+                      setSelectedChat(chat.phoneNumber);
+                      fetchMessages(chat.phoneNumber);
+                    }}
                   >
                     <div className='flex-shrink-0 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center'>
                       <Phone className='h-6 w-6 text-primary' />
