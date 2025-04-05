@@ -31,6 +31,7 @@ type Message = {
   id: string;
   message: string;
   sentAt: string;
+  phoneNumber: string;
   status: string;
   isOutbound: boolean;
   wamid: string;
@@ -142,6 +143,7 @@ const MessagesList = ({
       };
 
       eventSource.onmessage = (event) => {
+        console.log(event.data, 'event data');
         try {
           const data = JSON.parse(event.data) as SSEMessage;
 
@@ -152,12 +154,12 @@ const MessagesList = ({
 
           if (data.type === 'new_message' && data.data.message && data.data.phoneNumberId) {
             const { message, phoneNumberId } = data.data;
-            const recipientPhoneNumber = message.recipient.phoneNumber;
+            const recipientPhoneNumber = message.phoneNumber;
 
             // Update conversation cache
             setConversationCache((prev) => {
               const phoneNumber = phoneNumbers.find(
-                (pn) => pn.phoneNumberId === phoneNumberId
+                (pn) => pn.phoneNumber === recipientPhoneNumber
               )?.phoneNumber;
               if (!phoneNumber) return prev;
 
@@ -337,6 +339,7 @@ const MessagesList = ({
     const newMessage: Message = {
       id: String(Date.now()),
       message: inputMessage,
+      phoneNumber: selectedChat,
       sentAt: new Date().toISOString(),
       status: 'PENDING',
       isOutbound: true,

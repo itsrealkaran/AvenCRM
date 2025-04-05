@@ -1067,7 +1067,6 @@ export class WhatsAppController extends BaseController {
                   }
                 };
                 global.sseClients.forEach(client => {
-                  console.log(client.userId, whatsAppPhoneNumber.account.userId, "webhook test");
                   if (client.userId === whatsAppPhoneNumber.account.userId) {
                     client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
                   }
@@ -1101,6 +1100,7 @@ export class WhatsAppController extends BaseController {
                       data: {
                         recipientId: newRecipient.id,
                         wamid: message.id,
+                        phoneNumber: message.from,
                         message: message.text.body,
                         sentAt: new Date(message.timestamp * 1000),
                         status: 'PENDING',
