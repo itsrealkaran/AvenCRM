@@ -135,11 +135,10 @@ export function CreateCampaignModal({
       campaignData,
       (phoneNumbers: any) => {
         api.post('/whatsapp/campaigns/saveMessage', {
-          recipientId: phoneNumbers.recipientId,
+          phoneNumber: phoneNumbers.contacts[0].input,
           campaignData: campaignData,
           message: campaignData.text.body,
           wamid: phoneNumbers.messages[0].id,
-          phoneNumber: phoneNumbers.contacts[0].input,
           sentAt: new Date().toISOString(),
         });
       }

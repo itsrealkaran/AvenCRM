@@ -103,7 +103,7 @@ const MessagesList = () => {
   };
 
   return (
-    <div className='flex h-[calc(100vh-200px)] border rounded-lg overflow-hidden'>
+    <div className='flex h-[calc(100vh-200px)] border rounded-lg overflow-auto max-h-[500px]'>
       {/* Left Panel - Chat List */}
       <div className='w-1/3 border-r flex flex-col'>
         <div className='p-4 border-b'>

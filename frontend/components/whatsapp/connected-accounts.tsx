@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
-import { WhatsAppAccount, WhatsAppPhoneNumberData } from '@/types/whatsapp.types';
-import { FaCheck, FaEdit, FaTrash, FaWhatsapp } from 'react-icons/fa';
+import { WhatsAppPhoneNumberData } from '@/types/whatsapp.types';
+import { LogOut } from 'lucide-react';
+import { FaCheck, FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,6 @@ import { Label } from '@/components/ui/label';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 
 export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberData[] }) {
-  const [loading, setLoading] = useState(true);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<WhatsAppPhoneNumberData | null>(null);
@@ -69,9 +69,9 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
   };
 
   return (
-    <div className='space-y-4'>
-      <div className='flex justify-between items-center'>
-        <h2 className='text-xl font-semibold'>Connected WhatsApp Accounts</h2>
+    <Card className='min-h-[300px] max-h-[500px] overflow-y-auto'>
+      <CardHeader className='flex flex-row justify-between items-center'>
+        <CardTitle className='text-xl font-semibold'>Connected WhatsApp Accounts</CardTitle>
         <Button
           onClick={() => setShowConnectModal(true)}
           className='bg-[#25D366] hover:bg-[#25D366]/90 text-white'
@@ -79,7 +79,7 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
           <FaWhatsapp className='w-4 h-4 mr-2' />
           Connect New Account
         </Button>
-      </div>
+      </CardHeader>
 
       {accounts.length === 0 ? (
         <Card className='border border-dashed'>
@@ -99,7 +99,7 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
           </CardContent>
         </Card>
       ) : (
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mx-4 mb-4'>
           {accounts.map((account) => (
             <Card key={account.phoneNumberId}>
               <CardHeader className='pb-2'>
@@ -119,9 +119,6 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
                 <div className='space-y-2'>
                   <p className='text-sm text-muted-foreground'>Phone: {account.phoneNumber}</p>
                   <div className='flex space-x-2 mt-4'>
-                    <Button variant='outline' size='sm' onClick={() => handleEditAccount(account)}>
-                      <FaEdit className='w-3 h-3 mr-1' /> Edit
-                    </Button>
                     {account.codeVerificationStatus === 'NOT_VERIFIED' && (
                       <Button
                         variant='outline'
@@ -144,10 +141,10 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
                     <Button
                       variant='outline'
                       size='sm'
-                      className='text-red-500 hover:text-red-700'
+                      className='text-red-500 hover:text-red-700 justify-self-end'
                       onClick={() => handleDeleteAccount(account.phoneNumberId)}
                     >
-                      <FaTrash className='w-3 h-3 mr-1' /> Delete
+                      <LogOut className='w-3 h-3 mr-1' /> Disconnect
                     </Button>
                   </div>
                 </div>
@@ -188,6 +185,6 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </Card>
   );
 }

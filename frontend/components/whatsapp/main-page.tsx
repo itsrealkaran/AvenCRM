@@ -226,9 +226,9 @@ export default function WhatsAppCampaignsPage() {
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
               <TabsTrigger value='messages'>Messages</TabsTrigger>
-              <TabsTrigger value='accounts'>Connected Accounts</TabsTrigger>
               <TabsTrigger value='audience'>Audience</TabsTrigger>
               <TabsTrigger value='templates'>Templates</TabsTrigger>
+              <TabsTrigger value='accounts'>Accounts</TabsTrigger>
             </TabsList>
             <TabsContent value='campaigns'>
               <CampaignsList
