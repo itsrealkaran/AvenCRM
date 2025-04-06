@@ -198,7 +198,7 @@ export function CampaignsList({
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
-        height: '540px',
+        height: '340px',
         border: '1px solid rgb(201, 201, 201)',
         borderRadius: '8px',
       },

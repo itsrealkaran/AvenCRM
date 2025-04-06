@@ -1078,6 +1078,16 @@ export class WhatsAppController extends BaseController {
                 let newMessage;
                 
                 if (recipient) {
+                  if (!recipient.name && change.value.contacts[0].profile.name) {
+                    await prisma.whatsAppRecipient.update({
+                      where: {
+                        id: recipient.id
+                      },
+                      data: {
+                        name: change.value.contacts[0].profile.name
+                      }
+                    })
+                  }
                   newMessage = await prisma.whatsAppMessage.create({
                     data: {
                       recipientId: recipient.id,
@@ -1094,6 +1104,7 @@ export class WhatsAppController extends BaseController {
                     const newRecipient = await tx.whatsAppRecipient.create({
                       data: {
                         phoneNumber: message.from,
+                        name: change.value.contacts[0].profile.name || null,
                         whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
                       }
                     });
@@ -1378,6 +1389,7 @@ export class WhatsAppController extends BaseController {
           name: true,
           recipients: {
             select: {
+              name: true,
               phoneNumber: true,
               messages: {
                 orderBy: {
@@ -1404,7 +1416,7 @@ export class WhatsAppController extends BaseController {
 
       const phoneNumbers = whatsAppPhoneNumbers[0].recipients.map(recipient => ({
         phoneNumber: recipient.phoneNumber,
-        name: whatsAppPhoneNumbers[0].name,
+        name: recipient.name,
         latestMessage: recipient.messages[0]
       }));
 

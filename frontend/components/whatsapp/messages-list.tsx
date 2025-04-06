@@ -423,16 +423,18 @@ const MessagesList = ({
     setInputMessage('');
   };
 
-  const handleSelectPhoneNumber = (value: string) => {};
+  const handleSelectPhoneNumber = (value: string) => {
+    setPhoneNumberId(value);
+  };
 
   return (
-    <div className='flex h-[calc(100vh-200px)] border rounded-lg overflow-auto max-h-[500px]'>
+    <div className='flex h-[calc(100vh-200px)] border rounded-lg overflow-auto max-h-[480px]'>
       {/* Left Panel - Chat List */}
       <div className='w-1/3 border-r flex flex-col'>
         <div className='p-4 border-b'>
-          <Select onValueChange={handleSelectPhoneNumber}>
+          <Select value={phoneNumberId} onValueChange={handleSelectPhoneNumber}>
             <SelectTrigger className='w-full'>
-              <SelectValue defaultValue={phoneNumbers[0].phoneNumberId} />
+              <SelectValue placeholder='Select phone number' />
             </SelectTrigger>
             <SelectContent>
               {phoneNumbers?.map((phoneNumber) => (
@@ -488,7 +490,9 @@ const MessagesList = ({
                     </div>
                     <div className='ml-4 flex-1 min-w-0'>
                       <div className='flex justify-between items-baseline'>
-                        <p className='font-medium truncate text-sm'>{chat.phoneNumber}</p>
+                        <p className='font-medium truncate text-sm'>
+                          {chat.name ? chat.name : chat.phoneNumber}
+                        </p>
                         <span className='text-xs text-muted-foreground ml-2'>
                           {new Date(chat.latestMessage?.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',

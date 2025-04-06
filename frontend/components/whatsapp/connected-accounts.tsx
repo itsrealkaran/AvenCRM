@@ -69,7 +69,7 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
   };
 
   return (
-    <Card className='min-h-[300px] max-h-[500px] overflow-y-auto'>
+    <Card className='min-h-[300px] max-h-[480px] overflow-y-auto'>
       <CardHeader className='flex flex-row justify-between items-center'>
         <CardTitle className='text-xl font-semibold'>Connected WhatsApp Accounts</CardTitle>
         <Button
