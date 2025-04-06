@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
+import { Box, ListItemIcon, MenuItem } from '@mui/material';
 import {
   flexRender,
   getCoreRowModel,
@@ -10,7 +11,12 @@ import {
   type ColumnDef,
   type SortingState,
 } from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal, Search } from 'lucide-react';
+import { ArrowUpDown, MoreHorizontal, RefreshCw, Search } from 'lucide-react';
+import {
+  MaterialReactTable,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+} from 'material-react-table';
 import { FaEdit, FaPause, FaPlay, FaTrash } from 'react-icons/fa';
 import { toast } from 'sonner';
 
@@ -95,33 +101,16 @@ export function CampaignsList({
     }
   };
 
-  const filteredCampaigns = campaigns.filter(
-    (campaign) =>
-      campaign.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      campaign.audience.name.toLowerCase().includes(filterValue.toLowerCase()) ||
-      campaign.type.toLowerCase().includes(filterValue.toLowerCase())
-  );
-
-  const columns: ColumnDef<Campaign>[] = [
+  const columns = [
     {
       accessorKey: 'name',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Name
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: 'Name',
     },
     {
       accessorKey: 'type',
       header: 'Type',
-      cell: ({ row }) => {
-        const value = row.getValue('type') as string;
+      Cell: ({ row }: any) => {
+        const value = row.original.type;
         const typeColors = {
           text: 'bg-blue-100 text-blue-800',
           image: 'bg-green-100 text-green-800',
@@ -129,7 +118,9 @@ export function CampaignsList({
         };
         return (
           <span
-            className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${typeColors[value as keyof typeof typeColors]}`}
+            className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
+              typeColors[value as keyof typeof typeColors]
+            }`}
           >
             {value.charAt(0).toUpperCase() + value.slice(1)}
           </span>
@@ -137,18 +128,14 @@ export function CampaignsList({
       },
     },
     {
-      accessorKey: 'audience',
+      accessorKey: 'audience.name',
       header: 'Audience',
-      cell: ({ row }) => {
-        const audience = row.getValue('audience') as AudienceGroup;
-        return audience.name;
-      },
     },
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
-        const value = row.getValue('status') as string;
+      Cell: ({ row }: any) => {
+        const value = row.original.status;
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -162,19 +149,9 @@ export function CampaignsList({
     },
     {
       accessorKey: 'createdAt',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Created At
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const date = new Date(row.getValue('createdAt'));
+      header: 'Created At',
+      Cell: ({ row }: any) => {
+        const date = new Date(row.original.createdAt);
         return date.toLocaleString('en-US', {
           year: 'numeric',
           month: 'short',
@@ -184,77 +161,67 @@ export function CampaignsList({
         });
       },
     },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        const campaign = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant='ghost' className='h-8 w-8 p-0' disabled={isLoading}>
-                <MoreHorizontal className='h-4 w-4' />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align='end'>
-              <DropdownMenuItem onClick={() => handleEditCampaign(campaign)}>
-                <FaEdit className='mr-2 h-4 w-4' />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleToggleCampaignStatus(campaign)}>
-                {campaign.status === 'Active' ? (
-                  <>
-                    <FaPause className='mr-2 h-4 w-4' />
-                    Pause
-                  </>
-                ) : (
-                  <>
-                    <FaPlay className='mr-2 h-4 w-4' />
-                    Resume
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDeleteCampaign(campaign)}>
-                <FaTrash className='mr-2 h-4 w-4' />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
   ];
 
-  const table = useReactTable({
-    data: filteredCampaigns,
+  const table = useMaterialReactTable({
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
+    data: campaigns,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      //density: 'compact',
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
     },
-  });
-
-  return (
-    <Card className='border rounded-lg'>
-      <CardHeader className='border-b'>
-        <div className='flex items-center justify-between'>
-          <div>
-            <CardTitle className='text-xl'>Campaigns</CardTitle>
-            <CardDescription>View and manage your WhatsApp campaigns</CardDescription>
-          </div>
-        </div>
-        <div className='mt-4 flex justify-between items-center'>
-          <div className='relative max-w-sm'>
-            <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
-            <Input
-              placeholder='Filter campaigns...'
-              className='pl-8'
-              value={filterValue}
-              onChange={(e) => setFilterValue(e.target.value)}
-            />
-          </div>
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '540px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search campaigns...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
           <Button
             onClick={() => {
               setEditingCampaign(null);
@@ -265,59 +232,64 @@ export function CampaignsList({
           >
             Create Campaign
           </Button>
-        </div>
-      </CardHeader>
-      <CardContent className='p-0'>
-        {campaigns && campaigns.length > 0 ? (
-          <div className='overflow-auto'>
-            <table className='w-full min-w-[800px]'>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <th
-                        key={header.id}
-                        className='h-12 px-4 text-left align-middle text-sm font-medium text-muted-foreground bg-gray-50/50'
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className='border-t hover:bg-gray-50/50'>
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className='p-4 align-middle text-sm'>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className='text-center py-10'>
-            <h3 className='text-lg font-semibold mb-2'>No campaigns yet</h3>
-            <p className='text-muted-foreground mb-4'>
-              Create your first WhatsApp campaign to get started
-            </p>
-            <Button
-              onClick={() => {
-                setEditingCampaign(null);
-                setShowCampaignModal(true);
-              }}
-              className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-              disabled={isLoading}
-            >
-              Create Campaign
-            </Button>
-          </div>
-        )}
+        </Box>
+      </Box>
+    ),
+    renderRowActionMenuItems: ({ row, closeMenu }) => [
+      <MenuItem
+        key={0}
+        onClick={() => {
+          handleEditCampaign(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <FaEdit className='size-4' />
+        </ListItemIcon>
+        Edit Campaign
+      </MenuItem>,
+      <MenuItem
+        key={1}
+        onClick={() => {
+          handleToggleCampaignStatus(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          {row.original.status === 'Active' ? (
+            <FaPause className='size-4' />
+          ) : (
+            <FaPlay className='size-4' />
+          )}
+        </ListItemIcon>
+        {row.original.status === 'Active' ? 'Pause' : 'Resume'}
+      </MenuItem>,
+      <MenuItem
+        key={2}
+        onClick={() => {
+          handleDeleteCampaign(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-red-600'
+      >
+        <ListItemIcon>
+          <FaTrash className='text-red-600 size-4' />
+        </ListItemIcon>
+        Delete Campaign
+      </MenuItem>,
+    ],
+    state: {
+      isLoading,
+    },
+  });
+
+  return (
+    <Card>
+      <CardContent className='px-4 py-2'>
+        <MaterialReactTable table={table} />
       </CardContent>
       <CreateCampaignModal
         open={showCampaignModal}
@@ -325,11 +297,6 @@ export function CampaignsList({
         onCreateCampaign={(campaign) => {
           onUpdateCampaign(campaign.id!, campaign);
           setShowCampaignModal(false);
-        }} // @ts-ignore
-        onCreateAudience={(audience: AudienceGroup): AudienceGroup => {
-          // This is a placeholder. The actual audience creation is handled in the parent component.
-          console.log('New audience created:', audience);
-          return audience;
         }}
         editingCampaign={editingCampaign}
         audiences={audiences}

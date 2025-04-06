@@ -4,6 +4,7 @@ import { use, useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
+import { toast } from 'sonner';
 
 import WhatsAppPlaceholder from '@/components/placeholders/whatsapp';
 import { Button } from '@/components/ui/button';
@@ -21,14 +22,25 @@ import { useAuth } from '@/hooks/useAuth';
 
 import MessagesList from './messages-list';
 
+type Template = {
+  id: string;
+  name: string;
+  parameter_format: string;
+  components: any[];
+  language: string;
+  status: string;
+  category: string;
+};
+
 export default function WhatsAppCampaignsPage() {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showCampaignModal, setShowCampaignModal] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
-  const [templates, setTemplates] = useState<any[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
   const [whatsAppCode, setWhatsAppCode] = useState<string | null>(null);
+
   const queryClient = useQueryClient();
 
   const whatsAppAccount = useQuery({
@@ -42,12 +54,6 @@ export default function WhatsAppCampaignsPage() {
     enabled: !!whatsAppAccount.data,
   });
 
-  const whatsAppTemplates = useQuery({
-    queryKey: ['whatsapp-templates'],
-    queryFn: () => whatsAppService.getTemplates(),
-    enabled: !!whatsAppAccount.data,
-  });
-
   const whatsAppCampaigns = useQuery({
     queryKey: ['whatsapp-campaigns'],
     queryFn: () => api.get('/whatsapp/campaigns'),
@@ -55,19 +61,47 @@ export default function WhatsAppCampaignsPage() {
   });
 
   useEffect(() => {
+    if (whatsAppAccount.data?.data?.wabaid) {
+      console.log('Fetching templates for WABA ID:', whatsAppAccount.data.data.wabaid);
+      // @ts-ignore
+      FB.api(
+        `/${whatsAppAccount.data?.data?.wabaid}/message_templates?access_token=${whatsAppAccount.data?.data?.accessToken}`,
+        'GET',
+        (response: any) => {
+          console.log('Received templates from Facebook API:', response);
+          if (response && response.data) {
+            setTemplates(response.data);
+          }
+        }
+      );
+    }
+  }, [whatsAppAccount.data]);
+
+  useEffect(() => {
     if (whatsAppAudiences.data) {
       setAudiences(whatsAppAudiences.data);
-    }
-    if (whatsAppTemplates.data) {
-      setTemplates(whatsAppTemplates.data);
     }
     if (whatsAppCampaigns.data) {
       setCampaigns(whatsAppCampaigns.data.data);
     }
-  }, [whatsAppAudiences.data, whatsAppTemplates.data, whatsAppCampaigns.data]);
+  }, [whatsAppAudiences.data, whatsAppCampaigns.data]);
 
-  const handleCreateCampaign = (newCampaign: Campaign) => {
-    setCampaigns([...campaigns, newCampaign]);
+  const handleCreateCampaign = async (campaign: Campaign) => {
+    try {
+      const response = await api.post('/whatsapp/campaigns', {
+        name: campaign.name,
+        type: campaign.type,
+        template: campaign.template,
+        templateParams: campaign.templateParams,
+        audienceId: campaign.audienceId,
+        scheduledAt: campaign.scheduledAt,
+      });
+      setCampaigns((prev) => [...prev, response.data]);
+      toast.success('Campaign created successfully');
+    } catch (error) {
+      console.error('Error creating campaign:', error);
+      toast.error('Failed to create campaign');
+    }
   };
 
   const handleCreateAudience = (newAudience: AudienceGroup) => {
@@ -156,10 +190,15 @@ export default function WhatsAppCampaignsPage() {
                     codeVerificationStatus: phoneNumber.code_verification_status,
                   }));
 
+                  const phoneNumberIds = phoneNumberData.map(
+                    (phoneNumber: any) => phoneNumber.phoneNumberId
+                  );
+
                   api
                     .post('/whatsapp/accounts', {
                       displayName: userInfo.name,
                       phoneNumberData: phoneNumberData,
+                      phoneNumberIds: phoneNumberIds,
                       wabaid: wabaId,
                       accessToken: accessToken,
                     })
@@ -226,9 +265,9 @@ export default function WhatsAppCampaignsPage() {
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
               <TabsTrigger value='messages'>Messages</TabsTrigger>
-              <TabsTrigger value='accounts'>Connected Accounts</TabsTrigger>
               <TabsTrigger value='audience'>Audience</TabsTrigger>
               <TabsTrigger value='templates'>Templates</TabsTrigger>
+              <TabsTrigger value='accounts'>Accounts</TabsTrigger>
             </TabsList>
             <TabsContent value='campaigns'>
               <CampaignsList
@@ -241,7 +280,10 @@ export default function WhatsAppCampaignsPage() {
               />
             </TabsContent>
             <TabsContent value='messages'>
-              <MessagesList />
+              <MessagesList
+                phoneNumbers={whatsAppAccount.data?.data?.phoneNumbers || []}
+                accessToken={whatsAppAccount.data?.data?.accessToken || ''}
+              />
             </TabsContent>
             <TabsContent value='accounts'>
               <ConnectedAccounts accounts={whatsAppAccount.data?.data?.phoneNumberData} />
@@ -283,9 +325,9 @@ export default function WhatsAppCampaignsPage() {
       <CreateCampaignModal
         open={showCampaignModal}
         onClose={() => setShowCampaignModal(false)}
+        templates={templates}
         onCreateCampaign={handleCreateCampaign}
-        audiences={audiences} // @ts-ignore
-        onCreateAudience={null}
+        audiences={audiences}
       />
     </Card>
   );

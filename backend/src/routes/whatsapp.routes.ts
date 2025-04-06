@@ -12,6 +12,8 @@ router.get('/access-token/:code', whatsAppController.getAccessToken);
 // WhatsApp Account Management
 router.post('/accounts', whatsAppController.createAccount);
 router.get('/accounts', whatsAppController.getAccounts);
+router.get('/accounts/phone-numbers', whatsAppController.getPhoneNumbers);
+router.get('/accounts/phone-numbers/:phoneNumber', whatsAppController.getPhoneNumberChats);
 router.get('/accounts/:id', whatsAppController.getAccount);
 router.put('/accounts/:id', whatsAppController.updateAccount);
 router.delete('/accounts/:id', whatsAppController.deleteAccount);
@@ -21,6 +23,7 @@ router.post('/campaigns/saveMessage', whatsAppController.saveMessage);
 
 // Message Management
 router.get('/messages', whatsAppController.getMessages);
+router.get('/messages/stream', whatsAppController.streamMessages);
 
 // Audience Management
 router.post('/audiences', whatsAppController.createAudience);

@@ -177,4 +177,23 @@ export const whatsAppService = {
     const response = await api.get(`/whatsapp/campaigns/${campaignId}/statistics`);
     return response.data;
   },
+
+  async getPhoneNumbers(page = 1, limit = 20, phoneNumberId: string) {
+    const response = await api.get(
+      `/whatsapp/accounts/phone-numbers?page=${page}&limit=${limit}&phoneNumberId=${phoneNumberId}`
+    );
+    return response.data;
+  },
+
+  async getPhoneNumberChats(
+    phoneNumber: string,
+    originPhoneNumberId: string,
+    page = 1,
+    limit = 50
+  ) {
+    const response = await api.get(
+      `/whatsapp/accounts/phone-numbers/${phoneNumber}?page=${page}&limit=${limit}&originPhoneNumberId=${originPhoneNumberId}`
+    );
+    return response.data;
+  },
 };

@@ -226,7 +226,7 @@ export default function DealsPage() {
     enableStickyHeader: true,
     initialState: {
       showGlobalFilter: true,
-      density: 'compact',
+      //density: 'compact',
       columnPinning: {
         left: ['mrt-row-select'],
         right: ['mrt-row-actions'],

@@ -331,10 +331,7 @@ export function AdminDashboard() {
         {/* Performance Chart */}
         <Card className='col-span-4 bg-white shadow-sm'>
           <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <Activity className='h-5 w-5 text-gray-500' />
-              Performance Overview
-            </CardTitle>
+            <CardTitle className='flex items-center gap-2'>Performance Overview</CardTitle>
             <CardDescription>Monthly deals and revenue analysis</CardDescription>
           </CardHeader>
           <CardContent className='pl-2'>
