@@ -85,7 +85,13 @@ const MessagesList = ({
     data: [],
     pagination: { currentPage: 1, totalPages: 1, totalItems: 0, hasMore: false },
   });
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [selectedChat, setSelectedChat] = useState<{
+    phoneNumber: string;
+    name: string | undefined;
+  }>({
+    phoneNumber: '',
+    name: '',
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [inputMessage, setInputMessage] = useState('');
   const [messages, setMessages] = useState<Messages>({});
@@ -188,17 +194,20 @@ const MessagesList = ({
             });
 
             // Update current messages if this is the selected chat
-            if (selectedChat === recipientPhoneNumber) {
+            if (selectedChat.phoneNumber === recipientPhoneNumber) {
               setMessages((prev) => {
                 const currentMessages = { ...prev };
 
                 // If the conversation doesn't exist yet, create it
-                if (!currentMessages[selectedChat]) {
-                  currentMessages[selectedChat] = [];
+                if (!currentMessages[selectedChat.phoneNumber]) {
+                  currentMessages[selectedChat.phoneNumber] = [];
                 }
 
                 // Add the new message to the conversation
-                currentMessages[selectedChat] = [...currentMessages[selectedChat], message];
+                currentMessages[selectedChat.phoneNumber] = [
+                  ...currentMessages[selectedChat.phoneNumber],
+                  message,
+                ];
 
                 console.log('Updated messages:', currentMessages);
                 return currentMessages;
@@ -230,14 +239,14 @@ const MessagesList = ({
             });
 
             // Update current messages if this is the selected chat
-            if (selectedChat) {
+            if (selectedChat.phoneNumber) {
               setMessages((prev) => {
                 const currentMessages = { ...prev };
 
-                if (currentMessages[selectedChat]) {
-                  currentMessages[selectedChat] = currentMessages[selectedChat].map((msg) =>
-                    msg.wamid === wamid ? { ...msg, status } : msg
-                  );
+                if (currentMessages[selectedChat.phoneNumber]) {
+                  currentMessages[selectedChat.phoneNumber] = currentMessages[
+                    selectedChat.phoneNumber
+                  ].map((msg) => (msg.wamid === wamid ? { ...msg, status } : msg));
                 }
 
                 console.log('Updated messages with status:', currentMessages);
@@ -265,7 +274,7 @@ const MessagesList = ({
         eventSourceRef.current.close();
       }
     };
-  }, [phoneNumbers, selectedChat]);
+  }, [phoneNumbers, selectedChat.phoneNumber]);
 
   const loadMoreChats = async () => {
     if (!hasMoreChats || isLoadingMore) return;
@@ -333,19 +342,19 @@ const MessagesList = ({
   };
 
   const loadMoreMessages = async () => {
-    if (!selectedChat || !hasMoreMessages || isLoadingMore) return;
+    if (!selectedChat.phoneNumber || !hasMoreMessages || isLoadingMore) return;
 
     setIsLoadingMore(true);
     try {
       const nextPage = messagePage + 1;
       const response = await whatsAppService.getPhoneNumberChats(
-        selectedChat,
+        selectedChat.phoneNumber,
         phoneNumberId,
         nextPage
       );
       setMessages((prev) => ({
         ...prev,
-        [selectedChat]: [...prev[selectedChat], ...response.data],
+        [selectedChat.phoneNumber]: [...prev[selectedChat.phoneNumber], ...response.data],
       }));
       setMessagePage(nextPage);
       setHasMoreMessages(response.pagination.hasMore);
@@ -368,35 +377,35 @@ const MessagesList = ({
   );
 
   const handleSendMessage = () => {
-    if (!selectedChat || !inputMessage.trim()) return;
+    if (!selectedChat.phoneNumber || !inputMessage.trim()) return;
 
     const newMessage: Message = {
       id: String(Date.now()),
       message: inputMessage,
-      phoneNumber: selectedChat,
+      phoneNumber: selectedChat.phoneNumber,
       sentAt: new Date().toISOString(),
       status: 'PENDING',
       isOutbound: true,
       wamid: String(Date.now()),
       recipient: {
-        phoneNumber: selectedChat,
+        phoneNumber: selectedChat.phoneNumber,
       },
     };
 
     // Update cache and messages state
     setConversationCache((prev) => ({
       ...prev,
-      [selectedChat]: [...(prev[selectedChat] || []), newMessage],
+      [selectedChat.phoneNumber]: [...(prev[selectedChat.phoneNumber] || []), newMessage],
     }));
     setMessages((prev) => ({
       ...prev,
-      [selectedChat]: [...(prev[selectedChat] || []), newMessage],
+      [selectedChat.phoneNumber]: [...(prev[selectedChat.phoneNumber] || []), newMessage],
     }));
 
     const campaignData = {
       recipient_type: 'individual',
       messaging_product: 'whatsapp',
-      to: `${selectedChat}`,
+      to: `${selectedChat.phoneNumber}`,
       type: 'text',
       text: {
         preview_url: true,
@@ -411,7 +420,7 @@ const MessagesList = ({
       campaignData,
       (phoneNumbers: any) => {
         api.post('/whatsapp/campaigns/saveMessage', {
-          recipientNumber: selectedChat,
+          recipientNumber: selectedChat.phoneNumber,
           phoneNumberId: phoneNumberId,
           message: inputMessage,
           wamid: phoneNumbers.messages[0].id,
@@ -478,10 +487,10 @@ const MessagesList = ({
                     key={chat.phoneNumber}
                     className={cn(
                       'flex items-center p-4 cursor-pointer hover:bg-accent transition-colors',
-                      selectedChat === chat.phoneNumber && 'bg-accent'
+                      selectedChat.phoneNumber === chat.phoneNumber && 'bg-accent'
                     )}
                     onClick={() => {
-                      setSelectedChat(chat.phoneNumber);
+                      setSelectedChat({ phoneNumber: chat.phoneNumber, name: chat.name });
                       fetchMessages(chat.phoneNumber);
                     }}
                   >
@@ -519,7 +528,7 @@ const MessagesList = ({
 
       {/* Right Panel - Messages */}
       <div className='flex-1 flex flex-col'>
-        {selectedChat ? (
+        {selectedChat.phoneNumber ? (
           <>
             {/* Chat Header */}
             <div className='p-4 border-b flex items-center'>
@@ -527,7 +536,11 @@ const MessagesList = ({
                 <Phone className='h-5 w-5 text-primary' />
               </div>
               <div className='ml-4'>
-                <p className='font-medium'>{selectedChat}</p>
+                <p className='font-medium'>
+                  {selectedChat.name
+                    ? `${selectedChat.name} (+${selectedChat.phoneNumber})`
+                    : selectedChat.phoneNumber}
+                </p>
                 <p className='text-sm text-muted-foreground'>Online</p>
               </div>
             </div>
@@ -544,7 +557,7 @@ const MessagesList = ({
                         Loading more messages...
                       </div>
                     )}
-                    {messages[selectedChat]?.map((message) => (
+                    {messages[selectedChat.phoneNumber]?.map((message) => (
                       <div
                         key={message.id}
                         className={cn('flex', message.isOutbound ? 'justify-end' : 'justify-start')}

@@ -122,7 +122,8 @@ export const whatsAppService = {
     type: 'TEXT' | 'IMAGE' | 'TEMPLATE';
     message?: string;
     mediaUrl?: string;
-    templateId?: string;
+    template?: { name: string; id: string };
+    status?: 'Successfull' | 'Failed' | 'Pending';
     templateParams?: Record<string, string>;
     accountId: string;
     audienceId: string;

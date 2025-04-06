@@ -43,7 +43,7 @@ interface CreateCampaignModalProps {
 export type Campaign = {
   id?: string;
   name: string;
-  type: 'text' | 'image' | 'template';
+  type: 'TEXT' | 'IMAGE' | 'TEMPLATE';
   message: string;
   imageUrl?: string;
   template?: {
@@ -53,7 +53,7 @@ export type Campaign = {
   templateParams?: { [key: string]: string };
   audience: AudienceGroup;
   audienceId: string;
-  status: 'Active' | 'Paused';
+  status: 'Successfull' | 'Failed';
   createdAt: string;
   accountId?: string;
   scheduledAt?: Date;
@@ -79,7 +79,7 @@ export function CreateCampaignModal({
   console.log('CreateCampaignModal received templates:', templates);
 
   const [campaignName, setCampaignName] = useState('');
-  const [campaignType, setCampaignType] = useState<'text' | 'image' | 'template'>('template');
+  const [campaignType, setCampaignType] = useState<'TEXT' | 'IMAGE' | 'TEMPLATE'>('TEMPLATE');
   const [message, setMessage] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
@@ -170,7 +170,7 @@ export function CreateCampaignModal({
     } else {
       // Reset form fields but preserve template selection
       setCampaignName('');
-      setCampaignType('template');
+      setCampaignType('TEMPLATE');
       setMessage('');
       setImageUrl('');
       // Don't reset template selection
@@ -192,10 +192,10 @@ export function CreateCampaignModal({
     const newErrors: { [key: string]: string } = {};
     if (!campaignName.trim()) newErrors.name = 'Campaign name is required';
     if (!selectedAccountId) newErrors.account = 'WhatsApp account is required';
-    if (campaignType === 'text' && !message.trim()) newErrors.message = 'Message is required';
-    if (campaignType === 'image' && !imageUrl.trim()) newErrors.imageUrl = 'Image URL is required';
+    if (campaignType === 'TEXT' && !message.trim()) newErrors.message = 'Message is required';
+    if (campaignType === 'IMAGE' && !imageUrl.trim()) newErrors.imageUrl = 'Image URL is required';
     if (
-      campaignType === 'template' &&
+      campaignType === 'TEMPLATE' &&
       Object.values(templateParams).some((param) => !param.trim())
     ) {
       newErrors.templateParams = 'All template parameters are required';
@@ -211,26 +211,26 @@ export function CreateCampaignModal({
     setIsLoading(true);
 
     try {
+      let isSuccessFull = true;
       const campaignData: Campaign = {
         id: editingCampaign?.id,
         name: campaignName,
         type: campaignType,
         message: selectedTemplate.components?.[0]?.text || '',
-        imageUrl: campaignType === 'image' ? imageUrl : undefined,
         template: {
           name: selectedTemplate.name,
           id: selectedTemplate.id,
         },
-        templateParams: campaignType === 'template' ? templateParams : undefined,
+        templateParams: templateParams,
         audience: selectedAudience!,
         audienceId: selectedAudience!.id,
-        status: editingCampaign?.status || 'Active',
+        status: isSuccessFull ? 'Successfull' : 'Failed',
         createdAt: editingCampaign?.createdAt || new Date().toISOString(),
         accountId: selectedAccountId.phoneNumberId,
         scheduledAt: editingCampaign?.scheduledAt || undefined,
       };
 
-      if (campaignType === 'template') {
+      if (campaignType === 'TEMPLATE') {
         // Build the message text from template components
         let messageText = '';
         selectedTemplate.components.forEach((component) => {
@@ -303,9 +303,16 @@ export function CreateCampaignModal({
             }
           } catch (error) {
             console.error('Error sending message:', error);
+            isSuccessFull = false;
             toast.error(`Failed to send message to ${recipient.phoneNumber}`);
           }
         }
+        campaignData.status = isSuccessFull ? 'Successfull' : 'Failed';
+        await whatsAppService.createCampaign({
+          ...campaignData,
+          accountId: selectedAccountId.phoneNumberId,
+        });
+
         onClose();
         return;
       }
@@ -332,35 +339,20 @@ export function CreateCampaignModal({
 
   const renderMessageInput = () => {
     switch (campaignType) {
-      // case 'image':
-      //   return (
-      //     <div className='space-y-2'>
-      //       <Label htmlFor='imageUrl'>Image</Label>
-      //       <div className='flex space-x-2'>
-      //         <Input
-      //           id='imageUrl'
-      //           placeholder='Enter image URL'
-      //           value={imageUrl}
-      //           onChange={(e) => setImageUrl(e.target.value)}
-      //         />
-      //         <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-      //           <DialogTrigger asChild>
-      //             <Button variant='outline'>Select Image</Button>
-      //           </DialogTrigger>
-      //           <ImageSelectionModal handleImageSelection={handleImageSelection} />
-      //         </Dialog>
-      //       </div>
-      //       {errors.imageUrl && <p className='text-sm text-red-500'>{errors.imageUrl}</p>}
-      //       <Label htmlFor='imageCaption'>Image Caption (optional)</Label>
-      //       <Input
-      //         id='imageCaption'
-      //         placeholder='Enter image caption'
-      //         value={message}
-      //         onChange={(e) => setMessage(e.target.value)}
-      //       />
-      //     </div>
-      // );
-      case 'template':
+      case 'IMAGE':
+        return (
+          <div className='space-y-2'>
+            <Label htmlFor='imageUrl'>Image</Label>
+            <Input
+              id='imageUrl'
+              placeholder='Enter image URL'
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+            />
+            {errors.imageUrl && <p className='text-sm text-red-500'>{errors.imageUrl}</p>}
+          </div>
+        );
+      case 'TEMPLATE':
         return (
           <div className='space-y-4'>
             <div className='space-y-2'>
@@ -553,13 +545,13 @@ export function CreateCampaignModal({
               <Select
                 disabled={true}
                 value={campaignType}
-                onValueChange={(value: 'template') => setCampaignType(value)}
+                onValueChange={(value: 'TEMPLATE') => setCampaignType(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder='Select campaign type' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='template'>Template Message</SelectItem>
+                  <SelectItem value='TEMPLATE'>Template Message</SelectItem>
                 </SelectContent>
               </Select>
             </div>

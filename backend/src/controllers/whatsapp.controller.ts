@@ -649,7 +649,8 @@ export class WhatsAppController extends BaseController {
         type,
         message,
         mediaUrl,
-        templateId,
+        template,
+        status,
         templateParams,
         accountId,
         audienceId,
@@ -665,7 +666,7 @@ export class WhatsAppController extends BaseController {
         return res.status(400).json({ message: 'Message is required for text campaigns' });
       } else if (type === 'IMAGE' && !mediaUrl) {
         return res.status(400).json({ message: 'Media URL is required for image campaigns' });
-      } else if (type === 'TEMPLATE' && !templateId) {
+      } else if (type === 'TEMPLATE' && !template.id) {
         return res.status(400).json({ message: 'Template ID is required for template campaigns' });
       }
 
@@ -679,31 +680,20 @@ export class WhatsAppController extends BaseController {
         return res.status(403).json({ message: 'Forbidden' });
       }
 
-      // If template is specified, verify it belongs to account
-      if (templateId) {
-        const template = await prisma.whatsAppTemplate.findUnique({
-          where: { id: templateId }
-        });
-
-        if (!template || template.accountId !== accountId) {
-          return res.status(403).json({ message: 'Invalid template for this account' });
-        }
-      }
-
       const campaign = await prisma.whatsAppCampaign.create({
         data: {
           name,
           type,
           message,
           mediaUrl,
-          templateId,
+          templateId: template.id,
           templateParams: templateParams
             ? templateParams
             : Prisma.JsonNull,
           accountId: account.id,
           audienceId,
           scheduledAt: scheduledAt ? new Date(scheduledAt) : null,
-          status: WhatsAppCampaignStatus.DRAFT
+          status
         }
       });
 
@@ -742,12 +732,7 @@ export class WhatsAppController extends BaseController {
                 }
               }
             }
-          },
-          template: {
-            select: {
-              name: true
-            }
-          },
+          }
         }
       });
 
@@ -775,7 +760,6 @@ export class WhatsAppController extends BaseController {
               recipients: true
             }
           },
-          template: true,
         }
       });
 
