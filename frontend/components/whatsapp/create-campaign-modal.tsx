@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type React from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
-import { WhatsAppAccount } from '@/types/whatsapp.types';
+import { WhatsAppAccount, WhatsAppTemplate } from '@/types/whatsapp.types';
 import { Plus } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import { toast } from 'sonner';
@@ -36,8 +36,8 @@ interface CreateCampaignModalProps {
   onClose: () => void;
   onCreateCampaign: (campaign: Campaign) => void;
   audiences?: AudienceGroup[];
-  onCreateAudience: (audience: AudienceGroup) => AudienceGroup;
   editingCampaign?: Campaign | null;
+  templates?: WhatsAppTemplate[];
 }
 
 export type Campaign = {
@@ -46,13 +46,17 @@ export type Campaign = {
   type: 'text' | 'image' | 'template';
   message: string;
   imageUrl?: string;
-  templateId?: string;
+  template?: {
+    name: string;
+    id: string;
+  };
   templateParams?: { [key: string]: string };
   audience: AudienceGroup;
   audienceId: string;
   status: 'Active' | 'Paused';
   createdAt: string;
   accountId?: string;
+  scheduledAt?: Date;
 };
 
 const SAMPLE_TEMPLATES = [
@@ -69,14 +73,16 @@ export function CreateCampaignModal({
   onClose,
   onCreateCampaign,
   audiences,
-  onCreateAudience,
   editingCampaign,
+  templates,
 }: CreateCampaignModalProps) {
+  console.log('CreateCampaignModal received templates:', templates);
+
   const [campaignName, setCampaignName] = useState('');
-  const [campaignType, setCampaignType] = useState<'text' | 'image' | 'template'>('text');
+  const [campaignType, setCampaignType] = useState<'text' | 'image' | 'template'>('template');
   const [message, setMessage] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [selectedTemplate, setSelectedTemplate] = useState(SAMPLE_TEMPLATES[0]);
+  const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const [templateParams, setTemplateParams] = useState<{ [key: string]: string }>({});
   const [selectedAudience, setSelectedAudience] = useState<AudienceGroup | null>(null);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -91,7 +97,6 @@ export function CreateCampaignModal({
     phoneNumberId: accounts?.phoneNumberData[0]?.phoneNumberId || '',
     phoneNumber: accounts?.phoneNumberData[0]?.phoneNumber || '',
   });
-  const [templates, setTemplates] = useState<any[]>(SAMPLE_TEMPLATES);
 
   // Ensure audiences is always an array
   const safeAudiences = useMemo(() => audiences || [], [audiences]);
@@ -124,32 +129,29 @@ export function CreateCampaignModal({
       // If we have a real API for templates, use it
       // const templatesData = await whatsAppService.getTemplates();
       // setTemplates(templatesData);
-
       // For now, we're using sample templates
-      setTemplates(SAMPLE_TEMPLATES);
     } catch (error) {
       console.error('Error fetching templates:', error);
       toast.error('Failed to load message templates');
     }
   };
   const sendMessage = async (campaignData: any) => {
-    // @ts-ignore
-    FB.api(
-      `/${selectedAccountId.phoneNumberId}/messages?access_token=${accounts?.accessToken}`,
-      'POST',
-      campaignData,
-      (phoneNumbers: any) => {
-        api.post('/whatsapp/campaigns/saveMessage', {
-          phoneNumberId: selectedAccountId.phoneNumberId,
-          phoneNumber: selectedAccountId.phoneNumber,
-          campaignData: campaignData,
-          recipientNumber: campaignData.to,
-          message: campaignData.text.body,
-          wamid: phoneNumbers.messages[0].id,
-          sentAt: new Date().toISOString(),
-        });
-      }
-    );
+    try {
+      console.log('Attempting to save message with data:', campaignData);
+      const response = await api.post('/whatsapp/campaigns/saveMessage', {
+        phoneNumberId: selectedAccountId.phoneNumberId,
+        phoneNumber: selectedAccountId.phoneNumber,
+        campaignData: campaignData,
+        recipientNumber: campaignData.to,
+        message: campaignData.text?.body || campaignData.template?.name,
+        wamid: campaignData.wamid,
+        sentAt: new Date().toISOString(),
+      });
+      console.log('Message saved successfully:', response);
+    } catch (error) {
+      console.error('Error saving message:', error);
+      toast.error('Failed to save message');
+    }
   };
 
   useEffect(() => {
@@ -158,9 +160,7 @@ export function CreateCampaignModal({
       setCampaignType(editingCampaign.type);
       setMessage(editingCampaign.message);
       setImageUrl(editingCampaign.imageUrl || '');
-      setSelectedTemplate(
-        SAMPLE_TEMPLATES.find((t) => t.id === editingCampaign.templateId) || SAMPLE_TEMPLATES[0]
-      );
+      setSelectedTemplate(templates?.find((t) => t.id === editingCampaign.template?.id) || null);
       setTemplateParams(editingCampaign.templateParams || {});
       setSelectedAudience(editingCampaign.audience);
       setSelectedAccountId({
@@ -168,17 +168,25 @@ export function CreateCampaignModal({
         phoneNumber: editingCampaign.audience.phoneNumbers?.[0] || '',
       });
     } else {
-      // Reset form fields
+      // Reset form fields but preserve template selection
       setCampaignName('');
-      setCampaignType('text');
+      setCampaignType('template');
       setMessage('');
       setImageUrl('');
-      setSelectedTemplate(SAMPLE_TEMPLATES[0]);
+      // Don't reset template selection
       setTemplateParams({});
       setSelectedAudience(null);
       // Don't reset account ID to preserve the selected account
     }
-  }, [editingCampaign]);
+  }, [editingCampaign, templates]);
+
+  const handleTemplateChange = (value: string) => {
+    const template = templates?.find((t) => t.name === value);
+    console.log('Selected template:', template);
+    setSelectedTemplate(template || null);
+    // Reset template params when template changes
+    setTemplateParams({});
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -198,67 +206,111 @@ export function CreateCampaignModal({
   };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return;
+    if (!validateForm() || !selectedTemplate) return;
 
     setIsLoading(true);
 
     try {
-      if (campaignType === 'text') {
-        selectedAudience?.recipients?.map((recipient) => {
-          const campaignData = {
-            recipient_type: 'individual',
-            messaging_product: 'whatsapp',
-            to: `${recipient.phoneNumber}`,
-            type: 'text',
-            text: {
-              preview_url: true,
-              body: message,
-            },
-          };
-
-          sendMessage(campaignData);
-        });
-      }
-
       const campaignData: Campaign = {
         id: editingCampaign?.id,
         name: campaignName,
         type: campaignType,
-        message: campaignType === 'template' ? selectedTemplate.content : message,
+        message: selectedTemplate.components?.[0]?.text || '',
         imageUrl: campaignType === 'image' ? imageUrl : undefined,
-        templateId: campaignType === 'template' ? selectedTemplate.id : undefined,
+        template: {
+          name: selectedTemplate.name,
+          id: selectedTemplate.id,
+        },
         templateParams: campaignType === 'template' ? templateParams : undefined,
         audience: selectedAudience!,
         audienceId: selectedAudience!.id,
         status: editingCampaign?.status || 'Active',
         createdAt: editingCampaign?.createdAt || new Date().toISOString(),
         accountId: selectedAccountId.phoneNumberId,
+        scheduledAt: editingCampaign?.scheduledAt || undefined,
       };
 
       if (campaignType === 'template') {
-        selectedAudience?.recipients?.map((recipient) => {
-          const campaignData = {
-            recipient_type: 'individual',
-          };
+        // Build the message text from template components
+        let messageText = '';
+        selectedTemplate.components.forEach((component) => {
+          if (component.type === 'BODY') {
+            let text = component.text;
+            Object.entries(templateParams).forEach(([key, value]) => {
+              text = text.replace(`{{${key}}}`, value || '');
+            });
+            messageText += text + '\n\n';
+          }
+          if (component.type === 'HEADER') {
+            let text = component.text;
+            Object.entries(templateParams).forEach(([key, value]) => {
+              text = text.replace(`{{${key}}}`, value || '');
+            });
+            messageText = text + '\n\n' + messageText;
+          }
+          if (component.type === 'FOOTER') {
+            messageText += '\n' + component.text;
+          }
         });
-        toast.success('Template sent successfully');
+
+        const messageData = {
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: selectedAudience?.recipients?.[0]?.phoneNumber,
+          type: 'text',
+          text: {
+            preview_url: true,
+            body: messageText,
+          },
+        };
+
+        console.log('Starting to send messages to recipients');
+        for (const recipient of selectedAudience?.recipients || []) {
+          console.log('Processing recipient:', recipient.phoneNumber);
+          messageData.to = recipient.phoneNumber;
+          try {
+            // @ts-ignore
+            const response = await new Promise((resolve, reject) => {
+              console.log('Sending message to Facebook API');
+              // @ts-ignore
+              FB.api(
+                `/${selectedAccountId.phoneNumberId}/messages?access_token=${accounts?.accessToken}`,
+                'POST',
+                messageData,
+                (response: any) => {
+                  console.log('Facebook API response:', response);
+                  if (response.error) {
+                    reject(response.error);
+                  } else {
+                    resolve(response);
+                  }
+                }
+              );
+            });
+
+            if (response) {
+              console.log('Facebook API call successful, saving message');
+              // @ts-ignore
+              const wamid = response.messages?.[0]?.id;
+              if (wamid) {
+                // @ts-ignore
+                messageData.wamid = wamid;
+                await sendMessage(messageData);
+              } else {
+                console.error('No message ID received from Facebook API');
+                toast.error('Failed to get message ID from Facebook');
+              }
+            }
+          } catch (error) {
+            console.error('Error sending message:', error);
+            toast.error(`Failed to send message to ${recipient.phoneNumber}`);
+          }
+        }
         onClose();
         return;
       }
-      // Call API to create or update campaign
-      let result;
-      if (editingCampaign?.id) {
-        result = await whatsAppService.updateCampaign(editingCampaign.id, campaignData);
-        toast.success('Campaign updated successfully');
-      } else {
-        // @ts-ignore
-        result = await whatsAppService.createCampaign(campaignData);
-        toast.success('Campaign created successfully');
-      }
 
-      // Pass the result to parent component
-      onCreateCampaign(result);
-
+      onCreateCampaign(campaignData);
       onClose();
     } catch (error) {
       console.error('Error saving campaign:', error);
@@ -274,94 +326,59 @@ export function CreateCampaignModal({
   }, []);
 
   const handleCreateAudience = (newAudience: AudienceGroup) => {
-    const createdAudience = onCreateAudience!(newAudience);
-    setSelectedAudience(createdAudience);
+    setSelectedAudience(newAudience);
     setIsCreateAudienceModalOpen(false);
   };
 
   const renderMessageInput = () => {
     switch (campaignType) {
-      case 'text':
-        return (
-          <div className='space-y-2'>
-            <Label htmlFor='message'>Message</Label>
-            <Textarea
-              id='message'
-              placeholder='Enter your campaign message'
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              rows={4}
-            />
-            {errors.message && <p className='text-sm text-red-500'>{errors.message}</p>}
-          </div>
-        );
-      case 'image':
-        return (
-          <div className='space-y-2'>
-            <Label htmlFor='imageUrl'>Image</Label>
-            <div className='flex space-x-2'>
-              <Input
-                id='imageUrl'
-                placeholder='Enter image URL'
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-              />
-              <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-                <DialogTrigger asChild>
-                  <Button variant='outline'>Select Image</Button>
-                </DialogTrigger>
-                <ImageSelectionModal handleImageSelection={handleImageSelection} />
-              </Dialog>
-            </div>
-            {errors.imageUrl && <p className='text-sm text-red-500'>{errors.imageUrl}</p>}
-            <Label htmlFor='imageCaption'>Image Caption (optional)</Label>
-            <Input
-              id='imageCaption'
-              placeholder='Enter image caption'
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-          </div>
-        );
+      // case 'image':
+      //   return (
+      //     <div className='space-y-2'>
+      //       <Label htmlFor='imageUrl'>Image</Label>
+      //       <div className='flex space-x-2'>
+      //         <Input
+      //           id='imageUrl'
+      //           placeholder='Enter image URL'
+      //           value={imageUrl}
+      //           onChange={(e) => setImageUrl(e.target.value)}
+      //         />
+      //         <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+      //           <DialogTrigger asChild>
+      //             <Button variant='outline'>Select Image</Button>
+      //           </DialogTrigger>
+      //           <ImageSelectionModal handleImageSelection={handleImageSelection} />
+      //         </Dialog>
+      //       </div>
+      //       {errors.imageUrl && <p className='text-sm text-red-500'>{errors.imageUrl}</p>}
+      //       <Label htmlFor='imageCaption'>Image Caption (optional)</Label>
+      //       <Input
+      //         id='imageCaption'
+      //         placeholder='Enter image caption'
+      //         value={message}
+      //         onChange={(e) => setMessage(e.target.value)}
+      //       />
+      //     </div>
+      // );
       case 'template':
         return (
           <div className='space-y-4'>
             <div className='space-y-2'>
               <Label htmlFor='template'>Template</Label>
-              <Select
-                value={selectedTemplate.id}
-                onValueChange={(value) =>
-                  setSelectedTemplate(templates.find((t) => t.id === value) || templates[0])
-                }
-              >
+              <Select value={selectedTemplate?.name || ''} onValueChange={handleTemplateChange}>
                 <SelectTrigger>
                   <SelectValue placeholder='Select a template' />
                 </SelectTrigger>
                 <SelectContent>
-                  {templates.map((template) => (
-                    <SelectItem key={template.id} value={template.id}>
+                  {templates?.map((template) => (
+                    <SelectItem key={template.name} value={template.name}>
                       {template.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {selectedTemplate.content.match(/{{(\d+)}}/g)?.map((param, index) => {
-              const paramNumber = param.match(/\d+/)?.[0] || `${index + 1}`;
-              return (
-                <div key={index} className='space-y-2'>
-                  <Label htmlFor={`param${paramNumber}`}>Parameter {paramNumber}</Label>
-                  <Input
-                    id={`param${paramNumber}`}
-                    placeholder={`Enter value for ${param}`}
-                    value={templateParams[paramNumber] || ''}
-                    onChange={(e) =>
-                      setTemplateParams({ ...templateParams, [paramNumber]: e.target.value })
-                    }
-                  />
-                </div>
-              );
-            })}
+            {selectedTemplate && renderTemplateParams()}
             {errors.templateParams && (
               <p className='text-sm text-red-500'>{errors.templateParams}</p>
             )}
@@ -372,42 +389,91 @@ export function CreateCampaignModal({
     }
   };
 
-  const renderMessagePreview = () => {
-    let previewContent: React.ReactNode;
+  const renderTemplateParams = () => {
+    if (!selectedTemplate) return null;
 
-    switch (campaignType) {
-      case 'text':
-        previewContent = (
-          <p className='text-sm break-words'>
-            {message || 'Your message preview will appear here'}
-          </p>
-        );
-        break;
-      case 'image':
-        previewContent = (
-          <div className='space-y-2'>
-            <img
-              src={imageUrl || '/placeholder.svg'}
-              alt='Preview'
-              className='max-w-full h-auto rounded'
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = '/placeholder.svg';
-              }}
-            />
-            {message && <p className='text-sm break-words'>{message}</p>}
+    return selectedTemplate.components.map((component, index) => {
+      if (component.type === 'BODY') {
+        const params = component.example?.body_text_named_params || [];
+        return (
+          <div key={index} className='space-y-4'>
+            {params.map((param: { param_name: string; example: string }) => (
+              <div key={param.param_name} className='space-y-2'>
+                <Label htmlFor={param.param_name}>{param.param_name}</Label>
+                <Input
+                  id={param.param_name}
+                  placeholder={param.example}
+                  value={templateParams[param.param_name] || ''}
+                  onChange={(e) =>
+                    setTemplateParams({ ...templateParams, [param.param_name]: e.target.value })
+                  }
+                />
+              </div>
+            ))}
           </div>
         );
-        break;
-      case 'template':
-        let previewMessage = selectedTemplate.content;
+      }
+      if (component.type === 'HEADER') {
+        const params = component.example?.header_text_named_params || [];
+        return (
+          <div key={index} className='space-y-4'>
+            {params.map((param: { param_name: string; example: string }) => (
+              <div key={param.param_name} className='space-y-2'>
+                <Label htmlFor={param.param_name}>{param.param_name}</Label>
+                <Input
+                  id={param.param_name}
+                  placeholder={param.example}
+                  value={templateParams[param.param_name] || ''}
+                  onChange={(e) =>
+                    setTemplateParams({ ...templateParams, [param.param_name]: e.target.value })
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return null;
+    });
+  };
+
+  const renderMessagePreview = () => {
+    if (!selectedTemplate) return null;
+
+    let previewMessage = '';
+    selectedTemplate.components.forEach((component) => {
+      if (component.type === 'BODY') {
+        let text = component.text;
         Object.entries(templateParams).forEach(([key, value]) => {
-          previewMessage = previewMessage.replace(`{{${key}}}`, value || `{{${key}}}`);
+          text = text.replace(
+            `{{${key}}}`,
+            value ||
+              component.example?.body_text_named_params?.find(
+                (p: { param_name: string; example: string }) => p.param_name === key
+              )?.example ||
+              `{{${key}}}`
+          );
         });
-        previewContent = <p className='text-sm break-words'>{previewMessage}</p>;
-        break;
-      default:
-        previewContent = <p>Select a message type to see preview</p>;
-    }
+        previewMessage += text + '\n\n';
+      }
+      if (component.type === 'HEADER') {
+        let text = component.text;
+        Object.entries(templateParams).forEach(([key, value]) => {
+          text = text.replace(
+            `{{${key}}}`,
+            value ||
+              component.example?.header_text_named_params?.find(
+                (p: { param_name: string; example: string }) => p.param_name === key
+              )?.example ||
+              `{{${key}}}`
+          );
+        });
+        previewMessage = text + '\n\n' + previewMessage;
+      }
+      if (component.type === 'FOOTER') {
+        previewMessage += '\n' + component.text;
+      }
+    });
 
     return (
       <Card className='bg-gray-50'>
@@ -419,7 +485,7 @@ export function CreateCampaignModal({
               <span className='font-medium'>WhatsApp Business</span>
             </div>
             <div className='bg-[#DCF8C6] rounded-lg p-3 inline-block max-w-full'>
-              {previewContent}
+              <p className='text-sm break-words whitespace-pre-wrap'>{previewMessage}</p>
             </div>
           </div>
         </CardContent>
@@ -429,7 +495,7 @@ export function CreateCampaignModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className='max-w-2xl'>
+      <DialogContent className='max-w-2xl max-h-[80vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>{editingCampaign ? 'Edit Campaign' : 'Create New Campaign'}</DialogTitle>
           <DialogDescription>
@@ -485,15 +551,14 @@ export function CreateCampaignModal({
             <div className='space-y-2'>
               <Label htmlFor='campaign-type'>Campaign Type</Label>
               <Select
+                disabled={true}
                 value={campaignType}
-                onValueChange={(value: 'text' | 'image' | 'template') => setCampaignType(value)}
+                onValueChange={(value: 'template') => setCampaignType(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder='Select campaign type' />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value='text'>Text Message</SelectItem>
-                  <SelectItem value='image'>Image Message</SelectItem>
                   <SelectItem value='template'>Template Message</SelectItem>
                 </SelectContent>
               </Select>
@@ -564,56 +629,56 @@ export function CreateCampaignModal({
   );
 }
 
-const ImageSelectionModal = ({
-  handleImageSelection,
-}: {
-  handleImageSelection: (imageData: string) => void;
-}) => {
-  return (
-    <DialogContent className='sm:max-w-[425px]'>
-      <DialogHeader>
-        <DialogTitle>Select Image</DialogTitle>
-        <DialogDescription>
-          Choose an image from your CRM or upload from your device.
-        </DialogDescription>
-      </DialogHeader>
-      <div className='grid gap-4 py-4'>
-        <Button
-          className='bg-[#5932EA] hover:bg-[#5932EA]/90 text-white'
-          onClick={() => {
-            // TODO: Implement CRM image selection
-            console.log('CRM image selection clicked');
-          }}
-        >
-          Select from CRM
-        </Button>
-        <div>
-          <input
-            type='file'
-            id='image-upload'
-            accept='image/*'
-            className='hidden'
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                  if (event.target?.result) {
-                    handleImageSelection(event.target.result as string);
-                  }
-                };
-                reader.readAsDataURL(file);
-              }
-            }}
-          />
-          <Button
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90 text-white w-full'
-            onClick={() => document.getElementById('image-upload')?.click()}
-          >
-            Upload from Device
-          </Button>
-        </div>
-      </div>
-    </DialogContent>
-  );
-};
+// const ImageSelectionModal = ({
+//   handleImageSelection,
+// }: {
+//   handleImageSelection: (imageData: string) => void;
+// }) => {
+//   return (
+//     <DialogContent className='sm:max-w-[425px]'>
+//       <DialogHeader>
+//         <DialogTitle>Select Image</DialogTitle>
+//         <DialogDescription>
+//           Choose an image from your CRM or upload from your device.
+//         </DialogDescription>
+//       </DialogHeader>
+//       <div className='grid gap-4 py-4'>
+//         <Button
+//           className='bg-[#5932EA] hover:bg-[#5932EA]/90 text-white'
+//           onClick={() => {
+//             // TODO: Implement CRM image selection
+//             console.log('CRM image selection clicked');
+//           }}
+//         >
+//           Select from CRM
+//         </Button>
+//         <div>
+//           <input
+//             type='file'
+//             id='image-upload'
+//             accept='image/*'
+//             className='hidden'
+//             onChange={(e) => {
+//               const file = e.target.files?.[0];
+//               if (file) {
+//                 const reader = new FileReader();
+//                 reader.onload = (event) => {
+//                   if (event.target?.result) {
+//                     handleImageSelection(event.target.result as string);
+//                   }
+//                 };
+//                 reader.readAsDataURL(file);
+//               }
+//             }}
+//           />
+//           <Button
+//             className='bg-[#5932EA] hover:bg-[#5932EA]/90 text-white w-full'
+//             onClick={() => document.getElementById('image-upload')?.click()}
+//           >
+//             Upload from Device
+//           </Button>
+//         </div>
+//       </div>
+//     </DialogContent>
+//   );
+// };

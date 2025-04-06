@@ -16,14 +16,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { CreateTemplateModal } from '@/components/whatsapp/create-template-modal';
 
-interface Template {
+type Template = {
   id: string;
   name: string;
-  content: string;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  createdAt: string;
-  updatedAt: string;
-}
+  parameter_format: string;
+  components: any[];
+  language: string;
+  status: string;
+  category: string;
+};
 
 interface TemplatesListProps {
   templates?: Template[];

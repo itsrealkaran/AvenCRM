@@ -99,6 +99,17 @@ const MessagesList = ({
   const [phoneNumberId, setPhoneNumberId] = useState<string>(phoneNumbers[0].phoneNumberId);
   const [conversationCache, setConversationCache] = useState<Record<string, Message[]>>({});
   const eventSourceRef = useRef<EventSource | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Add scroll to bottom function
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Add useEffect to scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -555,6 +566,7 @@ const MessagesList = ({
                         </div>
                       </div>
                     ))}
+                    <div ref={messagesEndRef} />
                   </>
                 )}
               </div>

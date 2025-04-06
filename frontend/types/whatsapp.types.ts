@@ -53,16 +53,6 @@ export interface WhatsAppRecipient {
   updatedAt: string;
 }
 
-export interface WhatsAppTemplate {
-  id: string;
-  name: string;
-  content: string;
-  accountId: string;
-  approved: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface WhatsAppCampaign {
   id: string;
   name: string;
@@ -107,3 +97,13 @@ export interface WhatsAppCampaignStatistics {
   readRate: number;
   failureRate: number;
 }
+
+export type WhatsAppTemplate = {
+  id: string;
+  name: string;
+  parameter_format: string;
+  components: any[];
+  language: string;
+  status: string;
+  category: string;
+};

@@ -298,10 +298,6 @@ export function CampaignsList({
           onUpdateCampaign(campaign.id!, campaign);
           setShowCampaignModal(false);
         }}
-        onCreateAudience={(audience: AudienceGroup): AudienceGroup => {
-          console.log('New audience created:', audience);
-          return audience;
-        }}
         editingCampaign={editingCampaign}
         audiences={audiences}
       />

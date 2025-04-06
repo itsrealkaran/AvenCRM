@@ -1081,6 +1081,7 @@ export class WhatsAppController extends BaseController {
                   newMessage = await prisma.whatsAppMessage.create({
                     data: {
                       recipientId: recipient.id,
+                      phoneNumber: message.from,
                       wamid: message.id,
                       message: message.text.body,
                       sentAt: new Date(message.timestamp * 1000),
