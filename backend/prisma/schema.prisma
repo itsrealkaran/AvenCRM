@@ -184,12 +184,9 @@ model User {
   emailAccounts  EmailAccount[]
   emailTemplates EmailTemplate[]
   emailCampaigns EmailCampaign[]
-  pageBuilders   PageBuilder[]
   supportTickets SupportTicket[] // Tickets created by user
   leadForms      LeadForm[]
-
-  // Admin specific relations
-  allowedPages PageBuilder[] @relation("AllowedAdmins")
+  page           Page[]
 
   // SuperAdmin specific relations
   adminAccessTokens AdminAccessToken[]
@@ -677,22 +674,6 @@ model Email {
   @@index([status])
 }
 
-model PageBuilder {
-  id       String  @id @default(cuid())
-  title    String
-  content  Json // JSON containing text, designs, image references, etc.
-  isPublic Boolean @default(false) // Privacy setting: public/private
-
-  // Created and updated timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relationships
-  createdBy     User   @relation(fields: [createdById], references: [id])
-  createdById   String
-  allowedAdmins User[] @relation("AllowedAdmins")
-}
-
 model Task {
   id          String       @id @default(cuid())
   title       String
@@ -863,4 +844,31 @@ model LeadForm {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Page Builder Section
+enum TemplateType {
+  DOCUMENT
+  LOCATION
+  PORTFOLIO
+  CONTACT
+}
+
+model Page {
+  id           String       @id @default(uuid())
+  userId       String       
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug         String       @unique
+  templateType TemplateType
+  title        String
+  description  String?
+  jsonData     Json
+  isPublic     Boolean      @default(false)
+  viewCount    Int          @default(0)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  lastPublishedAt DateTime?
+  
+  @@index([userId])
+  @@index([slug])
 }
