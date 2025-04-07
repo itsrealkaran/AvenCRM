@@ -72,3 +72,47 @@ export const companyAPI = {
   getAdmins: () => api.get('/user/admins'),
   // getPlans: () => api.get('/plans'),
 };
+
+// Page Builder API functions
+export const pageBuilderApi = {
+  // Get all pages
+  getPages: async (templateType?: string) => {
+    const params = templateType ? `?templateType=${templateType}` : '';
+    return api.get(`/page-builder/pages${params}`);
+  },
+
+  // Get a specific page
+  getPage: async (id: string) => {
+    return api.get(`/page-builder/pages/${id}`);
+  },
+
+  // Create a new page
+  createPage: async (pageData: any) => {
+    return api.post('/page-builder/pages', pageData);
+  },
+
+  // Update a page
+  updatePage: async (id: string, pageData: any) => {
+    return api.put(`/page-builder/pages/${id}`, pageData);
+  },
+
+  // Delete a page
+  deletePage: async (id: string) => {
+    return api.delete(`/page-builder/pages/${id}`);
+  },
+
+  // Check if a slug is unique
+  checkSlug: async (slug: string, pageId?: string) => {
+    return api.post('/page-builder/check-slug', { slug, pageId });
+  },
+
+  // Publish a page
+  publishPage: async (id: string) => {
+    return api.post(`/page-builder/pages/${id}/publish`);
+  },
+
+  // Get a public page by slug
+  getPublicPage: async (slug: string) => {
+    return api.get(`/public/pages/${slug}`);
+  }
+};

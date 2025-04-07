@@ -98,7 +98,7 @@ export default function ContactView({ navigateTo }: ContactViewProps) {
       </div>
       <main className='flex-grow container mx-auto p-4'>
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
-          <div className='h-[calc(100vh-8rem)] overflow-y-auto'>
+          <div className='h-[calc(99%-8rem)] overflow-y-auto'>
             <ContactFormTemplate data={contactData}
             />
           </div>
