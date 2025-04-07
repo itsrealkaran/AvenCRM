@@ -61,22 +61,7 @@ export default function ContactView({ navigateTo }: ContactViewProps) {
     setIsUpdateModalOpen(true);
   };
 
-  if (isLoading && !contactData)
-    return (
-      <div className='flex flex-col justify-center items-center h-screen bg-[#fafbff]'>
-        <div className='relative w-32 h-32'>
-          <div className='absolute inset-0 border-4 border-primary/30 rounded-full'></div>
-          <div className='absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin'></div>
-          <div className='absolute text-[4rem] inset-2 flex items-center justify-center'>
-            <Logo />
-          </div>
-        </div>
-        <div className='mt-6 space-y-2 text-center'>
-          <p className='text-lg font-medium text-gray-900'>Loading Property</p>
-          <p className='text-sm text-gray-500'>Please wait while we fetch the details...</p>
-        </div>
-      </div>
-    );
+  if (isLoading && !contactData) return null;
 
   return (
     <Card className='h-full flex flex-col'>

@@ -18,6 +18,7 @@ export default function LocationSearchTemplate({
     subtitle: string;
     description: string;
     bgImage: string;
+    buttonText: string;
     accentColor: string;
     agentName: string;
     agentTitle: string;

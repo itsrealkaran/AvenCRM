@@ -309,6 +309,23 @@ export default function LocationSearchForm({
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name='buttonText'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Submit Button Text</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Submit'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             )}
 

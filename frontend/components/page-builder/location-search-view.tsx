@@ -28,6 +28,7 @@ export default function LocationSearch({ navigateTo }: LocationSearchProps) {
         'Search for properties in your desired location and connect with our expert agents.',
       description:
         'Our comprehensive property search platform allows you to explore a wide range of residential and commercial properties in your desired location. Whether you\'re looking for a cozy apartment, a spacious family home, or an investment opportunity, our database is regularly updated with the latest listings. Connect with our expert agents who have in-depth knowledge of local markets and can guide you through every step of the buying, selling, or renting process. We\'re committed to helping you find the perfect property that meets all your requirements and fits within your budget.',
+      buttonText: 'Submit',
       accentColor: '#2563eb',
       agentName: 'John Doe',
       agentTitle: 'Real Estate Agent',
