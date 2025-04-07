@@ -61,10 +61,10 @@ export function CampaignsList({
   const handleToggleCampaignStatus = async (campaign: Campaign) => {
     try {
       setIsLoading(true);
-      const newStatus = campaign.status === 'Active' ? 'Paused' : 'Active';
+      const newStatus = campaign.status === 'Successfull' ? 'Successfull' : 'Failed';
 
       // Call the appropriate API method based on the status change
-      if (newStatus === 'Active') {
+      if (newStatus === 'Successfull') {
         await whatsAppService.startCampaign(campaign.id!);
       } else {
         await whatsAppService.pauseCampaign(campaign.id!);
@@ -73,10 +73,14 @@ export function CampaignsList({
       // Update the campaign in the local state
       onUpdateCampaign(campaign.id!, { status: newStatus });
 
-      toast.success(`Campaign ${newStatus === 'Active' ? 'started' : 'paused'} successfully`);
+      toast.success(
+        `Campaign ${newStatus === 'Successfull' ? 'Successfull' : 'Failed'} successfully`
+      );
     } catch (error) {
       console.error('Error toggling campaign status:', error);
-      toast.error(`Failed to ${campaign.status === 'Active' ? 'pause' : 'start'} campaign`);
+      toast.error(
+        `Failed to ${campaign.status === 'Successfull' ? 'Successfull' : 'Failed'} campaign`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -139,7 +143,7 @@ export function CampaignsList({
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full ${
-              value === 'Active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+              value === 'Successfull' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
             }`}
           >
             {value}
@@ -198,7 +202,7 @@ export function CampaignsList({
         '--mui-palette-primary-main': '#7c3aed',
         '--mui-palette-primary-light': '#7c3aed',
         '--mui-palette-primary-dark': '#7c3aed',
-        height: '540px',
+        height: '340px',
         border: '1px solid rgb(201, 201, 201)',
         borderRadius: '8px',
       },
@@ -258,13 +262,13 @@ export function CampaignsList({
         sx={{ m: 0 }}
       >
         <ListItemIcon>
-          {row.original.status === 'Active' ? (
+          {row.original.status === 'Successfull' ? (
             <FaPause className='size-4' />
           ) : (
             <FaPlay className='size-4' />
           )}
         </ListItemIcon>
-        {row.original.status === 'Active' ? 'Pause' : 'Resume'}
+        {row.original.status === 'Successfull' ? 'Successfull' : 'Failed'}
       </MenuItem>,
       <MenuItem
         key={2}

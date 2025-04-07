@@ -771,7 +771,6 @@ model WhatsAppCampaign {
   message        String?
   mediaUrl       String?
   templateId     String?
-  template       WhatsAppTemplate? @relation(fields: [templateId], references: [id])
   templateParams Json? // Stored as JSON object
   accountId      String
   account        WhatsAppAccount   @relation(fields: [accountId], references: [id])
@@ -794,7 +793,6 @@ model WhatsAppTemplate {
   approved  Boolean            @default(false)
   createdAt DateTime           @default(now())
   updatedAt DateTime           @updatedAt
-  campaigns WhatsAppCampaign[]
 }
 
 // Store individual messages
