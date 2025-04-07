@@ -14,18 +14,24 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { WhatsAppConnectModal } from '@/components/whatsapp/whatsapp-connect-modal';
 
-export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberData[] }) {
+import { RegisterNumberModal } from './register-number';
+
+export function ConnectedAccounts({
+  accounts,
+  accessToken,
+}: {
+  accounts: WhatsAppPhoneNumberData[];
+  accessToken: string;
+}) {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingAccount, setEditingAccount] = useState<WhatsAppPhoneNumberData | null>(null);
   const [displayName, setDisplayName] = useState('');
-  const [verifyingAccount, setVerifyingAccount] = useState<string | null>(null);
-
-  const handleEditAccount = (account: WhatsAppPhoneNumberData) => {
-    setEditingAccount(account);
-    setDisplayName(account.name);
-    setShowEditModal(true);
-  };
+  const [registeringAccount, setRegisteringAccount] = useState<{
+    phoneNumberId: string;
+    id: string;
+  } | null>(null);
+  const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
 
   const handleUpdateAccount = async () => {
     if (!editingAccount) return;
@@ -54,20 +60,97 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
     }
   };
 
-  const handleVerifyAccount = async (accountId: string) => {
-    setVerifyingAccount(accountId);
+  const handleRegisterAccount = async (pin: string) => {
+    console.log(accessToken, 'access token');
+    if (!registeringAccount) return;
     try {
-      await whatsAppService.verifyAccount(accountId);
-      toast.success('Account verified successfully');
+      // @ts-ignore
+      FB.api(
+        `/${registeringAccount.phoneNumberId}/register?access_token=${accessToken}`,
+        'POST',
+        { pin, messaging_product: 'whatsapp' },
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            whatsAppService.updateRegisteredNumberStatus(registeringAccount.id);
+            toast.success('Account registered successfully');
+          } else {
+            toast.error(response.error.error_user_msg || response.error.message);
+          }
+        }
+      );
+
+      // @ts-ignore
+      FB.api(
+        `/${registeringAccount.phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
+        'POST',
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            toast.success('Account subscribed successfully');
+          } else {
+            toast.error(response.error.error_user_msg || response.error.message);
+          }
+        }
+      );
     } catch (error: any) {
-      console.error('Error verifying account:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to verify account';
+      console.error('Error registering account:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to register account';
       toast.error(errorMessage);
     } finally {
-      setVerifyingAccount(null);
+      setRegisteringAccount(null);
     }
   };
 
+  const handleCreatePin = async (pin: string) => {
+    if (!registeringAccount) return;
+    try {
+      console.log('Creating pin for account:', registeringAccount, pin);
+      // @ts-ignore
+      FB.api(
+        `/${registeringAccount.phoneNumberId}?access_token=${accessToken}`,
+        'POST',
+        { pin },
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            toast.success('Pin created successfully');
+          } else {
+            toast.error(response.error.error_user_msg || response.error.message);
+          }
+        }
+      );
+
+      // @ts-ignore
+      FB.api(
+        `/${registeringAccount.phoneNumberId}/register?access_token=${accessToken}`,
+        'POST',
+        { pin, messaging_product: 'whatsapp' },
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            toast.success('Account registered successfully');
+          } else {
+            toast.error(response.error.error_user_msg || response.error.message);
+          }
+        }
+      );
+
+      // @ts-ignore
+      FB.api(
+        `/${registeringAccount.phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
+        'POST',
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            toast.success('Account subscribed successfully');
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error creating pin:', error);
+    }
+  };
   return (
     <Card className='min-h-[300px] max-h-[480px] overflow-y-auto'>
       <CardHeader className='flex flex-row justify-between items-center'>
@@ -123,17 +206,27 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
                       <Button
                         variant='outline'
                         size='sm'
-                        onClick={() => handleVerifyAccount(account.phoneNumberId)}
-                        disabled={verifyingAccount === account.phoneNumberId}
+                        onClick={() => {
+                          setIsRegisteringModalOpen(true);
+                          setRegisteringAccount({
+                            phoneNumberId: account.phoneNumberId,
+                            id: account.id,
+                          });
+                        }}
+                        disabled={account.isRegistered}
                       >
-                        {verifyingAccount === account.phoneNumberId ? (
+                        {registeringAccount?.id === account.id ? (
                           <>
                             <span className='animate-spin h-3 w-3 mr-1 border-2 border-t-transparent border-blue-600 rounded-full'></span>
-                            Verifying...
+                            Registering...
+                          </>
+                        ) : account.isRegistered ? (
+                          <>
+                            <FaCheck className='w-3 h-3 mr-1' /> Registered
                           </>
                         ) : (
                           <>
-                            <FaCheck className='w-3 h-3 mr-1' /> Verify
+                            <FaCheck className='w-3 h-3 mr-1' /> Register
                           </>
                         )}
                       </Button>
@@ -185,6 +278,13 @@ export function ConnectedAccounts({ accounts }: { accounts: WhatsAppPhoneNumberD
           </div>
         </DialogContent>
       </Dialog>
+
+      <RegisterNumberModal
+        open={isRegisteringModalOpen}
+        onClose={() => setIsRegisteringModalOpen(false)}
+        onRegister={handleRegisterAccount}
+        onCreatePin={handleCreatePin}
+      />
     </Card>
   );
 }

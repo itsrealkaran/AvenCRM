@@ -197,4 +197,11 @@ export const whatsAppService = {
     );
     return response.data;
   },
+
+  updateRegisteredNumberStatus: async (id: string) => {
+    const response = await api.post(`/whatsapp/accounts/phone-numbers/updateRegisteredStatus`, {
+      id,
+    });
+    return response.data;
+  },
 };

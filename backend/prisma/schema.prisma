@@ -742,6 +742,9 @@ model WhatsAppPhoneNumber {
   name                   String?
   codeVerificationStatus String?
 
+  isRegistered Boolean @default(false)
+  isSubscribed Boolean @default(false)
+
   accountId String
   account   WhatsAppAccount @relation(fields: [accountId], references: [id])
 
@@ -784,7 +787,7 @@ model WhatsAppRecipient {
 
 // Store campaign data
 model WhatsAppCampaign {
-  id             String            @id @default(cuid())
+  id             String           @id @default(cuid())
   name           String
   type           String // TEXT, IMAGE, TEMPLATE
   message        String?
@@ -792,46 +795,46 @@ model WhatsAppCampaign {
   templateId     String?
   templateParams Json? // Stored as JSON object
   accountId      String
-  account        WhatsAppAccount   @relation(fields: [accountId], references: [id])
+  account        WhatsAppAccount  @relation(fields: [accountId], references: [id])
   audienceId     String
-  audience       WhatsAppAudience  @relation(fields: [audienceId], references: [id])
-  status         String            @default("COMPLETED") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
+  audience       WhatsAppAudience @relation(fields: [audienceId], references: [id])
+  status         String           @default("COMPLETED") // DRAFT, SCHEDULED, ACTIVE, PAUSED, COMPLETED, FAILED
   scheduledAt    DateTime?
   completedAt    DateTime?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
 }
 
 // Store message templates
 model WhatsAppTemplate {
-  id        String             @id @default(cuid())
+  id        String          @id @default(cuid())
   name      String
   content   String
   accountId String
-  account   WhatsAppAccount    @relation(fields: [accountId], references: [id])
-  approved  Boolean            @default(false)
-  createdAt DateTime           @default(now())
-  updatedAt DateTime           @updatedAt
+  account   WhatsAppAccount @relation(fields: [accountId], references: [id])
+  approved  Boolean         @default(false)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 }
 
 // Store individual messages
 model WhatsAppMessage {
-  id           String            @id @default(cuid())
-  wamid        String? // WhatsApp Message ID for delivery tracking
-  status       String            @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
-  message      String?
-  isOutbound   Boolean           @default(false)
-  errorMessage String?
-  phoneNumber  String?
-  sentAt       DateTime?
-  deliveredAt  DateTime?         @default(now())
-  readAt       DateTime?
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  id                    String               @id @default(cuid())
+  wamid                 String? // WhatsApp Message ID for delivery tracking
+  status                String               @default("PENDING") // PENDING, SENT, DELIVERED, READ, FAILED
+  message               String?
+  isOutbound            Boolean              @default(false)
+  errorMessage          String?
+  phoneNumber           String?
+  sentAt                DateTime?
+  deliveredAt           DateTime?            @default(now())
+  readAt                DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
   whatsAppPhoneNumberId String?
   whatsAppPhoneNumber   WhatsAppPhoneNumber? @relation(fields: [whatsAppPhoneNumberId], references: [id])
-  recipientId  String
-  recipient    WhatsAppRecipient @relation(fields: [recipientId], references: [id])
+  recipientId           String
+  recipient             WhatsAppRecipient    @relation(fields: [recipientId], references: [id])
 }
 
 model MetaAdAccount {

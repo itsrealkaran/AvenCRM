@@ -286,7 +286,10 @@ export default function WhatsAppCampaignsPage() {
               />
             </TabsContent>
             <TabsContent value='accounts'>
-              <ConnectedAccounts accounts={whatsAppAccount.data?.data?.phoneNumberData} />
+              <ConnectedAccounts
+                accounts={whatsAppAccount.data?.data?.phoneNumbers}
+                accessToken={whatsAppAccount.data?.data?.accessToken || ''}
+              />
             </TabsContent>
             <TabsContent value='audience'>
               <AudienceList audiences={audiences} onCreateAudience={handleCreateAudience} />
