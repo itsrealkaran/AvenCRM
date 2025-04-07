@@ -1,270 +1,641 @@
 'use client';
 
-import type React from 'react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, FileText, Save, Settings, Type } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  Building,
+  CheckCircle,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  ImageIcon,
+  Mail,
+  MapPin,
+  Palette,
+  Phone,
+  Share2,
+  Type,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
+import { BaseEntityDialog } from '@/components/entity-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { api } from '@/lib/api';
 
-interface SetupFormProps {
-  navigateTo: (view: string) => void;
+interface DocumentDownloadFormProps {
+  pageId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
-export default function UpdateDocumentDownload({ navigateTo }: SetupFormProps) {
+// Form validation schema
+const documentDownloadFormSchema = z.object({
+  // Page configuration
+  slug: z.string().min(3, 'Slug must be at least 3 characters').optional(),
+  isPublic: z.boolean().default(false),
+
+  // Template configuration
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  subtitle: z.string().optional(),
+  description: z.string().optional(),
+  bgImage: z.string().url('Please enter a valid URL').optional(),
+  buttonText: z.string().optional(),
+  accentColor: z.string().optional(),
+  documentRequireForm: z.boolean().default(true),
+
+  // Agent information
+  agentName: z.string().optional(),
+  agentTitle: z.string().optional(),
+  agentImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+
+  // Contact information
+  contactInfo: z.object({
+    address: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+  }),
+
+  // Social links
+  social: z.object({
+    facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    twitter: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  }),
+});
+
+type DocumentDownloadFormValues = z.infer<typeof documentDownloadFormSchema>;
+
+export default function DocumentDownloadForm({
+  pageId,
+  open,
+  onOpenChange,
+  isLoading,
+}: DocumentDownloadFormProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const [formData, setFormData] = useState({
-    documentTitle: 'Document Resource Center',
-    documentDescription:
-      'Access our comprehensive collection of real estate documents, forms, and templates.',
+  // Steps configuration
+  const steps = [
+    { id: 'content', label: 'Content' },
+    { id: 'appearance', label: 'Appearance' },
+    { id: 'agent', label: 'Agent Info' },
+    { id: 'social', label: 'Social' },
+    { id: 'settings', label: 'Settings' },
+  ];
+
+  // Default values for the form
+  const defaultValues: DocumentDownloadFormValues = {
+    slug: '',
+    isPublic: false,
+    title: 'Document Resource Center',
+    subtitle: 'Access our comprehensive collection of real estate documents',
+    description:
+      'Our document center provides all the forms and resources you need for your real estate transaction. Download contracts, disclosures, and other important documents.',
+    bgImage:
+      'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+    buttonText: 'Download Documents',
+    accentColor: '#059669',
     documentRequireForm: true,
-  });
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-
-  // Load existing data if available
-  useEffect(() => {
-    const savedData = localStorage.getItem('realtorData');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setFormData({
-        documentTitle: parsedData.documentTitle || formData.documentTitle,
-        documentDescription: parsedData.documentDescription || formData.documentDescription,
-        documentRequireForm:
-          parsedData.documentRequireForm !== undefined
-            ? parsedData.documentRequireForm
-            : formData.documentRequireForm,
-      });
-    }
-  }, []);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    agentName: 'John Doe',
+    agentTitle: 'Real Estate Agent',
+    agentImage:
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=774&q=80',
+    contactInfo: {
+      address: '123 Main St, Anytown, USA',
+      phone: '(123) 456-7890',
+      email: 'john.doe@example.com',
+    },
+    social: {
+      facebook: 'https://facebook.com',
+      instagram: 'https://instagram.com',
+      linkedin: 'https://linkedin.com',
+      twitter: 'https://twitter.com',
+    },
   };
 
-  const handleSwitchChange = (checked: boolean) => {
-    setFormData((prev) => ({ ...prev, documentRequireForm: checked }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      // Get existing data
-      const existingData = localStorage.getItem('realtorData');
-      const parsedData = existingData ? JSON.parse(existingData) : {};
-
-      // Update only the document download fields
-      const updatedData = {
-        ...parsedData,
-        documentTitle: formData.documentTitle,
-        documentDescription: formData.documentDescription,
-        documentRequireForm: formData.documentRequireForm,
+  // Mutation for saving the form
+  const savePage = useMutation({
+    mutationFn: async (values: DocumentDownloadFormValues) => {
+      const pageData = {
+        title: values.title,
+        templateType: 'document-download',
+        content: values,
+        isPublic: values.isPublic,
+        slug: values.slug || `documents-${Date.now()}`,
       };
 
-      // Save back to localStorage
-      localStorage.setItem('realtorData', JSON.stringify(updatedData));
+      if (pageId) {
+        return await api.put(`/page-builder/${pageId}`, pageData);
+      } else {
+        return await api.post('/page-builder', pageData);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      onOpenChange(false);
+      toast.success(`Document download page ${pageId ? 'updated' : 'created'} successfully`);
+    },
+    onError: () => {
+      toast.error(`Failed to ${pageId ? 'update' : 'create'} document download page`);
+    },
+  });
 
-      setIsSaving(false);
-      setSaveSuccess(true);
-
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSaveSuccess(false);
-      }, 3000);
-    }, 1000);
+  // Handle next step navigation
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
   };
 
-  const handlePreview = () => {
-    router.push('/document-download/preview');
+  // Handle previous step navigation
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+    }
   };
 
   return (
-    <div className='container mx-auto py-10 px-4'>
-      <div className='max-w-3xl mx-auto'>
-        <div className='flex items-center justify-between mb-8'>
-          <div className='flex items-center'>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='mr-2'
-              onClick={() => router.push('/dashboard')}
-            >
-              <ArrowLeft className='h-5 w-5' />
-            </Button>
-            <h1 className='text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 bg-clip-text text-transparent'>
-              Update Document Center
-            </h1>
-          </div>
-          <div className='flex gap-2'>
-            <Button variant='outline' onClick={handlePreview}>
-              Preview
-            </Button>
-          </div>
-        </div>
-
-        <Tabs defaultValue='content' className='w-full'>
-          <TabsList className='grid grid-cols-2 mb-8'>
-            <TabsTrigger value='content' className='flex items-center gap-1'>
-              <Type className='h-4 w-4' /> Content
-            </TabsTrigger>
-            <TabsTrigger value='settings' className='flex items-center gap-1'>
-              <Settings className='h-4 w-4' /> Settings
-            </TabsTrigger>
-          </TabsList>
-
-          <form onSubmit={handleSubmit}>
-            <Card className='border-none shadow-xl mb-6'>
-              <CardHeader>
-                <CardTitle className='text-xl'>Document Center Settings</CardTitle>
-              </CardHeader>
-
-              <CardContent>
-                <TabsContent value='content' className='space-y-6 mt-0'>
-                  <div className='space-y-2'>
-                    <Label htmlFor='documentTitle'>Page Title</Label>
-                    <Input
-                      id='documentTitle'
-                      name='documentTitle'
-                      value={formData.documentTitle}
-                      onChange={handleChange}
-                      placeholder='e.g. Document Resource Center'
-                      required
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      This title appears at the top of your document center page.
-                    </p>
-                  </div>
-
-                  <div className='space-y-2'>
-                    <Label htmlFor='documentDescription'>Page Description</Label>
-                    <Textarea
-                      id='documentDescription'
-                      name='documentDescription'
-                      value={formData.documentDescription}
-                      onChange={handleChange}
-                      placeholder='e.g. Access our comprehensive collection of real estate documents...'
-                      rows={4}
-                      required
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      This description appears below the title and helps explain the purpose of the
-                      document center.
-                    </p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value='settings' className='space-y-6 mt-0'>
-                  <div className='space-y-4'>
-                    <div className='flex items-center justify-between'>
-                      <div>
-                        <Label htmlFor='documentRequireForm' className='text-base'>
-                          Require Contact Form
-                        </Label>
-                        <p className='text-sm text-muted-foreground'>
-                          Users must fill out a contact form before downloading documents
-                        </p>
-                      </div>
-                      <Switch
-                        id='documentRequireForm'
-                        checked={formData.documentRequireForm}
-                        onCheckedChange={handleSwitchChange}
-                      />
-                    </div>
-
-                    <div className='bg-gray-50 p-4 rounded-md border border-gray-200'>
-                      <h3 className='font-medium mb-2 flex items-center'>
-                        <FileText className='h-4 w-4 mr-2 text-emerald-600' />
-                        Contact Form Fields
-                      </h3>
-                      <p className='text-sm text-gray-600 mb-3'>
-                        The following information will be collected from users before they can
-                        download documents:
-                      </p>
-                      <ul className='text-sm space-y-1 text-gray-600'>
-                        <li className='flex items-center'>
-                          <span className='bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded mr-2'>
-                            Required
-                          </span>
-                          Full Name
-                        </li>
-                        <li className='flex items-center'>
-                          <span className='bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded mr-2'>
-                            Required
-                          </span>
-                          Email Address
-                        </li>
-                        <li className='flex items-center'>
-                          <span className='bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded mr-2'>
-                            Optional
-                          </span>
-                          Phone Number
-                        </li>
-                        <li className='flex items-center'>
-                          <span className='bg-gray-100 text-gray-800 text-xs px-2 py-0.5 rounded mr-2'>
-                            Optional
-                          </span>
-                          Company/Organization
-                        </li>
-                        <li className='flex items-center'>
-                          <span className='bg-emerald-100 text-emerald-800 text-xs px-2 py-0.5 rounded mr-2'>
-                            Required
-                          </span>
-                          Purpose of Download
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </TabsContent>
-              </CardContent>
-
-              <CardFooter className='flex justify-between'>
-                <div>
-                  {saveSuccess && (
-                    <span className='text-green-600 text-sm'>✓ Changes saved successfully</span>
-                  )}
+    <BaseEntityDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={pageId ? 'Update Document Download Page' : 'Create Document Download Page'}
+      schema={documentDownloadFormSchema}
+      defaultValues={defaultValues}
+      onSubmit={(values) => {
+        savePage.mutate(values);
+      }}
+      isLoading={isLoading || savePage.isPending}
+    >
+      {(form) => (
+        <Tabs value={steps[currentStep].id} className='w-full'>
+          {/* Step Indicator */}
+          <div className='flex items-center justify-between mb-6 px-1'>
+            {steps.map((step, index) => (
+              <div key={step.id} className='flex flex-col items-center'>
+                <div
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                    index === currentStep
+                      ? 'border-emerald-600 bg-emerald-600 text-white'
+                      : index < currentStep
+                        ? 'border-emerald-600 bg-white text-emerald-600'
+                        : 'border-gray-300 bg-white text-gray-400'
+                  }`}
+                >
+                  {index < currentStep ? <CheckCircle className='w-4 h-4' /> : index + 1}
                 </div>
+                <span
+                  className={`text-xs mt-1 ${
+                    index === currentStep ? 'text-emerald-600 font-medium' : 'text-gray-500'
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className='h-[55vh] overflow-y-auto pr-2'>
+            {/* Content */}
+            {currentStep === 0 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='title'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Page Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter page title'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='subtitle'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subtitle</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter subtitle'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='description'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='Enter page description'
+                          disabled={isLoading || savePage.isPending}
+                          className='min-h-[100px]'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='buttonText'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Button Text</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter button text'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Appearance */}
+            {currentStep === 1 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='bgImage'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Background Image URL</FormLabel>
+                      <FormControl>
+                        <div className='flex space-x-2'>
+                          <Input
+                            placeholder='Enter image URL'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                            className='flex-1'
+                          />
+                          {field.value && (
+                            <div
+                              className='h-10 w-10 rounded border overflow-hidden bg-cover bg-center'
+                              style={{ backgroundImage: `url(${field.value})` }}
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='accentColor'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Accent Color</FormLabel>
+                      <FormControl>
+                        <div className='flex items-center space-x-2'>
+                          <Input
+                            placeholder='#059669'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                          <div
+                            className='h-10 w-10 rounded border'
+                            style={{ backgroundColor: field.value }}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Agent Info */}
+            {currentStep === 2 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='agentName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Agent Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter agent name'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='agentTitle'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Agent Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter agent title'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='agentImage'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Agent Image URL</FormLabel>
+                      <FormControl>
+                        <div className='flex space-x-2'>
+                          <Input
+                            placeholder='Enter image URL'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                            className='flex-1'
+                          />
+                          {field.value && (
+                            <div
+                              className='h-10 w-10 rounded-full border overflow-hidden bg-cover bg-center'
+                              style={{ backgroundImage: `url(${field.value})` }}
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='contactInfo.address'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Office Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter office address'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='contactInfo.phone'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter phone number'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='contactInfo.email'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter email address'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Social */}
+            {currentStep === 3 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='social.facebook'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Facebook URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://facebook.com/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='social.instagram'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://instagram.com/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='social.twitter'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Twitter URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://twitter.com/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='social.linkedin'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://linkedin.com/in/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Settings */}
+            {currentStep === 4 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='slug'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Custom URL Slug</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='Enter URL slug (e.g., documents)'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                      <p className='text-xs text-muted-foreground'>
+                        This will determine your page URL: yourdomain.com/p/
+                        {field.value || 'documents-[timestamp]'}
+                      </p>
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='isPublic'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                      <div className='space-y-0.5'>
+                        <FormLabel className='text-base'>Public Page</FormLabel>
+                        <div className='text-sm text-muted-foreground'>
+                          Make this page publicly accessible
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isLoading || savePage.isPending}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className='flex justify-between space-x-4 mt-6'>
+            <div>
+              {currentStep > 0 && (
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handlePrevious}
+                  disabled={savePage.isPending}
+                >
+                  <ChevronLeft className='w-4 h-4 mr-2' />
+                  Previous
+                </Button>
+              )}
+            </div>
+
+            <div className='flex space-x-2'>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={savePage.isPending}
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
+              </Button>
+
+              {currentStep < steps.length - 1 ? (
+                <Button
+                  type='button'
+                  onClick={handleNext}
+                  disabled={savePage.isPending}
+                  className='bg-emerald-600 hover:bg-emerald-700'
+                >
+                  Next
+                  <ChevronRight className='w-4 h-4 ml-2' />
+                </Button>
+              ) : (
                 <Button
                   type='submit'
-                  className='bg-emerald-600 hover:bg-emerald-700'
-                  disabled={isSaving}
+                  disabled={savePage.isPending || !form.formState.isValid}
+                  className='bg-emerald-600 hover:bg-emerald-700 min-w-[100px]'
                 >
-                  {isSaving ? (
-                    <>Saving...</>
-                  ) : (
-                    <>
-                      <Save className='mr-2 h-4 w-4' />
-                      Save Changes
-                    </>
-                  )}
+                  {savePage.isPending ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
                 </Button>
-              </CardFooter>
-            </Card>
-          </form>
+              )}
+            </div>
+          </div>
         </Tabs>
-
-        <div className='flex justify-between mt-8'>
-          <Button variant='outline' onClick={() => router.push('/update/location-search')}>
-            <ArrowLeft className='mr-2 h-4 w-4' />
-            Location Search
-          </Button>
-          <Button variant='outline' onClick={() => router.push('/update/contact')}>
-            Contact Form
-            <ArrowLeft className='ml-2 h-4 w-4 rotate-180' />
-          </Button>
-        </div>
-      </div>
-    </div>
+      )}
+    </BaseEntityDialog>
   );
 }

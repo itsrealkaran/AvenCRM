@@ -1,13 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { RefreshCw, Share, ChevronLeft } from 'lucide-react';
+import { ChevronLeft, RefreshCw, Share } from 'lucide-react';
 
 import ContactFormTemplate from '@/components/page-builder/contact-form-template';
 import ContactForm from '@/components/page-builder/update/contact/page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import Logo from '../logo';
 
 interface ContactViewProps {
   navigateTo: (view: string) => void;
@@ -33,7 +34,11 @@ export default function ContactView({ navigateTo }: ContactViewProps) {
       bgImage:
         'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
       buttonText: 'Send Message',
-      accentColor: '#4f46e5',
+      accentColor: '#D97706',
+      agentName: 'John Doe',
+      officeAddress: '123 Main St, Anytown, USA',
+      phone: '123-456-7890',
+      email: 'john.doe@example.com',
       social: {
         facebook: 'https://facebook.com',
         instagram: 'https://instagram.com',
@@ -56,28 +61,32 @@ export default function ContactView({ navigateTo }: ContactViewProps) {
     setIsUpdateModalOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading && !contactData)
     return (
-      <Card className='flex items-center justify-center min-h-full'>
-        <div className='text-center'>
-          <div className='inline-flex items-center px-3 py-1 rounded-full text-amber-600 text-sm font-medium mb-4'>
-            <span className='relative flex h-2 w-2 mr-2'>
-              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-600 opacity-75'></span>
-              <span className='relative inline-flex rounded-full h-2 w-2 bg-amber-600'></span>
-            </span>
-            Loading Contact Form
+      <div className='flex flex-col justify-center items-center h-screen bg-[#fafbff]'>
+        <div className='relative w-32 h-32'>
+          <div className='absolute inset-0 border-4 border-primary/30 rounded-full'></div>
+          <div className='absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin'></div>
+          <div className='absolute text-[4rem] inset-2 flex items-center justify-center'>
+            <Logo />
           </div>
-          <p className='text-muted-foreground'>Please wait while we prepare your contact form...</p>
         </div>
-      </Card>
+        <div className='mt-6 space-y-2 text-center'>
+          <p className='text-lg font-medium text-gray-900'>Loading Property</p>
+          <p className='text-sm text-gray-500'>Please wait while we fetch the details...</p>
+        </div>
+      </div>
     );
-  }
 
   return (
     <Card className='h-full flex flex-col'>
-      <ContactForm open={isUpdateModalOpen} onOpenChange={setIsUpdateModalOpen} isLoading={isLoading} />
+      <ContactForm
+        open={isUpdateModalOpen}
+        onOpenChange={setIsUpdateModalOpen}
+        isLoading={isLoading}
+      />
 
-      <div className='shadow-sm p-4'>
+      <div className='shadow-sm p-4 bg-white'>
         <div className='container mx-auto flex justify-between items-center'>
           <div className='flex items-center'>
             <Button
@@ -105,14 +114,7 @@ export default function ContactView({ navigateTo }: ContactViewProps) {
       <main className='flex-grow container mx-auto p-4'>
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
           <div className='h-[calc(100vh-8rem)] overflow-y-auto'>
-            <ContactFormTemplate
-              bgImage={contactData.bgImage}
-              title={contactData.title}
-              subtitle={contactData.subtitle}
-              description={contactData.description}
-              buttonText={contactData.buttonText}
-              accentColor={contactData.accentColor}
-              social={contactData.social}
+            <ContactFormTemplate data={contactData}
             />
           </div>
         </div>

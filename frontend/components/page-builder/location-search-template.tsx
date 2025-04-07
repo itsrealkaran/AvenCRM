@@ -1,187 +1,369 @@
 'use client';
 
-import type React from 'react';
-import { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Building, Building2, Mail, Phone, Search } from 'lucide-react';
 
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-// Type definitions
-interface PageContent {
-  title: string;
-  description: string;
-  backgroundImage: string;
-  submissionText: string;
-}
-
-interface FormData {
-  name: string;
-  email: string;
-  phone: string;
-  note: string;
-  location: string;
-}
-
-// Mock data - in a real app, this would come from an API or CMS
-const pageContent: PageContent = {
-  title: 'Find Local Real Estate Agents',
-  description:
-    'Enter your location to connect with experienced real estate agents in your area who can help you buy, sell, or rent property with confidence.',
-  backgroundImage:
-    'https://images.pexels.com/photos/531880/pexels-photo-531880.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
-  submissionText: 'Thank you! A local agent will contact you shortly to discuss your needs.',
-};
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
-
-export default function Home() {
-  const [address, setAddress] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [formData, setFormData] = useState<FormData>({
+export default function LocationSearchTemplate({
+  data,
+}: {
+  data: {
+    title: string;
+    subtitle: string;
+    description: string;
+    bgImage: string;
+    searchPlaceholder: string;
+    buttonText: string;
+    accentColor: string;
+    agentName: string;
+    agentTitle: string;
+    agentImage: string;
+    contactInfo: {
+      address: string;
+      phone: string;
+      email: string;
+    };
+    social: {
+      facebook: string;
+      instagram: string;
+      linkedin: string;
+      twitter: string;
+    };
+  };
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
-    note: '',
-    location: '',
+    message: '',
   });
 
-  useEffect(() => {
-    const loadGoogleMapsScript = () => {
-      if (!window.google) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_API_KEY}&libraries=places`;
-        script.async = true;
-        script.onload = initAutocomplete;
-        document.body.appendChild(script);
-      } else {
-        initAutocomplete();
-      }
-    };
-
-    const initAutocomplete = () => {
-      const input = document.getElementById('location-input') as HTMLInputElement;
-      if (input && window.google && window.google.maps && window.google.maps.places) {
-        const autocomplete = new window.google.maps.places.Autocomplete(input, {
-          types: ['address'],
-          fields: ['formatted_address'],
-        });
-
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (place.formatted_address) {
-            setAddress(place.formatted_address);
-            setFormData((prev) => ({ ...prev, location: place.formatted_address }));
-            setFormOpen(true);
-          }
-        });
-      }
-    };
-
-    loadGoogleMapsScript();
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchValue.trim()) {
+      setShowForm(true);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
-    setSubmitted(true);
+    console.log(formData);
+    setShowForm(false);
   };
 
+  if (!data) return null;
+
   return (
-    <main className='min-h-screen flex flex-col'>
+    <div className='w-full h-full flex flex-col bg-gradient-to-b from-white to-gray-50 relative'>
+      {/* Hero Section with Search */}
       <div
-        className='relative flex flex-col items-center justify-center px-4 py-20 md:py-32 text-center'
+        className='relative w-full'
         style={{
-          backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${pageContent.backgroundImage})`,
+          backgroundImage: `url(${data.bgImage})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           minHeight: '70vh',
         }}
       >
-        <div className='max-w-3xl mx-auto text-white z-10'>
-          <h1 className='text-3xl md:text-5xl font-bold mb-6'>{pageContent.title}</h1>
-          <div className='bg-white/10 backdrop-blur-sm p-6 rounded-lg mb-8'>
+        <div className='absolute inset-0 bg-black/60' />
+        <div className='absolute inset-0 flex flex-col items-center justify-center px-4'>
+          <div className='text-center text-white max-w-3xl mx-auto mb-12'>
+            <h1 className='text-4xl md:text-5xl font-bold mb-4'>{data.title}</h1>
+            <p className='text-lg md:text-xl mb-8'>{data.subtitle}</p>
+          </div>
+
+          <form onSubmit={handleSearch} className='relative max-w-xl w-full'>
             <Input
-              id='location-input'
-              placeholder='Enter your address'
-              className='h-14 px-4 text-black'
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              type='text'
+              placeholder='Enter your address...'
+              className='pl-5 pr-14 py-7 text-lg rounded-lg border-2 border-white/20 bg-white/10 text-white placeholder:text-white/70'
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
             />
+            <Button
+              type='submit'
+              size='icon'
+              className='absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full'
+              style={{ backgroundColor: data.accentColor }}
+            >
+              <Search className='h-5 w-5' />
+              <span className='sr-only'>Search</span>
+            </Button>
+          </form>
+        </div>
+      </div>
+
+      {/* Bottom half with paragraph */}
+      <div className='flex-1 bg-white'>
+        <div className='max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16'>
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+            <div className='md:col-span-2'>
+              <p className='text-lg text-gray-700 leading-relaxed mb-12'>{data.description}</p>
+            </div>
+            <Card className='p-6 shadow-md h-full'>
+              <div className='space-y-6'>
+                <div className='flex items-center space-x-4 border-b pb-4'>
+                  <Avatar className='h-16 w-16 border'>
+                    <AvatarImage src={data.agentImage} alt={data.agentName} />
+                    <AvatarFallback>
+                      {data.agentName
+                        .split(' ')
+                        .map((n) => n[0])
+                        .join('')}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className='text-xl font-bold'>{data.agentName}</h3>
+                    <p style={{ color: data.accentColor }}>Real Estate Agent</p>
+                  </div>
+                </div>
+
+                <div className='space-y-4'>
+                  <div className='flex items-start space-x-4'>
+                    <Building2
+                      className='h-5 w-5 mt-1 flex-shrink-0'
+                      style={{ color: data.accentColor }}
+                    />
+                    <div>
+                      <h4 className='font-medium text-gray-700'>Office Address</h4>
+                      <p className='text-gray-600'>{data.contactInfo.address}</p>
+                    </div>
+                  </div>
+
+                  <div className='flex items-start space-x-4'>
+                    <Phone
+                      className='h-5 w-5 mt-1 flex-shrink-0'
+                      style={{ color: data.accentColor }}
+                    />
+                    <div>
+                      <h4 className='font-medium text-gray-700'>Phone</h4>
+                      <p className='text-gray-600'>{data.contactInfo.phone}</p>
+                    </div>
+                  </div>
+
+                  <div className='flex items-start space-x-4'>
+                    <Mail
+                      className='h-5 w-5 mt-1 flex-shrink-0'
+                      style={{ color: data.accentColor }}
+                    />
+                    <div>
+                      <h4 className='font-medium text-gray-700'>Email</h4>
+                      <p className='text-gray-600'>{data.contactInfo.email}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
-      <p className='text-lg md:text-xl mb-8'>{pageContent.description}</p>
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className='sm:max-w-md'>
-          <DialogHeader>
-            <DialogTitle>Contact Form</DialogTitle>
-          </DialogHeader>
-          {!submitted ? (
-            <form onSubmit={handleSubmit} className='space-y-4'>
-              <Label htmlFor='name'>Name</Label>
-              <Input
-                id='name'
-                name='name'
-                required
-                value={formData.name}
-                onChange={handleInputChange}
-              />
-              <Label htmlFor='email'>Email</Label>
-              <Input
-                id='email'
-                name='email'
-                type='email'
-                required
-                value={formData.email}
-                onChange={handleInputChange}
-              />
-              <Label htmlFor='phone'>Phone</Label>
-              <Input
-                id='phone'
-                name='phone'
-                type='tel'
-                required
-                value={formData.phone}
-                onChange={handleInputChange}
-              />
-              <Label htmlFor='note'>Note</Label>
-              <Textarea
-                id='note'
-                name='note'
-                rows={3}
-                value={formData.note}
-                onChange={handleInputChange}
-              />
-              <Label htmlFor='location'>Selected Location</Label>
-              <Input id='location' name='location' value={formData.location} readOnly disabled />
-              <Button type='submit'>Submit</Button>
-            </form>
-          ) : (
-            <Alert className='border-green-500 bg-green-50'>
-              <CheckCircle2 className='h-4 w-4 text-green-600' />
-              <AlertTitle className='text-green-800'>Success!</AlertTitle>
-              <AlertDescription className='text-green-700'>
-                {pageContent.submissionText}
-              </AlertDescription>
-            </Alert>
-          )}
-        </DialogContent>
-      </Dialog>
-    </main>
+
+      {/* Footer */}
+      <footer
+        className='w-full mt-auto bg-[#f9f8ff] py-6 border-t'
+        style={{ borderColor: `${data.accentColor}10` }}
+      >
+        <div className='container mx-auto px-4'>
+          <div className='flex flex-col md:flex-row justify-between items-center gap-4'>
+            <div className='flex items-center gap-2'>
+              <Building className='h-5 w-5' style={{ color: data.accentColor }} />
+              <span className={`font-semibold`} style={{ color: data.accentColor }}>
+                {data.agentName}
+              </span>
+            </div>
+            <div className='flex flex-col items-center text-center'>
+              <div className='text-xs mt-1 font-medium' style={{ color: `${data.accentColor}aa` }}>
+                © {new Date().getFullYear()} {data.agentName}. Powered by AvenCRM
+              </div>
+            </div>
+            <div className='flex items-center gap-4'>
+              <a
+                href={data.social.facebook}
+                style={{
+                  color: `${data.accentColor}aa`,
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = data.accentColor)}
+                onMouseOut={(e) => (e.currentTarget.style.color = `${data.accentColor}aa`)}
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  className='h-5 w-5'
+                >
+                  <path d='M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z' />
+                </svg>
+              </a>
+              <a
+                href={data.social.instagram}
+                style={{
+                  color: `${data.accentColor}aa`,
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = data.accentColor)}
+                onMouseOut={(e) => (e.currentTarget.style.color = `${data.accentColor}aa`)}
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  className='h-5 w-5'
+                >
+                  <rect width='20' height='20' x='2' y='2' rx='5' ry='5' />
+                  <path d='M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z' />
+                  <line x1='17.5' x2='17.51' y1='6.5' y2='6.5' />
+                </svg>
+              </a>
+              <a
+                href={data.social.twitter}
+                style={{
+                  color: `${data.accentColor}aa`,
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = data.accentColor)}
+                onMouseOut={(e) => (e.currentTarget.style.color = `${data.accentColor}aa`)}
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  className='h-5 w-5'
+                >
+                  <path d='M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1a10.66 10.66 0 0 1-9-4.53s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20-4.5 20-13.5V6a8.11 8.11 0 0 0 2-.5z' />
+                </svg>
+              </a>
+              <a
+                href={data.social.linkedin}
+                style={{
+                  color: `${data.accentColor}aa`,
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.color = data.accentColor)}
+                onMouseOut={(e) => (e.currentTarget.style.color = `${data.accentColor}aa`)}
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  className='h-5 w-5'
+                >
+                  <path d='M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z' />
+                  <rect width='4' height='12' x='2' y='9' />
+                  <circle cx='4' cy='4' r='2' />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modal Form */}
+      {showForm && (
+        <div className='absolute inset-0 bg-black/70 flex items-center justify-center z-50 p-4'>
+          <Card className='max-w-md w-full'>
+            <CardContent className='p-6'>
+              <h2 className='text-2xl font-bold mb-6'>{data.title}</h2>
+
+              <form onSubmit={handleSubmit} className='space-y-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='name'>Name</Label>
+                  <Input
+                    id='name'
+                    placeholder='Your name'
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='email'>Email</Label>
+                  <Input
+                    id='email'
+                    type='email'
+                    placeholder='your.email@example.com'
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='phone'>Phone Number</Label>
+                  <Input
+                    id='phone'
+                    type='tel'
+                    placeholder='(123) 456-7890'
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='message'>Message</Label>
+                  <Textarea
+                    id='message'
+                    placeholder="I'm interested in properties in this area..."
+                    className='min-h-[100px]'
+                    value={formData.message}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        message:
+                          'Property Valuation Enquiry:' + searchValue + 'Message:' + e.target.value,
+                      })
+                    }
+                    required
+                  />
+                </div>
+
+                <div className='flex justify-end space-x-2 pt-4'>
+                  <Button variant='outline' onClick={() => setShowForm(false)}>
+                    Cancel
+                  </Button>
+                  <Button type='submit' style={{ backgroundColor: data.accentColor }}>
+                    {data.buttonText}
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,74 +1,136 @@
 'use client';
 
-import type React from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  ArrowLeft,
-  ArrowRight,
   Award,
   Building,
   CheckCircle,
+  ChevronLeft,
+  ChevronRight,
   FileText,
+  Globe,
+  ImageIcon,
   Mail,
   MapPin,
   Phone,
+  Share2,
   Star,
+  Type,
   User,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import * as z from 'zod';
 
+import { BaseEntityDialog } from '@/components/entity-dialog';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { api } from '@/lib/api';
 
 interface SetupFormProps {
-  navigateTo: (view: string) => void;
+  pageId?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  isLoading?: boolean;
 }
 
-export default function SetupForm({ navigateTo }: SetupFormProps) {
+// Form validation schema
+const portfolioFormSchema = z.object({
+  // Page configuration
+  slug: z.string().min(3, 'Slug must be at least 3 characters').optional(),
+  isPublic: z.boolean().default(false),
+
+  // Personal Info
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  title: z.string().min(2, 'Title must be at least 2 characters'),
+  location: z.string().optional(),
+  bio: z.string().optional(),
+  profileImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+
+  // Stats
+  dealsCount: z.string().optional(),
+  propertyValue: z.string().optional(),
+  yearsExperience: z.string().optional(),
+  clientSatisfaction: z.string().optional(),
+
+  // Appearance
+  accentColor: z.string().optional(),
+
+  // About
+  approach: z.string().optional(),
+  expertise: z.array(z.string()).optional(),
+  certifications: z.array(z.string()).optional(),
+  education: z.string().optional(),
+
+  // Contact
+  phone: z.string().optional(),
+  email: z.string().email('Please enter a valid email').optional(),
+  officeLocation: z.string().optional(),
+
+  // Social links
+  facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+
+  // Testimonials
+  testimonials: z
+    .array(
+      z.object({
+        text: z.string().optional(),
+        client: z.string().optional(),
+        location: z.string().optional(),
+      })
+    )
+    .optional(),
+});
+
+type PortfolioFormValues = z.infer<typeof portfolioFormSchema>;
+
+export default function SetupForm({ pageId, open, onOpenChange, isLoading }: SetupFormProps) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
-  const totalSteps = 4;
-  const progress = (step / totalSteps) * 100;
+  const queryClient = useQueryClient();
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const [formData, setFormData] = useState({
+  // Steps configuration
+  const steps = [
+    { id: 'personal', label: 'Personal' },
+    { id: 'stats', label: 'Stats' },
+    { id: 'about', label: 'About' },
+    { id: 'contact', label: 'Contact' },
+    { id: 'settings', label: 'Settings' },
+  ];
+
+  // Default values for the form
+  const defaultValues: PortfolioFormValues = {
+    // Page configuration
+    slug: '',
+    isPublic: false,
+
     // Personal Info
-    name: '',
-    title: '',
-    location: '',
-    bio: '',
-    profileImage: '',
-
-    // Location Search Settings
-    locationSearchTitle: 'Find Your Dream Home',
-    locationSearchDescription:
-      'Search for properties in your desired location and connect with our expert agents.',
-    locationSearchBackgroundImage: '',
-
-    // Document Download Settings
-    documentTitle: 'Document Resource Center',
-    documentDescription:
-      'Access our comprehensive collection of real estate documents, forms, and templates.',
-    documentRequireForm: true,
-
-    // Contact Form Settings
-    contactFormTitle: 'Get in Touch With Our Team',
-    contactFormDescription:
-      'Have questions about buying or selling a property? Our team of experts is here to help you every step of the way.',
-    contactFormBackgroundImage: '',
+    name: 'Sarah Johnson',
+    title: 'Luxury Real Estate Specialist',
+    location: 'San Francisco Bay Area, CA',
+    bio: 'With over 15 years of experience, I specialize in luxury properties and helping clients make informed decisions in the competitive Bay Area market.',
+    profileImage:
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=776&q=80',
 
     // Stats
-    dealsCount: '',
-    propertyValue: '',
-    yearsExperience: '',
-    clientSatisfaction: '',
+    dealsCount: '350+',
+    propertyValue: '$500M+',
+    yearsExperience: '15+',
+    clientSatisfaction: '98%',
+
+    // Appearance
+    accentColor: '#4f46e5', // Default purple/indigo color
 
     // About
-    approach: '',
+    approach:
+      'I believe in personalized service and leveraging the latest technology to ensure my clients get the best deals in the market.',
     expertise: [
       'Luxury Residential Properties',
       'Investment Properties',
@@ -81,370 +143,741 @@ export default function SetupForm({ navigateTo }: SetupFormProps) {
       'Luxury Home Marketing Specialist',
       'Certified Negotiation Expert (CNE)',
     ],
-    education: '',
+    education:
+      'Bachelor of Business Administration in Real Estate, University of California, Berkeley',
 
     // Contact
-    phone: '',
-    email: '',
-    officeLocation: '',
-    facebook: '',
-    instagram: '',
-    linkedin: '',
+    phone: '(415) 555-0123',
+    email: 'sarah@sarahjohnsonrealty.com',
+    officeLocation: '123 Market Street, San Francisco, CA 94105',
+
+    // Social links
+    facebook: 'https://facebook.com/sarahjohnsonrealty',
+    instagram: 'https://instagram.com/sarahjohnsonrealty',
+    linkedin: 'https://linkedin.com/in/sarahjohnsonrealty',
 
     // Testimonials
     testimonials: [
-      { text: '', client: '', location: '' },
-      { text: '', client: '', location: '' },
-      { text: '', client: '', location: '' },
+      {
+        text: 'Sarah helped us find our dream home in a competitive market. Her expertise and negotiation skills were invaluable.',
+        client: 'John & Lisa Thomason',
+        location: 'Palo Alto',
+      },
+      {
+        text: 'Working with Sarah made selling our home stress-free. She handled everything professionally and got us above asking price.',
+        client: 'Michael Chen',
+        location: 'San Francisco',
+      },
+      {
+        text: "As first-time buyers, we appreciated Sarah's patience and guidance throughout the process. Highly recommended!",
+        client: 'Emma & David Wilson',
+        location: 'Menlo Park',
+      },
     ],
+  };
+
+  // Mutation for saving the form
+  const savePage = useMutation({
+    mutationFn: async (values: PortfolioFormValues) => {
+      const pageData = {
+        title: values.name,
+        templateType: 'portfolio',
+        content: values,
+        isPublic: values.isPublic,
+        slug: values.slug || `portfolio-${Date.now()}`,
+      };
+
+      if (pageId) {
+        return await api.put(`/page-builder/${pageId}`, pageData);
+      } else {
+        return await api.post('/page-builder', pageData);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      onOpenChange(false);
+      toast.success(`Portfolio ${pageId ? 'updated' : 'created'} successfully`);
+    },
+    onError: () => {
+      toast.error(`Failed to ${pageId ? 'update' : 'create'} portfolio`);
+    },
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleExpertiseChange = (index: number, value: string) => {
-    const newExpertise = [...formData.expertise];
-    newExpertise[index] = value;
-    setFormData((prev) => ({ ...prev, expertise: newExpertise }));
-  };
-
-  const handleCertificationChange = (index: number, value: string) => {
-    const newCertifications = [...formData.certifications];
-    newCertifications[index] = value;
-    setFormData((prev) => ({ ...prev, certifications: newCertifications }));
-  };
-
-  const handleTestimonialChange = (index: number, field: string, value: string) => {
-    const newTestimonials = [...formData.testimonials];
-    newTestimonials[index] = { ...newTestimonials[index], [field]: value };
-    setFormData((prev) => ({ ...prev, testimonials: newTestimonials }));
-  };
-
-  const nextStep = () => {
-    if (step < totalSteps) {
-      setStep(step + 1);
-      window.scrollTo(0, 0);
+  // Handle next step navigation
+  const handleNext = () => {
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  const prevStep = () => {
-    if (step > 1) {
-      setStep(step - 1);
-      window.scrollTo(0, 0);
+  // Handle previous step navigation
+  const handlePrevious = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // In a real application, you would save this data to a database
-    // For this example, we'll use localStorage to simulate data persistence
-    localStorage.setItem('realtorData', JSON.stringify(formData));
-    router.push('/');
+  // Function to add a new testimonial field
+  const addTestimonial = (form: any) => {
+    const currentTestimonials = form.getValues('testimonials') || [];
+    form.setValue('testimonials', [...currentTestimonials, { text: '', client: '', location: '' }]);
+  };
+
+  // Function to remove a testimonial field
+  const removeTestimonial = (form: any, index: number) => {
+    const currentTestimonials = form.getValues('testimonials') || [];
+    form.setValue(
+      'testimonials',
+      currentTestimonials.filter((_: any, i: number) => i !== index)
+    );
   };
 
   return (
-    <div className='container mx-auto py-10 px-4'>
-      <div className='max-w-3xl mx-auto'>
-        <div className='mb-8'>
-          <div className='flex justify-between mb-2'>
-            <span className='text-sm font-medium'>
-              Step {step} of {totalSteps}
-            </span>
-            <span className='text-sm font-medium'>{Math.round(progress)}%</span>
+    <BaseEntityDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={pageId ? 'Update Portfolio' : 'Create Portfolio'}
+      schema={portfolioFormSchema}
+      defaultValues={defaultValues}
+      onSubmit={(values) => {
+        savePage.mutate(values);
+      }}
+      isLoading={isLoading || savePage.isPending}
+    >
+      {(form) => (
+        <Tabs value={steps[currentStep].id} className='w-full'>
+          {/* Step Indicator */}
+          <div className='flex items-center justify-between mb-6 px-1'>
+            {steps.map((step, index) => (
+              <div key={step.id} className='flex flex-col items-center'>
+                <div
+                  className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                    index === currentStep
+                      ? 'border-primary bg-primary text-white'
+                      : index < currentStep
+                        ? 'border-primary bg-white text-primary'
+                        : 'border-gray-300 bg-white text-gray-400'
+                  }`}
+                >
+                  {index < currentStep ? <CheckCircle className='w-4 h-4' /> : index + 1}
+                </div>
+                <span
+                  className={`text-xs mt-1 ${
+                    index === currentStep ? 'text-primary font-medium' : 'text-gray-500'
+                  }`}
+                >
+                  {step.label}
+                </span>
+              </div>
+            ))}
           </div>
-          <Progress value={progress} className='h-2' />
-        </div>
 
-        <form onSubmit={handleSubmit}>
-          <Card className='border-none shadow-xl'>
-            <CardHeader>
-              <CardTitle>
-                {step === 1 && (
-                  <div className='flex items-center gap-2'>
-                    <User className='h-5 w-5 text-primary' />
-                    <span>Personal Information</span>
-                  </div>
-                )}
-                {step === 2 && (
-                  <div className='flex items-center gap-2'>
-                    <CheckCircle className='h-5 w-5 text-primary' />
-                    <span>Your Achievements</span>
-                  </div>
-                )}
-                {step === 3 && (
-                  <div className='flex items-center gap-2'>
-                    <Award className='h-5 w-5 text-primary' />
-                    <span>About You</span>
-                  </div>
-                )}
-                {step === 4 && (
-                  <div className='flex items-center gap-2'>
-                    <Phone className='h-5 w-5 text-primary' />
-                    <span>Contact Information</span>
-                  </div>
-                )}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-4'>
-              {/* Step 1: Personal Information */}
-              {step === 1 && (
-                <>
-                  <div className='space-y-2'>
-                    <Label htmlFor='name'>Full Name</Label>
-                    <Input
-                      id='name'
-                      name='name'
-                      value={formData.name}
-                      onChange={handleChange}
-                      placeholder='e.g. Sarah Johnson'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='title'>Professional Title</Label>
-                    <Input
-                      id='title'
-                      name='title'
-                      value={formData.title}
-                      onChange={handleChange}
-                      placeholder='e.g. Luxury Real Estate Specialist'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='location'>Location</Label>
-                    <Input
-                      id='location'
-                      name='location'
-                      value={formData.location}
-                      onChange={handleChange}
-                      placeholder='e.g. San Francisco Bay Area, CA'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='bio'>Short Bio</Label>
-                    <Textarea
-                      id='bio'
-                      name='bio'
-                      value={formData.bio}
-                      onChange={handleChange}
-                      placeholder='e.g. Helping clients find their dream homes and maximize property investments...'
-                      rows={3}
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='profileImage'>Profile Image URL</Label>
-                    <Input
-                      id='profileImage'
-                      name='profileImage'
-                      value={formData.profileImage || ''}
-                      onChange={handleChange}
-                      placeholder='e.g. https://example.com/your-image.jpg'
-                    />
-                    <p className='text-xs text-muted-foreground'>
-                      Leave empty to use default image
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* Step 2: Stats/Achievements */}
-              {step === 2 && (
-                <>
-                  <div className='space-y-2'>
-                    <Label htmlFor='dealsCount'>Deals Closed</Label>
-                    <Input
-                      id='dealsCount'
-                      name='dealsCount'
-                      value={formData.dealsCount}
-                      onChange={handleChange}
-                      placeholder='e.g. 350+'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='propertyValue'>Property Value Handled</Label>
-                    <Input
-                      id='propertyValue'
-                      name='propertyValue'
-                      value={formData.propertyValue}
-                      onChange={handleChange}
-                      placeholder='e.g. $500M+'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='yearsExperience'>Years of Experience</Label>
-                    <Input
-                      id='yearsExperience'
-                      name='yearsExperience'
-                      value={formData.yearsExperience}
-                      onChange={handleChange}
-                      placeholder='e.g. 15+'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='clientSatisfaction'>Client Satisfaction Rate</Label>
-                    <Input
-                      id='clientSatisfaction'
-                      name='clientSatisfaction'
-                      value={formData.clientSatisfaction}
-                      onChange={handleChange}
-                      placeholder='e.g. 98%'
-                      required
-                    />
-                  </div>
-                </>
-              )}
-
-              {/* Step 3: About */}
-              {step === 3 && (
-                <>
-                  <div className='space-y-2'>
-                    <Label htmlFor='approach'>Your Approach</Label>
-                    <Textarea
-                      id='approach'
-                      name='approach'
-                      value={formData.approach}
-                      onChange={handleChange}
-                      placeholder='Describe your approach to real estate...'
-                      rows={3}
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label>Areas of Expertise</Label>
-                    <div className='grid gap-2'>
-                      {formData.expertise.map((item, index) => (
+          <div className='h-[55vh] overflow-y-auto pr-2'>
+            {/* Personal Info */}
+            {currentStep === 0 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='name'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Name</FormLabel>
+                      <FormControl>
                         <Input
-                          key={index}
-                          value={item}
-                          onChange={(e) => handleExpertiseChange(index, e.target.value)}
-                          placeholder={`Expertise ${index + 1}`}
+                          placeholder='e.g. Sarah Johnson'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
                         />
-                      ))}
-                    </div>
-                  </div>
-                  <div className='space-y-2'>
-                    <Label>Certifications</Label>
-                    <div className='grid gap-2'>
-                      {formData.certifications.map((item, index) => (
-                        <Input
-                          key={index}
-                          value={item}
-                          onChange={(e) => handleCertificationChange(index, e.target.value)}
-                          placeholder={`Certification ${index + 1}`}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='education'>Education</Label>
-                    <Input
-                      id='education'
-                      name='education'
-                      value={formData.education}
-                      onChange={handleChange}
-                      placeholder='e.g. Bachelor of Business Administration in Real Estate, University of California, Berkeley'
-                      required
-                    />
-                  </div>
-                </>
-              )}
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-              {/* Step 4: Contact Information */}
-              {step === 4 && (
-                <>
-                  <div className='space-y-2'>
-                    <Label htmlFor='phone'>Phone Number</Label>
-                    <Input
-                      id='phone'
-                      name='phone'
-                      value={formData.phone}
-                      onChange={handleChange}
-                      placeholder='e.g. (415) 555-0123'
-                      required
+                <FormField
+                  control={form.control}
+                  name='title'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Professional Title</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. Luxury Real Estate Specialist'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='location'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Location</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. San Francisco Bay Area, CA'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='bio'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Short Bio</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='e.g. Helping clients find their dream homes...'
+                          disabled={isLoading || savePage.isPending}
+                          className='min-h-[100px]'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='profileImage'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Profile Image URL</FormLabel>
+                      <FormControl>
+                        <div className='flex space-x-2'>
+                          <Input
+                            placeholder='Enter image URL'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                            className='flex-1'
+                          />
+                          {field.value && (
+                            <div
+                              className='h-10 w-10 rounded-full border overflow-hidden bg-cover bg-center'
+                              style={{ backgroundImage: `url(${field.value})` }}
+                            />
+                          )}
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Stats */}
+            {currentStep === 1 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='dealsCount'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Deals</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. 350+'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='propertyValue'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Total Property Value</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. $500M+'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='yearsExperience'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Years of Experience</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. 15+'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='clientSatisfaction'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Client Satisfaction Rate</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. 98%'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* About */}
+            {currentStep === 2 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='approach'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Approach</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='Describe your approach to real estate'
+                          disabled={isLoading || savePage.isPending}
+                          className='min-h-[100px]'
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className='space-y-2'>
+                  <FormLabel>Areas of Expertise</FormLabel>
+                  {form.getValues('expertise')?.map((_: any, index: number) => (
+                    <FormField
+                      key={`expertise-${index}`}
+                      control={form.control}
+                      name={`expertise.${index}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              placeholder={`Expertise ${index + 1}`}
+                              disabled={isLoading || savePage.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='email'>Email Address</Label>
-                    <Input
-                      id='email'
-                      name='email'
-                      type='email'
-                      value={formData.email}
-                      onChange={handleChange}
-                      placeholder='e.g. sarah@sarahjohnsonrealty.com'
-                      required
+                  ))}
+                </div>
+
+                <div className='space-y-2'>
+                  <FormLabel>Certifications</FormLabel>
+                  {form.getValues('certifications')?.map((_: any, index: number) => (
+                    <FormField
+                      key={`certifications-${index}`}
+                      control={form.control}
+                      name={`certifications.${index}`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              placeholder={`Certification ${index + 1}`}
+                              disabled={isLoading || savePage.isPending}
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
+                  ))}
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name='education'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Education</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. Bachelor of Business Administration in Real Estate'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='accentColor'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Accent Color</FormLabel>
+                      <div className='flex items-center gap-2'>
+                        <div
+                          className='h-8 w-8 rounded-full border'
+                          style={{ backgroundColor: field.value || '#4f46e5' }}
+                        />
+                        <FormControl>
+                          <Input
+                            type='text'
+                            placeholder='#4f46e5'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                      </div>
+                      <p className='text-xs text-muted-foreground mt-1'>
+                        Choose a color for portfolio accents and highlights
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Contact Info */}
+            {currentStep === 3 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='phone'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Phone Number</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. (415) 555-0123'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='email'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. sarah@example.com'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='officeLocation'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Office Location</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='e.g. 123 Market Street, San Francisco, CA 94105'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='facebook'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Facebook URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://facebook.com/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='instagram'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Instagram URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://instagram.com/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='linkedin'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://linkedin.com/in/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className='space-y-4 mt-6'>
+                  <div className='flex items-center justify-between'>
+                    <FormLabel className='text-base'>Testimonials</FormLabel>
+                    <Button
+                      type='button'
+                      variant='ghost'
+                      size='sm'
+                      onClick={() => addTestimonial(form)}
+                      disabled={isLoading || savePage.isPending}
+                    >
+                      Add Testimonial
+                    </Button>
                   </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='officeLocation'>Office Location</Label>
-                    <Input
-                      id='officeLocation'
-                      name='officeLocation'
-                      value={formData.officeLocation}
-                      onChange={handleChange}
-                      placeholder='e.g. 123 Market Street, San Francisco, CA 94105'
-                      required
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='facebook'>Facebook URL</Label>
-                    <Input
-                      id='facebook'
-                      name='facebook'
-                      value={formData.facebook || ''}
-                      onChange={handleChange}
-                      placeholder='e.g. https://facebook.com/yourprofile'
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='instagram'>Instagram URL</Label>
-                    <Input
-                      id='instagram'
-                      name='instagram'
-                      value={formData.instagram || ''}
-                      onChange={handleChange}
-                      placeholder='e.g. https://instagram.com/yourprofile'
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='linkedin'>LinkedIn URL</Label>
-                    <Input
-                      id='linkedin'
-                      name='linkedin'
-                      value={formData.linkedin || ''}
-                      onChange={handleChange}
-                      placeholder='e.g. https://linkedin.com/in/yourprofile'
-                    />
-                  </div>
-                </>
+
+                  {form.getValues('testimonials')?.map((_: any, index: number) => (
+                    <div
+                      key={`testimonial-${index}`}
+                      className='space-y-4 p-4 border rounded-md relative'
+                    >
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        className='absolute top-2 right-2 h-8 w-8 p-0'
+                        onClick={() => removeTestimonial(form, index)}
+                        disabled={isLoading || savePage.isPending}
+                      >
+                        ×
+                      </Button>
+
+                      <FormField
+                        control={form.control}
+                        name={`testimonials.${index}.text`}
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Testimonial Text</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder='Enter client testimonial'
+                                disabled={isLoading || savePage.isPending}
+                                className='min-h-[80px]'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <div className='grid grid-cols-2 gap-4'>
+                        <FormField
+                          control={form.control}
+                          name={`testimonials.${index}.client`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Client Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder='e.g. John & Lisa Thomason'
+                                  disabled={isLoading || savePage.isPending}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name={`testimonials.${index}.location`}
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Client Location</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder='e.g. Palo Alto'
+                                  disabled={isLoading || savePage.isPending}
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Settings */}
+            {currentStep === 4 && (
+              <div className='space-y-4 p-2'>
+                <FormField
+                  control={form.control}
+                  name='slug'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Page URL Slug</FormLabel>
+                      <FormControl>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-muted-foreground text-sm'>yoursite.com/p/</span>
+                          <Input
+                            placeholder='your-name-realtor'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </div>
+                      </FormControl>
+                      <p className='text-xs text-muted-foreground mt-1'>
+                        This will be used in the public URL for your portfolio
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='isPublic'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4 mt-6'>
+                      <div className='space-y-0.5'>
+                        <FormLabel className='text-base'>Publish Portfolio</FormLabel>
+                        <p className='text-xs text-muted-foreground'>
+                          When published, your portfolio will be accessible to the public
+                        </p>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isLoading || savePage.isPending}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+          </div>
+
+          <div className='flex justify-between space-x-4 mt-6'>
+            <div>
+              {currentStep > 0 && (
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={handlePrevious}
+                  disabled={savePage.isPending}
+                >
+                  <ChevronLeft className='w-4 h-4 mr-2' />
+                  Previous
+                </Button>
               )}
-            </CardContent>
-            <CardFooter className='flex justify-between'>
-              <Button type='button' variant='outline' onClick={prevStep} disabled={step === 1}>
-                <ArrowLeft className='mr-2 h-4 w-4' /> Back
+            </div>
+
+            <div className='flex space-x-2'>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={savePage.isPending}
+                onClick={() => onOpenChange(false)}
+              >
+                Cancel
               </Button>
 
-              {step < totalSteps ? (
-                <Button type='button' onClick={nextStep}>
-                  Next <ArrowRight className='ml-2 h-4 w-4' />
+              {currentStep < steps.length - 1 ? (
+                <Button
+                  type='button'
+                  onClick={handleNext}
+                  disabled={savePage.isPending}
+                  className='bg-primary/90 hover:bg-primary/95'
+                >
+                  Next
+                  <ChevronRight className='w-4 h-4 ml-2' />
                 </Button>
               ) : (
-                <Button type='submit' className='bg-primary hover:bg-primary/90'>
-                  Create Portfolio <Building className='ml-2 h-4 w-4' />
+                <Button
+                  type='submit'
+                  disabled={savePage.isPending || !form.formState.isValid}
+                  className='bg-primary/90 hover:bg-primary/95 min-w-[100px]'
+                >
+                  {savePage.isPending
+                    ? 'Saving...'
+                    : pageId
+                      ? 'Update Portfolio'
+                      : 'Create Portfolio'}
                 </Button>
               )}
-            </CardFooter>
-          </Card>
-        </form>
-      </div>
-    </div>
+            </div>
+          </div>
+        </Tabs>
+      )}
+    </BaseEntityDialog>
   );
 }

@@ -1,99 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, RefreshCw, Share } from 'lucide-react';
+import { ChevronLeft, RefreshCw, Share } from 'lucide-react';
 
 import LocationSearchTemplate from '@/components/page-builder/location-search-template';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-
-// Sample property data
-const properties = [
-  {
-    id: 1,
-    title: 'Modern Luxury Villa',
-    address: '123 Oceanview Drive, Malibu, CA',
-    price: 2450000,
-    beds: 5,
-    baths: 4,
-    sqft: 3800,
-    type: 'For Sale',
-    featured: true,
-    image: '/placeholder.svg?height=300&width=500',
-    lat: 34.025922,
-    lng: -118.779757,
-  },
-  {
-    id: 2,
-    title: 'Downtown Penthouse',
-    address: '789 Skyline Ave, Los Angeles, CA',
-    price: 1850000,
-    beds: 3,
-    baths: 3.5,
-    sqft: 2200,
-    type: 'For Sale',
-    featured: false,
-    image: '/placeholder.svg?height=300&width=500',
-    lat: 34.052235,
-    lng: -118.243683,
-  },
-  {
-    id: 3,
-    title: 'Cozy Family Home',
-    address: '456 Maple Street, Pasadena, CA',
-    price: 975000,
-    beds: 4,
-    baths: 2,
-    sqft: 2400,
-    type: 'For Sale',
-    featured: false,
-    image: '/placeholder.svg?height=300&width=500',
-    lat: 34.147785,
-    lng: -118.144516,
-  },
-  {
-    id: 4,
-    title: 'Beachfront Condo',
-    address: '101 Shoreline Blvd, Santa Monica, CA',
-    price: 1250000,
-    beds: 2,
-    baths: 2,
-    sqft: 1500,
-    type: 'For Sale',
-    featured: true,
-    image: '/placeholder.svg?height=300&width=500',
-    lat: 34.009124,
-    lng: -118.497886,
-  },
-  {
-    id: 5,
-    title: 'Hillside Retreat',
-    address: '555 Canyon View, Beverly Hills, CA',
-    price: 3750000,
-    beds: 6,
-    baths: 5.5,
-    sqft: 5200,
-    type: 'For Sale',
-    featured: false,
-    image: '/placeholder.svg?height=300&width=500',
-    lat: 34.07362,
-    lng: -118.400352,
-  },
-  {
-    id: 6,
-    title: 'Urban Loft',
-    address: '222 Arts District, Los Angeles, CA',
-    price: 895000,
-    beds: 1,
-    baths: 2,
-    sqft: 1800,
-    type: 'For Sale',
-    featured: false,
-    image: '/placeholder.svg?height=300&width=500',
-    lat: 34.040713,
-    lng: -118.231476,
-  },
-];
+import LocationSearchForm from './update/location-search/page';
+import Logo from '../logo';
 
 interface LocationSearchProps {
   navigateTo: (view: string) => void;
@@ -101,26 +15,39 @@ interface LocationSearchProps {
 
 export default function LocationSearch({ navigateTo }: LocationSearchProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [searchSettings, setSearchSettings] = useState<any>(null);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
-  // Update the properties object to include the new props
-  const [searchSettings, setSearchSettings] = useState({
-    title: 'Find Your Dream Home',
-    description:
-      'Search for properties in your desired location and connect with our expert agents.',
-    backgroundImage: '/placeholder.svg?height=800&width=1600',
-  });
-
-  // In useEffect, add code to load settings from localStorage
   useEffect(() => {
-    const savedData = localStorage.getItem('realtorData');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setSearchSettings({
-        title: parsedData.locationSearchTitle || searchSettings.title,
-        description: parsedData.locationSearchDescription || searchSettings.description,
-        backgroundImage: parsedData.locationSearchBackgroundImage || searchSettings.backgroundImage,
-      });
-    }
+    setIsLoading(true);
+    setSearchSettings({
+      bgImage:
+        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+      title: 'Find Your Dream Home',
+      subtitle:
+        'Search for properties in your desired location and connect with our expert agents.',
+      description:
+        'Our comprehensive property search platform allows you to explore a wide range of residential and commercial properties in your desired location. Whether you\'re looking for a cozy apartment, a spacious family home, or an investment opportunity, our database is regularly updated with the latest listings. Connect with our expert agents who have in-depth knowledge of local markets and can guide you through every step of the buying, selling, or renting process. We\'re committed to helping you find the perfect property that meets all your requirements and fits within your budget.',
+      searchPlaceholder: 'Search for properties in your desired location',
+      buttonText: 'Search',
+      accentColor: '#2563eb',
+      agentName: 'John Doe',
+      agentTitle: 'Real Estate Agent',
+      agentImage:
+        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+      contactInfo: {
+        address: '123 Main St, Anytown, USA',
+        phone: '123-456-7890',
+        email: 'john.doe@example.com',
+      },
+      social: {
+        facebook: 'https://www.facebook.com/john.doe',
+        instagram: 'https://www.instagram.com/john.doe',
+        linkedin: 'https://www.linkedin.com/in/john.doe',
+        twitter: 'https://www.twitter.com/john.doe',
+      },
+    });
+    setIsLoading(false);
   }, []);
 
   const handleShare = () => {
@@ -129,29 +56,33 @@ export default function LocationSearch({ navigateTo }: LocationSearchProps) {
   };
 
   const handleUpdate = () => {
-    // In a real app, this would navigate to a setup page
-    alert('Update functionality to be implemented');
+    setIsUpdateModalOpen(true);
   };
 
-  if (isLoading) {
+  if (isLoading && !searchSettings)
     return (
-      <Card className='flex items-center justify-center min-h-full'>
-        <div className='text-center'>
-          <div className='inline-flex items-center px-3 py-1 rounded-full bg-blue-100 text-blue-600 text-sm font-medium mb-4'>
-            <span className='relative flex h-2 w-2 mr-2'>
-              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-600 opacity-75'></span>
-              <span className='relative inline-flex rounded-full h-2 w-2 bg-blue-600'></span>
-            </span>
-            Loading Properties
+      <div className='flex flex-col justify-center items-center h-screen bg-[#fafbff]'>
+        <div className='relative w-32 h-32'>
+          <div className='absolute inset-0 border-4 border-primary/30 rounded-full'></div>
+          <div className='absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin'></div>
+          <div className='absolute text-[4rem] inset-2 flex items-center justify-center'>
+            <Logo />
           </div>
-          <p className='text-muted-foreground'>Please wait while we load property listings...</p>
         </div>
-      </Card>
+        <div className='mt-6 space-y-2 text-center'>
+          <p className='text-lg font-medium text-gray-900'>Loading Page</p>
+          <p className='text-sm text-gray-500'>Please wait while we fetch the details...</p>
+        </div>
+      </div>
     );
-  }
 
   return (
     <Card className='min-h-full flex flex-col'>
+      <LocationSearchForm
+        open={isUpdateModalOpen}
+        onOpenChange={setIsUpdateModalOpen}
+        isLoading={isLoading}
+      />
       <header className='bg-white shadow-sm p-4'>
         <div className='container mx-auto flex justify-between items-center'>
           <div className='flex items-center'>
@@ -161,7 +92,7 @@ export default function LocationSearch({ navigateTo }: LocationSearchProps) {
               className='mr-2'
               onClick={() => navigateTo('dashboard')}
             >
-              <ArrowLeft className='h-5 w-5' />
+              <ChevronLeft className='h-5 w-5 text-blue-600' />
             </Button>
             <h1 className='text-2xl font-bold text-blue-600'>Property Search</h1>
           </div>
@@ -179,13 +110,8 @@ export default function LocationSearch({ navigateTo }: LocationSearchProps) {
       </header>
       <main className='flex-grow container mx-auto p-4'>
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
-          <div className='h-[calc(100vh-8rem)] overflow-y-auto p-6'>
-            <LocationSearchTemplate
-              properties={properties}
-              title={searchSettings.title}
-              description={searchSettings.description}
-              backgroundImage={searchSettings.backgroundImage}
-            />
+          <div className='h-[calc(100vh-8rem)] overflow-y-auto'>
+            <LocationSearchTemplate data={searchSettings} />
           </div>
         </div>
       </main>
