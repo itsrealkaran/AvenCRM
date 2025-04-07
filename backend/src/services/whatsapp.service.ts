@@ -36,7 +36,6 @@ export class WhatsAppService {
     return prisma.whatsAppAccount.create({
       data: {
         userId,
-        phoneNumberData: accountData.phoneNumberData,
         wabaid: accountData.wabaid,
         accessToken: accountData.accessToken,
         displayName: accountData.displayName
