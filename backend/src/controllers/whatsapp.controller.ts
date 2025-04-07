@@ -60,12 +60,22 @@ export class WhatsAppController extends BaseController {
         return res.status(400).json({ message: 'Missing required fields' });
       }
 
-      const account = await whatsAppService.createAccount(req.user.id, {
-        wabaid,
-        accessToken,
-        phoneNumberData,
-        phoneNumberIds,
-        displayName,
+      const account = await prisma.$transaction(async (tx) => {
+        const account = await whatsAppService.createAccount(req.user!.id, {
+          wabaid,
+          accessToken,
+          phoneNumberIds,
+          displayName,
+        });
+
+        await tx.whatsAppPhoneNumber.createMany({
+          data: phoneNumberData.map((phoneNumber: any) => ({
+            ...phoneNumber,
+            accountId: account.id
+          }))
+        });
+
+        return account;
       });
 
       return res.status(201).json(account);
