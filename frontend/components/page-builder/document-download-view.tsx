@@ -54,22 +54,7 @@ export default function DocumentDownload({ navigateTo }: DocumentDownloadProps) 
     setIsUpdateModalOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <Card className='flex items-center justify-center min-h-full'>
-        <div className='text-center'>
-          <div className='inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-sm font-medium mb-4'>
-            <span className='relative flex h-2 w-2 mr-2'>
-              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-600 opacity-75'></span>
-              <span className='relative inline-flex rounded-full h-2 w-2 bg-emerald-600'></span>
-            </span>
-            Loading Documents
-          </div>
-          <p className='text-muted-foreground'>Please wait while we load your documents...</p>
-        </div>
-      </Card>
-    );
-  }
+  if (isLoading && !documentSettings) return null;
 
   return (
     <Card className='min-h-full flex flex-col'>

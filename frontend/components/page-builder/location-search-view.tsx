@@ -28,8 +28,6 @@ export default function LocationSearch({ navigateTo }: LocationSearchProps) {
         'Search for properties in your desired location and connect with our expert agents.',
       description:
         'Our comprehensive property search platform allows you to explore a wide range of residential and commercial properties in your desired location. Whether you\'re looking for a cozy apartment, a spacious family home, or an investment opportunity, our database is regularly updated with the latest listings. Connect with our expert agents who have in-depth knowledge of local markets and can guide you through every step of the buying, selling, or renting process. We\'re committed to helping you find the perfect property that meets all your requirements and fits within your budget.',
-      searchPlaceholder: 'Search for properties in your desired location',
-      buttonText: 'Search',
       accentColor: '#2563eb',
       agentName: 'John Doe',
       agentTitle: 'Real Estate Agent',
@@ -59,22 +57,7 @@ export default function LocationSearch({ navigateTo }: LocationSearchProps) {
     setIsUpdateModalOpen(true);
   };
 
-  if (isLoading && !searchSettings)
-    return (
-      <div className='flex flex-col justify-center items-center h-screen bg-[#fafbff]'>
-        <div className='relative w-32 h-32'>
-          <div className='absolute inset-0 border-4 border-primary/30 rounded-full'></div>
-          <div className='absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin'></div>
-          <div className='absolute text-[4rem] inset-2 flex items-center justify-center'>
-            <Logo />
-          </div>
-        </div>
-        <div className='mt-6 space-y-2 text-center'>
-          <p className='text-lg font-medium text-gray-900'>Loading Page</p>
-          <p className='text-sm text-gray-500'>Please wait while we fetch the details...</p>
-        </div>
-      </div>
-    );
+  if (isLoading && !searchSettings) return null;
 
   return (
     <Card className='min-h-full flex flex-col'>

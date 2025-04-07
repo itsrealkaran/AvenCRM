@@ -86,7 +86,6 @@ export default function LocationSearchForm({
   // Define form steps
   const steps = [
     { id: 'content', label: 'Content', icon: <Type className='h-4 w-4' /> },
-    { id: 'search', label: 'Search Options', icon: <Search className='h-4 w-4' /> },
     { id: 'appearance', label: 'Appearance', icon: <ImageIcon className='h-4 w-4' /> },
     { id: 'agent', label: 'Agent Info', icon: <Building className='h-4 w-4' /> },
     { id: 'contact', label: 'Contact Info', icon: <Phone className='h-4 w-4' /> },
@@ -263,49 +262,8 @@ export default function LocationSearchForm({
               </div>
             )}
 
-            {/* Search Options */}
-            {currentStep === 1 && (
-              <div className='space-y-4 p-2'>
-                <FormField
-                  control={form.control}
-                  name='searchPlaceholder'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Search Placeholder Text</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder='e.g., Enter your address...'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='buttonText'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Button Text</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder='e.g., Search'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
             {/* Appearance */}
-            {currentStep === 2 && (
+            {currentStep === 1 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -355,7 +313,7 @@ export default function LocationSearchForm({
             )}
 
             {/* Agent Info */}
-            {currentStep === 3 && (
+            {currentStep === 2 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -414,7 +372,7 @@ export default function LocationSearchForm({
             )}
 
             {/* Contact Info */}
-            {currentStep === 4 && (
+            {currentStep === 3 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -473,7 +431,7 @@ export default function LocationSearchForm({
             )}
 
             {/* Social Media */}
-            {currentStep === 5 && (
+            {currentStep === 4 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -550,7 +508,7 @@ export default function LocationSearchForm({
             )}
 
             {/* Settings */}
-            {currentStep === 6 && (
+            {currentStep === 5 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
