@@ -15,8 +15,8 @@ import { Label } from '@/components/ui/label';
 interface RegisterNumberModalProps {
   open: boolean;
   onClose: () => void;
-  onRegister: (pin: string) => void;
-  onCreatePin: (pin: string) => void;
+  onRegister: (pin: string) => Promise<void>;
+  onCreatePin: (pin: string) => Promise<void>;
 }
 
 export function RegisterNumberModal({
@@ -27,16 +27,29 @@ export function RegisterNumberModal({
 }: RegisterNumberModalProps) {
   const [pin, setPin] = useState('');
   const [isCreatingPin, setIsCreatingPin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!pin || pin.length !== 6) {
       toast.error('Please enter a valid 6-digit PIN');
       return;
     }
-    if (isCreatingPin) {
-      onCreatePin(pin);
-    } else {
-      onRegister(pin);
+    setIsLoading(true);
+    try {
+      if (isCreatingPin) {
+        onCreatePin(pin).then(() => {
+          onClose();
+        });
+      } else {
+        onRegister(pin).then(() => {
+          onClose();
+        });
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      toast.error('An error occurred while submitting the form. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -64,8 +77,9 @@ export function RegisterNumberModal({
               placeholder={isCreatingPin ? 'Create a new PIN' : 'Enter your PIN'}
             />
           </div>
-          <Button className='w-full' onClick={handleSubmit}>
-            {isCreatingPin ? 'Create PIN' : 'Verify PIN'}
+
+          <Button className='w-full' onClick={handleSubmit} disabled={isLoading}>
+            {isLoading ? 'Processing...' : isCreatingPin ? 'Create PIN' : 'Verify PIN'}
           </Button>
           {!isCreatingPin && (
             <p className='text-center text-sm text-muted-foreground'>

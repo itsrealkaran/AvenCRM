@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { MessageSquare, Phone, Search, Send } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+
+import { RegisterNumberModal } from './register-number';
 
 type Chat = {
   phoneNumber: string;
@@ -55,6 +58,7 @@ type PhoneNumber = {
   phoneNumber: string;
   phoneNumberId: string;
   status: string;
+  isRegistered: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -77,9 +81,11 @@ interface SSEMessage {
 const MessagesList = ({
   phoneNumbers,
   accessToken,
+  wabaId,
 }: {
   phoneNumbers: PhoneNumber[];
   accessToken: string;
+  wabaId: string;
 }) => {
   const [chats, setChats] = useState<PaginatedResponse<Chat>>({
     data: [],
@@ -104,9 +110,9 @@ const MessagesList = ({
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [phoneNumberId, setPhoneNumberId] = useState<string>(phoneNumbers[0].phoneNumberId);
   const [conversationCache, setConversationCache] = useState<Record<string, Message[]>>({});
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const eventSourceRef = useRef<EventSource | null>(null);
   // Add scroll to bottom function
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -436,6 +442,107 @@ const MessagesList = ({
     setPhoneNumberId(value);
   };
 
+  const handleRegisterAccount = async (pin: string) => {
+    console.log(accessToken, 'access token');
+    try {
+      // @ts-ignore
+      FB.api(
+        `/${phoneNumberId}/register?access_token=${accessToken}`,
+        'POST',
+        { pin, messaging_product: 'whatsapp' },
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            const id = phoneNumbers.find(
+              (phoneNumber) => phoneNumber.phoneNumberId === phoneNumberId
+            )?.id;
+            if (id) {
+              whatsAppService.updateRegisteredNumberStatus(id);
+              toast.success('Account registered successfully');
+            } else {
+              toast.error('Phone number not found');
+            }
+          } else {
+            toast.error(response.error.error_user_msg || response.error.message);
+          }
+        }
+      );
+
+      // @ts-ignore
+      FB.api(`/${wabaId}/subscribed_apps?access_token=${accessToken}`, 'POST', (response: any) => {
+        console.log('Response:', response);
+        if (response && !response.error) {
+          toast.success('Account subscribed successfully');
+        } else {
+          toast.error(response.error.error_user_msg || response.error.message);
+        }
+      });
+
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Error registering account:', error);
+      const errorMessage = error.response?.data?.message || 'Failed to register account';
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleCreatePin = async (pin: string) => {
+    try {
+      console.log('Creating pin for account:', phoneNumberId, pin);
+      // @ts-ignore
+      FB.api(`/${phoneNumberId}?access_token=${accessToken}`, 'POST', { pin }, (response: any) => {
+        console.log('Response:', response);
+        if (response && !response.error) {
+          toast.success('Pin created successfully');
+        } else {
+          toast.error(response.error.error_user_msg || response.error.message);
+        }
+      });
+
+      // @ts-ignore
+      FB.api(
+        `/${phoneNumberId}/register?access_token=${accessToken}`,
+        'POST',
+        { pin, messaging_product: 'whatsapp' },
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            toast.success('Account registered successfully');
+          } else {
+            toast.error(response.error.error_user_msg || response.error.message);
+          }
+        }
+      );
+
+      // @ts-ignore
+      FB.api(
+        `/${phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
+        'POST',
+        (response: any) => {
+          console.log('Response:', response);
+          if (response && !response.error) {
+            toast.success('Account subscribed successfully');
+          }
+        }
+      );
+
+      window.location.reload();
+    } catch (error) {
+      console.error('Error creating pin:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (
+      phoneNumbers.find(
+        (phoneNumber) =>
+          phoneNumber.phoneNumberId === phoneNumberId && phoneNumber.isRegistered === false
+      )
+    ) {
+      setIsRegisteringModalOpen(true);
+    }
+  }, [messages]);
+
   return (
     <div className='flex h-[calc(100vh-200px)] border rounded-lg overflow-auto max-h-[480px]'>
       {/* Left Panel - Chat List */}
@@ -618,6 +725,12 @@ const MessagesList = ({
           </div>
         )}
       </div>
+      <RegisterNumberModal
+        open={isRegisteringModalOpen}
+        onClose={() => setIsRegisteringModalOpen(false)}
+        onRegister={handleRegisterAccount}
+        onCreatePin={handleCreatePin}
+      />
     </div>
   );
 };

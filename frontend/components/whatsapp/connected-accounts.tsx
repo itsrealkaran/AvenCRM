@@ -19,9 +19,11 @@ import { RegisterNumberModal } from './register-number';
 export function ConnectedAccounts({
   accounts,
   accessToken,
+  wabaId,
 }: {
   accounts: WhatsAppPhoneNumberData[];
   accessToken: string;
+  wabaId: string;
 }) {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -81,18 +83,16 @@ export function ConnectedAccounts({
       );
 
       // @ts-ignore
-      FB.api(
-        `/${registeringAccount.phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
-        'POST',
-        (response: any) => {
-          console.log('Response:', response);
-          if (response && !response.error) {
-            toast.success('Account subscribed successfully');
-          } else {
-            toast.error(response.error.error_user_msg || response.error.message);
-          }
+      FB.api(`/${wabaId}/subscribed_apps?access_token=${accessToken}`, 'POST', (response: any) => {
+        console.log('Response:', response);
+        if (response && !response.error) {
+          toast.success('Account subscribed successfully');
+        } else {
+          toast.error(response.error.error_user_msg || response.error.message);
         }
-      );
+      });
+
+      window.location.reload();
     } catch (error: any) {
       console.error('Error registering account:', error);
       const errorMessage = error.response?.data?.message || 'Failed to register account';
@@ -123,7 +123,7 @@ export function ConnectedAccounts({
 
       // @ts-ignore
       FB.api(
-        `/${registeringAccount.phoneNumberId}/register?access_token=${accessToken}`,
+        `/${wabaId}/register?access_token=${accessToken}`,
         'POST',
         { pin, messaging_product: 'whatsapp' },
         (response: any) => {
@@ -147,6 +147,8 @@ export function ConnectedAccounts({
           }
         }
       );
+
+      window.location.reload();
     } catch (error) {
       console.error('Error creating pin:', error);
     }

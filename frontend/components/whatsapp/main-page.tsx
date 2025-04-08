@@ -283,12 +283,14 @@ export default function WhatsAppCampaignsPage() {
               <MessagesList
                 phoneNumbers={whatsAppAccount.data?.data?.phoneNumbers || []}
                 accessToken={whatsAppAccount.data?.data?.accessToken || ''}
+                wabaId={whatsAppAccount.data?.data?.wabaid || ''}
               />
             </TabsContent>
             <TabsContent value='accounts'>
               <ConnectedAccounts
                 accounts={whatsAppAccount.data?.data?.phoneNumbers}
                 accessToken={whatsAppAccount.data?.data?.accessToken || ''}
+                wabaId={whatsAppAccount.data?.data?.wabaid || ''}
               />
             </TabsContent>
             <TabsContent value='audience'>
