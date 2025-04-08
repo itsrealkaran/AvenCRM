@@ -29,6 +29,7 @@ export class WhatsAppController extends BaseController {
             `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}`,
           );
           const data: any = await response.json();
+          console.log(data, 'data from get access token');
           return res.status(200).json({ access_token: data.access_token });
         } catch (error: any) {
           console.error('Facebook API Error:', error);
@@ -60,12 +61,22 @@ export class WhatsAppController extends BaseController {
         return res.status(400).json({ message: 'Missing required fields' });
       }
 
-      const account = await whatsAppService.createAccount(req.user.id, {
-        wabaid,
-        accessToken,
-        phoneNumberData,
-        phoneNumberIds,
-        displayName,
+      const account = await prisma.$transaction(async (tx) => {
+        const account = await whatsAppService.createAccount(req.user!.id, {
+          wabaid,
+          accessToken,
+          phoneNumberIds,
+          displayName,
+        });
+
+        await tx.whatsAppPhoneNumber.createMany({
+          data: phoneNumberData.map((phoneNumber: any) => ({
+            ...phoneNumber,
+            accountId: account.id
+          }))
+        });
+
+        return account;
       });
 
       return res.status(201).json(account);
@@ -186,6 +197,32 @@ export class WhatsAppController extends BaseController {
       return res.status(200).json({ message: 'Account deleted successfully' });
     } catch (error) {
       logger.error('Error deleting WhatsApp account:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+
+  async updateRegisteredNumberStatus(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const { id } = req.body;
+
+      const phoneNumber = await prisma.whatsAppPhoneNumber.update({
+        where: { id },
+        data: {
+          isRegistered: true
+        }
+      });
+
+      if (!phoneNumber) {
+        return res.status(404).json({ message: 'Phone number not found' });
+      }
+
+      return res.status(200).json({ message: 'Phone number registered successfully' });
+    } catch (error) {
+      logger.error('Error registering WhatsApp number:', error);
       return res.status(500).json({ message: 'Internal server error' });
     }
   }

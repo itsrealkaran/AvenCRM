@@ -15,9 +15,11 @@ export enum WhatsAppCampaignStatus {
 
 export interface WhatsAppPhoneNumberData {
   phoneNumberId: string;
+  id: string;
   name: string;
   phoneNumber: string;
   codeVerificationStatus: string;
+  isRegistered: boolean;
 }
 
 export interface WhatsAppAccount {
