@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -254,7 +254,7 @@ export default function WhatsAppCampaignsPage() {
 
       {hasWhatsAppAccount ? (
         <>
-          <MetricsCards />
+          <MetricsCards campaigns={whatsAppCampaigns.data?.data || []} />
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
