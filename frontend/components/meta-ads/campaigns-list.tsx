@@ -1,25 +1,19 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Box, ListItemIcon, MenuItem } from '@mui/material';
+import { MoreHorizontal } from 'lucide-react';
 import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+  MaterialReactTable,
+  MRT_ToggleFiltersButton,
+  useMaterialReactTable,
+} from 'material-react-table';
+import { FaEdit, FaPause, FaPlay, FaTrash } from 'react-icons/fa';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
@@ -29,6 +23,8 @@ interface Campaign {
   objective: string;
   status: string;
   created_time: string;
+  budget?: string;
+  reach?: string;
 }
 
 interface CampaignsListProps {
@@ -44,9 +40,9 @@ export function CampaignsList({
   adAccountId,
   campaigns,
 }: CampaignsListProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
   const onEditCampaign = (campaign: Campaign) => {
@@ -78,26 +74,16 @@ export function CampaignsList({
     });
   };
 
-  const columns: ColumnDef<Campaign>[] = [
+  const columns = [
     {
       accessorKey: 'name',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Name
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: 'Name',
     },
     {
-      accessorKey: 'type',
+      accessorKey: 'objective',
       header: 'Type',
-      cell: ({ row }) => {
-        const value = row.getValue('type') as string;
+      Cell: ({ row }: any) => {
+        const value = row.original.objective;
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${
@@ -113,19 +99,9 @@ export function CampaignsList({
     },
     {
       accessorKey: 'budget',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Budget
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const value = row.getValue('budget') as string;
+      header: 'Budget',
+      Cell: ({ row }: any) => {
+        const value = row.original.budget;
         return (
           <span className='px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap'>
             {value ? `$${value}` : 'N/A'}
@@ -135,23 +111,13 @@ export function CampaignsList({
     },
     {
       accessorKey: 'reach',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Reach
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: 'Reach',
     },
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
-        const value = row.getValue('status') as string;
+      Cell: ({ row }: any) => {
+        const value = row.original.status;
         return (
           <span
             className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -165,147 +131,123 @@ export function CampaignsList({
     },
     {
       accessorKey: 'created_time',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Created At
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        const date = new Date(row.getValue('created_time'));
+      header: 'Created At',
+      Cell: ({ row }: any) => {
+        const date = new Date(row.original.created_time);
         return date.toLocaleDateString();
       },
     },
-    {
-      id: 'actions',
-      cell: ({ row }) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuItem onClick={() => onEditCampaign?.(row.original)}>
-              Edit Campaign
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => onDeleteCampaign?.(row.original.id)}
-              className='text-red-600'
-            >
-              Delete Campaign
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
   ];
 
-  const table = useReactTable({
-    data: campaigns,
+  const table = useMaterialReactTable({
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
+    data: campaigns,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
+    },
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '340px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search campaigns...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+          <MRT_ToggleFiltersButton table={table} />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          <Button
+            onClick={() => {
+              onCreateCampaign();
+            }}
+            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
+            disabled={isLoading}
+          >
+            Create Campaign
+          </Button>
+        </Box>
+      </Box>
+    ),
+    renderRowActionMenuItems: ({ row, closeMenu }) => [
+      <MenuItem
+        key={0}
+        onClick={() => {
+          onEditCampaign(row.original);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <FaEdit className='size-4' />
+        </ListItemIcon>
+        {row.original.status === 'ACTIVE' ? 'Pause Campaign' : 'Resume Campaign'}
+      </MenuItem>,
+      <MenuItem
+        key={1}
+        onClick={() => {
+          onDeleteCampaign(row.original.id);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-red-600'
+      >
+        <ListItemIcon>
+          <FaTrash className='text-red-600 size-4' />
+        </ListItemIcon>
+        Delete Campaign
+      </MenuItem>,
+    ],
     state: {
-      sorting,
+      isLoading,
     },
   });
 
   return (
-    <>
-      <Card className='border rounded-lg'>
-        <CardHeader className='border-b'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <CardTitle className='text-xl'>Campaigns</CardTitle>
-              <CardDescription>View and manage your Facebook ad campaigns</CardDescription>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' className='h-8 w-8 p-0'>
-                  <span className='sr-only'>Open menu</span>
-                  <MoreHorizontal className='h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem>Export Campaigns</DropdownMenuItem>
-                <DropdownMenuItem>Import Campaigns</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className='mt-4'>
-            <Input placeholder='Filter campaigns...' className='max-w-sm' />
-          </div>
-        </CardHeader>
-        <CardContent className='p-0'>
-          {campaigns.length > 0 && (
-            <div className='overflow-auto'>
-              <table className='w-full min-w-[1000px]'>
-                <thead>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className='h-12 px-4 text-left align-middle text-sm font-medium text-muted-foreground bg-gray-50/50'
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className='border-t hover:bg-gray-50/50 cursor-pointer'
-                      onClick={() => {
-                        setSelectedCampaign(row.original);
-                        setIsDetailsOpen(true);
-                      }}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className='p-4 align-middle text-sm'
-                          onClick={(e) => {
-                            // Prevent row click when clicking on actions
-                            if (cell.column.id === 'actions') {
-                              e.stopPropagation();
-                            }
-                          }}
-                        >
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {campaigns.length === 0 && (
-            <div className='text-center py-10'>
-              <h3 className='text-lg font-semibold mb-2'>No campaigns yet</h3>
-              <p className='text-muted-foreground mb-4'>
-                Create your first campaign to get started
-              </p>
-              <Button onClick={onCreateCampaign} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
-                Create Campaign
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    <Card>
+      <CardContent className='px-4 py-2'>
+        <MaterialReactTable table={table} />
+      </CardContent>
 
       {/* Campaign Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
@@ -354,8 +296,6 @@ export function CampaignsList({
                   </p>
                 </div>
 
-                {/* Add more campaign details as needed */}
-
                 <div className='col-span-2 pt-4 flex justify-end space-x-2'>
                   <Button
                     variant='outline'
@@ -383,6 +323,6 @@ export function CampaignsList({
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </Card>
   );
 }

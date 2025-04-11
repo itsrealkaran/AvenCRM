@@ -183,7 +183,6 @@ export function CampaignsList({
     enableStickyHeader: true,
     initialState: {
       showGlobalFilter: true,
-      //density: 'compact',
       columnPinning: {
         left: ['mrt-row-select'],
         right: ['mrt-row-actions'],

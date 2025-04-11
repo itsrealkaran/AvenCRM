@@ -1,27 +1,67 @@
+import { whatsAppService } from '@/api/whatsapp.service';
+import { useQuery } from '@tanstack/react-query';
 import { FaChartBar, FaClock, FaUsers, FaWhatsapp } from 'react-icons/fa';
 
 import { Card, CardContent } from '@/components/ui/card';
 
-export function MetricsCards() {
+export function MetricsCards({ campaigns }: { campaigns: any[] }) {
+  const { data: metricsData } = useQuery({
+    queryKey: ['metrics'],
+    queryFn: () => whatsAppService.getAccountStats(),
+  });
+
+  const thisMonthCampaigns = campaigns.filter((campaign) => {
+    const campaignDate = new Date(campaign.createdAt);
+    const thisMonth = new Date();
+    thisMonth.setDate(1);
+    return campaignDate >= thisMonth;
+  });
+
+  const lastMonthCampaigns = campaigns.filter((campaign) => {
+    const campaignDate = new Date(campaign.createdAt);
+    const lastMonth = new Date();
+    lastMonth.setDate(1);
+    return campaignDate >= lastMonth;
+  });
+
+  // figure out the growth/decline percentage
+  const campaignGrowthPercentage =
+    ((thisMonthCampaigns.length - lastMonthCampaigns.length) / lastMonthCampaigns.length) * 100;
+
   const metrics = [
     {
       title: 'Total Campaigns',
-      value: '8',
-      change: '+10%',
+      value: thisMonthCampaigns.length,
+      change:
+        campaigns.length > 0
+          ? campaignGrowthPercentage >= 0
+            ? `+${campaignGrowthPercentage}%`
+            : `${campaignGrowthPercentage}%`
+          : '0%',
       icon: FaWhatsapp,
       iconColor: 'text-[#25D366]', // Updated icon color
     },
     {
-      title: 'Active Subscribers',
-      value: '1,234',
-      change: '+5%',
+      title: 'Active Conversations',
+      value: metricsData?.activeConversations,
+      change:
+        metricsData?.activeConversationsChange !== undefined
+          ? metricsData.activeConversationsChange >= 0
+            ? `+${metricsData.activeConversationsChange}%`
+            : `${metricsData.activeConversationsChange}%`
+          : '0%',
       icon: FaUsers,
       iconColor: 'text-blue-500',
     },
     {
       title: 'Message Open Rate',
-      value: '68%',
-      change: '+3%',
+      value: metricsData?.messageOpenRate,
+      change:
+        metricsData?.messageOpenRateChange !== undefined
+          ? metricsData.messageOpenRateChange >= 0
+            ? `+${metricsData.messageOpenRateChange}%`
+            : `${metricsData.messageOpenRateChange}%`
+          : '0%',
       icon: FaChartBar,
       iconColor: 'text-purple-500',
     },

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -142,7 +142,7 @@ export default function WhatsAppCampaignsPage() {
         config_id: '1931062140756222',
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'ads_management',
+        scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management',
       }
     );
   };
@@ -260,7 +260,7 @@ export default function WhatsAppCampaignsPage() {
 
       {hasWhatsAppAccount ? (
         <>
-          <MetricsCards />
+          <MetricsCards campaigns={whatsAppCampaigns.data?.data || []} />
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
@@ -283,12 +283,14 @@ export default function WhatsAppCampaignsPage() {
               <MessagesList
                 phoneNumbers={whatsAppAccount.data?.data?.phoneNumbers || []}
                 accessToken={whatsAppAccount.data?.data?.accessToken || ''}
+                wabaId={whatsAppAccount.data?.data?.wabaid || ''}
               />
             </TabsContent>
             <TabsContent value='accounts'>
               <ConnectedAccounts
                 accounts={whatsAppAccount.data?.data?.phoneNumbers}
                 accessToken={whatsAppAccount.data?.data?.accessToken || ''}
+                wabaId={whatsAppAccount.data?.data?.wabaid || ''}
               />
             </TabsContent>
             <TabsContent value='audience'>

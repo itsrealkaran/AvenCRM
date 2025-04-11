@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { MessageSquare, Phone, Search, Send } from 'lucide-react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,8 @@ import {
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+
+import { RegisterNumberModal } from './register-number';
 
 type Chat = {
   phoneNumber: string;
@@ -55,6 +58,7 @@ type PhoneNumber = {
   phoneNumber: string;
   phoneNumberId: string;
   status: string;
+  isRegistered: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -77,9 +81,11 @@ interface SSEMessage {
 const MessagesList = ({
   phoneNumbers,
   accessToken,
+  wabaId,
 }: {
   phoneNumbers: PhoneNumber[];
   accessToken: string;
+  wabaId: string;
 }) => {
   const [chats, setChats] = useState<PaginatedResponse<Chat>>({
     data: [],
@@ -104,9 +110,9 @@ const MessagesList = ({
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [phoneNumberId, setPhoneNumberId] = useState<string>(phoneNumbers[0].phoneNumberId);
   const [conversationCache, setConversationCache] = useState<Record<string, Message[]>>({});
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
+  const eventSourceRef = useRef<EventSource | null>(null);
   // Add scroll to bottom function
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -436,6 +442,17 @@ const MessagesList = ({
     setPhoneNumberId(value);
   };
 
+  useEffect(() => {
+    if (
+      phoneNumbers.find(
+        (phoneNumber) =>
+          phoneNumber.phoneNumberId === phoneNumberId && phoneNumber.isRegistered === false
+      )
+    ) {
+      setIsRegisteringModalOpen(true);
+    }
+  }, [messages]);
+
   return (
     <div className='flex h-[calc(100vh-200px)] border rounded-lg overflow-auto max-h-[480px]'>
       {/* Left Panel - Chat List */}
@@ -618,6 +635,21 @@ const MessagesList = ({
           </div>
         )}
       </div>
+      <RegisterNumberModal
+        open={isRegisteringModalOpen}
+        onClose={() => setIsRegisteringModalOpen(false)}
+        accessToken={accessToken}
+        phoneNumberId={phoneNumberId}
+        wabaId={wabaId}
+        phoneNumbers={phoneNumbers.map((phoneNumber) => ({
+          id: phoneNumber.id,
+          phoneNumberId: phoneNumber.phoneNumberId,
+          name: phoneNumber.phoneNumber,
+          phoneNumber: phoneNumber.phoneNumber,
+          codeVerificationStatus: phoneNumber.status,
+          isRegistered: phoneNumber.isRegistered,
+        }))}
+      />
     </div>
   );
 };

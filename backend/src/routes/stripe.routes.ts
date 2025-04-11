@@ -17,7 +17,8 @@ declare global {
 
 const router: Router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
+  //@ts-ignore
+  apiVersion: '2024-11-20.acacia'
 });
 
 // Webhook handler for Stripe events

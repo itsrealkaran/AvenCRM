@@ -204,4 +204,9 @@ export const whatsAppService = {
     });
     return response.data;
   },
+
+  getAccountStats: async () => {
+    const response = await api.get('/whatsapp/accounts/stats');
+    return response.data;
+  },
 };

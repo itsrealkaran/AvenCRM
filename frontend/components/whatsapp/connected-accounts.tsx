@@ -19,9 +19,11 @@ import { RegisterNumberModal } from './register-number';
 export function ConnectedAccounts({
   accounts,
   accessToken,
+  wabaId,
 }: {
   accounts: WhatsAppPhoneNumberData[];
   accessToken: string;
+  wabaId: string;
 }) {
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -81,18 +83,16 @@ export function ConnectedAccounts({
       );
 
       // @ts-ignore
-      FB.api(
-        `/${registeringAccount.phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
-        'POST',
-        (response: any) => {
-          console.log('Response:', response);
-          if (response && !response.error) {
-            toast.success('Account subscribed successfully');
-          } else {
-            toast.error(response.error.error_user_msg || response.error.message);
-          }
+      FB.api(`/${wabaId}/subscribed_apps?access_token=${accessToken}`, 'POST', (response: any) => {
+        console.log('Response:', response);
+        if (response && !response.error) {
+          toast.success('Account subscribed successfully');
+        } else {
+          toast.error(response.error.error_user_msg || response.error.message);
         }
-      );
+      });
+
+      window.location.reload();
     } catch (error: any) {
       console.error('Error registering account:', error);
       const errorMessage = error.response?.data?.message || 'Failed to register account';
@@ -123,7 +123,7 @@ export function ConnectedAccounts({
 
       // @ts-ignore
       FB.api(
-        `/${registeringAccount.phoneNumberId}/register?access_token=${accessToken}`,
+        `/${wabaId}/register?access_token=${accessToken}`,
         'POST',
         { pin, messaging_product: 'whatsapp' },
         (response: any) => {
@@ -147,6 +147,8 @@ export function ConnectedAccounts({
           }
         }
       );
+
+      window.location.reload();
     } catch (error) {
       console.error('Error creating pin:', error);
     }
@@ -202,35 +204,33 @@ export function ConnectedAccounts({
                 <div className='space-y-2'>
                   <p className='text-sm text-muted-foreground'>Phone: {account.phoneNumber}</p>
                   <div className='flex space-x-2 mt-4'>
-                    {account.codeVerificationStatus === 'NOT_VERIFIED' && (
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={() => {
-                          setIsRegisteringModalOpen(true);
-                          setRegisteringAccount({
-                            phoneNumberId: account.phoneNumberId,
-                            id: account.id,
-                          });
-                        }}
-                        disabled={account.isRegistered}
-                      >
-                        {registeringAccount?.id === account.id ? (
-                          <>
-                            <span className='animate-spin h-3 w-3 mr-1 border-2 border-t-transparent border-blue-600 rounded-full'></span>
-                            Registering...
-                          </>
-                        ) : account.isRegistered ? (
-                          <>
-                            <FaCheck className='w-3 h-3 mr-1' /> Registered
-                          </>
-                        ) : (
-                          <>
-                            <FaCheck className='w-3 h-3 mr-1' /> Register
-                          </>
-                        )}
-                      </Button>
-                    )}
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => {
+                        setIsRegisteringModalOpen(true);
+                        setRegisteringAccount({
+                          phoneNumberId: account.phoneNumberId,
+                          id: account.id,
+                        });
+                      }}
+                      disabled={account.isRegistered}
+                    >
+                      {registeringAccount?.id === account.id ? (
+                        <>
+                          <span className='animate-spin h-3 w-3 mr-1 border-2 border-t-transparent border-blue-600 rounded-full'></span>
+                          Registering...
+                        </>
+                      ) : account.isRegistered ? (
+                        <>
+                          <FaCheck className='w-3 h-3 mr-1' /> Registered
+                        </>
+                      ) : (
+                        <>
+                          <FaCheck className='w-3 h-3 mr-1' /> Register
+                        </>
+                      )}
+                    </Button>
                     <Button
                       variant='outline'
                       size='sm'
@@ -282,8 +282,10 @@ export function ConnectedAccounts({
       <RegisterNumberModal
         open={isRegisteringModalOpen}
         onClose={() => setIsRegisteringModalOpen(false)}
-        onRegister={handleRegisterAccount}
-        onCreatePin={handleCreatePin}
+        accessToken={accessToken}
+        phoneNumberId={registeringAccount?.phoneNumberId || ''}
+        wabaId={wabaId}
+        phoneNumbers={accounts}
       />
     </Card>
   );

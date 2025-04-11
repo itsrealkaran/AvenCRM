@@ -178,6 +178,12 @@ export class WhatsAppController extends BaseController {
 
       const accountId = req.params.id;
 
+      await prisma.whatsAppPhoneNumber.deleteMany({
+        where: {
+          accountId: accountId
+        }
+      });
+
       const account = await prisma.whatsAppAccount.findUnique({
         where: { id: accountId }
       });
@@ -1012,7 +1018,7 @@ export class WhatsAppController extends BaseController {
     //     return res.status(403).json({ message: 'Forbidden' });
     //   }
 
-      
+
 
     //   const stats = {
     //     totalMessages,
@@ -1097,7 +1103,7 @@ export class WhatsAppController extends BaseController {
               for (const message of change.value.messages) {
                 const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
                 let newMessage;
-                
+
                 if (recipient) {
                   if (!recipient.name && change.value.contacts[0].profile.name) {
                     await prisma.whatsAppRecipient.update({
@@ -1256,7 +1262,7 @@ export class WhatsAppController extends BaseController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
-  
+
   async saveMessage(req: Request, res: Response) {
     try {
       if (!req.user) {
@@ -1295,7 +1301,7 @@ export class WhatsAppController extends BaseController {
           }
         });
       }
-      
+
       await prisma.whatsAppMessage.create({
         data: {
           recipientId: recipient.id,
@@ -1338,11 +1344,11 @@ export class WhatsAppController extends BaseController {
       // Group messages by phone number
       const groupedMessages = messages.reduce((acc, message) => {
         if (!message.phoneNumber) return acc;
-        
+
         if (!acc[message.phoneNumber]) {
           acc[message.phoneNumber] = [];
         }
-        
+
         acc[message.phoneNumber].push(message);
         return acc;
       }, {} as Record<string, typeof messages>);
@@ -1350,16 +1356,16 @@ export class WhatsAppController extends BaseController {
       // Format the response
       const formattedResponse = Object.entries(groupedMessages).map(([phoneNumber, msgs]) => {
         // Sort messages by date (newest first)
-        const sortedMessages = msgs.sort((a, b) => 
+        const sortedMessages = msgs.sort((a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        
+
         // Get the last message
         const lastMessage = sortedMessages[0];
-        
+
         // Count unread messages (assuming status 'PENDING' means unread)
         const unreadCount = msgs.filter(msg => msg.status === 'PENDING').length;
-        
+
         return {
           id: phoneNumber, // Using phone number as ID for simplicity
           phoneNumber,
@@ -1442,7 +1448,7 @@ export class WhatsAppController extends BaseController {
       }));
 
       const totalPages = Math.ceil(totalCount / limit);
-      
+
       return res.status(200).json({
         data: phoneNumbers,
         pagination: {
@@ -1519,7 +1525,73 @@ export class WhatsAppController extends BaseController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
-  
+
+  async getAccountStats(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      // Get messages for last 60 days
+      const messages = await prisma.whatsAppMessage.findMany({
+        where: {
+          whatsAppPhoneNumber: {
+            account: { userId: req.user.id }
+          },
+          createdAt: {
+            gte: new Date(new Date().setDate(new Date().getDate() - 60)),
+            lte: new Date()
+          }
+        },
+        select: {
+          isOutbound: true,
+          createdAt: true,
+          phoneNumber: true,
+          status: true
+        }
+      });
+
+      // Split messages into current and previous 30 days
+      const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
+      const sixtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 60));
+
+      const currentPeriodMessages = messages.filter(msg => 
+        msg.createdAt >= thirtyDaysAgo && msg.isOutbound
+      );
+      const previousPeriodMessages = messages.filter(msg => 
+        msg.createdAt >= sixtyDaysAgo && msg.createdAt < thirtyDaysAgo && msg.isOutbound
+      );
+
+      // Calculate open rates for both periods
+      const currentOpenRate = currentPeriodMessages.length > 0
+        ? Math.round((currentPeriodMessages.filter(msg => msg.status === 'READ').length / currentPeriodMessages.length) * 100)
+        : 0;
+
+      const previousOpenRate = previousPeriodMessages.length > 0
+        ? Math.round((previousPeriodMessages.filter(msg => msg.status === 'READ').length / previousPeriodMessages.length) * 100)
+        : 0;
+
+      // Calculate growth/decline percentage
+      const openRateChange = previousOpenRate > 0
+        ? Math.round(((currentOpenRate - previousOpenRate) / previousOpenRate) * 100)
+        : 0;
+
+      const messageOpenRate = currentOpenRate;
+      const messageOpenRateChange = openRateChange;
+
+      return res.status(200).json({
+        activeConversations: currentPeriodMessages.length,
+        activeConversationsChange: previousPeriodMessages.length > 0 
+          ? Math.round(((currentPeriodMessages.length - previousPeriodMessages.length) / previousPeriodMessages.length) * 100)
+          : 0,
+        messageOpenRate,
+        messageOpenRateChange
+      });
+    } catch (error) {
+      logger.error('Error fetching WhatsApp account stats:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
 }
 
 export const whatsAppController = new WhatsAppController(); 

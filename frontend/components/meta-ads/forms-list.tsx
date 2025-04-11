@@ -1,25 +1,15 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from '@tanstack/react-table';
-import { ArrowUpDown, MoreHorizontal } from 'lucide-react';
+import { Box, ListItemIcon, MenuItem } from '@mui/material';
+import { MoreHorizontal } from 'lucide-react';
+import { MaterialReactTable, useMaterialReactTable } from 'material-react-table';
+import { FaEdit, FaTrash } from 'react-icons/fa';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 
@@ -39,169 +29,148 @@ interface FormsListProps {
 }
 
 export function FormsList({ data, onCreateForm, accessToken }: FormsListProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [selectedForm, setSelectedForm] = useState<Form | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const columns: ColumnDef<Form>[] = [
+  const columns = [
     {
       accessorKey: 'name',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Name
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
+      header: 'Name',
     },
     {
       accessorKey: 'fields',
       header: 'Fields',
-      cell: ({ row }) => {
+      Cell: ({ row }: any) => {
         const fields = row.original.questions as Form['questions'];
         return Array.isArray(fields) ? fields.length : 0;
       },
     },
     {
       accessorKey: 'submissions',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Submissions
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
-      },
-      cell: ({ row }) => {
-        return row.original.submissions || 0; // Default to 0 if submissions is not set
+      header: 'Submissions',
+      Cell: ({ row }: any) => {
+        return row.original.submissions || 0;
       },
     },
     {
       accessorKey: 'createdAt',
-      header: ({ column }) => {
-        return (
-          <Button
-            variant='ghost'
-            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
-          >
-            Created At
-            <ArrowUpDown className='ml-2 h-4 w-4' />
-          </Button>
-        );
+      header: 'Created At',
+      Cell: ({ row }: any) => {
+        return new Date(row.original.createdAt).toLocaleDateString();
       },
-      cell: ({ row }) => {
-        return new Date(row.getValue('createdAt')).toLocaleDateString();
-      },
-    },
-    {
-      id: 'select',
-      cell: ({ row }) => (
-        <div
-          className='cursor-pointer'
-          onClick={() => {
-            setSelectedForm(row.original);
-            setIsDetailsOpen(true);
-          }}
-        >
-          <Button variant='ghost' size='sm'>
-            View Details
-          </Button>
-        </div>
-      ),
     },
   ];
 
-  const table = useReactTable({
-    data: data,
+  const table = useMaterialReactTable({
     columns,
-    getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
+    data,
+    enableRowSelection: true,
+    enableColumnResizing: true,
+    enableColumnOrdering: true,
+    enableGlobalFilter: true,
+    enableColumnFilters: true,
+    enablePagination: true,
+    enableSorting: true,
+    enableRowActions: true,
+    enableColumnActions: false,
+    positionActionsColumn: 'last',
+    enableStickyHeader: true,
+    initialState: {
+      showGlobalFilter: true,
+      columnPinning: {
+        left: ['mrt-row-select'],
+        right: ['mrt-row-actions'],
+      },
+    },
+    muiTablePaperProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        boxShadow: 'none',
+      },
+    },
+    muiTableContainerProps: {
+      sx: {
+        '--mui-palette-primary-main': '#7c3aed',
+        '--mui-palette-primary-light': '#7c3aed',
+        '--mui-palette-primary-dark': '#7c3aed',
+        height: '340px',
+        border: '1px solid rgb(201, 201, 201)',
+        borderRadius: '8px',
+      },
+    },
+    renderTopToolbar: ({ table }) => (
+      <Box
+        sx={{
+          display: 'flex',
+          gap: '0.5rem',
+          py: '12px',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box sx={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <Input
+            placeholder='Search forms...'
+            value={table.getState().globalFilter ?? ''}
+            onChange={(e) => table.setGlobalFilter(e.target.value)}
+            className='w-md'
+          />
+        </Box>
+        <Box sx={{ display: 'flex', gap: '0.5rem' }}>
+          <Button
+            onClick={onCreateForm}
+            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
+            disabled={isLoading}
+          >
+            Create Form
+          </Button>
+        </Box>
+      </Box>
+    ),
+    renderRowActionMenuItems: ({ row, closeMenu }) => [
+      <MenuItem
+        key={0}
+        onClick={() => {
+          setSelectedForm(row.original);
+          setIsDetailsOpen(true);
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+      >
+        <ListItemIcon>
+          <FaEdit className='size-4' />
+        </ListItemIcon>
+        View Details
+      </MenuItem>,
+      <MenuItem
+        key={1}
+        onClick={() => {
+          // Add delete functionality here
+          closeMenu();
+        }}
+        sx={{ m: 0 }}
+        className='text-red-600'
+      >
+        <ListItemIcon>
+          <FaTrash className='text-red-600 size-4' />
+        </ListItemIcon>
+        Delete Form
+      </MenuItem>,
+    ],
     state: {
-      sorting,
+      isLoading,
     },
   });
 
   return (
-    <>
-      <Card className='border rounded-lg'>
-        <CardHeader className='border-b'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <CardTitle className='text-xl'>Forms</CardTitle>
-              <CardDescription>Manage your lead generation forms</CardDescription>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant='ghost' className='h-8 w-8 p-0'>
-                  <span className='sr-only'>Open menu</span>
-                  <MoreHorizontal className='h-4 w-4' />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align='end'>
-                <DropdownMenuItem>Export Forms</DropdownMenuItem>
-                <DropdownMenuItem>Import Forms</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className='mt-4'>
-            <Input placeholder='Filter forms...' className='max-w-sm' />
-          </div>
-        </CardHeader>
-        <CardContent className='p-0'>
-          {data.length === 0 ? (
-            <p className='mt-2 text-sm text-gray-500'>Loading forms...</p>
-          ) : data.length === 0 ? (
-            <div className='text-center py-10'>
-              <h3 className='text-lg font-semibold mb-2'>No forms yet</h3>
-              <p className='text-muted-foreground mb-4'>Create your first form to get started</p>
-              <Button onClick={onCreateForm} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
-                Create Form
-              </Button>
-            </div>
-          ) : (
-            <div className='overflow-auto'>
-              <table className='w-full min-w-[800px]'>
-                <thead>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className='h-12 px-4 text-left align-middle text-sm font-medium text-muted-foreground bg-gray-50/50'
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr key={row.id} className='border-t hover:bg-gray-50/50'>
-                      {row.getVisibleCells().map((cell) => (
-                        <td key={cell.id} className='p-4 align-middle text-sm'>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+    <Card>
+      <CardContent className='px-4 py-2'>
+        <MaterialReactTable table={table} />
+      </CardContent>
 
+      {/* Form Details Modal */}
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
         <DialogContent className='sm:max-w-[600px]'>
           <DialogHeader>
@@ -270,6 +239,6 @@ export function FormsList({ data, onCreateForm, accessToken }: FormsListProps) {
           )}
         </DialogContent>
       </Dialog>
-    </>
+    </Card>
   );
 }
