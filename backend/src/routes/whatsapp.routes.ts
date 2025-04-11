@@ -15,6 +15,7 @@ router.get('/accounts', whatsAppController.getAccounts);
 router.get('/accounts/phone-numbers', whatsAppController.getPhoneNumbers);
 router.post('/accounts/phone-numbers/updateRegisteredStatus', whatsAppController.updateRegisteredNumberStatus);
 router.get('/accounts/phone-numbers/:phoneNumber', whatsAppController.getPhoneNumberChats);
+router.get('/accounts/stats', whatsAppController.getAccountStats);
 router.get('/accounts/:id', whatsAppController.getAccount);
 router.put('/accounts/:id', whatsAppController.updateAccount);
 router.delete('/accounts/:id', whatsAppController.deleteAccount);

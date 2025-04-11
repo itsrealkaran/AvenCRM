@@ -142,7 +142,7 @@ export default function WhatsAppCampaignsPage() {
         config_id: '1931062140756222',
         response_type: 'code',
         override_default_response_type: true,
-        scope: 'ads_management',
+        scope: 'whatsapp_business_management,whatsapp_business_messaging,business_management',
       }
     );
   };
@@ -167,52 +167,46 @@ export default function WhatsAppCampaignsPage() {
           setShowWhatsAppModal(false);
 
           // @ts-ignore
-          FB.api(
-            `/debug_token?input_token=${accessToken}&access_token=${accessToken}`,
-            (debugInfo: any) => {
-              console.log('Debug info:', debugInfo);
-              const wabaId = debugInfo.data.granular_scopes.find(
-                (scope: any) => scope.scope === 'whatsapp_business_management'
-              )?.target_ids[0];
-              console.log('WABA ID:', wabaId);
-              console.log('debug info:', debugInfo);
+          FB.api(`/debug_token?input_token=${accessToken}`, (debugInfo: any) => {
+            console.log('Debug info:', debugInfo);
+            const wabaId = debugInfo.data.granular_scopes.find(
+              (scope: any) => scope.scope === 'whatsapp_business_management'
+            )?.target_ids[0];
+            console.log('WABA ID:', wabaId);
+            console.log('debug info:', debugInfo);
 
-              // @ts-ignore
-              FB.api(
-                `/${wabaId}/phone_numbers?access_token=${accessToken}`,
-                (phoneNumbers: any) => {
-                  console.log('Phone numbers:', phoneNumbers);
+            // @ts-ignore
+            FB.api(`/${wabaId}/phone_numbers?access_token=${accessToken}`, (phoneNumbers: any) => {
+              console.log('Phone numbers:', phoneNumbers);
 
-                  const phoneNumberData = phoneNumbers.data.map((phoneNumber: any) => ({
-                    phoneNumberId: phoneNumber.id,
-                    name: phoneNumber.verified_name,
-                    phoneNumber: phoneNumber.display_phone_number,
-                    codeVerificationStatus: phoneNumber.code_verification_status,
-                  }));
+              const phoneNumberData = phoneNumbers.data.map((phoneNumber: any) => ({
+                phoneNumberId: phoneNumber.id,
+                name: phoneNumber.verified_name,
+                phoneNumber: phoneNumber.display_phone_number,
+                codeVerificationStatus: phoneNumber.code_verification_status,
+              }));
 
-                  const phoneNumberIds = phoneNumberData.map(
-                    (phoneNumber: any) => phoneNumber.phoneNumberId
-                  );
-
-                  api
-                    .post('/whatsapp/accounts', {
-                      displayName: userInfo.name,
-                      phoneNumberData: phoneNumberData,
-                      phoneNumberIds: phoneNumberIds,
-                      wabaid: wabaId,
-                      accessToken: accessToken,
-                    })
-                    .then((response: any) => {
-                      console.log('API response:', response);
-                      setIsConnected(true);
-                      setShowWhatsAppModal(false);
-                      // Invalidate and refetch the whatsapp-account query
-                      queryClient.invalidateQueries({ queryKey: ['whatsapp-account'] });
-                    });
-                }
+              const phoneNumberIds = phoneNumberData.map(
+                (phoneNumber: any) => phoneNumber.phoneNumberId
               );
-            }
-          );
+
+              api
+                .post('/whatsapp/accounts', {
+                  displayName: userInfo.name,
+                  phoneNumberData: phoneNumberData,
+                  phoneNumberIds: phoneNumberIds,
+                  wabaid: wabaId,
+                  accessToken: accessToken,
+                })
+                .then((response: any) => {
+                  console.log('API response:', response);
+                  setIsConnected(true);
+                  setShowWhatsAppModal(false);
+                  // Invalidate and refetch the whatsapp-account query
+                  queryClient.invalidateQueries({ queryKey: ['whatsapp-account'] });
+                });
+            });
+          });
         });
       };
       fetchAccessToken();

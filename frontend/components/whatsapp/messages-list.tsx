@@ -459,6 +459,21 @@ const MessagesList = ({
             if (id) {
               whatsAppService.updateRegisteredNumberStatus(id);
               toast.success('Account registered successfully');
+
+              // @ts-ignore
+              FB.api(
+                `/${wabaId}/subscribed_apps?access_token=${accessToken}`,
+                'POST',
+                (response: any) => {
+                  console.log('Response:', response);
+                  if (response && !response.error) {
+                    toast.success('Account subscribed successfully');
+                    window.location.reload();
+                  } else {
+                    toast.error(response.error.error_user_msg || response.error.message);
+                  }
+                }
+              );
             } else {
               toast.error('Phone number not found');
             }
@@ -467,18 +482,6 @@ const MessagesList = ({
           }
         }
       );
-
-      // @ts-ignore
-      FB.api(`/${wabaId}/subscribed_apps?access_token=${accessToken}`, 'POST', (response: any) => {
-        console.log('Response:', response);
-        if (response && !response.error) {
-          toast.success('Account subscribed successfully');
-        } else {
-          toast.error(response.error.error_user_msg || response.error.message);
-        }
-      });
-
-      window.location.reload();
     } catch (error: any) {
       console.error('Error registering account:', error);
       const errorMessage = error.response?.data?.message || 'Failed to register account';
@@ -494,39 +497,48 @@ const MessagesList = ({
         console.log('Response:', response);
         if (response && !response.error) {
           toast.success('Pin created successfully');
+
+          // @ts-ignore
+          FB.api(
+            `/${phoneNumberId}/register?access_token=${accessToken}`,
+            'POST',
+            { pin, messaging_product: 'whatsapp' },
+            (response: any) => {
+              console.log('Response:', response);
+              if (response && !response.error) {
+                const id = phoneNumbers.find(
+                  (phoneNumber) => phoneNumber.phoneNumberId === phoneNumberId
+                )?.id;
+                if (id) {
+                  whatsAppService.updateRegisteredNumberStatus(id);
+                  toast.success('Account registered successfully');
+
+                  // @ts-ignore
+                  FB.api(
+                    `/${phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
+                    'POST',
+                    (response: any) => {
+                      console.log('Response:', response);
+                      if (response && !response.error) {
+                        toast.success('Account subscribed successfully');
+                        window.location.reload();
+                      } else {
+                        toast.error(response.error.error_user_msg || response.error.message);
+                      }
+                    }
+                  );
+                } else {
+                  toast.error('Phone number not found');
+                }
+              } else {
+                toast.error(response.error.error_user_msg || response.error.message);
+              }
+            }
+          );
         } else {
           toast.error(response.error.error_user_msg || response.error.message);
         }
       });
-
-      // @ts-ignore
-      FB.api(
-        `/${phoneNumberId}/register?access_token=${accessToken}`,
-        'POST',
-        { pin, messaging_product: 'whatsapp' },
-        (response: any) => {
-          console.log('Response:', response);
-          if (response && !response.error) {
-            toast.success('Account registered successfully');
-          } else {
-            toast.error(response.error.error_user_msg || response.error.message);
-          }
-        }
-      );
-
-      // @ts-ignore
-      FB.api(
-        `/${phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
-        'POST',
-        (response: any) => {
-          console.log('Response:', response);
-          if (response && !response.error) {
-            toast.success('Account subscribed successfully');
-          }
-        }
-      );
-
-      window.location.reload();
     } catch (error) {
       console.error('Error creating pin:', error);
     }

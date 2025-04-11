@@ -26,7 +26,7 @@ export class WhatsAppController extends BaseController {
         try {
           const { code } = req.params;
           const response = await fetch(
-            `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}`,
+            `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}&redirect_uri=https://crm.avencrm.com`,
           );
           const data: any = await response.json();
           console.log(data, 'data from get access token');
@@ -177,6 +177,12 @@ export class WhatsAppController extends BaseController {
       }
 
       const accountId = req.params.id;
+
+      await prisma.whatsAppPhoneNumber.deleteMany({
+        where: {
+          accountId: accountId
+        }
+      });
 
       const account = await prisma.whatsAppAccount.findUnique({
         where: { id: accountId }
@@ -1519,7 +1525,37 @@ export class WhatsAppController extends BaseController {
       return res.status(500).json({ message: 'Internal server error' });
     }
   }
-  
+
+  async getAccountStats(req: Request, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+
+      const messages = await prisma.whatsAppMessage.findMany({
+        where: {
+          whatsAppPhoneNumber: {
+            account: { userId: req.user.id }
+          },
+          isOutbound: true,
+          
+        }
+      });
+
+      const totalMessages = messages.length;
+      const totalMessagesSent = messages.filter(msg => msg.isOutbound).length;
+      const totalMessagesReceived = messages.filter(msg => !msg.isOutbound).length;
+
+      return res.status(200).json({
+        totalMessages,
+        totalMessagesSent,
+        totalMessagesReceived
+      });
+    } catch (error) {
+      logger.error('Error fetching WhatsApp account stats:', error);
+      return res.status(500).json({ message: 'Internal server error' });
+    }
+  }
 }
 
 export const whatsAppController = new WhatsAppController(); 
