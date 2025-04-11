@@ -26,7 +26,7 @@ export class WhatsAppController extends BaseController {
         try {
           const { code } = req.params;
           const response = await fetch(
-            `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}&redirect_uri=https://crm.avencrm.com`,
+            `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}`,
           );
           const data: any = await response.json();
           console.log(data, 'data from get access token');

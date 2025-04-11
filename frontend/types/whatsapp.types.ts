@@ -26,7 +26,7 @@ export interface WhatsAppAccount {
   id: string;
   userId: string;
   accessToken: string;
-  phoneNumberData: WhatsAppPhoneNumberData[];
+  phoneNumbers: WhatsAppPhoneNumberData[];
   wabaid: string;
   displayName: string;
   verified: boolean;

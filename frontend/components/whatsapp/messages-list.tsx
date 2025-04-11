@@ -442,108 +442,6 @@ const MessagesList = ({
     setPhoneNumberId(value);
   };
 
-  const handleRegisterAccount = async (pin: string) => {
-    console.log(accessToken, 'access token');
-    try {
-      // @ts-ignore
-      FB.api(
-        `/${phoneNumberId}/register?access_token=${accessToken}`,
-        'POST',
-        { pin, messaging_product: 'whatsapp' },
-        (response: any) => {
-          console.log('Response:', response);
-          if (response && !response.error) {
-            const id = phoneNumbers.find(
-              (phoneNumber) => phoneNumber.phoneNumberId === phoneNumberId
-            )?.id;
-            if (id) {
-              whatsAppService.updateRegisteredNumberStatus(id);
-              toast.success('Account registered successfully');
-
-              // @ts-ignore
-              FB.api(
-                `/${wabaId}/subscribed_apps?access_token=${accessToken}`,
-                'POST',
-                (response: any) => {
-                  console.log('Response:', response);
-                  if (response && !response.error) {
-                    toast.success('Account subscribed successfully');
-                    window.location.reload();
-                  } else {
-                    toast.error(response.error.error_user_msg || response.error.message);
-                  }
-                }
-              );
-            } else {
-              toast.error('Phone number not found');
-            }
-          } else {
-            toast.error(response.error.error_user_msg || response.error.message);
-          }
-        }
-      );
-    } catch (error: any) {
-      console.error('Error registering account:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to register account';
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleCreatePin = async (pin: string) => {
-    try {
-      console.log('Creating pin for account:', phoneNumberId, pin);
-      // @ts-ignore
-      FB.api(`/${phoneNumberId}?access_token=${accessToken}`, 'POST', { pin }, (response: any) => {
-        console.log('Response:', response);
-        if (response && !response.error) {
-          toast.success('Pin created successfully');
-
-          // @ts-ignore
-          FB.api(
-            `/${phoneNumberId}/register?access_token=${accessToken}`,
-            'POST',
-            { pin, messaging_product: 'whatsapp' },
-            (response: any) => {
-              console.log('Response:', response);
-              if (response && !response.error) {
-                const id = phoneNumbers.find(
-                  (phoneNumber) => phoneNumber.phoneNumberId === phoneNumberId
-                )?.id;
-                if (id) {
-                  whatsAppService.updateRegisteredNumberStatus(id);
-                  toast.success('Account registered successfully');
-
-                  // @ts-ignore
-                  FB.api(
-                    `/${phoneNumberId}/subscribed_apps?access_token=${accessToken}`,
-                    'POST',
-                    (response: any) => {
-                      console.log('Response:', response);
-                      if (response && !response.error) {
-                        toast.success('Account subscribed successfully');
-                        window.location.reload();
-                      } else {
-                        toast.error(response.error.error_user_msg || response.error.message);
-                      }
-                    }
-                  );
-                } else {
-                  toast.error('Phone number not found');
-                }
-              } else {
-                toast.error(response.error.error_user_msg || response.error.message);
-              }
-            }
-          );
-        } else {
-          toast.error(response.error.error_user_msg || response.error.message);
-        }
-      });
-    } catch (error) {
-      console.error('Error creating pin:', error);
-    }
-  };
-
   useEffect(() => {
     if (
       phoneNumbers.find(
@@ -740,8 +638,17 @@ const MessagesList = ({
       <RegisterNumberModal
         open={isRegisteringModalOpen}
         onClose={() => setIsRegisteringModalOpen(false)}
-        onRegister={handleRegisterAccount}
-        onCreatePin={handleCreatePin}
+        accessToken={accessToken}
+        phoneNumberId={phoneNumberId}
+        wabaId={wabaId}
+        phoneNumbers={phoneNumbers.map((phoneNumber) => ({
+          id: phoneNumber.id,
+          phoneNumberId: phoneNumber.phoneNumberId,
+          name: phoneNumber.phoneNumber,
+          phoneNumber: phoneNumber.phoneNumber,
+          codeVerificationStatus: phoneNumber.status,
+          isRegistered: phoneNumber.isRegistered,
+        }))}
       />
     </div>
   );

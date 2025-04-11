@@ -71,11 +71,11 @@ export function TemplatesList({
       header: 'Name',
     },
     {
-      accessorKey: 'content',
-      header: 'Content',
+      accessorKey: 'category',
+      header: 'Category',
       Cell: ({ row }: any) => {
-        const content = row.original.content;
-        return <div className='max-w-md truncate'>{content}</div>;
+        const category = row.original.category;
+        return <div className='max-w-md truncate'>{category}</div>;
       },
     },
     {
@@ -100,17 +100,11 @@ export function TemplatesList({
       },
     },
     {
-      accessorKey: 'createdAt',
-      header: 'Created At',
+      accessorKey: 'language',
+      header: 'Language',
       Cell: ({ row }: any) => {
-        const date = new Date(row.original.createdAt);
-        return date.toLocaleString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        });
+        const language = row.original.language;
+        return language;
       },
     },
   ];
