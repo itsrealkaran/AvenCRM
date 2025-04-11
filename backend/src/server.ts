@@ -192,8 +192,7 @@ app.use('/public', publicRoutes);
 app.use('/notification', notificationRoutes);
 app.use('/whatsapp', whatsAppRoutes);
 app.use('/meta-ads', metaAdsRoutes);
-app.use('/api/page-builder', pageBuilderRoutes);
-app.use('/api/public', publicRoutes);
+app.use('/page-builder', pageBuilderRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {

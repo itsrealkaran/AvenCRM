@@ -80,7 +80,19 @@ export class PageBuilderController extends BaseController {
         });
       }
       
-      const { title, templateType, description, jsonData, isPublic } = validation.data;
+      const { templateType, title, description, jsonData, isPublic } = validation.data;
+      
+      // Check if the user already has a page with this template type
+      const existingPageWithType = await prisma.page.findFirst({
+        where: { userId, templateType }
+      });
+      
+      if (existingPageWithType) {
+        return res.status(400).json({ 
+          message: 'You already have a page with this template type', 
+          existingPageId: existingPageWithType.id 
+        });
+      }
       
       // Generate slug if not provided
       let slug = validation.data.slug;

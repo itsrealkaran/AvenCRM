@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Building, FileText, Mail, MapPin } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -11,12 +13,41 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { pageBuilderApi } from '@/lib/api';
 
 interface DashboardProps {
-  navigateTo: (view: string) => void;
+  navigateTo: (view: string, pageId?: string) => void;
 }
 
 export default function Dashboard({ navigateTo }: DashboardProps) {
+  // Use React Query to fetch pages
+  const {
+    data: pages,
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['pages'],
+    queryFn: () => pageBuilderApi.getPages(),
+  });
+
+  // Initialize page map for quick lookup
+  const pageMap: Record<string, any> = {
+    PORTFOLIO: null,
+    LOCATION: null,
+    DOCUMENT: null,
+    CONTACT: null,
+  };
+
+  // Populate page map if data is available
+  if (pages?.data) {
+    pages.data.forEach((page: { templateType: string | null; id: string | null }) => {
+      if (page.templateType) {
+        pageMap[page.templateType] = page;
+      }
+    });
+  }
+
   return (
     <Card className='min-h-full w-full p-6'>
       <div className='space-y-6'>
@@ -24,7 +55,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
           <div>
             <h1 className='text-2xl font-bold'>Real Estate Templates</h1>
             <p className='text-sm text-muted-foreground'>
-              Choose a template to customize your real estate website
+              Create and manage your real estate website pages
             </p>
           </div>
         </div>
@@ -46,9 +77,24 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 Perfect for real estate agents looking to highlight their property listings with
                 high-quality images and detailed information.
               </p>
-              <Button className='w-full mt-auto' size='sm' onClick={() => navigateTo('portfolio')}>
-                Select Template
-              </Button>
+              <div className='flex justify-between items-center'>
+                <span className='text-xs text-muted-foreground'>
+                  {isLoading ? (
+                    <Skeleton className='h-4 w-20' />
+                  ) : pageMap.PORTFOLIO ? (
+                    'Page created'
+                  ) : (
+                    'No page created'
+                  )}
+                </span>
+                <Button
+                  className='mt-auto'
+                  size='sm'
+                  onClick={() => navigateTo('portfolio', pageMap.PORTFOLIO?.id)}
+                >
+                  {pageMap.PORTFOLIO ? 'Edit Page' : 'Create Page'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -68,13 +114,24 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 Interactive map-based search that allows clients to explore properties by
                 neighborhood, city, or region with filtering options.
               </p>
-              <Button
-                className='w-full mt-auto'
-                size='sm'
-                onClick={() => navigateTo('location-search')}
-              >
-                Select Template
-              </Button>
+              <div className='flex justify-between items-center'>
+                <span className='text-xs text-muted-foreground'>
+                  {isLoading ? (
+                    <Skeleton className='h-4 w-20' />
+                  ) : pageMap.LOCATION ? (
+                    'Page created'
+                  ) : (
+                    'No page created'
+                  )}
+                </span>
+                <Button
+                  className='mt-auto'
+                  size='sm'
+                  onClick={() => navigateTo('location-search', pageMap.LOCATION?.id)}
+                >
+                  {pageMap.LOCATION ? 'Edit Page' : 'Create Page'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -94,13 +151,24 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 Offer downloadable guides, market reports, and legal documents to establish your
                 expertise and provide value to potential clients.
               </p>
-              <Button
-                className='w-full mt-auto'
-                size='sm'
-                onClick={() => navigateTo('document-download')}
-              >
-                Select Template
-              </Button>
+              <div className='flex justify-between items-center'>
+                <span className='text-xs text-muted-foreground'>
+                  {isLoading ? (
+                    <Skeleton className='h-4 w-20' />
+                  ) : pageMap.DOCUMENT ? (
+                    'Page created'
+                  ) : (
+                    'No page created'
+                  )}
+                </span>
+                <Button
+                  className='mt-auto'
+                  size='sm'
+                  onClick={() => navigateTo('document-download', pageMap.DOCUMENT?.id)}
+                >
+                  {pageMap.DOCUMENT ? 'Edit Page' : 'Create Page'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -120,9 +188,24 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 Professional contact form with lead capture capabilities to help you grow your
                 client base and respond to inquiries promptly.
               </p>
-              <Button className='w-full mt-auto' size='sm' onClick={() => navigateTo('contact')}>
-                Select Template
-              </Button>
+              <div className='flex justify-between items-center'>
+                <span className='text-xs text-muted-foreground'>
+                  {isLoading ? (
+                    <Skeleton className='h-4 w-20' />
+                  ) : pageMap.CONTACT ? (
+                    'Page created'
+                  ) : (
+                    'No page created'
+                  )}
+                </span>
+                <Button
+                  className='mt-auto'
+                  size='sm'
+                  onClick={() => navigateTo('contact', pageMap.CONTACT?.id)}
+                >
+                  {pageMap.CONTACT ? 'Edit Page' : 'Create Page'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
