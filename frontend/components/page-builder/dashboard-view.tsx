@@ -41,12 +41,27 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
 
   // Populate page map if data is available
   if (pages?.data) {
-    pages.data.forEach((page: { templateType: string | null; id: string | null }) => {
+    pages.data.forEach((page: any) => {
       if (page.templateType) {
         pageMap[page.templateType] = page;
       }
     });
   }
+
+  // Debug to verify page IDs are available
+  useEffect(() => {
+    if (pages?.data) {
+      console.log('Pages loaded:', pages.data);
+      console.log('Page map:', pageMap);
+    }
+  }, [pages?.data]);
+
+  // Function to handle navigation with proper page ID
+  const handleNavigate = (view: string, templateType: string) => {
+    const page = pageMap[templateType];
+    console.log(`Navigating to ${view} with page:`, page?.id);
+    navigateTo(view, page?.id);
+  };
 
   return (
     <Card className='min-h-full w-full p-6'>
@@ -90,7 +105,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 <Button
                   className='mt-auto'
                   size='sm'
-                  onClick={() => navigateTo('portfolio', pageMap.PORTFOLIO?.id)}
+                  onClick={() => handleNavigate('portfolio', 'PORTFOLIO')}
                 >
                   {pageMap.PORTFOLIO ? 'Edit Page' : 'Create Page'}
                 </Button>
@@ -127,7 +142,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 <Button
                   className='mt-auto'
                   size='sm'
-                  onClick={() => navigateTo('location-search', pageMap.LOCATION?.id)}
+                  onClick={() => handleNavigate('location-search', 'LOCATION')}
                 >
                   {pageMap.LOCATION ? 'Edit Page' : 'Create Page'}
                 </Button>
@@ -164,7 +179,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 <Button
                   className='mt-auto'
                   size='sm'
-                  onClick={() => navigateTo('document-download', pageMap.DOCUMENT?.id)}
+                  onClick={() => handleNavigate('document-download', 'DOCUMENT')}
                 >
                   {pageMap.DOCUMENT ? 'Edit Page' : 'Create Page'}
                 </Button>
@@ -201,7 +216,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                 <Button
                   className='mt-auto'
                   size='sm'
-                  onClick={() => navigateTo('contact', pageMap.CONTACT?.id)}
+                  onClick={() => handleNavigate('contact', 'CONTACT')}
                 >
                   {pageMap.CONTACT ? 'Edit Page' : 'Create Page'}
                 </Button>

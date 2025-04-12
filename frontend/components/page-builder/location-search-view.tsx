@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ChevronLeft, ExternalLink, RefreshCw, Share, Trash2 } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import LocationSearchTemplate from '@/components/page-builder/location-search-template';
 import {
@@ -18,61 +17,104 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { api, pageBuilderApi } from '@/lib/api';
+import { pageBuilderApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
-
 import LocationSearchForm from './update/location-search/page';
 
-interface LocationSearchProps {
+interface LocationSearchViewProps {
   navigateTo: (view: string) => void;
   pageId?: string;
 }
 
-export default function LocationSearch({ navigateTo, pageId }: LocationSearchProps) {
-  const router = useRouter();
+export default function LocationSearchView({ navigateTo, pageId }: LocationSearchViewProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  
+  // Debug log to check pageId
+  useEffect(() => {
+    console.log('LocationSearchView pageId:', pageId);
+  }, [pageId]);
 
   // Fetch page data if pageId is provided
-  const {
-    data: pageData,
+  const { 
+    data: pageData, 
     isLoading,
-    isError,
+    isError 
   } = useQuery({
     queryKey: ['page', pageId],
-    queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
-    enabled: !!pageId,
+    queryFn: () => {
+      console.log('Fetching location page with ID:', pageId);
+      return pageId ? pageBuilderApi.getPage(pageId) : null;
+    },
+    enabled: !!pageId
   });
 
-  // Create default data if no pageId is provided
+  // Default location search data
   const defaultData = {
-    title: 'Find Your Dream Home',
-    subtitle: 'Search for properties in your desired location and connect with our expert agents.',
-    description:
-      'Our comprehensive property search platform allows you to explore a wide range of properties.',
-    bgImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa',
-    buttonText: 'Submit',
-    accentColor: '#2563eb',
-    searchPlaceholder: 'Enter your desired location',
-    templateType: 'LOCATION',
-    agentName: 'John Doe',
-    agentTitle: 'Real Estate Agent',
-    agentImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa',
+    title: 'Find Your Dream Property',
+    subtitle: 'Search properties by location, features, and price range',
+    description: 'Our interactive map helps you discover available properties in your desired neighborhoods.',
+    regions: [
+      {
+        name: 'Downtown',
+        description: 'Urban living in the heart of the city with modern condos and lofts.',
+        properties: '45',
+        priceRange: '$350k - $1.2M',
+        image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.7749, lng: -122.4194 }
+      },
+      {
+        name: 'Suburbia',
+        description: 'Family-friendly neighborhoods with excellent schools and community amenities.',
+        properties: '78',
+        priceRange: '$450k - $950k',
+        image: 'https://images.unsplash.com/photo-1625602812206-5ec545ca1231?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.7749, lng: -122.2194 }
+      },
+      {
+        name: 'Waterfront',
+        description: 'Luxury properties with stunning water views and premium amenities.',
+        properties: '23',
+        priceRange: '$750k - $3.5M',
+        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.8049, lng: -122.4194 }
+      },
+      {
+        name: 'Countryside',
+        description: 'Spacious properties with large lots and rural charm just outside the city.',
+        properties: '32',
+        priceRange: '$400k - $1.1M',
+        image: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.7249, lng: -122.4594 }
+      }
+    ],
+    accentColor: '#3b82f6',
+    mapZoom: 10,
+    mapCenter: { lat: 37.7749, lng: -122.4194 },
+    searchPlaceholder: 'Enter a city, neighborhood, or address',
     contactInfo: {
-      address: '123 Main St, Anytown, USA',
-      phone: '123-456-7890',
-      email: 'john.doe@example.com',
+      name: 'Sarah Johnson',
+      phone: '(415) 555-0123',
+      email: 'info@realestate.com'
     },
-    social: {
-      facebook: 'https://www.facebook.com/',
-      instagram: 'https://www.instagram.com/',
-      linkedin: 'https://www.linkedin.com/',
-      twitter: 'https://www.twitter.com/',
+    filters: {
+      price: true,
+      bedrooms: true,
+      propertyType: true,
+      squareFeet: true
     },
-    isPublic: false,
+    callToAction: 'Contact us to schedule a viewing',
+    templateType: 'LOCATION'
   };
+
+  // Effect to open setup form automatically if no pageId is provided
+  useEffect(() => {
+    if (!pageId && !isUpdateModalOpen) {
+      setIsUpdateModalOpen(true);
+    }
+  }, [pageId, isUpdateModalOpen]);
 
   // Delete page mutation
   const deletePage = useMutation({
@@ -80,15 +122,15 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       toast({
-        title: 'Page deleted',
-        description: 'Your page has been deleted successfully.',
+        title: 'Location page deleted',
+        description: 'Your location search page has been deleted successfully.',
       });
       navigateTo('dashboard');
     },
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to delete page. Please try again.',
+        description: 'Failed to delete location page. Please try again.',
         variant: 'destructive',
       });
     },
@@ -101,25 +143,34 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       toast({
-        title: 'Page published',
-        description: 'Your page is now publicly available.',
+        title: 'Location page published',
+        description: 'Your location search page is now publicly available.',
       });
     },
     onError: (error) => {
       toast({
         title: 'Error',
-        description: 'Failed to publish page. Please try again.',
+        description: 'Failed to publish location page. Please try again.',
         variant: 'destructive',
       });
     },
   });
 
-  // Handle share action
+  // Handle share/publish action
   const handleShare = () => {
+    if (!pageId) {
+      toast({
+        title: 'Cannot share',
+        description: 'Please create your location page first before sharing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if (!pageData?.data?.slug) {
       toast({
         title: 'Cannot share',
-        description: 'Please save your page first before sharing.',
+        description: 'Please save your location page first before sharing.',
         variant: 'destructive',
       });
       return;
@@ -133,7 +184,7 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
       navigator.clipboard.writeText(url);
       toast({
         title: 'Link copied',
-        description: 'Page URL has been copied to clipboard.',
+        description: 'Location page URL has been copied to clipboard.',
       });
     }
   };
@@ -155,7 +206,7 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
     } else {
       toast({
         title: 'Cannot preview',
-        description: 'Please save your page first before previewing.',
+        description: 'Please save your location page first before previewing.',
         variant: 'destructive',
       });
     }
@@ -167,15 +218,8 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
     setIsDeleteDialogOpen(false);
   };
 
-  // Handle form submission from modal
-  const handleFormSubmission = () => {
-    queryClient.invalidateQueries({ queryKey: ['page', pageId] });
-    queryClient.invalidateQueries({ queryKey: ['pages'] });
-    setIsUpdateModalOpen(false);
-  };
-
   return (
-    <Card className='min-h-full flex flex-col'>
+    <Card className='h-full flex flex-col'>
       <LocationSearchForm
         pageId={pageId}
         open={isUpdateModalOpen}
@@ -188,7 +232,7 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your page.
+              This action cannot be undone. This will permanently delete your location search page.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -209,11 +253,9 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
               className='mr-2'
               onClick={() => navigateTo('dashboard')}
             >
-              <ChevronLeft className='h-5 w-5 text-blue-600' />
+              <ChevronLeft className='h-5 w-5 text-blue-500' />
             </Button>
-            <h1 className='text-2xl font-bold text-blue-600'>
-              {pageData?.data?.title || 'Property Search'}
-            </h1>
+            <h1 className='text-2xl font-bold text-blue-500'>Location Search</h1>
           </div>
           <div className='space-x-2'>
             {pageId && (
@@ -236,17 +278,24 @@ export default function LocationSearch({ navigateTo, pageId }: LocationSearchPro
               <Share className='w-4 h-4 mr-2' />
               {pageData?.data?.isPublic ? 'Copy Link' : 'Publish'}
             </Button>
-            <Button onClick={handleUpdate} className='bg-blue-600 hover:bg-blue-700'>
+            <Button onClick={handleUpdate}>
               <RefreshCw className='w-4 h-4 mr-2' />
               {pageId ? 'Update' : 'Create'}
             </Button>
           </div>
         </div>
       </header>
+
       <main className='flex-grow container mx-auto p-4'>
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
           <div className='h-[calc(100vh-8rem)] overflow-y-auto'>
-            <LocationSearchTemplate data={pageData?.data?.jsonData || defaultData} />
+            {isLoading ? (
+              <div className='flex items-center justify-center h-full'>
+                <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500'></div>
+              </div>
+            ) : (
+              <LocationSearchTemplate data={pageData?.data?.jsonData || defaultData} />
+            )}
           </div>
         </div>
       </main>

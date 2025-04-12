@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Award,
   Building,
@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/lib/api';
+import { pageBuilderApi } from '@/lib/api';
 
 interface SetupFormProps {
   pageId?: string;
@@ -39,85 +39,90 @@ interface SetupFormProps {
   isLoading?: boolean;
 }
 
-// Form validation schema
+// Schema definition for the form
 const portfolioFormSchema = z.object({
-  // Page configuration
-  slug: z.string().min(3, 'Slug must be at least 3 characters').optional(),
-  isPublic: z.boolean().default(false),
-
-  // Personal Info
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-  title: z.string().min(2, 'Title must be at least 2 characters'),
-  location: z.string().optional(),
-  bio: z.string().optional(),
-  profileImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  // Personal info
+  name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
+  title: z.string().min(2, { message: 'Title is required' }),
+  location: z.string().min(2, { message: 'Location is required' }),
+  image: z.string().url({ message: 'Please enter a valid URL' }),
+  bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
 
   // Stats
-  dealsCount: z.string().optional(),
-  propertyValue: z.string().optional(),
-  yearsExperience: z.string().optional(),
-  clientSatisfaction: z.string().optional(),
+  dealsCount: z.string(),
+  propertyValue: z.string(),
+  yearsExperience: z.string(),
+  clientSatisfaction: z.string(),
 
-  // Appearance
-  accentColor: z.string().optional(),
+  // Style and approach
+  accentColor: z.string(),
+  approach: z.string().min(10, { message: 'Please provide your approach' }),
+  expertise: z.array(z.string()),
+  certifications: z.array(z.string()),
+  education: z.string(),
 
-  // About
-  approach: z.string().optional(),
-  expertise: z.array(z.string()).optional(),
-  certifications: z.array(z.string()).optional(),
-  education: z.string().optional(),
+  // Contact info
+  phone: z.string(),
+  email: z.string().email({ message: 'Please enter a valid email address' }),
+  officeAddress: z.string(),
 
-  // Contact
-  phone: z.string().optional(),
-  email: z.string().email('Please enter a valid email').optional(),
-  officeLocation: z.string().optional(),
-
-  // Social links
-  facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-  instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-  linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  // Social info
+  facebook: z.string().optional(),
+  twitter: z.string().optional(),
+  instagram: z.string().optional(),
+  linkedin: z.string().optional(),
 
   // Testimonials
-  testimonials: z
-    .array(
-      z.object({
-        text: z.string().optional(),
-        client: z.string().optional(),
-        location: z.string().optional(),
-      })
-    )
-    .optional(),
+  testimonials: z.array(
+    z.object({
+      text: z.string(),
+      client: z.string(),
+      location: z.string(),
+    })
+  ),
+
+  // Page settings
+  slug: z.string().optional(),
+  isPublic: z.boolean().default(false),
 });
 
+// Type inference from zod schema
 type PortfolioFormValues = z.infer<typeof portfolioFormSchema>;
 
-export default function SetupForm({ pageId, open, onOpenChange, isLoading }: SetupFormProps) {
+export default function SetupForm({
+  pageId,
+  open,
+  onOpenChange,
+  isLoading = false,
+}: SetupFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
 
-  // Steps configuration
+  // Define the steps for the multi-step form
   const steps = [
     { id: 'personal', label: 'Personal' },
-    { id: 'stats', label: 'Stats' },
-    { id: 'about', label: 'About' },
+    { id: 'professional', label: 'Professional' },
     { id: 'contact', label: 'Contact' },
     { id: 'settings', label: 'Settings' },
   ];
 
+  // Fetch existing page data if in edit mode
+  const { data: existingPageData, isLoading: isLoadingPageData } = useQuery({
+    queryKey: ['page', pageId],
+    queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
+    enabled: !!pageId && open,
+  });
+
   // Default values for the form
   const defaultValues: PortfolioFormValues = {
-    // Page configuration
-    slug: '',
-    isPublic: false,
-
-    // Personal Info
+    // Personal info
     name: 'Sarah Johnson',
     title: 'Luxury Real Estate Specialist',
     location: 'San Francisco Bay Area, CA',
+    image:
+      'https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXQlMjBtYW58ZW58MHx8MHx8fDA%3D',
     bio: 'With over 15 years of experience, I specialize in luxury properties and helping clients make informed decisions in the competitive Bay Area market.',
-    profileImage:
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=776&q=80',
 
     // Stats
     dealsCount: '350+',
@@ -125,10 +130,8 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
     yearsExperience: '15+',
     clientSatisfaction: '98%',
 
-    // Appearance
-    accentColor: '#4f46e5', // Default purple/indigo color
-
-    // About
+    // Style and approach
+    accentColor: '#7c3aed',
     approach:
       'I believe in personalized service and leveraging the latest technology to ensure my clients get the best deals in the market.',
     expertise: [
@@ -146,15 +149,16 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
     education:
       'Bachelor of Business Administration in Real Estate, University of California, Berkeley',
 
-    // Contact
+    // Contact info
     phone: '(415) 555-0123',
     email: 'sarah@sarahjohnsonrealty.com',
-    officeLocation: '123 Market Street, San Francisco, CA 94105',
+    officeAddress: '123 Market Street, San Francisco, CA 94105',
 
-    // Social links
-    facebook: 'https://facebook.com/sarahjohnsonrealty',
-    instagram: 'https://instagram.com/sarahjohnsonrealty',
-    linkedin: 'https://linkedin.com/in/sarahjohnsonrealty',
+    // Social info
+    facebook: 'https://www.facebook.com/sarahjohnsonrealty',
+    instagram: 'https://www.instagram.com/sarahjohnsonrealty',
+    linkedin: 'https://www.linkedin.com/company/sarahjohnsonrealty',
+    twitter: 'https://www.twitter.com/sarahjohnsonrealty',
 
     // Testimonials
     testimonials: [
@@ -174,32 +178,68 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
         location: 'Menlo Park',
       },
     ],
+
+    // Page settings
+    slug: '',
+    isPublic: false,
   };
+
+  // Use existing data if available
+  useEffect(() => {
+    if (existingPageData?.data) {
+      // Reset form with existing data
+      const pageData = existingPageData.data;
+      if (pageData.jsonData) {
+        // If editing an existing page, we should update our defaultValues
+        const jsonData = pageData.jsonData;
+        // We'll handle this in the BaseEntityDialog by passing the updated defaultValues
+      }
+    }
+  }, [existingPageData, open]);
 
   // Mutation for saving the form
   const savePage = useMutation({
     mutationFn: async (values: PortfolioFormValues) => {
+      // Social media links structure
+      const social = {
+        facebook: values.facebook || '',
+        instagram: values.instagram || '',
+        linkedin: values.linkedin || '',
+        twitter: values.twitter || '',
+      };
+
+      // Prepare the page data structure for our API
       const pageData = {
         title: values.name,
-        templateType: 'portfolio',
-        content: values,
-        isPublic: values.isPublic,
         slug: values.slug || `portfolio-${Date.now()}`,
+        templateType: 'PORTFOLIO',
+        description: values.bio.substring(0, 100) + (values.bio.length > 100 ? '...' : ''),
+        jsonData: {
+          ...values,
+          social,
+        },
+        isPublic: values.isPublic,
       };
 
       if (pageId) {
-        return await api.put(`/page-builder/${pageId}`, pageData);
+        return await pageBuilderApi.updatePage(pageId, pageData);
       } else {
-        return await api.post('/page-builder', pageData);
+        return await pageBuilderApi.createPage(pageData);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pages'] });
+      if (pageId) {
+        queryClient.invalidateQueries({ queryKey: ['page', pageId] });
+      }
       onOpenChange(false);
       toast.success(`Portfolio ${pageId ? 'updated' : 'created'} successfully`);
     },
-    onError: () => {
-      toast.error(`Failed to ${pageId ? 'update' : 'create'} portfolio`);
+    onError: (error: any) => {
+      console.error('Error saving page:', error);
+      toast.error(
+        `Failed to ${pageId ? 'update' : 'create'} portfolio: ${error?.response?.data?.message || 'Unknown error'}`
+      );
     },
   });
 
@@ -232,17 +272,20 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
     );
   };
 
+  // Calculate initial values for the form
+  const initialValues = existingPageData?.data?.jsonData || defaultValues;
+
   return (
     <BaseEntityDialog
       open={open}
       onOpenChange={onOpenChange}
       title={pageId ? 'Update Portfolio' : 'Create Portfolio'}
       schema={portfolioFormSchema}
-      defaultValues={defaultValues}
+      defaultValues={initialValues}
       onSubmit={(values) => {
         savePage.mutate(values);
       }}
-      isLoading={isLoading || savePage.isPending}
+      isLoading={isLoading || isLoadingPageData || savePage.isPending}
     >
       {(form) => (
         <Tabs value={steps[currentStep].id} className='w-full'>
@@ -332,44 +375,35 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
 
                 <FormField
                   control={form.control}
+                  name='image'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Your Photo URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://example.com/your-photo.jpg'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name='bio'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Short Bio</FormLabel>
+                      <FormLabel>Bio</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder='e.g. Helping clients find their dream homes...'
+                          placeholder='Tell clients about yourself and your experience...'
+                          className='min-h-[120px]'
                           disabled={isLoading || savePage.isPending}
-                          className='min-h-[100px]'
                           {...field}
                         />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='profileImage'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Profile Image URL</FormLabel>
-                      <FormControl>
-                        <div className='flex space-x-2'>
-                          <Input
-                            placeholder='Enter image URL'
-                            disabled={isLoading || savePage.isPending}
-                            {...field}
-                            className='flex-1'
-                          />
-                          {field.value && (
-                            <div
-                              className='h-10 w-10 rounded-full border overflow-hidden bg-cover bg-center'
-                              style={{ backgroundImage: `url(${field.value})` }}
-                            />
-                          )}
-                        </div>
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -378,86 +412,110 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
               </div>
             )}
 
-            {/* Stats */}
+            {/* Professional Details */}
             {currentStep === 1 && (
               <div className='space-y-4 p-2'>
+                <div className='grid grid-cols-2 gap-4'>
+                  <FormField
+                    control={form.control}
+                    name='yearsExperience'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Years Experience</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='e.g. 15+'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='dealsCount'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Properties Sold</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='e.g. 350+'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='propertyValue'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Property Value Sold</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='e.g. $500M+'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='clientSatisfaction'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Client Satisfaction</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='e.g. 98%'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name='dealsCount'
+                  name='accentColor'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Number of Deals</FormLabel>
-                      <FormControl>
+                      <FormLabel>Accent Color</FormLabel>
+                      <div className='flex items-center gap-2'>
+                        <FormControl>
+                          <Input
+                            type='color'
+                            className='w-12 h-10 p-1'
+                            disabled={isLoading || savePage.isPending}
+                            {...field}
+                          />
+                        </FormControl>
                         <Input
-                          placeholder='e.g. 350+'
+                          value={field.value}
+                          onChange={field.onChange}
+                          className='flex-1'
                           disabled={isLoading || savePage.isPending}
-                          {...field}
                         />
-                      </FormControl>
+                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name='propertyValue'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Total Property Value</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder='e.g. $500M+'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='yearsExperience'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Years of Experience</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder='e.g. 15+'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='clientSatisfaction'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Client Satisfaction Rate</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder='e.g. 98%'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            )}
-
-            {/* About */}
-            {currentStep === 2 && (
-              <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
                   name='approach'
@@ -466,9 +524,9 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
                       <FormLabel>Your Approach</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder='Describe your approach to real estate'
+                          placeholder='Describe your approach to real estate...'
+                          className='min-h-[120px]'
                           disabled={isLoading || savePage.isPending}
-                          className='min-h-[100px]'
                           {...field}
                         />
                       </FormControl>
@@ -540,39 +598,11 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
                     </FormItem>
                   )}
                 />
-
-                <FormField
-                  control={form.control}
-                  name='accentColor'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Accent Color</FormLabel>
-                      <div className='flex items-center gap-2'>
-                        <div
-                          className='h-8 w-8 rounded-full border'
-                          style={{ backgroundColor: field.value || '#4f46e5' }}
-                        />
-                        <FormControl>
-                          <Input
-                            type='text'
-                            placeholder='#4f46e5'
-                            disabled={isLoading || savePage.isPending}
-                            {...field}
-                          />
-                        </FormControl>
-                      </div>
-                      <p className='text-xs text-muted-foreground mt-1'>
-                        Choose a color for portfolio accents and highlights
-                      </p>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               </div>
             )}
 
             {/* Contact Info */}
-            {currentStep === 3 && (
+            {currentStep === 2 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -612,10 +642,10 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
 
                 <FormField
                   control={form.control}
-                  name='officeLocation'
+                  name='officeAddress'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Office Location</FormLabel>
+                      <FormLabel>Office Address</FormLabel>
                       <FormControl>
                         <Input
                           placeholder='e.g. 123 Market Street, San Francisco, CA 94105'
@@ -637,6 +667,24 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
                       <FormControl>
                         <Input
                           placeholder='https://facebook.com/yourpage'
+                          disabled={isLoading || savePage.isPending}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='twitter'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Twitter URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://twitter.com/yourhandle'
                           disabled={isLoading || savePage.isPending}
                           {...field}
                         />
@@ -681,120 +729,32 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
                     </FormItem>
                   )}
                 />
-
-                <div className='space-y-4 mt-6'>
-                  <div className='flex items-center justify-between'>
-                    <FormLabel className='text-base'>Testimonials</FormLabel>
-                    <Button
-                      type='button'
-                      variant='ghost'
-                      size='sm'
-                      onClick={() => addTestimonial(form)}
-                      disabled={isLoading || savePage.isPending}
-                    >
-                      Add Testimonial
-                    </Button>
-                  </div>
-
-                  {form.getValues('testimonials')?.map((_: any, index: number) => (
-                    <div
-                      key={`testimonial-${index}`}
-                      className='space-y-4 p-4 border rounded-md relative'
-                    >
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='sm'
-                        className='absolute top-2 right-2 h-8 w-8 p-0'
-                        onClick={() => removeTestimonial(form, index)}
-                        disabled={isLoading || savePage.isPending}
-                      >
-                        ×
-                      </Button>
-
-                      <FormField
-                        control={form.control}
-                        name={`testimonials.${index}.text`}
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Testimonial Text</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder='Enter client testimonial'
-                                disabled={isLoading || savePage.isPending}
-                                className='min-h-[80px]'
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className='grid grid-cols-2 gap-4'>
-                        <FormField
-                          control={form.control}
-                          name={`testimonials.${index}.client`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Client Name</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder='e.g. John & Lisa Thomason'
-                                  disabled={isLoading || savePage.isPending}
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name={`testimonials.${index}.location`}
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Client Location</FormLabel>
-                              <FormControl>
-                                <Input
-                                  placeholder='e.g. Palo Alto'
-                                  disabled={isLoading || savePage.isPending}
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
             )}
 
-            {/* Settings */}
-            {currentStep === 4 && (
+            {/* Page Settings */}
+            {currentStep === 3 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
                   name='slug'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Page URL Slug</FormLabel>
-                      <FormControl>
-                        <div className='flex items-center gap-2'>
-                          <span className='text-muted-foreground text-sm'>yoursite.com/p/</span>
+                      <FormLabel>Page URL</FormLabel>
+                      <div className='flex items-center space-x-2'>
+                        <div className='flex-shrink-0 text-muted-foreground text-sm'>
+                          yourdomain.com/p/
+                        </div>
+                        <FormControl>
                           <Input
-                            placeholder='your-name-realtor'
+                            placeholder={`portfolio-${Date.now()}`}
                             disabled={isLoading || savePage.isPending}
                             {...field}
                           />
-                        </div>
-                      </FormControl>
-                      <p className='text-xs text-muted-foreground mt-1'>
-                        This will be used in the public URL for your portfolio
+                        </FormControl>
+                      </div>
+                      <p className='text-xs text-muted-foreground'>
+                        Enter a unique URL for your portfolio page or leave blank to auto-generate
                       </p>
                       <FormMessage />
                     </FormItem>
@@ -805,11 +765,11 @@ export default function SetupForm({ pageId, open, onOpenChange, isLoading }: Set
                   control={form.control}
                   name='isPublic'
                   render={({ field }) => (
-                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4 mt-6'>
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4 mt-4'>
                       <div className='space-y-0.5'>
-                        <FormLabel className='text-base'>Publish Portfolio</FormLabel>
-                        <p className='text-xs text-muted-foreground'>
-                          When published, your portfolio will be accessible to the public
+                        <FormLabel>Publish Portfolio</FormLabel>
+                        <p className='text-sm text-muted-foreground'>
+                          Make your portfolio publicly accessible
                         </p>
                       </div>
                       <FormControl>
