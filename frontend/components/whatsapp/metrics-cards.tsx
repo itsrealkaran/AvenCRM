@@ -4,7 +4,13 @@ import { FaChartBar, FaClock, FaUsers, FaWhatsapp } from 'react-icons/fa';
 
 import { Card, CardContent } from '@/components/ui/card';
 
-export function MetricsCards({ campaigns }: { campaigns: any[] }) {
+export function MetricsCards({
+  campaigns,
+  totalCost,
+}: {
+  campaigns: any[];
+  totalCost: { currentMonth: number; previousMonth: number };
+}) {
   const { data: metricsData } = useQuery({
     queryKey: ['metrics'],
     queryFn: () => whatsAppService.getAccountStats(),
@@ -24,6 +30,10 @@ export function MetricsCards({ campaigns }: { campaigns: any[] }) {
     return campaignDate >= lastMonth;
   });
 
+  const totalCostPercentage =
+    ((totalCost.currentMonth - totalCost.previousMonth) / totalCost.previousMonth) * 100 || 0;
+
+  console.log('totalCostPercentage:', totalCostPercentage);
   // figure out the growth/decline percentage
   const campaignGrowthPercentage =
     ((thisMonthCampaigns.length - lastMonthCampaigns.length) / lastMonthCampaigns.length) * 100;
@@ -66,9 +76,9 @@ export function MetricsCards({ campaigns }: { campaigns: any[] }) {
       iconColor: 'text-purple-500',
     },
     {
-      title: 'Avg. Response Time',
-      value: '2m 30s',
-      change: '-10%',
+      title: 'Total Cost',
+      value: totalCost.currentMonth,
+      change: totalCostPercentage >= 0 ? `+${totalCostPercentage}%` : `${totalCostPercentage}%`,
       icon: FaClock,
       iconColor: 'text-yellow-500',
     },

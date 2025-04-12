@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -40,7 +40,10 @@ export default function WhatsAppCampaignsPage() {
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [whatsAppCode, setWhatsAppCode] = useState<string | null>(null);
-
+  const [totalCost, setTotalCost] = useState<{ currentMonth: number; previousMonth: number }>({
+    currentMonth: 0,
+    previousMonth: 0,
+  });
   const queryClient = useQueryClient();
 
   const whatsAppAccount = useQuery({
@@ -219,6 +222,89 @@ export default function WhatsAppCampaignsPage() {
     }
   }, [whatsAppCode, queryClient]);
 
+  const fetchTotalCost = useCallback(async () => {
+    if (!whatsAppAccount.data?.data?.wabaid || !whatsAppAccount.data?.data?.accessToken) {
+      console.log('Missing required data for analytics fetch');
+      return;
+    }
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    // convert to unix timestamp
+    const startDateUnix = Math.floor(startDate.getTime() / 1000);
+    const endDateUnix = Math.floor(new Date().getTime() / 1000);
+
+    try {
+      //@ts-ignore
+      FB.api(
+        `/${whatsAppAccount.data.data.wabaid}?fields=conversation_analytics
+        .start(${startDateUnix})
+        .end(${endDateUnix})
+        .granularity(DAILY)
+        .phone_numbers([])
+        .dimensions(["CONVERSATION_CATEGORY","CONVERSATION_TYPE","COUNTRY","PHONE"])
+        &access_token=${whatsAppAccount.data.data.accessToken}`,
+        (response: any) => {
+          if (response.error) {
+            console.error('Error fetching analytics:', response.error);
+            return;
+          }
+          console.log('stats:', response);
+          if (response.conversation_analytics) {
+            let calculatedTotalCost = 0;
+            for (const data of response.conversation_analytics.data) {
+              console.log('data:', data);
+              for (const point of data.data_points) {
+                calculatedTotalCost += point.cost;
+              }
+            }
+            console.log('totalCost:', calculatedTotalCost);
+            setTotalCost({ ...totalCost, currentMonth: calculatedTotalCost });
+          }
+        }
+      );
+
+      // fetching total cost of previous month for analytics
+      const startDatePreviousMonth = new Date();
+      startDatePreviousMonth.setDate(startDatePreviousMonth.getDate() - 60);
+      const startDatePreviousMonthUnix = Math.floor(startDatePreviousMonth.getTime() / 1000);
+      // @ts-ignore
+      FB.api(
+        `/${whatsAppAccount.data.data.wabaid}?fields=conversation_analytics
+        .start(${startDatePreviousMonthUnix})
+        .end(${startDateUnix})
+        .granularity(DAILY)
+        .phone_numbers([])
+        .dimensions(["CONVERSATION_CATEGORY","CONVERSATION_TYPE","COUNTRY","PHONE"])
+        &access_token=${whatsAppAccount.data.data.accessToken}`,
+        (response: any) => {
+          if (response.error) {
+            console.error('Error fetching analytics:', response.error);
+            return;
+          }
+          if (response.conversation_analytics) {
+            let calculatedTotalCost = 0;
+            for (const data of response.conversation_analytics.data) {
+              for (const point of data.data_points) {
+                calculatedTotalCost += point.cost;
+              }
+            }
+            setTotalCost({ ...totalCost, previousMonth: calculatedTotalCost });
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error in fetchTotalCost:', error);
+    }
+  }, [whatsAppAccount.data]);
+
+  useEffect(() => {
+    if (whatsAppAccount.data?.data?.wabaid && whatsAppAccount.data?.data?.accessToken) {
+      fetchTotalCost();
+    }
+  }, [whatsAppAccount.data, fetchTotalCost]);
+
   if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
@@ -260,7 +346,7 @@ export default function WhatsAppCampaignsPage() {
 
       {hasWhatsAppAccount ? (
         <>
-          <MetricsCards campaigns={whatsAppCampaigns.data?.data || []} />
+          <MetricsCards campaigns={whatsAppCampaigns.data?.data || []} totalCost={totalCost} />
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
