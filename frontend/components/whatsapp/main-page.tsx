@@ -46,6 +46,9 @@ export default function WhatsAppCampaignsPage() {
   });
   const queryClient = useQueryClient();
 
+  // Add state to track if templates are loaded
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
+
   const whatsAppAccount = useQuery({
     queryKey: ['whatsapp-account'],
     queryFn: () => api.get('/whatsapp/accounts'),
@@ -65,15 +68,15 @@ export default function WhatsAppCampaignsPage() {
 
   useEffect(() => {
     if (whatsAppAccount.data?.data?.wabaid) {
-      console.log('Fetching templates for WABA ID:', whatsAppAccount.data.data.wabaid);
       // @ts-ignore
       FB.api(
         `/${whatsAppAccount.data?.data?.wabaid}/message_templates?access_token=${whatsAppAccount.data?.data?.accessToken}`,
         'GET',
         (response: any) => {
-          console.log('Received templates from Facebook API:', response);
           if (response && response.data) {
+            console.log('Templates:', response.data);
             setTemplates(response.data);
+            setTemplatesLoaded(true);
           }
         }
       );
@@ -307,6 +310,12 @@ export default function WhatsAppCampaignsPage() {
     }
   }, [whatsAppAccount.data, fetchTotalCost]);
 
+  const handleOpenCampaignModal = useCallback(() => {
+    if (templatesLoaded) {
+      setShowCampaignModal(true);
+    }
+  }, [templatesLoaded]);
+
   if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
@@ -337,10 +346,7 @@ export default function WhatsAppCampaignsPage() {
             Connect WhatsApp
           </Button>
         ) : (
-          <Button
-            onClick={() => setShowCampaignModal(true)}
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-          >
+          <Button onClick={handleOpenCampaignModal} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
             Create Campaign
           </Button>
         )}
@@ -417,8 +423,9 @@ export default function WhatsAppCampaignsPage() {
         onConnect={() => setIsConnected(true)}
       />
 
-      {showCampaignModal && (
+      {showCampaignModal && templatesLoaded && (
         <CreateCampaignModal
+          key={`modal-${templates.length}-${showCampaignModal}`}
           open={showCampaignModal}
           onClose={handleCloseCampaignModal}
           templates={templates}

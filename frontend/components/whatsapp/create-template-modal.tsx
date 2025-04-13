@@ -62,27 +62,75 @@ export function CreateTemplateModal({
   );
   const [showRules, setShowRules] = useState(false);
 
+  const fixVariableNumbering = (text: string): string => {
+    let counter = 1;
+    return text.replace(/{{(\d+)}}/g, () => `{{${counter++}}}`);
+  };
+
   const handleSubmit = async () => {
     if (!name || !language || !category || !bodyText) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    // Count variables in header and body text
-    const headerVariables = (headerText.match(/{{(\d+)}}/g) || []).length;
-    const bodyVariables = (bodyText.match(/{{(\d+)}}/g) || []).length;
+    // Fix variable numbering in both components
+    const fixedHeaderText = headerText ? fixVariableNumbering(headerText) : '';
+    const fixedBodyText = fixVariableNumbering(bodyText);
 
-    // Validate examples match variables
-    if (headerText && headerExamples.length !== headerVariables) {
+    // Validate variable numbering in header and body text
+    const headerVariables = (fixedHeaderText.match(/{{(\d+)}}/g) || []).map((match: string) =>
+      parseInt(match.match(/\d+/)![0])
+    );
+    const bodyVariables = (fixedBodyText.match(/{{(\d+)}}/g) || []).map((match: string) =>
+      parseInt(match.match(/\d+/)![0])
+    );
+
+    console.log('Header variables:', headerVariables);
+    console.log('Body variables:', bodyVariables);
+    console.log('Body text:', fixedBodyText);
+
+    // Check if variables start from 1 and are sequential
+    const isHeaderSequential =
+      headerVariables.length === 0 ||
+      (headerVariables[0] === 1 &&
+        headerVariables.every((val: number, idx: number) => val === idx + 1));
+    const isBodySequential =
+      bodyVariables.length === 0 ||
+      (bodyVariables[0] === 1 &&
+        bodyVariables.every((val: number, idx: number) => val === idx + 1));
+
+    console.log('Is header sequential:', isHeaderSequential);
+    console.log('Is body sequential:', isBodySequential);
+
+    if (!isHeaderSequential && headerVariables.length > 0) {
       toast.error(
-        `Please provide ${headerVariables} example${headerVariables !== 1 ? 's' : ''} for the header variables`
+        `Header variables must start from 1 and be sequential. Found: ${headerVariables.join(', ')}`
       );
       return;
     }
 
-    if (bodyExamples.length !== bodyVariables) {
+    if (!isBodySequential && bodyVariables.length > 0) {
       toast.error(
-        `Please provide ${bodyVariables} example${bodyVariables !== 1 ? 's' : ''} for the body variables`
+        `Body variables must start from 1 and be sequential. Found: ${bodyVariables.join(', ')}`
+      );
+      return;
+    }
+
+    // Count variables in header and body text
+    const headerVarCount = headerVariables.length;
+    const bodyVarCount = bodyVariables.length;
+
+    // Validate examples match variables
+    if (headerText && headerExamples.length !== headerVarCount) {
+      toast.error(
+        `Please provide ${headerVarCount} example${headerVarCount !== 1 ? 's' : ''} for the header variables`
+      );
+      return;
+    }
+
+    if (bodyExamples.length !== bodyVarCount) {
+      toast.error(
+        `Please provide ${bodyVarCount} example${bodyVarCount !== 1 ? 's' : ''} for the body variables`
       );
       return;
     }
@@ -95,12 +143,12 @@ export function CreateTemplateModal({
         language,
         category,
         components: [
-          ...(headerText
+          ...(fixedHeaderText
             ? [
                 {
                   type: 'HEADER',
                   format: 'TEXT',
-                  text: headerText,
+                  text: fixedHeaderText,
                   example: {
                     header_text: headerExamples,
                   },
@@ -109,9 +157,9 @@ export function CreateTemplateModal({
             : []),
           {
             type: 'BODY',
-            text: bodyText,
+            text: fixedBodyText,
             example: {
-              body_text: [bodyExamples],
+              body_text: [bodyExamples.map((example) => example || '')],
             },
           },
           {
@@ -125,14 +173,19 @@ export function CreateTemplateModal({
         // TODO: Update template
       } else {
         // @ts-ignore
-        FB.api(`/${wabaId}/message_templates`, 'POST', templateData, (response) => {
-          console.log('response:', response);
-          if (response.error) {
-            toast.error(response.error.error_user_msg);
-          } else {
-            toast.success('Template created successfully');
+        FB.api(
+          `/${wabaId}/message_templates?access_token=${accessToken}`,
+          'POST',
+          templateData,
+          (response: any) => {
+            console.log('response:', response);
+            if (response.error) {
+              toast.error(response.error.error_user_msg);
+            } else {
+              toast.success('Template created successfully! Please wait for approval from Meta.');
+            }
           }
-        });
+        );
       }
 
       onCreateTemplate();

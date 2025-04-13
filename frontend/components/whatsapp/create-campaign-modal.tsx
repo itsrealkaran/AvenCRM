@@ -269,13 +269,6 @@ export function CreateCampaignModal({
     }
   }, [open, editingCampaign?.id, templates.length]);
 
-  // Fetch accounts when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchAccounts();
-    }
-  }, [open]);
-
   const fetchAccounts = async () => {
     try {
       const accountsData = await whatsAppService.getAccounts();
