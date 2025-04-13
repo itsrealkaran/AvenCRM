@@ -125,10 +125,6 @@ export default function WhatsAppCampaignsPage() {
     queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
   };
 
-  const handleUpdateTemplate = (template: any) => {
-    setTemplates(templates.map((t) => (t.id === template.id ? template : t)));
-  };
-
   const { company } = useAuth();
 
   const handleWhatsAppLogin = () => {
@@ -371,6 +367,7 @@ export default function WhatsAppCampaignsPage() {
                 onUpdateCampaign={() => {
                   queryClient.invalidateQueries({ queryKey: ['whatsapp-campaigns'] });
                 }}
+                onOpenCreateCampaignModal={() => setShowCampaignModal(true)}
               />
             </TabsContent>
             <TabsContent value='messages'>
@@ -396,7 +393,6 @@ export default function WhatsAppCampaignsPage() {
                 wabaId={whatsAppAccount.data?.data?.wabaid || ''}
                 accessToken={whatsAppAccount.data?.data?.accessToken || ''}
                 onCreateTemplate={handleCreateTemplate}
-                onUpdateTemplate={handleUpdateTemplate}
               />
             </TabsContent>
           </Tabs>

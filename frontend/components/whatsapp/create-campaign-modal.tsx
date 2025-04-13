@@ -88,35 +88,27 @@ const MessagePreview = React.memo(
 
       let message = '';
       template.components.forEach((component) => {
-        if (component.type === 'BODY') {
+        if (component.type === 'BODY' && component.text) {
           let text = component.text;
           Object.entries(params).forEach(([key, value]) => {
-            text = text.replace(
-              `{{${key}}}`,
-              value ||
-                component.example?.body_text_named_params?.find(
-                  (p: { param_name: string; example: string }) => p.param_name === key
-                )?.example ||
-                `{{${key}}}`
-            );
+            if (key.startsWith('body_param')) {
+              const index = parseInt(key.replace('body_param', ''));
+              text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+            }
           });
           message += text + '\n\n';
         }
-        if (component.type === 'HEADER') {
+        if (component.type === 'HEADER' && component.text) {
           let text = component.text;
           Object.entries(params).forEach(([key, value]) => {
-            text = text.replace(
-              `{{${key}}}`,
-              value ||
-                component.example?.header_text_named_params?.find(
-                  (p: { param_name: string; example: string }) => p.param_name === key
-                )?.example ||
-                `{{${key}}}`
-            );
+            if (key.startsWith('header_param')) {
+              const index = parseInt(key.replace('header_param', ''));
+              text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+            }
           });
           message = text + '\n\n' + message;
         }
-        if (component.type === 'FOOTER') {
+        if (component.type === 'FOOTER' && component.text) {
           message += '\n' + component.text;
         }
       });
@@ -158,48 +150,56 @@ const TemplateParameters = React.memo(
     onChange: (params: Record<string, string>) => void;
   }) => {
     const handleParamChange = useCallback(
-      (key: string, value: string) => {
-        onChange({ ...params, [key]: value });
+      (componentType: string, index: number, value: string) => {
+        const paramKey = `${componentType.toLowerCase()}_param${index}`;
+        const newParams = { ...params, [paramKey]: value };
+        onChange(newParams);
       },
       [params, onChange]
     );
 
     return (
       <div className='space-y-4'>
-        {template.components.map((component, index) => {
-          if (component.type === 'BODY') {
-            const params = component.example?.body_text_named_params || [];
+        {template.components.map((component, componentIndex) => {
+          if (component.type === 'BODY' && component.example?.body_text) {
             return (
-              <div key={index} className='space-y-4'>
-                {params.map((param: TemplateParam) => (
-                  <div key={param.param_name} className='space-y-2'>
-                    <Label htmlFor={param.param_name}>{param.param_name}</Label>
-                    <Input
-                      id={param.param_name}
-                      placeholder={param.example}
-                      value={params[param.param_name] || ''}
-                      onChange={(e) => handleParamChange(param.param_name, e.target.value)}
-                    />
-                  </div>
-                ))}
+              <div key={componentIndex} className='space-y-4'>
+                {component.example.body_text.map((example: string, index: number) => {
+                  const paramIndex = index + 1;
+                  const paramKey = `body_param${paramIndex}`;
+                  return (
+                    <div key={index} className='space-y-2'>
+                      <Label htmlFor={paramKey}>Body Parameter {paramIndex}</Label>
+                      <Input
+                        id={paramKey}
+                        placeholder={example}
+                        value={params[paramKey] || ''}
+                        onChange={(e) => handleParamChange('BODY', paramIndex, e.target.value)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             );
           }
-          if (component.type === 'HEADER') {
-            const params = component.example?.header_text_named_params || [];
+          if (component.type === 'HEADER' && component.example?.header_text) {
             return (
-              <div key={index} className='space-y-4'>
-                {params.map((param: TemplateParam) => (
-                  <div key={param.param_name} className='space-y-2'>
-                    <Label htmlFor={param.param_name}>{param.param_name}</Label>
-                    <Input
-                      id={param.param_name}
-                      placeholder={param.example}
-                      value={params[param.param_name] || ''}
-                      onChange={(e) => handleParamChange(param.param_name, e.target.value)}
-                    />
-                  </div>
-                ))}
+              <div key={componentIndex} className='space-y-4'>
+                {component.example.header_text.map((example: string, index: number) => {
+                  const paramIndex = index + 1;
+                  const paramKey = `header_param${paramIndex}`;
+                  return (
+                    <div key={index} className='space-y-2'>
+                      <Label htmlFor={paramKey}>Header Parameter {paramIndex}</Label>
+                      <Input
+                        id={paramKey}
+                        placeholder={example}
+                        value={params[paramKey] || ''}
+                        onChange={(e) => handleParamChange('HEADER', paramIndex, e.target.value)}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             );
           }
@@ -342,10 +342,29 @@ export function CreateCampaignModal({
         const messageData = {
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
-          type: 'text',
-          text: {
-            preview_url: true,
-            body: selectedTemplate.components?.[0]?.text || '',
+          type: 'template',
+          template: {
+            name: selectedTemplate.name,
+            language: {
+              code: 'en_US',
+            },
+            components: selectedTemplate.components.map((component) => {
+              if (component.type === 'BODY' || component.type === 'HEADER') {
+                return {
+                  type: component.type.toLowerCase(),
+                  parameters: Object.entries(data.templateParams || {})
+                    .filter(([key]) => key.startsWith(component.type.toLowerCase() + '_param'))
+                    .map(([key, value]) => ({
+                      type: 'text',
+                      text: value,
+                    })),
+                };
+              }
+              if (component.type === 'FOOTER') {
+                return;
+              }
+              return component;
+            }),
           },
         };
 
@@ -382,13 +401,39 @@ export function CreateCampaignModal({
 
             if (response) {
               const wamid = (response as any).messages?.[0]?.id;
+              const message = selectedTemplate.components.reduce((message, component) => {
+                if (component.type === 'BODY' && component.text) {
+                  let text = component.text;
+                  Object.entries(data.templateParams || {}).forEach(([key, value]) => {
+                    if (key.startsWith('body_param')) {
+                      const index = parseInt(key.replace('body_param', ''));
+                      text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+                    }
+                  });
+                  message += text + '\n\n';
+                }
+                if (component.type === 'HEADER' && component.text) {
+                  let text = component.text;
+                  Object.entries(data.templateParams || {}).forEach(([key, value]) => {
+                    if (key.startsWith('header_param')) {
+                      const index = parseInt(key.replace('header_param', ''));
+                      text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+                    }
+                  });
+                  message = text + '\n\n' + message;
+                }
+                if (component.type === 'FOOTER' && component.text) {
+                  message += '\n' + component.text;
+                }
+                return message;
+              }, '');
               if (wamid) {
                 await api.post('/whatsapp/campaigns/saveMessage', {
                   phoneNumberId: data.accountId,
                   phoneNumber: recipient.phoneNumber,
                   campaignData: { ...messageWithRecipient, wamid },
                   recipientNumber: recipient.phoneNumber,
-                  message: messageWithRecipient.text.body,
+                  message,
                   wamid,
                   sentAt: new Date().toISOString(),
                 });

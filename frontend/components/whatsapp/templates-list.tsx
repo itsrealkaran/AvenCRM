@@ -29,7 +29,6 @@ type Template = {
 interface TemplatesListProps {
   templates?: Template[];
   onCreateTemplate: () => void;
-  onUpdateTemplate: (template: Template) => void;
   wabaId: string;
   accessToken: string;
 }
@@ -37,7 +36,6 @@ interface TemplatesListProps {
 export function TemplatesList({
   templates = [],
   onCreateTemplate,
-  onUpdateTemplate,
   wabaId,
   accessToken,
 }: TemplatesListProps) {
