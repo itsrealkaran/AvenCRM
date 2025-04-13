@@ -1,11 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { api } from '@/lib/api';
 
 interface VerifyNumberModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export function VerifyNumberModal({
   const [isLoading, setIsLoading] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (isOpen) {
@@ -103,8 +106,17 @@ export function VerifyNumberModal({
               console.error('Error verifying account:', response.error);
               toast.error(response.error.error_user_msg);
             } else {
-              toast.success('Account verified successfully');
-              onClose();
+              api
+                .post(`/whatsapp/accounts/${phoneNumberId}/verify`)
+                .then(() => {
+                  toast.success('Account verified successfully');
+                  queryClient.invalidateQueries({ queryKey: ['whatsapp-account'] });
+                  onClose();
+                })
+                .catch((error) => {
+                  console.error('Error verifying account:', error);
+                  toast.error('Failed to verify account');
+                });
             }
           }
         );

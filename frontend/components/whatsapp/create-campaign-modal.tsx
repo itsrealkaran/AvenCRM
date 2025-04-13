@@ -267,7 +267,14 @@ export function CreateCampaignModal({
       setSelectedTemplate(null);
       setSelectedAccountId('');
     }
-  }, [open, editingCampaign, templates, form]);
+  }, [open, editingCampaign?.id, templates.length]);
+
+  // Fetch accounts when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchAccounts();
+    }
+  }, [open]);
 
   const fetchAccounts = async () => {
     try {
@@ -280,20 +287,18 @@ export function CreateCampaignModal({
   };
 
   // Handle account selection
-  const handleAccountSelect = useCallback(
-    (value: string) => {
-      setSelectedAccountId(value);
-      const account = accounts?.phoneNumbers.find((acc) => acc.phoneNumberId === value);
-      if (account) {
-        if (!account.isRegistered) {
-          setIsRegisteringModalOpen(true);
-        } else {
-          form.setValue('accountId', value);
-        }
-      }
-    },
-    [accounts?.phoneNumbers, form]
-  );
+  const handleAccountSelect = (value: string) => {
+    const account = accounts?.phoneNumbers.find((acc) => acc.phoneNumberId === value);
+    if (!account) return;
+
+    setSelectedAccountId(value);
+    if (!account.isRegistered) {
+      form.setValue('accountId', '');
+      setIsRegisteringModalOpen(true);
+    } else {
+      form.setValue('accountId', value);
+    }
+  };
 
   const handleTemplateChange = useCallback(
     (value: string) => {
@@ -315,7 +320,10 @@ export function CreateCampaignModal({
   const onSubmit = async (data: CampaignFormData) => {
     if (!selectedTemplate || !data.accountId) return;
 
-    setIsLoading(true);
+    if (!accounts?.phoneNumbers.find((acc) => acc.phoneNumberId === data.accountId)?.isRegistered) {
+      toast.error('Please register your WhatsApp account first');
+      return;
+    }
 
     try {
       const campaignData: Omit<Campaign, 'accountId'> & { accountId: string } = {
@@ -440,7 +448,7 @@ export function CreateCampaignModal({
 
             <div className='space-y-2'>
               <Label htmlFor='accountId'>WhatsApp Account</Label>
-              <Select value={selectedAccountId} onValueChange={handleAccountSelect}>
+              <Select value={form.watch('accountId')} onValueChange={handleAccountSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>
@@ -570,7 +578,7 @@ export function CreateCampaignModal({
         open={isRegisteringModalOpen}
         onClose={() => setIsRegisteringModalOpen(false)}
         accessToken={accounts?.accessToken || ''}
-        phoneNumberId={form.watch('accountId')}
+        phoneNumberId={selectedAccountId}
         wabaId={accounts?.wabaid || ''}
         phoneNumbers={accounts?.phoneNumbers || []}
       />

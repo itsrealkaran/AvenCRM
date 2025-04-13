@@ -32,6 +32,8 @@ interface CreateTemplateModalProps {
   onClose: () => void;
   onCreateTemplate: () => void;
   editingTemplate?: any;
+  wabaId: string;
+  accessToken: string;
 }
 
 export function CreateTemplateModal({
@@ -39,6 +41,8 @@ export function CreateTemplateModal({
   onClose,
   onCreateTemplate,
   editingTemplate,
+  wabaId,
+  accessToken,
 }: CreateTemplateModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState(editingTemplate?.name || '');
@@ -87,7 +91,7 @@ export function CreateTemplateModal({
 
     try {
       const templateData = {
-        name,
+        name: name.toLowerCase().replace(/ /g, '_'),
         language,
         category,
         components: [
@@ -110,16 +114,26 @@ export function CreateTemplateModal({
               body_text: [bodyExamples],
             },
           },
+          {
+            type: 'FOOTER',
+            text: 'Generated using AvenCRM',
+          },
         ],
       };
 
-      // if (editingTemplate) {
-      //   await whatsAppService.updateTemplate(editingTemplate.id, templateData);
-      //   toast.success('Template updated successfully');
-      // } else {
-      //   await whatsAppService.createTemplate(templateData);
-      //   toast.success('Template created successfully');
-      // }
+      if (editingTemplate) {
+        // TODO: Update template
+      } else {
+        // @ts-ignore
+        FB.api(`/${wabaId}/message_templates`, 'POST', templateData, (response) => {
+          console.log('response:', response);
+          if (response.error) {
+            toast.error(response.error.error_user_msg);
+          } else {
+            toast.success('Template created successfully');
+          }
+        });
+      }
 
       onCreateTemplate();
       onClose();
@@ -206,9 +220,9 @@ export function CreateTemplateModal({
         </DialogHeader>
 
         <ScrollArea className='max-h-[calc(90vh-230px)] pr-4'>
-          <div className='grid gap-6 py-4 -ml-10'>
+          <div className='grid gap-6 py-4 mx-8'>
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='name' className='text-right font-medium'>
+              <Label htmlFor='name' className='text-left font-medium'>
                 Name
                 <TooltipProvider>
                   <Tooltip>
@@ -231,7 +245,7 @@ export function CreateTemplateModal({
             </div>
 
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='language' className='text-right font-medium'>
+              <Label htmlFor='language' className='text-left font-medium'>
                 Language
                 <TooltipProvider>
                   <Tooltip>
@@ -266,7 +280,7 @@ export function CreateTemplateModal({
             </div>
 
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='category' className='text-right font-medium'>
+              <Label htmlFor='category' className='text-left font-medium'>
                 Category
                 <TooltipProvider>
                   <Tooltip>
@@ -355,7 +369,7 @@ export function CreateTemplateModal({
             <div className='grid grid-cols-4 gap-4'>
               <Label
                 htmlFor='header'
-                className='text-right font-medium sticky top-0 pt-4 bg-background'
+                className='text-left font-medium sticky top-0 pt-4 bg-background'
               >
                 Header
                 <TooltipProvider>
@@ -417,7 +431,7 @@ export function CreateTemplateModal({
             <div className='grid grid-cols-4 gap-4'>
               <Label
                 htmlFor='body'
-                className='text-right font-medium sticky top-0 pt-4 bg-background'
+                className='text-left font-medium sticky top-0 pt-4 bg-background'
               >
                 Body
                 <TooltipProvider>

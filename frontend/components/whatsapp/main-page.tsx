@@ -89,7 +89,7 @@ export default function WhatsAppCampaignsPage() {
     }
   }, [whatsAppAudiences.data, whatsAppCampaigns.data]);
 
-  const handleCreateCampaign = async (campaign: Campaign) => {
+  const handleCreateCampaign = useCallback(async (campaign: Campaign) => {
     try {
       const response = await api.post('/whatsapp/campaigns', {
         name: campaign.name,
@@ -105,7 +105,11 @@ export default function WhatsAppCampaignsPage() {
       console.error('Error creating campaign:', error);
       toast.error('Failed to create campaign');
     }
-  };
+  }, []);
+
+  const handleCloseCampaignModal = useCallback(() => {
+    setShowCampaignModal(false);
+  }, []);
 
   const handleCreateAudience = (newAudience: AudienceGroup) => {
     setAudiences([...audiences, newAudience]);
@@ -383,6 +387,8 @@ export default function WhatsAppCampaignsPage() {
             <TabsContent value='templates'>
               <TemplatesList
                 templates={templates}
+                wabaId={whatsAppAccount.data?.data?.wabaid || ''}
+                accessToken={whatsAppAccount.data?.data?.accessToken || ''}
                 onCreateTemplate={handleCreateTemplate}
                 onUpdateTemplate={handleUpdateTemplate}
               />
@@ -411,13 +417,15 @@ export default function WhatsAppCampaignsPage() {
         onConnect={() => setIsConnected(true)}
       />
 
-      <CreateCampaignModal
-        open={showCampaignModal}
-        onClose={() => setShowCampaignModal(false)}
-        templates={templates}
-        onCreateCampaign={handleCreateCampaign}
-        audiences={audiences}
-      />
+      {showCampaignModal && (
+        <CreateCampaignModal
+          open={showCampaignModal}
+          onClose={handleCloseCampaignModal}
+          templates={templates}
+          onCreateCampaign={handleCreateCampaign}
+          audiences={audiences}
+        />
+      )}
     </Card>
   );
 }

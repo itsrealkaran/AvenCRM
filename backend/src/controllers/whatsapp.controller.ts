@@ -239,27 +239,29 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const accountId = req.params.id;
+      const { phoneNumberId } = req.query;
 
-      const account = await prisma.whatsAppAccount.findUnique({
-        where: { id: accountId }
+      const phoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
+        where: { 
+          account: {
+            userId: req.user.id
+          },
+          phoneNumberId: phoneNumberId as string
+        }
       });
 
-      if (!account) {
+      if (!phoneNumber) {
         return res.status(404).json({ message: 'Account not found' });
       }
 
-      if (account.userId !== req.user.id) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
-
-      const verified = await whatsAppService.verifyAccount(accountId);
-
-      if (verified) {
-        return res.status(200).json({ message: 'Account verified successfully', verified: true });
-      } else {
-        return res.status(400).json({ message: 'Account verification failed', verified: false });
-      }
+      await prisma.whatsAppPhoneNumber.update({
+        where: { id: phoneNumber.id },
+        data: {
+          codeVerificationStatus: 'VERIFIED'
+        }
+      });
+      
+      return res.status(200).json({ message: 'Account verified successfully' });
     } catch (error) {
       logger.error('Error verifying WhatsApp account:', error);
       return res.status(500).json({ message: 'Internal server error' });
