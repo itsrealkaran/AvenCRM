@@ -67,7 +67,7 @@ export function ConnectedAccounts({
         (response: any) => {
           if (response.error) {
             console.error('Error verifying account:', response.error);
-            toast.error('Failed to verify account');
+            toast.error(response.error.error_user_msg);
           }
         }
       );

@@ -33,7 +33,6 @@ export function MetricsCards({
   const totalCostPercentage =
     ((totalCost.currentMonth - totalCost.previousMonth) / totalCost.previousMonth) * 100 || 0;
 
-  console.log('totalCostPercentage:', totalCostPercentage);
   // figure out the growth/decline percentage
   const campaignGrowthPercentage =
     ((thisMonthCampaigns.length - lastMonthCampaigns.length) / lastMonthCampaigns.length) * 100;

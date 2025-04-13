@@ -254,12 +254,10 @@ export default function WhatsAppCampaignsPage() {
           if (response.conversation_analytics) {
             let calculatedTotalCost = 0;
             for (const data of response.conversation_analytics.data) {
-              console.log('data:', data);
               for (const point of data.data_points) {
                 calculatedTotalCost += point.cost;
               }
             }
-            console.log('totalCost:', calculatedTotalCost);
             setTotalCost({ ...totalCost, currentMonth: calculatedTotalCost });
           }
         }

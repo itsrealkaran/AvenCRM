@@ -225,6 +225,7 @@ export function CreateCampaignModal({
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
   const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
@@ -257,34 +258,16 @@ export function CreateCampaignModal({
       form.reset(initialValues);
       const template = templates.find((t) => t.id === editingCampaign.template?.id);
       setSelectedTemplate(template || null);
+      setSelectedAccountId(editingCampaign.accountId || '');
     } else {
       form.reset({
         type: 'TEMPLATE',
         templateParams: {},
       });
       setSelectedTemplate(null);
+      setSelectedAccountId('');
     }
   }, [open, editingCampaign, templates, form]);
-
-  // Fix the infinite update loop by properly managing dependencies
-  useEffect(() => {
-    const accountId = form.getValues('accountId');
-    if (!accountId || !accounts?.phoneNumbers) return;
-
-    const account = accounts.phoneNumbers.find((acc) => acc.phoneNumberId === accountId);
-    if (account && !account.isRegistered) {
-      setIsRegisteringModalOpen(true);
-    }
-
-    if (!isRegisteringModalOpen) {
-      const account = accounts.phoneNumbers.find((acc) => acc.phoneNumberId === accountId);
-      if (account && account.isRegistered) {
-        form.setValue('accountId', accountId);
-      } else {
-        form.setValue('accountId', '');
-      }
-    }
-  }, [form.watch('accountId'), accounts?.phoneNumbers, isRegisteringModalOpen]);
 
   const fetchAccounts = async () => {
     try {
@@ -295,6 +278,22 @@ export function CreateCampaignModal({
       toast.error('Failed to load WhatsApp accounts');
     }
   };
+
+  // Handle account selection
+  const handleAccountSelect = useCallback(
+    (value: string) => {
+      setSelectedAccountId(value);
+      const account = accounts?.phoneNumbers.find((acc) => acc.phoneNumberId === value);
+      if (account) {
+        if (!account.isRegistered) {
+          setIsRegisteringModalOpen(true);
+        } else {
+          form.setValue('accountId', value);
+        }
+      }
+    },
+    [accounts?.phoneNumbers, form]
+  );
 
   const handleTemplateChange = useCallback(
     (value: string) => {
@@ -441,22 +440,7 @@ export function CreateCampaignModal({
 
             <div className='space-y-2'>
               <Label htmlFor='accountId'>WhatsApp Account</Label>
-              <Select
-                value={form.watch('accountId')}
-                onValueChange={(value) => {
-                  if (value) {
-                    const account = accounts?.phoneNumbers.find(
-                      (acc) => acc.phoneNumberId === value
-                    );
-                    if (account && account.isRegistered) {
-                      form.setValue('accountId', value);
-                    } else {
-                      form.setValue('accountId', value);
-                      setIsRegisteringModalOpen(true);
-                    }
-                  }
-                }}
-              >
+              <Select value={selectedAccountId} onValueChange={handleAccountSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>
