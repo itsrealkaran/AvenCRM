@@ -1053,118 +1053,123 @@ export class WhatsAppController extends BaseController {
           for (const change of entry.changes) {
             const phoneNumberId = change.value.metadata.phone_number_id;
 
-            const whatsAppPhoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
+            // Find all matching phone numbers
+            const whatsAppPhoneNumbers = await prisma.whatsAppPhoneNumber.findMany({
               where: {
                 phoneNumberId
               },
               include: {
                 recipients: true,
-                account: true // Include account to get userId
+                account: true
               }
             });
 
-            if (!whatsAppPhoneNumber) {
+            if (!whatsAppPhoneNumbers || whatsAppPhoneNumbers.length === 0) {
               logger.error('WhatsApp phone number not found');
               continue;
             }
 
-            // Emit event for status updates
-            if (change.field === 'messages' && change.value && change.value.statuses) {
-              for (const status of change.value.statuses) {
-                const wamid = status.id;
-                const statusValue = status.status;
+            // Process each matching phone number
+            for (const whatsAppPhoneNumber of whatsAppPhoneNumbers) {
+              // Emit event for status updates
+              if (change.field === 'messages' && change.value && change.value.statuses) {
+                for (const status of change.value.statuses) {
+                  const wamid = status.id;
+                  const statusValue = status.status;
 
-                // Update message status
-                const updatedMessage = await prisma.whatsAppMessage.updateMany({
-                  where: { wamid },
-                  data: {
-                    status: statusValue.toUpperCase(),
-                    deliveredAt: statusValue === 'delivered' ? new Date() : undefined,
-                    readAt: statusValue === 'read' ? new Date() : undefined,
-                    errorMessage: status.errors ? JSON.stringify(status.errors) : null
-                  }
-                });
-
-                // Emit status update event
-                const eventData = {
-                  type: 'status_update',
-                  userId: whatsAppPhoneNumber.account.userId,
-                  data: {
-                    wamid,
-                    status: statusValue.toUpperCase(),
-                    phoneNumberId
-                  }
-                };
-                global.sseClients.forEach(client => {
-                  if (client.userId === whatsAppPhoneNumber.account.userId) {
-                    client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
-                  }
-                });
-              }
-            } else if (change.field === 'messages' && change.value && !change.value.statuses) {
-              for (const message of change.value.messages) {
-                const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
-                let newMessage;
-
-                if (recipient) {
-                  if (!recipient.name && change.value.contacts[0].profile.name) {
-                    await prisma.whatsAppRecipient.update({
-                      where: {
-                        id: recipient.id
-                      },
-                      data: {
-                        name: change.value.contacts[0].profile.name
-                      }
-                    })
-                  }
-                  newMessage = await prisma.whatsAppMessage.create({
+                  // Update message status
+                  await prisma.whatsAppMessage.updateMany({
+                    where: { wamid },
                     data: {
-                      recipientId: recipient.id,
-                      phoneNumber: message.from,
-                      wamid: message.id,
-                      message: message.text.body,
-                      sentAt: new Date(message.timestamp * 1000),
-                      status: 'PENDING',
-                      whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
+                      status: statusValue.toUpperCase(),
+                      deliveredAt: statusValue === 'delivered' ? new Date() : undefined,
+                      readAt: statusValue === 'read' ? new Date() : undefined,
+                      errorMessage: status.errors ? JSON.stringify(status.errors) : null
                     }
                   });
-                } else {
-                  await prisma.$transaction(async (tx) => {
-                    const newRecipient = await tx.whatsAppRecipient.create({
-                      data: {
-                        phoneNumber: message.from,
-                        name: change.value.contacts[0].profile.name || null,
-                        whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
-                      }
-                    });
+
+                  // Emit status update event
+                  const eventData = {
+                    type: 'status_update',
+                    userId: whatsAppPhoneNumber.account.userId,
+                    data: {
+                      wamid,
+                      status: statusValue.toUpperCase(),
+                      phoneNumberId
+                    }
+                  };
+                  global.sseClients.forEach(client => {
+                    if (client.userId === whatsAppPhoneNumber.account.userId) {
+                      client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                    }
+                  });
+                }
+              } else if (change.field === 'messages' && change.value && !change.value.statuses) {
+                for (const message of change.value.messages) {
+                  const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
+                  let newMessage;
+
+                  if (recipient) {
+                    if (!recipient.name && change.value.contacts[0].profile.name) {
+                      await prisma.whatsAppRecipient.update({
+                        where: {
+                          id: recipient.id
+                        },
+                        data: {
+                          name: change.value.contacts[0].profile.name
+                        }
+                      });
+                    }
                     newMessage = await prisma.whatsAppMessage.create({
                       data: {
-                        recipientId: newRecipient.id,
-                        wamid: message.id,
+                        recipientId: recipient.id,
                         phoneNumber: message.from,
+                        wamid: message.id,
                         message: message.text.body,
                         sentAt: new Date(message.timestamp * 1000),
                         status: 'PENDING',
                         whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
                       }
                     });
+                  } else {
+                    const newData = await prisma.$transaction(async (tx) => {
+                      const newRecipient = await tx.whatsAppRecipient.create({
+                        data: {
+                          phoneNumber: message.from,
+                          name: change.value.contacts[0].profile.name || null,
+                          whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
+                        }
+                      });
+                      newMessage = await tx.whatsAppMessage.create({
+                        data: {
+                          recipientId: newRecipient.id,
+                          wamid: message.id,
+                          phoneNumber: message.from,
+                          message: message.text.body,
+                          sentAt: new Date(message.timestamp * 1000),
+                          status: 'PENDING',
+                          whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
+                        }
+                      });
+                      return { newRecipient, newMessage };
+                    });
+                  }
+
+                  // Emit new message event
+                  const eventData = {
+                    type: 'new_message',
+                    userId: whatsAppPhoneNumber.account.userId,
+                    data: {
+                      message: newMessage,
+                      phoneNumberId
+                    }
+                  };
+                  global.sseClients.forEach(client => {
+                    if (client.userId === whatsAppPhoneNumber.account.userId) {
+                      client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                    }
                   });
                 }
-
-                // Emit new message event
-                const eventData = {
-                  type: 'new_message',
-                  userId: whatsAppPhoneNumber.account.userId,
-                  data: {
-                    message: newMessage,
-                    phoneNumberId
-                  }
-                };
-                global.sseClients.forEach(client => {
-                  if (client.userId === whatsAppPhoneNumber.account.userId) {
-                    client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
-                  }
-                });
               }
             }
           }
