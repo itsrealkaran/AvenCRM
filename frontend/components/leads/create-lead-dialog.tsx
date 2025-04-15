@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { leadsApi } from '@/api/leads.service';
 import { createLeadSchema } from '@/schema';
 import { CreateLead, LeadStatus, PropertyType } from '@/types';
@@ -34,6 +34,7 @@ export function CreateLeadDialog({
   initialValues,
 }: CreateLeadDialogProps) {
   const queryClient = useQueryClient();
+  const formRef = useRef<any>(null);
 
   const createLead = useMutation({
     mutationFn: async (values: CreateLead) => {
@@ -67,6 +68,12 @@ export function CreateLeadDialog({
     notes: initialValues?.notes || [],
   };
 
+  useEffect(() => {
+    if (open && initialValues && formRef.current) {
+      formRef.current.reset(defaultValues);
+    }
+  }, [open, initialValues]);
+
   return (
     <BaseEntityDialog
       open={open}
@@ -80,6 +87,7 @@ export function CreateLeadDialog({
       isLoading={isLoading}
     >
       {(form) => {
+        formRef.current = form;
         return (
           <>
             <div className='h-[50vh] overflow-y-auto pr-2'>
@@ -160,7 +168,12 @@ export function CreateLeadDialog({
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter phone' disabled={isLoading} {...field} />
+                          <Input
+                            placeholder='Enter phone'
+                            disabled={isLoading}
+                            {...field}
+                            value={field.value || ''}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
