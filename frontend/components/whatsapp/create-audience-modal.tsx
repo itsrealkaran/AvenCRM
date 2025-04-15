@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { WhatsAppAccount } from '@/types/whatsapp.types';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,6 +27,11 @@ import {
 
 import type { AudienceGroup } from './audience-list';
 
+interface Recipient {
+  name: string;
+  phoneNumber: string;
+}
+
 interface CreateAudienceModalProps {
   open: boolean;
   onClose: () => void;
@@ -41,11 +47,13 @@ export function CreateAudienceModal({
 }: CreateAudienceModalProps) {
   const [name, setName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
+  const [recipientName, setRecipientName] = useState('');
+  const [phoneNumbers, setPhoneNumbers] = useState<Recipient[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [accounts, setAccounts] = useState<WhatsAppAccount>();
   const [selectedAccountId, setSelectedAccountId] = useState<string>('');
+  const queryClient = useQueryClient();
 
   // Reset form when modal opens/closes
   useEffect(() => {
@@ -62,7 +70,7 @@ export function CreateAudienceModal({
   // Set form values when editing audience changes
   useEffect(() => {
     if (editingAudience) {
-      setName(editingAudience.name);
+      setName(editingAudience.name || '');
       setPhoneNumbers(editingAudience.phoneNumbers || []);
       setSelectedAccountId(editingAudience.id || '');
     } else if (open) {
@@ -77,6 +85,7 @@ export function CreateAudienceModal({
     setPhoneNumber('');
     setSelectedAccountId('');
     setErrors({});
+    setRecipientName('');
   };
 
   const fetchAccounts = async () => {
@@ -105,30 +114,29 @@ export function CreateAudienceModal({
   };
 
   const handleAddPhoneNumber = () => {
-    if (!phoneNumber.trim()) return;
-
-    // Validate phone number format (basic validation)
     const phoneRegex = /^\+[0-9]{10,15}$/;
-    if (!phoneRegex.test(phoneNumber.trim())) {
-      setErrors({ ...errors, phoneNumber: 'Invalid phone format. Use format: +1234567890' });
+    if (!phoneRegex.test(phoneNumber)) {
+      setErrors({
+        phoneNumber: 'Please enter a valid phone number with country code (e.g., +1234567890)',
+      });
       return;
     }
 
-    if (!phoneNumbers.includes(phoneNumber.trim())) {
-      setPhoneNumbers([...phoneNumbers, phoneNumber.trim()]);
-      setPhoneNumber('');
-      // Clear phone number error if it exists
-      if (errors.phoneNumber) {
-        const { phoneNumber: _, ...restErrors } = errors;
-        setErrors(restErrors);
-      }
-    } else {
-      setErrors({ ...errors, phoneNumber: 'This phone number is already added' });
+    if (phoneNumbers.some((recipient) => recipient.phoneNumber === phoneNumber)) {
+      setErrors({ phoneNumber: 'This phone number is already added' });
+      return;
+    }
+
+    setPhoneNumbers([...phoneNumbers, { name: recipientName, phoneNumber }]);
+    setPhoneNumber('');
+    setRecipientName('');
+    if (errors.phoneNumber) {
+      setErrors({});
     }
   };
 
   const handleRemovePhoneNumber = (number: string) => {
-    setPhoneNumbers(phoneNumbers.filter((n) => n !== number));
+    setPhoneNumbers(phoneNumbers.filter((n) => n.phoneNumber !== number));
   };
 
   const handleSubmit = async () => {
@@ -140,7 +148,10 @@ export function CreateAudienceModal({
       let audience;
 
       // Clean phone numbers by removing '+' prefix
-      const cleanPhoneNumbers = phoneNumbers.map((number) => number.replace('+', ''));
+      const cleanPhoneNumbersWithName = phoneNumbers.map((number) => ({
+        name: number.name,
+        phoneNumber: number.phoneNumber.replace('+', ''),
+      }));
 
       if (editingAudience) {
         audience = await whatsAppService.updateAudience(editingAudience.id, {
@@ -150,20 +161,23 @@ export function CreateAudienceModal({
         const existingRecipients = await whatsAppService.getAudienceRecipients(editingAudience.id);
         const existingPhoneNumbers = existingRecipients.map((r: any) => r.phoneNumber);
 
-        const newPhoneNumbers = cleanPhoneNumbers.filter(
-          (number) => !existingPhoneNumbers.includes(number)
+        // Only add new phone numbers that don't exist
+        const newPhoneNumbers = cleanPhoneNumbersWithName.filter(
+          (number) => !existingPhoneNumbers.includes(number.phoneNumber)
         );
 
         if (newPhoneNumbers.length > 0) {
           const recipients = newPhoneNumbers.map((phoneNumber) => ({
-            phoneNumber,
+            name: phoneNumber.name,
+            phoneNumber: phoneNumber.phoneNumber,
           }));
 
           await whatsAppService.addRecipients(editingAudience.id, recipients);
         }
 
+        // Remove phone numbers that are no longer in the list
         const removedRecipients = existingRecipients.filter(
-          (r: any) => !cleanPhoneNumbers.includes(r.phoneNumber)
+          (r: any) => !cleanPhoneNumbersWithName.some((n) => n.phoneNumber === r.phoneNumber)
         );
 
         for (const recipient of removedRecipients) {
@@ -174,7 +188,7 @@ export function CreateAudienceModal({
 
         audience = {
           ...updatedAudience,
-          phoneNumbers: cleanPhoneNumbers,
+          phoneNumbers: cleanPhoneNumbersWithName,
         };
 
         toast.success('Audience updated successfully');
@@ -184,9 +198,10 @@ export function CreateAudienceModal({
           accountId: selectedAccountId,
         });
 
-        if (cleanPhoneNumbers.length > 0) {
-          const recipients = cleanPhoneNumbers.map((phoneNumber) => ({
-            phoneNumber,
+        if (cleanPhoneNumbersWithName.length > 0) {
+          const recipients = cleanPhoneNumbersWithName.map((phoneNumber) => ({
+            name: phoneNumber.name,
+            phoneNumber: phoneNumber.phoneNumber,
           }));
 
           await whatsAppService.addRecipients(audience.id, recipients);
@@ -196,12 +211,13 @@ export function CreateAudienceModal({
 
         audience = {
           ...createdAudience,
-          phoneNumbers: cleanPhoneNumbers,
+          phoneNumbers: cleanPhoneNumbersWithName,
         };
 
         toast.success('Audience created successfully');
       }
 
+      queryClient.invalidateQueries({ queryKey: ['whatsapp-audiences'] });
       onCreateAudience(audience);
       onClose();
     } catch (error) {
@@ -247,30 +263,41 @@ export function CreateAudienceModal({
             {errors.name && <p className='text-sm text-red-500'>{errors.name}</p>}
           </div>
           <div className='grid gap-2'>
-            <Label htmlFor='phoneNumber'>Add Phone Number</Label>
-            <div className='flex gap-2'>
-              <Input
-                id='phoneNumber'
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder='Enter phone number with country code (e.g., +1234567890)'
-                className='flex-grow'
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleAddPhoneNumber();
-                  }
-                }}
-              />
+            <Label>Add Recipient</Label>
+            <div className='grid grid-cols-2 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='recipientName'>Recipient Name</Label>
+                <Input
+                  id='recipientName'
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder='Enter recipient name'
+                />
+                {errors.recipientName && (
+                  <p className='text-sm text-red-500'>{errors.recipientName}</p>
+                )}
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='phoneNumber'>Phone Number</Label>
+                <Input
+                  id='phoneNumber'
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  placeholder='Enter phone number with country code (e.g., +1234567890)'
+                />
+                {errors.phoneNumber && <p className='text-sm text-red-500'>{errors.phoneNumber}</p>}
+              </div>
+            </div>
+            <div className='flex justify-end mt-2'>
               <Button
                 onClick={handleAddPhoneNumber}
                 type='button'
                 className='bg-[#5932EA] hover:bg-[#5932EA]/90'
               >
-                <Plus className='h-4 w-4' />
+                <Plus className='h-4 w-4 mr-2' />
+                Add Recipient
               </Button>
             </div>
-            {errors.phoneNumber && <p className='text-sm text-red-500'>{errors.phoneNumber}</p>}
           </div>
           <div>
             <Label className='mb-2 block'>Phone Numbers ({phoneNumbers.length})</Label>
@@ -278,16 +305,16 @@ export function CreateAudienceModal({
               {phoneNumbers.length > 0 ? (
                 phoneNumbers.map((number) => (
                   <div
-                    key={number}
+                    key={number.phoneNumber}
                     className='flex items-center justify-between py-2 px-2 hover:bg-gray-100 rounded'
                   >
                     <Badge variant='secondary' className='font-mono'>
-                      {number}
+                      {number.name} {number.phoneNumber}
                     </Badge>
                     <Button
                       variant='ghost'
                       size='sm'
-                      onClick={() => handleRemovePhoneNumber(number)}
+                      onClick={() => handleRemovePhoneNumber(number.phoneNumber)}
                     >
                       <X className='h-4 w-4' />
                     </Button>

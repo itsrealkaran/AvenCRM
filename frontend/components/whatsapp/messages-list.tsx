@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
-import { MessageSquare, Phone, Search, Send } from 'lucide-react';
+import { LeadStatus, PropertyType } from '@/types';
+import { MessageSquare, Phone, Plus, Search, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,7 @@ import {
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
+import { CreateLeadDialog } from '../leads/create-lead-dialog';
 import { RegisterNumberModal } from './register-number';
 
 type Chat = {
@@ -39,6 +41,7 @@ type Message = {
   isOutbound: boolean;
   wamid: string;
   recipient: {
+    name?: string;
     phoneNumber: string;
   };
 };
@@ -111,6 +114,8 @@ const MessagesList = ({
   const [phoneNumberId, setPhoneNumberId] = useState<string>(phoneNumbers[0].phoneNumberId);
   const [conversationCache, setConversationCache] = useState<Record<string, Message[]>>({});
   const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [isAddToLeadsModalOpen, setIsAddToLeadsModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   // Add scroll to bottom function
@@ -560,6 +565,33 @@ const MessagesList = ({
                 </p>
                 <p className='text-sm text-muted-foreground'>Online</p>
               </div>
+              <div className='ml-auto'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    if (selectedChat.phoneNumber) {
+                      setSelectedMessage({
+                        id: '',
+                        message: '',
+                        sentAt: new Date().toISOString(),
+                        phoneNumber: selectedChat.phoneNumber,
+                        status: '',
+                        isOutbound: false,
+                        wamid: '',
+                        recipient: {
+                          name: selectedChat.name,
+                          phoneNumber: selectedChat.phoneNumber,
+                        },
+                      });
+                      setIsAddToLeadsModalOpen(true);
+                    }
+                  }}
+                >
+                  <Plus className='h-4 w-4' />
+                  Add to leads
+                </Button>
+              </div>
             </div>
 
             {/* Messages */}
@@ -649,6 +681,21 @@ const MessagesList = ({
           codeVerificationStatus: phoneNumber.status,
           isRegistered: phoneNumber.isRegistered,
         }))}
+      />
+      <CreateLeadDialog
+        open={isAddToLeadsModalOpen}
+        onOpenChange={(open) => setIsAddToLeadsModalOpen(open)}
+        initialValues={{
+          name: selectedChat.name || '',
+          phone: selectedChat.phoneNumber,
+          source: 'WhatsApp',
+          status: LeadStatus.NEW,
+          role: 'BUY',
+          propertyType: PropertyType.RESIDENTIAL,
+          budget: undefined,
+          location: '',
+          notes: [],
+        }}
       />
     </div>
   );

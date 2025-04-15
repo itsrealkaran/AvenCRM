@@ -28,7 +28,10 @@ import { CreateAudienceModal } from './create-audience-modal';
 export interface AudienceGroup {
   id: string;
   name: string;
-  phoneNumbers?: string[];
+  phoneNumbers?: {
+    name: string;
+    phoneNumber: string;
+  }[];
   recipients?: {
     id: string;
     phoneNumber: string;
@@ -85,7 +88,10 @@ export function AudienceList({ audiences: initialAudiences, onCreateAudience }: 
       const audienceWithRecipients = await whatsAppService.getAudience(audience.id);
       setEditingAudience({
         ...audience,
-        phoneNumbers: audienceWithRecipients.recipients.map((r: any) => r.phoneNumber),
+        phoneNumbers: audienceWithRecipients.recipients.map((r: any) => ({
+          name: r.name,
+          phoneNumber: r.phoneNumber,
+        })),
       });
       setShowCreateModal(true);
     } catch (error) {

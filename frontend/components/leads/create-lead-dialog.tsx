@@ -24,9 +24,15 @@ interface CreateLeadDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isLoading?: boolean;
+  initialValues?: Partial<CreateLead>;
 }
 
-export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDialogProps) {
+export function CreateLeadDialog({
+  open,
+  onOpenChange,
+  isLoading,
+  initialValues,
+}: CreateLeadDialogProps) {
   const queryClient = useQueryClient();
 
   const createLead = useMutation({
@@ -49,23 +55,23 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
   });
 
   const defaultValues: CreateLead = {
-    name: '',
-    email: '',
-    phone: '',
-    status: LeadStatus.NEW,
-    source: 'Manual',
-    role: 'BUY',
-    propertyType: PropertyType.RESIDENTIAL,
-    budget: undefined,
-    location: '',
-    notes: [],
+    name: initialValues?.name || '',
+    email: initialValues?.email || '',
+    phone: initialValues?.phone || '',
+    status: initialValues?.status || LeadStatus.NEW,
+    source: initialValues?.source || 'Manual',
+    role: initialValues?.role || 'BUY',
+    propertyType: initialValues?.propertyType || PropertyType.RESIDENTIAL,
+    budget: initialValues?.budget,
+    location: initialValues?.location || '',
+    notes: initialValues?.notes || [],
   };
 
   return (
     <BaseEntityDialog
       open={open}
       onOpenChange={onOpenChange}
-      title='Create New Lead'
+      title={`Create New Lead ${initialValues?.name ? `(${initialValues?.name})` : initialValues?.phone ? `(${initialValues?.phone})` : ''}`}
       schema={createLeadSchema}
       defaultValues={defaultValues}
       onSubmit={(values) => {
@@ -87,7 +93,12 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter name' disabled={isLoading} {...field} />
+                          <Input
+                            placeholder='Enter name'
+                            disabled={isLoading}
+                            {...field}
+                            value={field.value || ''}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -101,7 +112,12 @@ export function CreateLeadDialog({ open, onOpenChange, isLoading }: CreateLeadDi
                       <FormItem>
                         <FormLabel>Email</FormLabel>
                         <FormControl>
-                          <Input placeholder='Enter email' disabled={isLoading} {...field} />
+                          <Input
+                            placeholder='Enter email'
+                            disabled={isLoading}
+                            {...field}
+                            value={field.value || ''}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

@@ -161,45 +161,55 @@ const TemplateParameters = React.memo(
     return (
       <div className='space-y-4'>
         {template.components.map((component, componentIndex) => {
-          if (component.type === 'BODY' && component.example?.body_text) {
+          if (component.type === 'BODY' && component.text) {
+            // Extract variables from the text using regex
+            const variables = component.text.match(/{{(\d+)}}/g) || [];
+            const uniqueIndices: number[] = Array.from(
+              new Set(variables.map((v: string) => parseInt(v.match(/\d+/)![0])))
+            );
+
             return (
               <div key={componentIndex} className='space-y-4'>
-                {component.example.body_text.map((example: string, index: number) => {
-                  const paramIndex = index + 1;
-                  const paramKey = `body_param${paramIndex}`;
-                  return (
-                    <div key={index} className='space-y-2'>
-                      <Label htmlFor={paramKey}>Body Parameter {paramIndex}</Label>
-                      <Input
-                        id={paramKey}
-                        placeholder={example}
-                        value={params[paramKey] || ''}
-                        onChange={(e) => handleParamChange('BODY', paramIndex, e.target.value)}
-                      />
-                    </div>
-                  );
-                })}
+                <div className='grid grid-cols-2 gap-4'>
+                  {uniqueIndices.map((index: number) => {
+                    const paramKey = `body_param${index}`;
+                    const example = component.example?.body_text?.[0]?.[index - 1] || '';
+                    return (
+                      <div key={index} className='space-y-2'>
+                        <Label htmlFor={paramKey}>Parameter {index}</Label>
+                        <Input
+                          id={paramKey}
+                          placeholder={example}
+                          value={params[paramKey] || ''}
+                          onChange={(e) => handleParamChange('BODY', index, e.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           }
           if (component.type === 'HEADER' && component.example?.header_text) {
             return (
               <div key={componentIndex} className='space-y-4'>
-                {component.example.header_text.map((example: string, index: number) => {
-                  const paramIndex = index + 1;
-                  const paramKey = `header_param${paramIndex}`;
-                  return (
-                    <div key={index} className='space-y-2'>
-                      <Label htmlFor={paramKey}>Header Parameter {paramIndex}</Label>
-                      <Input
-                        id={paramKey}
-                        placeholder={example}
-                        value={params[paramKey] || ''}
-                        onChange={(e) => handleParamChange('HEADER', paramIndex, e.target.value)}
-                      />
-                    </div>
-                  );
-                })}
+                <div className='grid grid-cols-2 gap-4'>
+                  {component.example.header_text.map((example: string, index: number) => {
+                    const paramIndex = index + 1;
+                    const paramKey = `header_param${paramIndex}`;
+                    return (
+                      <div key={index} className='space-y-2'>
+                        <Label htmlFor={paramKey}>Header Parameter {paramIndex}</Label>
+                        <Input
+                          id={paramKey}
+                          placeholder={example}
+                          value={params[paramKey] || ''}
+                          onChange={(e) => handleParamChange('HEADER', paramIndex, e.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           }
@@ -501,22 +511,6 @@ export function CreateCampaignModal({
               {form.formState.errors.accountId && (
                 <p className='text-sm text-red-500'>{form.formState.errors.accountId.message}</p>
               )}
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='type'>Campaign Type</Label>
-              <Select
-                disabled={true}
-                value={form.watch('type')}
-                onValueChange={(value: 'TEMPLATE') => form.setValue('type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select campaign type' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='TEMPLATE'>Template Message</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {form.watch('type') === 'TEMPLATE' && (
