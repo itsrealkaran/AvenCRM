@@ -52,7 +52,7 @@ export function MetricsCards({
     },
     {
       title: 'Active Conversations',
-      value: metricsData?.activeConversations,
+      value: metricsData?.activeConversations || 0,
       change:
         metricsData?.activeConversationsChange !== undefined
           ? metricsData.activeConversationsChange >= 0
@@ -64,7 +64,7 @@ export function MetricsCards({
     },
     {
       title: 'Message Open Rate',
-      value: metricsData?.messageOpenRate,
+      value: metricsData?.messageOpenRate || 0,
       change:
         metricsData?.messageOpenRateChange !== undefined
           ? metricsData.messageOpenRateChange >= 0
@@ -76,7 +76,7 @@ export function MetricsCards({
     },
     {
       title: 'Total Cost',
-      value: totalCost.currentMonth,
+      value: totalCost.currentMonth || 0,
       change: totalCostPercentage >= 0 ? `+${totalCostPercentage}%` : `${totalCostPercentage}%`,
       icon: FaClock,
       iconColor: 'text-yellow-500',

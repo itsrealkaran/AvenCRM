@@ -30,6 +30,7 @@ type Chat = {
     createdAt: string;
     status: string;
   };
+  unreadCount: number;
 };
 
 type Message = {
@@ -132,7 +133,15 @@ const MessagesList = ({
     const fetchChats = async () => {
       try {
         const response = await whatsAppService.getPhoneNumbers(1, 20, phoneNumberId);
-        setChats(response);
+        // Add unreadCount to each chat
+        const chatsWithUnread = response.data.map((chat: Chat) => ({
+          ...chat,
+          unreadCount: 0,
+        }));
+        setChats({
+          ...response,
+          data: chatsWithUnread,
+        });
         setHasMoreChats(response.pagination.hasMore);
 
         // Initialize messages state with empty arrays for each chat
@@ -171,9 +180,10 @@ const MessagesList = ({
       };
 
       eventSource.onmessage = (event) => {
-        console.log(event.data, 'event data');
+        console.log('Raw SSE event data:', event.data);
         try {
           const data = JSON.parse(event.data) as SSEMessage;
+          console.log('Parsed SSE message:', data);
 
           if (data.type === 'connected') {
             console.log('Connected to SSE with userId:', data.userId);
@@ -181,12 +191,74 @@ const MessagesList = ({
           }
 
           if (data.type === 'new_message' && data.data.message && data.data.phoneNumberId) {
+            console.log('Processing new message:', {
+              message: data.data.message,
+              phoneNumberId: data.data.phoneNumberId,
+            });
+
             const { message, phoneNumberId } = data.data;
             const recipientPhoneNumber = message.phoneNumber;
 
-            console.log('New message received:', message);
-            console.log('Phone numbers:', phoneNumbers);
-            console.log('Recipient phone number:', recipientPhoneNumber);
+            console.log('Message details:', {
+              recipientPhoneNumber,
+              messageContent: message.message,
+              timestamp: message.sentAt,
+            });
+
+            // Update chat list order and unread count
+            setChats((prev) => {
+              console.log('Current chats state before update:', prev);
+              const currentChats = [...prev.data];
+              const chatIndex = currentChats.findIndex(
+                (chat) => chat.phoneNumber === recipientPhoneNumber
+              );
+
+              console.log('Found chat at index:', chatIndex);
+
+              let updatedChat;
+              if (chatIndex !== -1) {
+                // Remove the chat from its current position
+                const [chat] = currentChats.splice(chatIndex, 1);
+                console.log('Updating existing chat:', chat);
+                // Update unread count if not the selected chat
+                updatedChat = {
+                  ...chat,
+                  unreadCount:
+                    selectedChat.phoneNumber === recipientPhoneNumber ? 0 : chat.unreadCount + 1,
+                  latestMessage: {
+                    message: message.message,
+                    createdAt: message.sentAt,
+                    status: message.status,
+                  },
+                };
+              } else {
+                console.log('Creating new chat for:', recipientPhoneNumber);
+                // If chat doesn't exist, create a new one
+                updatedChat = {
+                  phoneNumber: recipientPhoneNumber,
+                  name: message.recipient.name,
+                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber ? 0 : 1,
+                  latestMessage: {
+                    message: message.message,
+                    createdAt: message.sentAt,
+                    status: message.status,
+                  },
+                };
+              }
+
+              // Add to the beginning of the array
+              currentChats.unshift(updatedChat);
+
+              console.log('Updated chats state:', {
+                ...prev,
+                data: currentChats,
+              });
+
+              return {
+                ...prev,
+                data: currentChats,
+              };
+            });
 
             // Update conversation cache
             setConversationCache((prev) => {
@@ -200,7 +272,6 @@ const MessagesList = ({
               // Add the new message to the conversation
               currentCache[recipientPhoneNumber] = [...currentCache[recipientPhoneNumber], message];
 
-              console.log('Updated cache:', currentCache);
               return currentCache;
             });
 
@@ -220,7 +291,6 @@ const MessagesList = ({
                   message,
                 ];
 
-                console.log('Updated messages:', currentMessages);
                 return currentMessages;
               });
             }
@@ -286,6 +356,18 @@ const MessagesList = ({
       }
     };
   }, [phoneNumbers, selectedChat.phoneNumber]);
+
+  // Add effect to reset unread count when selecting a chat
+  useEffect(() => {
+    if (selectedChat.phoneNumber) {
+      setChats((prev) => ({
+        ...prev,
+        data: prev.data.map((chat) =>
+          chat.phoneNumber === selectedChat.phoneNumber ? { ...chat, unreadCount: 0 } : chat
+        ),
+      }));
+    }
+  }, [selectedChat.phoneNumber]);
 
   const loadMoreChats = async () => {
     if (!hasMoreChats || isLoadingMore) return;
@@ -524,12 +606,19 @@ const MessagesList = ({
                         <p className='font-medium truncate text-sm'>
                           {chat.name ? chat.name : chat.phoneNumber}
                         </p>
-                        <span className='text-xs text-muted-foreground ml-2'>
-                          {new Date(chat.latestMessage?.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
+                        <div className='flex items-center gap-2'>
+                          {chat.unreadCount > 0 && (
+                            <span className='bg-primary text-primary-foreground text-xs rounded-full px-2 py-1'>
+                              {chat.unreadCount}
+                            </span>
+                          )}
+                          <span className='text-xs text-muted-foreground'>
+                            {new Date(chat.latestMessage?.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
                       </div>
                       <div className='flex justify-between items-center'>
                         <p className='text-sm w-[50%] text-muted-foreground truncate'>

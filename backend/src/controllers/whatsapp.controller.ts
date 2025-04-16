@@ -242,7 +242,7 @@ export class WhatsAppController extends BaseController {
       const { phoneNumberId } = req.query;
 
       const phoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
-        where: { 
+        where: {
           account: {
             userId: req.user.id
           },
@@ -260,7 +260,7 @@ export class WhatsAppController extends BaseController {
           codeVerificationStatus: 'VERIFIED'
         }
       });
-      
+
       return res.status(200).json({ message: 'Account verified successfully' });
     } catch (error) {
       logger.error('Error verifying WhatsApp account:', error);
@@ -1448,11 +1448,17 @@ export class WhatsAppController extends BaseController {
         }
       });
 
-      const phoneNumbers = whatsAppPhoneNumbers[0].recipients.map(recipient => ({
-        phoneNumber: recipient.phoneNumber,
-        name: recipient.name,
-        latestMessage: recipient.messages[0]
-      }));
+      const phoneNumbers = whatsAppPhoneNumbers[0].recipients
+        .map(recipient => ({
+          phoneNumber: recipient.phoneNumber,
+          name: recipient.name,
+          latestMessage: recipient.messages[0]
+        }))
+        .sort((a, b) => {
+          const aTime = a.latestMessage?.createdAt ? new Date(a.latestMessage.createdAt).getTime() : 0;
+          const bTime = b.latestMessage?.createdAt ? new Date(b.latestMessage.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
 
       const totalPages = Math.ceil(totalCount / limit);
 
@@ -1562,10 +1568,10 @@ export class WhatsAppController extends BaseController {
       const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
       const sixtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 60));
 
-      const currentPeriodMessages = messages.filter(msg => 
+      const currentPeriodMessages = messages.filter(msg =>
         msg.createdAt >= thirtyDaysAgo && msg.isOutbound
       );
-      const previousPeriodMessages = messages.filter(msg => 
+      const previousPeriodMessages = messages.filter(msg =>
         msg.createdAt >= sixtyDaysAgo && msg.createdAt < thirtyDaysAgo && msg.isOutbound
       );
 
@@ -1583,12 +1589,20 @@ export class WhatsAppController extends BaseController {
         ? Math.round(((currentOpenRate - previousOpenRate) / previousOpenRate) * 100)
         : 0;
 
+      // if the phone number is in the current period, then it is an active conversation
+      const activeConversation = currentPeriodMessages.reduce((acc, msg) => {
+        if (msg.phoneNumber) {
+          acc[msg.phoneNumber] = (acc[msg.phoneNumber] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+
       const messageOpenRate = currentOpenRate;
       const messageOpenRateChange = openRateChange;
 
       return res.status(200).json({
-        activeConversations: currentPeriodMessages.length,
-        activeConversationsChange: previousPeriodMessages.length > 0 
+        activeConversations: Object.keys(activeConversation).length,
+        activeConversationsChange: previousPeriodMessages.length > 0
           ? Math.round(((currentPeriodMessages.length - previousPeriodMessages.length) / previousPeriodMessages.length) * 100)
           : 0,
         messageOpenRate,
