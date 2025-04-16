@@ -75,7 +75,7 @@ export default function WhatsAppCampaignsPage() {
         (response: any) => {
           if (response && response.data) {
             console.log('Templates:', response.data);
-            setTemplates(response.data.filter((template: any) => template.status === 'APPROVED'));
+            setTemplates(response.data);
             setTemplatesLoaded(true);
           }
         }
@@ -424,7 +424,7 @@ export default function WhatsAppCampaignsPage() {
           key={`modal-${templates.length}-${showCampaignModal}`}
           open={showCampaignModal}
           onClose={handleCloseCampaignModal}
-          templates={templates}
+          templates={templates.filter((template: any) => template.status === 'APPROVED')}
           onCreateCampaign={handleCreateCampaign}
           audiences={audiences}
         />
