@@ -79,6 +79,7 @@ interface SSEMessage {
     wamid?: string;
     status?: string;
     phoneNumberId?: string;
+    error?: string;
   };
 }
 
@@ -199,97 +200,66 @@ const MessagesList = ({
             const { message, phoneNumberId } = data.data;
             const recipientPhoneNumber = message.phoneNumber;
 
-            console.log('Message details:', {
-              recipientPhoneNumber,
-              messageContent: message.message,
-              timestamp: message.sentAt,
-            });
-
-            // Update chat list order and unread count
+            // Update chats state with new message and unread count
             setChats((prev) => {
-              console.log('Current chats state before update:', prev);
               const currentChats = [...prev.data];
               const chatIndex = currentChats.findIndex(
                 (chat) => chat.phoneNumber === recipientPhoneNumber
               );
 
-              console.log('Found chat at index:', chatIndex);
-
-              let updatedChat;
               if (chatIndex !== -1) {
-                // Remove the chat from its current position
-                const [chat] = currentChats.splice(chatIndex, 1);
-                console.log('Updating existing chat:', chat);
-                // Update unread count if not the selected chat
-                updatedChat = {
-                  ...chat,
-                  unreadCount:
-                    selectedChat.phoneNumber === recipientPhoneNumber ? 0 : chat.unreadCount + 1,
+                // Chat exists, update it
+                const updatedChat: Chat = {
+                  ...currentChats[chatIndex],
                   latestMessage: {
                     message: message.message,
                     createdAt: message.sentAt,
-                    status: message.status,
+                    status: message.status
                   },
+                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber 
+                    ? 0 
+                    : currentChats[chatIndex].unreadCount + 1
+                };
+
+                // Remove from current position and add to beginning
+                currentChats.splice(chatIndex, 1);
+                currentChats.unshift(updatedChat);
+
+                return {
+                  ...prev,
+                  data: currentChats
                 };
               } else {
-                console.log('Creating new chat for:', recipientPhoneNumber);
-                // If chat doesn't exist, create a new one
-                updatedChat = {
+                // New chat, add it to the beginning
+                const newChat: Chat = {
                   phoneNumber: recipientPhoneNumber,
                   name: message.recipient.name,
-                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber ? 0 : 1,
                   latestMessage: {
                     message: message.message,
                     createdAt: message.sentAt,
-                    status: message.status,
+                    status: message.status
                   },
+                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber ? 0 : 1
+                };
+
+                return {
+                  ...prev,
+                  data: [newChat, ...currentChats]
                 };
               }
-
-              // Add to the beginning of the array
-              currentChats.unshift(updatedChat);
-
-              console.log('Updated chats state:', {
-                ...prev,
-                data: currentChats,
-              });
-
-              return {
-                ...prev,
-              };
-            });
-
-            // Update conversation cache
-            setConversationCache((prev) => {
-              const currentCache = { ...prev };
-
-              // If the conversation doesn't exist yet, create it
-              if (!currentCache[recipientPhoneNumber]) {
-                currentCache[recipientPhoneNumber] = [];
-              }
-
-              // Add the new message to the conversation
-              currentCache[recipientPhoneNumber] = [...currentCache[recipientPhoneNumber], message];
-
-              return currentCache;
             });
 
             // Update current messages if this is the selected chat
             if (selectedChat.phoneNumber === recipientPhoneNumber) {
               setMessages((prev) => {
                 const currentMessages = { ...prev };
-
-                // If the conversation doesn't exist yet, create it
                 if (!currentMessages[selectedChat.phoneNumber]) {
                   currentMessages[selectedChat.phoneNumber] = [];
                 }
-
-                // Add the new message to the conversation
                 currentMessages[selectedChat.phoneNumber] = [
                   ...currentMessages[selectedChat.phoneNumber],
                   message,
                 ];
-
                 return currentMessages;
               });
             }
@@ -299,7 +269,7 @@ const MessagesList = ({
             data.data.status &&
             data.data.phoneNumberId
           ) {
-            const { wamid, status, phoneNumberId } = data.data;
+            const { wamid, status, phoneNumberId, error } = data.data;
 
             // Update message status in cache
             setConversationCache((prev) => {

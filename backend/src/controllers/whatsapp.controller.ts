@@ -1077,16 +1077,26 @@ export class WhatsAppController extends BaseController {
                   const wamid = status.id;
                   const statusValue = status.status;
 
-                  // Update message status
-                  await prisma.whatsAppMessage.updateMany({
-                    where: { wamid },
-                    data: {
-                      status: statusValue.toUpperCase(),
-                      deliveredAt: statusValue === 'delivered' ? new Date() : undefined,
-                      readAt: statusValue === 'read' ? new Date() : undefined,
-                      errorMessage: status.errors ? JSON.stringify(status.errors) : null
-                    }
-                  });
+                  if (statusValue === 'failed') {
+                    await prisma.whatsAppMessage.updateMany({
+                      where: { wamid },
+                      data: {
+                        status: 'FAILED',
+                        errorMessage: JSON.stringify(status.errors)
+                      }
+                    });
+                  } else {
+                    // Update message status
+                    await prisma.whatsAppMessage.updateMany({
+                      where: { wamid },
+                      data: {
+                        status: statusValue.toUpperCase(),
+                        deliveredAt: statusValue === 'delivered' ? new Date() : undefined,
+                        readAt: statusValue === 'read' ? new Date() : undefined,
+                        errorMessage: status.errors ? JSON.stringify(status.errors) : null
+                      }
+                    });
+                  }
 
                   // Emit status update event
                   const eventData = {
@@ -1095,7 +1105,8 @@ export class WhatsAppController extends BaseController {
                     data: {
                       wamid,
                       status: statusValue.toUpperCase(),
-                      phoneNumberId
+                      phoneNumberId,
+                      error: status.errors ? status.errors[0].error_data.details : null
                     }
                   };
                   global.sseClients.forEach(client => {
