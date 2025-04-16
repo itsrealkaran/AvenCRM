@@ -256,7 +256,6 @@ const MessagesList = ({
 
               return {
                 ...prev,
-                data: currentChats,
               };
             });
 
@@ -472,14 +471,15 @@ const MessagesList = ({
   const handleSendMessage = () => {
     if (!selectedChat.phoneNumber || !inputMessage.trim()) return;
 
+    const newMessageId = String(Date.now());
     const newMessage: Message = {
-      id: String(Date.now()),
+      id: newMessageId,
       message: inputMessage,
       phoneNumber: selectedChat.phoneNumber,
       sentAt: new Date().toISOString(),
       status: 'PENDING',
       isOutbound: true,
-      wamid: String(Date.now()),
+      wamid: newMessageId,
       recipient: {
         phoneNumber: selectedChat.phoneNumber,
       },
@@ -512,13 +512,45 @@ const MessagesList = ({
       'POST',
       campaignData,
       (phoneNumbers: any) => {
-        api.post('/whatsapp/campaigns/saveMessage', {
-          recipientNumber: selectedChat.phoneNumber,
-          phoneNumberId: phoneNumberId,
-          message: inputMessage,
-          wamid: phoneNumbers.messages[0].id,
-          sentAt: new Date().toISOString(),
-        });
+        if (phoneNumbers.messages[0].id) {
+          api
+            .post('/whatsapp/campaigns/saveMessage', {
+              recipientNumber: selectedChat.phoneNumber,
+              phoneNumberId: phoneNumberId,
+              message: inputMessage,
+              wamid: phoneNumbers.messages[0].id,
+              sentAt: new Date().toISOString(),
+            })
+            .catch((err) => {
+              // if error then remove the message from the cache
+              setConversationCache((prev) => ({
+                ...prev,
+                [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+                  (msg) => msg.wamid !== newMessageId
+                ),
+              }));
+              setMessages((prev) => ({
+                ...prev,
+                [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+                  (msg) => msg.wamid !== newMessageId
+                ),
+              }));
+            });
+        } else {
+          // if error then remove the message from the cache
+          setConversationCache((prev) => ({
+            ...prev,
+            [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+              (msg) => msg.wamid !== newMessageId
+            ),
+          }));
+          setMessages((prev) => ({
+            ...prev,
+            [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+              (msg) => msg.wamid !== newMessageId
+            ),
+          }));
+        }
       }
     );
 
