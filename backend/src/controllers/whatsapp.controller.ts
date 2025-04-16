@@ -1076,6 +1076,7 @@ export class WhatsAppController extends BaseController {
                 for (const status of change.value.statuses) {
                   const wamid = status.id;
                   const statusValue = status.status;
+                  const phoneNumber = status.recipient_id;
 
                   if (statusValue === 'failed') {
                     await prisma.whatsAppMessage.updateMany({
@@ -1106,6 +1107,7 @@ export class WhatsAppController extends BaseController {
                       wamid,
                       status: statusValue.toUpperCase(),
                       phoneNumberId,
+                      phoneNumber,
                       error: status.errors ? status.errors[0].error_data.details : null
                     }
                   };

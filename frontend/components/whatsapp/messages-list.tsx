@@ -79,6 +79,7 @@ interface SSEMessage {
     wamid?: string;
     status?: string;
     phoneNumberId?: string;
+    phoneNumber?: string;
     error?: string;
   };
 }
@@ -214,11 +215,12 @@ const MessagesList = ({
                   latestMessage: {
                     message: message.message,
                     createdAt: message.sentAt,
-                    status: message.status
+                    status: message.status,
                   },
-                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber 
-                    ? 0 
-                    : currentChats[chatIndex].unreadCount + 1
+                  unreadCount:
+                    selectedChat.phoneNumber === recipientPhoneNumber
+                      ? 0
+                      : currentChats[chatIndex].unreadCount + 1,
                 };
 
                 // Remove from current position and add to beginning
@@ -227,7 +229,7 @@ const MessagesList = ({
 
                 return {
                   ...prev,
-                  data: currentChats
+                  data: currentChats,
                 };
               } else {
                 // New chat, add it to the beginning
@@ -237,14 +239,14 @@ const MessagesList = ({
                   latestMessage: {
                     message: message.message,
                     createdAt: message.sentAt,
-                    status: message.status
+                    status: message.status,
                   },
-                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber ? 0 : 1
+                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber ? 0 : 1,
                 };
 
                 return {
                   ...prev,
-                  data: [newChat, ...currentChats]
+                  data: [newChat, ...currentChats],
                 };
               }
             });
@@ -269,18 +271,27 @@ const MessagesList = ({
             data.data.status &&
             data.data.phoneNumberId
           ) {
-            const { wamid, status, phoneNumberId, error } = data.data;
+            const { wamid, status, phoneNumberId, phoneNumber, error } = data.data;
 
             // Update message status in cache
             setConversationCache((prev) => {
               const currentCache = { ...prev };
-              const phoneNumber = phoneNumbers.find(
-                (pn) => pn.phoneNumberId === phoneNumberId
+              const conversationPhoneNumber = phoneNumbers.find(
+                (pn) => pn.phoneNumber === phoneNumber
               )?.phoneNumber;
 
-              if (phoneNumber && currentCache[phoneNumber]) {
-                currentCache[phoneNumber] = currentCache[phoneNumber].map((msg) =>
-                  msg.wamid === wamid ? { ...msg, status } : msg
+              console.log(
+                'Phone number1:',
+                phoneNumbers.find((pn) => pn.phoneNumber === phoneNumber)
+              );
+
+              if (conversationPhoneNumber && currentCache[conversationPhoneNumber]) {
+                console.log(
+                  'Phone number:',
+                  currentCache[conversationPhoneNumber].filter((msg) => msg.wamid === wamid)
+                );
+                currentCache[conversationPhoneNumber] = currentCache[conversationPhoneNumber].map(
+                  (msg) => (msg.wamid === wamid ? { ...msg, status, error } : msg)
                 );
               }
 
