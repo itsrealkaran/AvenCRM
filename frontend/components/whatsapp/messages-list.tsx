@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { LeadStatus, PropertyType } from '@/types';
-import { MessageSquare, Phone, Plus, Search, Send } from 'lucide-react';
+import { Cross1Icon } from '@radix-ui/react-icons';
+import { Cross, MessageSquare, Phone, Plus, Search, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -40,6 +42,7 @@ type Message = {
   phoneNumber: string;
   status: string;
   isOutbound: boolean;
+  errorMessage?: string;
   wamid: string;
   recipient: {
     name?: string;
@@ -276,22 +279,19 @@ const MessagesList = ({
             // Update message status in cache
             setConversationCache((prev) => {
               const currentCache = { ...prev };
-              const conversationPhoneNumber = phoneNumbers.find(
-                (pn) => pn.phoneNumber === phoneNumber
-              )?.phoneNumber;
+              console.log('Phone number:', phoneNumber);
 
-              console.log(
-                'Phone number1:',
-                phoneNumbers.find((pn) => pn.phoneNumber === phoneNumber)
-              );
-
-              if (conversationPhoneNumber && currentCache[conversationPhoneNumber]) {
+              if (phoneNumber && currentCache[phoneNumber]) {
                 console.log(
                   'Phone number:',
-                  currentCache[conversationPhoneNumber].filter((msg) => msg.wamid === wamid)
+                  currentCache[phoneNumber].filter((msg) => {
+                    console.log('Msg:', msg.wamid);
+                    console.log('Wamid:', wamid);
+                    return msg.wamid === wamid;
+                  })
                 );
-                currentCache[conversationPhoneNumber] = currentCache[conversationPhoneNumber].map(
-                  (msg) => (msg.wamid === wamid ? { ...msg, status, error } : msg)
+                currentCache[phoneNumber] = currentCache[phoneNumber].map((msg) =>
+                  msg.wamid === wamid ? { ...msg, status, error } : msg
                 );
               }
 
@@ -307,7 +307,7 @@ const MessagesList = ({
                 if (currentMessages[selectedChat.phoneNumber]) {
                   currentMessages[selectedChat.phoneNumber] = currentMessages[
                     selectedChat.phoneNumber
-                  ].map((msg) => (msg.wamid === wamid ? { ...msg, status } : msg));
+                  ].map((msg) => (msg.wamid === wamid ? { ...msg, status, error } : msg));
                 }
 
                 console.log('Updated messages with status:', currentMessages);
@@ -732,6 +732,30 @@ const MessagesList = ({
                             })}
                           </p>
                         </div>
+                        {message.status === 'FAILED' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className='flex items-center ml-2'>
+                                  <Cross1Icon className='h-5 w-5 text-red-500 border-2 border-red-500 rounded-full p-1 hover:bg-red-50 hover:text-red-600 transition-all duration-200 cursor-help' />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side='left'
+                                className='max-w-[300px] bg-white/95 backdrop-blur-sm border border-red-100 shadow-lg rounded-lg p-3'
+                              >
+                                <div className='flex flex-col gap-2'>
+                                  <p className='text-sm font-semibold text-red-600'>
+                                    Message Failed
+                                  </p>
+                                  <p className='text-xs text-red-500/90 leading-relaxed'>
+                                    {message.errorMessage || 'Failed to send message'}
+                                  </p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                     ))}
                     <div ref={messagesEndRef} />

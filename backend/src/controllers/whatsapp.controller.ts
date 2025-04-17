@@ -1083,7 +1083,7 @@ export class WhatsAppController extends BaseController {
                       where: { wamid },
                       data: {
                         status: 'FAILED',
-                        errorMessage: JSON.stringify(status.errors)
+                        errorMessage: status.errors[0].error_data.details
                       }
                     });
                   } else {
