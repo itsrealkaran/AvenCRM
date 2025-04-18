@@ -88,35 +88,27 @@ const MessagePreview = React.memo(
 
       let message = '';
       template.components.forEach((component) => {
-        if (component.type === 'BODY') {
+        if (component.type === 'BODY' && component.text) {
           let text = component.text;
           Object.entries(params).forEach(([key, value]) => {
-            text = text.replace(
-              `{{${key}}}`,
-              value ||
-                component.example?.body_text_named_params?.find(
-                  (p: { param_name: string; example: string }) => p.param_name === key
-                )?.example ||
-                `{{${key}}}`
-            );
+            if (key.startsWith('body_param')) {
+              const index = parseInt(key.replace('body_param', ''));
+              text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+            }
           });
           message += text + '\n\n';
         }
-        if (component.type === 'HEADER') {
+        if (component.type === 'HEADER' && component.text) {
           let text = component.text;
           Object.entries(params).forEach(([key, value]) => {
-            text = text.replace(
-              `{{${key}}}`,
-              value ||
-                component.example?.header_text_named_params?.find(
-                  (p: { param_name: string; example: string }) => p.param_name === key
-                )?.example ||
-                `{{${key}}}`
-            );
+            if (key.startsWith('header_param')) {
+              const index = parseInt(key.replace('header_param', ''));
+              text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+            }
           });
           message = text + '\n\n' + message;
         }
-        if (component.type === 'FOOTER') {
+        if (component.type === 'FOOTER' && component.text) {
           message += '\n' + component.text;
         }
       });
@@ -158,48 +150,66 @@ const TemplateParameters = React.memo(
     onChange: (params: Record<string, string>) => void;
   }) => {
     const handleParamChange = useCallback(
-      (key: string, value: string) => {
-        onChange({ ...params, [key]: value });
+      (componentType: string, index: number, value: string) => {
+        const paramKey = `${componentType.toLowerCase()}_param${index}`;
+        const newParams = { ...params, [paramKey]: value };
+        onChange(newParams);
       },
       [params, onChange]
     );
 
     return (
       <div className='space-y-4'>
-        {template.components.map((component, index) => {
-          if (component.type === 'BODY') {
-            const params = component.example?.body_text_named_params || [];
+        {template.components.map((component, componentIndex) => {
+          if (component.type === 'BODY' && component.text) {
+            // Extract variables from the text using regex
+            const variables = component.text.match(/{{(\d+)}}/g) || [];
+            const uniqueIndices: number[] = Array.from(
+              new Set(variables.map((v: string) => parseInt(v.match(/\d+/)![0])))
+            );
+
             return (
-              <div key={index} className='space-y-4'>
-                {params.map((param: TemplateParam) => (
-                  <div key={param.param_name} className='space-y-2'>
-                    <Label htmlFor={param.param_name}>{param.param_name}</Label>
-                    <Input
-                      id={param.param_name}
-                      placeholder={param.example}
-                      value={params[param.param_name] || ''}
-                      onChange={(e) => handleParamChange(param.param_name, e.target.value)}
-                    />
-                  </div>
-                ))}
+              <div key={componentIndex} className='space-y-4'>
+                <div className='grid grid-cols-2 gap-4'>
+                  {uniqueIndices.map((index: number) => {
+                    const paramKey = `body_param${index}`;
+                    const example = component.example?.body_text?.[0]?.[index - 1] || '';
+                    return (
+                      <div key={index} className='space-y-2'>
+                        <Label htmlFor={paramKey}>Parameter {index}</Label>
+                        <Input
+                          id={paramKey}
+                          placeholder={example}
+                          value={params[paramKey] || ''}
+                          onChange={(e) => handleParamChange('BODY', index, e.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           }
-          if (component.type === 'HEADER') {
-            const params = component.example?.header_text_named_params || [];
+          if (component.type === 'HEADER' && component.example?.header_text) {
             return (
-              <div key={index} className='space-y-4'>
-                {params.map((param: TemplateParam) => (
-                  <div key={param.param_name} className='space-y-2'>
-                    <Label htmlFor={param.param_name}>{param.param_name}</Label>
-                    <Input
-                      id={param.param_name}
-                      placeholder={param.example}
-                      value={params[param.param_name] || ''}
-                      onChange={(e) => handleParamChange(param.param_name, e.target.value)}
-                    />
-                  </div>
-                ))}
+              <div key={componentIndex} className='space-y-4'>
+                <div className='grid grid-cols-2 gap-4'>
+                  {component.example.header_text.map((example: string, index: number) => {
+                    const paramIndex = index + 1;
+                    const paramKey = `header_param${paramIndex}`;
+                    return (
+                      <div key={index} className='space-y-2'>
+                        <Label htmlFor={paramKey}>Header Parameter {paramIndex}</Label>
+                        <Input
+                          id={paramKey}
+                          placeholder={example}
+                          value={params[paramKey] || ''}
+                          onChange={(e) => handleParamChange('HEADER', paramIndex, e.target.value)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           }
@@ -225,6 +235,7 @@ export function CreateCampaignModal({
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
   const [isCreateAudienceModalOpen, setIsCreateAudienceModalOpen] = useState(false);
   const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState<string>('');
   const form = useForm<CampaignFormData>({
     resolver: zodResolver(campaignFormSchema),
     defaultValues: {
@@ -257,34 +268,16 @@ export function CreateCampaignModal({
       form.reset(initialValues);
       const template = templates.find((t) => t.id === editingCampaign.template?.id);
       setSelectedTemplate(template || null);
+      setSelectedAccountId(editingCampaign.accountId || '');
     } else {
       form.reset({
         type: 'TEMPLATE',
         templateParams: {},
       });
       setSelectedTemplate(null);
+      setSelectedAccountId('');
     }
-  }, [open, editingCampaign, templates, form]);
-
-  // Fix the infinite update loop by properly managing dependencies
-  useEffect(() => {
-    const accountId = form.getValues('accountId');
-    if (!accountId || !accounts?.phoneNumbers) return;
-
-    const account = accounts.phoneNumbers.find((acc) => acc.phoneNumberId === accountId);
-    if (account && !account.isRegistered) {
-      setIsRegisteringModalOpen(true);
-    }
-
-    if (!isRegisteringModalOpen) {
-      const account = accounts.phoneNumbers.find((acc) => acc.phoneNumberId === accountId);
-      if (account && account.isRegistered) {
-        form.setValue('accountId', accountId);
-      } else {
-        form.setValue('accountId', '');
-      }
-    }
-  }, [form.watch('accountId'), accounts?.phoneNumbers, isRegisteringModalOpen]);
+  }, [open, editingCampaign?.id, templates.length]);
 
   const fetchAccounts = async () => {
     try {
@@ -293,6 +286,20 @@ export function CreateCampaignModal({
     } catch (error) {
       console.error('Error fetching WhatsApp accounts:', error);
       toast.error('Failed to load WhatsApp accounts');
+    }
+  };
+
+  // Handle account selection
+  const handleAccountSelect = (value: string) => {
+    const account = accounts?.phoneNumbers.find((acc) => acc.phoneNumberId === value);
+    if (!account) return;
+
+    setSelectedAccountId(value);
+    if (!account.isRegistered) {
+      form.setValue('accountId', '');
+      setIsRegisteringModalOpen(true);
+    } else {
+      form.setValue('accountId', value);
     }
   };
 
@@ -316,7 +323,10 @@ export function CreateCampaignModal({
   const onSubmit = async (data: CampaignFormData) => {
     if (!selectedTemplate || !data.accountId) return;
 
-    setIsLoading(true);
+    if (!accounts?.phoneNumbers.find((acc) => acc.phoneNumberId === data.accountId)?.isRegistered) {
+      toast.error('Please register your WhatsApp account first');
+      return;
+    }
 
     try {
       const campaignData: Omit<Campaign, 'accountId'> & { accountId: string } = {
@@ -342,10 +352,29 @@ export function CreateCampaignModal({
         const messageData = {
           messaging_product: 'whatsapp',
           recipient_type: 'individual',
-          type: 'text',
-          text: {
-            preview_url: true,
-            body: selectedTemplate.components?.[0]?.text || '',
+          type: 'template',
+          template: {
+            name: selectedTemplate.name,
+            language: {
+              code: 'en_US',
+            },
+            components: selectedTemplate.components.map((component) => {
+              if (component.type === 'BODY' || component.type === 'HEADER') {
+                return {
+                  type: component.type.toLowerCase(),
+                  parameters: Object.entries(data.templateParams || {})
+                    .filter(([key]) => key.startsWith(component.type.toLowerCase() + '_param'))
+                    .map(([key, value]) => ({
+                      type: 'text',
+                      text: value,
+                    })),
+                };
+              }
+              if (component.type === 'FOOTER') {
+                return;
+              }
+              return component;
+            }),
           },
         };
 
@@ -382,13 +411,39 @@ export function CreateCampaignModal({
 
             if (response) {
               const wamid = (response as any).messages?.[0]?.id;
+              const message = selectedTemplate.components.reduce((message, component) => {
+                if (component.type === 'BODY' && component.text) {
+                  let text = component.text;
+                  Object.entries(data.templateParams || {}).forEach(([key, value]) => {
+                    if (key.startsWith('body_param')) {
+                      const index = parseInt(key.replace('body_param', ''));
+                      text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+                    }
+                  });
+                  message += text + '\n\n';
+                }
+                if (component.type === 'HEADER' && component.text) {
+                  let text = component.text;
+                  Object.entries(data.templateParams || {}).forEach(([key, value]) => {
+                    if (key.startsWith('header_param')) {
+                      const index = parseInt(key.replace('header_param', ''));
+                      text = text.replace(`{{${index}}}`, value || `{{${index}}}`);
+                    }
+                  });
+                  message = text + '\n\n' + message;
+                }
+                if (component.type === 'FOOTER' && component.text) {
+                  message += '\n' + component.text;
+                }
+                return message;
+              }, '');
               if (wamid) {
                 await api.post('/whatsapp/campaigns/saveMessage', {
                   phoneNumberId: data.accountId,
                   phoneNumber: recipient.phoneNumber,
                   campaignData: { ...messageWithRecipient, wamid },
                   recipientNumber: recipient.phoneNumber,
-                  message: messageWithRecipient.text.body,
+                  message,
                   wamid,
                   sentAt: new Date().toISOString(),
                 });
@@ -441,22 +496,7 @@ export function CreateCampaignModal({
 
             <div className='space-y-2'>
               <Label htmlFor='accountId'>WhatsApp Account</Label>
-              <Select
-                value={form.watch('accountId')}
-                onValueChange={(value) => {
-                  if (value) {
-                    const account = accounts?.phoneNumbers.find(
-                      (acc) => acc.phoneNumberId === value
-                    );
-                    if (account && account.isRegistered) {
-                      form.setValue('accountId', value);
-                    } else {
-                      form.setValue('accountId', value);
-                      setIsRegisteringModalOpen(true);
-                    }
-                  }
-                }}
-              >
+              <Select value={form.watch('accountId')} onValueChange={handleAccountSelect}>
                 <SelectTrigger>
                   <SelectValue placeholder='Select WhatsApp account' />
                 </SelectTrigger>
@@ -471,22 +511,6 @@ export function CreateCampaignModal({
               {form.formState.errors.accountId && (
                 <p className='text-sm text-red-500'>{form.formState.errors.accountId.message}</p>
               )}
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='type'>Campaign Type</Label>
-              <Select
-                disabled={true}
-                value={form.watch('type')}
-                onValueChange={(value: 'TEMPLATE') => form.setValue('type', value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder='Select campaign type' />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value='TEMPLATE'>Template Message</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
 
             {form.watch('type') === 'TEMPLATE' && (
@@ -586,7 +610,7 @@ export function CreateCampaignModal({
         open={isRegisteringModalOpen}
         onClose={() => setIsRegisteringModalOpen(false)}
         accessToken={accounts?.accessToken || ''}
-        phoneNumberId={form.watch('accountId')}
+        phoneNumberId={selectedAccountId}
         wabaId={accounts?.wabaid || ''}
         phoneNumbers={accounts?.phoneNumbers || []}
       />

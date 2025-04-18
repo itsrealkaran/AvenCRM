@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FaWhatsapp } from 'react-icons/fa';
@@ -40,8 +40,14 @@ export default function WhatsAppCampaignsPage() {
   const [audiences, setAudiences] = useState<AudienceGroup[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [whatsAppCode, setWhatsAppCode] = useState<string | null>(null);
-
+  const [totalCost, setTotalCost] = useState<{ currentMonth: number; previousMonth: number }>({
+    currentMonth: 0,
+    previousMonth: 0,
+  });
   const queryClient = useQueryClient();
+
+  // Add state to track if templates are loaded
+  const [templatesLoaded, setTemplatesLoaded] = useState(false);
 
   const whatsAppAccount = useQuery({
     queryKey: ['whatsapp-account'],
@@ -62,15 +68,15 @@ export default function WhatsAppCampaignsPage() {
 
   useEffect(() => {
     if (whatsAppAccount.data?.data?.wabaid) {
-      console.log('Fetching templates for WABA ID:', whatsAppAccount.data.data.wabaid);
       // @ts-ignore
       FB.api(
         `/${whatsAppAccount.data?.data?.wabaid}/message_templates?access_token=${whatsAppAccount.data?.data?.accessToken}`,
         'GET',
         (response: any) => {
-          console.log('Received templates from Facebook API:', response);
           if (response && response.data) {
+            console.log('Templates:', response.data);
             setTemplates(response.data);
+            setTemplatesLoaded(true);
           }
         }
       );
@@ -86,7 +92,7 @@ export default function WhatsAppCampaignsPage() {
     }
   }, [whatsAppAudiences.data, whatsAppCampaigns.data]);
 
-  const handleCreateCampaign = async (campaign: Campaign) => {
+  const handleCreateCampaign = useCallback(async (campaign: Campaign) => {
     try {
       const response = await api.post('/whatsapp/campaigns', {
         name: campaign.name,
@@ -102,7 +108,11 @@ export default function WhatsAppCampaignsPage() {
       console.error('Error creating campaign:', error);
       toast.error('Failed to create campaign');
     }
-  };
+  }, []);
+
+  const handleCloseCampaignModal = useCallback(() => {
+    setShowCampaignModal(false);
+  }, []);
 
   const handleCreateAudience = (newAudience: AudienceGroup) => {
     setAudiences([...audiences, newAudience]);
@@ -113,10 +123,6 @@ export default function WhatsAppCampaignsPage() {
   const handleCreateTemplate = () => {
     // Invalidate and refetch templates
     queryClient.invalidateQueries({ queryKey: ['whatsapp-templates'] });
-  };
-
-  const handleUpdateTemplate = (template: any) => {
-    setTemplates(templates.map((t) => (t.id === template.id ? template : t)));
   };
 
   const { company } = useAuth();
@@ -219,6 +225,93 @@ export default function WhatsAppCampaignsPage() {
     }
   }, [whatsAppCode, queryClient]);
 
+  const fetchTotalCost = useCallback(async () => {
+    if (!whatsAppAccount.data?.data?.wabaid || !whatsAppAccount.data?.data?.accessToken) {
+      console.log('Missing required data for analytics fetch');
+      return;
+    }
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 30);
+
+    // convert to unix timestamp
+    const startDateUnix = Math.floor(startDate.getTime() / 1000);
+    const endDateUnix = Math.floor(new Date().getTime() / 1000);
+
+    try {
+      //@ts-ignore
+      FB.api(
+        `/${whatsAppAccount.data.data.wabaid}?fields=conversation_analytics
+        .start(${startDateUnix})
+        .end(${endDateUnix})
+        .granularity(DAILY)
+        .phone_numbers([])
+        .dimensions(["CONVERSATION_CATEGORY","CONVERSATION_TYPE","COUNTRY","PHONE"])
+        &access_token=${whatsAppAccount.data.data.accessToken}`,
+        (response: any) => {
+          if (response.error) {
+            console.error('Error fetching analytics:', response.error);
+            return;
+          }
+          console.log('stats:', response);
+          if (response.conversation_analytics) {
+            let calculatedTotalCost = 0;
+            for (const data of response.conversation_analytics.data) {
+              for (const point of data.data_points) {
+                calculatedTotalCost += point.cost;
+              }
+            }
+            setTotalCost({ ...totalCost, currentMonth: calculatedTotalCost });
+          }
+        }
+      );
+
+      // fetching total cost of previous month for analytics
+      const startDatePreviousMonth = new Date();
+      startDatePreviousMonth.setDate(startDatePreviousMonth.getDate() - 60);
+      const startDatePreviousMonthUnix = Math.floor(startDatePreviousMonth.getTime() / 1000);
+      // @ts-ignore
+      FB.api(
+        `/${whatsAppAccount.data.data.wabaid}?fields=conversation_analytics
+        .start(${startDatePreviousMonthUnix})
+        .end(${startDateUnix})
+        .granularity(DAILY)
+        .phone_numbers([])
+        .dimensions(["CONVERSATION_CATEGORY","CONVERSATION_TYPE","COUNTRY","PHONE"])
+        &access_token=${whatsAppAccount.data.data.accessToken}`,
+        (response: any) => {
+          if (response.error) {
+            console.error('Error fetching analytics:', response.error);
+            return;
+          }
+          if (response.conversation_analytics) {
+            let calculatedTotalCost = 0;
+            for (const data of response.conversation_analytics.data) {
+              for (const point of data.data_points) {
+                calculatedTotalCost += point.cost;
+              }
+            }
+            setTotalCost({ ...totalCost, previousMonth: calculatedTotalCost });
+          }
+        }
+      );
+    } catch (error) {
+      console.error('Error in fetchTotalCost:', error);
+    }
+  }, [whatsAppAccount.data]);
+
+  useEffect(() => {
+    if (whatsAppAccount.data?.data?.wabaid && whatsAppAccount.data?.data?.accessToken) {
+      fetchTotalCost();
+    }
+  }, [whatsAppAccount.data, fetchTotalCost]);
+
+  const handleOpenCampaignModal = useCallback(() => {
+    if (templatesLoaded) {
+      setShowCampaignModal(true);
+    }
+  }, [templatesLoaded]);
+
   if (company?.planName !== 'ENTERPRISE') {
     return <WhatsAppPlaceholder />;
   }
@@ -249,10 +342,7 @@ export default function WhatsAppCampaignsPage() {
             Connect WhatsApp
           </Button>
         ) : (
-          <Button
-            onClick={() => setShowCampaignModal(true)}
-            className='bg-[#5932EA] hover:bg-[#5932EA]/90'
-          >
+          <Button onClick={handleOpenCampaignModal} className='bg-[#5932EA] hover:bg-[#5932EA]/90'>
             Create Campaign
           </Button>
         )}
@@ -260,7 +350,7 @@ export default function WhatsAppCampaignsPage() {
 
       {hasWhatsAppAccount ? (
         <>
-          <MetricsCards campaigns={whatsAppCampaigns.data?.data || []} />
+          <MetricsCards campaigns={whatsAppCampaigns.data?.data || []} totalCost={totalCost} />
           <Tabs defaultValue='campaigns' className='space-y-4'>
             <TabsList>
               <TabsTrigger value='campaigns'>Campaigns</TabsTrigger>
@@ -277,6 +367,7 @@ export default function WhatsAppCampaignsPage() {
                 onUpdateCampaign={() => {
                   queryClient.invalidateQueries({ queryKey: ['whatsapp-campaigns'] });
                 }}
+                onOpenCreateCampaignModal={() => setShowCampaignModal(true)}
               />
             </TabsContent>
             <TabsContent value='messages'>
@@ -299,8 +390,9 @@ export default function WhatsAppCampaignsPage() {
             <TabsContent value='templates'>
               <TemplatesList
                 templates={templates}
+                wabaId={whatsAppAccount.data?.data?.wabaid || ''}
+                accessToken={whatsAppAccount.data?.data?.accessToken || ''}
                 onCreateTemplate={handleCreateTemplate}
-                onUpdateTemplate={handleUpdateTemplate}
               />
             </TabsContent>
           </Tabs>
@@ -327,13 +419,16 @@ export default function WhatsAppCampaignsPage() {
         onConnect={() => setIsConnected(true)}
       />
 
-      <CreateCampaignModal
-        open={showCampaignModal}
-        onClose={() => setShowCampaignModal(false)}
-        templates={templates}
-        onCreateCampaign={handleCreateCampaign}
-        audiences={audiences}
-      />
+      {showCampaignModal && templatesLoaded && (
+        <CreateCampaignModal
+          key={`modal-${templates.length}-${showCampaignModal}`}
+          open={showCampaignModal}
+          onClose={handleCloseCampaignModal}
+          templates={templates.filter((template: any) => template.status === 'APPROVED')}
+          onCreateCampaign={handleCreateCampaign}
+          audiences={audiences}
+        />
+      )}
     </Card>
   );
 }

@@ -39,6 +39,7 @@ interface CampaignsListProps {
   onCreateCampaign: () => void;
   audiences: AudienceGroup[];
   onUpdateCampaign: (campaignId: string, data: Partial<Campaign>) => void;
+  onOpenCreateCampaignModal: () => void;
 }
 
 export function CampaignsList({
@@ -46,17 +47,10 @@ export function CampaignsList({
   onCreateCampaign,
   audiences,
   onUpdateCampaign,
+  onOpenCreateCampaignModal,
 }: CampaignsListProps) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [showCampaignModal, setShowCampaignModal] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [filterValue, setFilterValue] = useState('');
-
-  const handleEditCampaign = (campaign: Campaign) => {
-    setEditingCampaign(campaign);
-    setShowCampaignModal(true);
-  };
 
   const handleToggleCampaignStatus = async (campaign: Campaign) => {
     try {
@@ -227,8 +221,7 @@ export function CampaignsList({
         <Box sx={{ display: 'flex', gap: '0.5rem' }}>
           <Button
             onClick={() => {
-              setEditingCampaign(null);
-              setShowCampaignModal(true);
+              onOpenCreateCampaignModal();
             }}
             className='bg-[#5932EA] hover:bg-[#5932EA]/90'
             disabled={isLoading}
@@ -239,19 +232,6 @@ export function CampaignsList({
       </Box>
     ),
     renderRowActionMenuItems: ({ row, closeMenu }) => [
-      <MenuItem
-        key={0}
-        onClick={() => {
-          handleEditCampaign(row.original);
-          closeMenu();
-        }}
-        sx={{ m: 0 }}
-      >
-        <ListItemIcon>
-          <FaEdit className='size-4' />
-        </ListItemIcon>
-        Edit Campaign
-      </MenuItem>,
       <MenuItem
         key={1}
         onClick={() => {
@@ -294,16 +274,6 @@ export function CampaignsList({
       <CardContent className='px-4 py-2'>
         <MaterialReactTable table={table} />
       </CardContent>
-      <CreateCampaignModal
-        open={showCampaignModal}
-        onClose={() => setShowCampaignModal(false)}
-        onCreateCampaign={(campaign) => {
-          onUpdateCampaign(campaign.id!, campaign);
-          setShowCampaignModal(false);
-        }}
-        editingCampaign={editingCampaign}
-        audiences={audiences}
-      />
     </Card>
   );
 }

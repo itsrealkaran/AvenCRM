@@ -47,9 +47,20 @@ export interface WhatsAppRecipientDto {
 }
 
 export interface WhatsAppTemplateDto {
+  category: string;
+  components: Array<{
+    type: string;
+    text?: string;
+    example?: {
+      body_text?: string[];
+      header_text?: string[];
+    };
+  }>;
+  id: string;
+  language: string;
   name: string;
-  content: string;
-  accountId: string;
+  parameter_format: 'POSITIONAL' | 'NAMED';
+  status: string;
 }
 
 export interface WhatsAppCampaignDto {

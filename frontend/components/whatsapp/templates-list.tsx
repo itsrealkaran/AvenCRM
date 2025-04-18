@@ -29,13 +29,15 @@ type Template = {
 interface TemplatesListProps {
   templates?: Template[];
   onCreateTemplate: () => void;
-  onUpdateTemplate: (template: Template) => void;
+  wabaId: string;
+  accessToken: string;
 }
 
 export function TemplatesList({
   templates = [],
   onCreateTemplate,
-  onUpdateTemplate,
+  wabaId,
+  accessToken,
 }: TemplatesListProps) {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -227,6 +229,8 @@ export function TemplatesList({
         }}
         onCreateTemplate={onCreateTemplate}
         editingTemplate={editingTemplate}
+        wabaId={wabaId}
+        accessToken={accessToken}
       />
     </Card>
   );

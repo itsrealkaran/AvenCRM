@@ -4,7 +4,13 @@ import { FaChartBar, FaClock, FaUsers, FaWhatsapp } from 'react-icons/fa';
 
 import { Card, CardContent } from '@/components/ui/card';
 
-export function MetricsCards({ campaigns }: { campaigns: any[] }) {
+export function MetricsCards({
+  campaigns,
+  totalCost,
+}: {
+  campaigns: any[];
+  totalCost: { currentMonth: number; previousMonth: number };
+}) {
   const { data: metricsData } = useQuery({
     queryKey: ['metrics'],
     queryFn: () => whatsAppService.getAccountStats(),
@@ -23,6 +29,9 @@ export function MetricsCards({ campaigns }: { campaigns: any[] }) {
     lastMonth.setDate(1);
     return campaignDate >= lastMonth;
   });
+
+  const totalCostPercentage =
+    ((totalCost.currentMonth - totalCost.previousMonth) / totalCost.previousMonth) * 100 || 0;
 
   // figure out the growth/decline percentage
   const campaignGrowthPercentage =
@@ -43,7 +52,7 @@ export function MetricsCards({ campaigns }: { campaigns: any[] }) {
     },
     {
       title: 'Active Conversations',
-      value: metricsData?.activeConversations,
+      value: metricsData?.activeConversations || 0,
       change:
         metricsData?.activeConversationsChange !== undefined
           ? metricsData.activeConversationsChange >= 0
@@ -55,7 +64,7 @@ export function MetricsCards({ campaigns }: { campaigns: any[] }) {
     },
     {
       title: 'Message Open Rate',
-      value: metricsData?.messageOpenRate,
+      value: metricsData?.messageOpenRate || 0,
       change:
         metricsData?.messageOpenRateChange !== undefined
           ? metricsData.messageOpenRateChange >= 0
@@ -66,9 +75,9 @@ export function MetricsCards({ campaigns }: { campaigns: any[] }) {
       iconColor: 'text-purple-500',
     },
     {
-      title: 'Avg. Response Time',
-      value: '2m 30s',
-      change: '-10%',
+      title: 'Total Cost',
+      value: totalCost.currentMonth || 0,
+      change: totalCostPercentage >= 0 ? `+${totalCostPercentage}%` : `${totalCostPercentage}%`,
       icon: FaClock,
       iconColor: 'text-yellow-500',
     },

@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { whatsAppService } from '@/api/whatsapp.service';
-import { MessageSquare, Phone, Search, Send } from 'lucide-react';
+import { LeadStatus, PropertyType } from '@/types';
+import { Cross1Icon } from '@radix-ui/react-icons';
+import { Cross, MessageSquare, Phone, Plus, Search, Send } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -15,9 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
+import { CreateLeadDialog } from '../leads/create-lead-dialog';
 import { RegisterNumberModal } from './register-number';
 
 type Chat = {
@@ -28,6 +32,7 @@ type Chat = {
     createdAt: string;
     status: string;
   };
+  unreadCount: number;
 };
 
 type Message = {
@@ -37,8 +42,10 @@ type Message = {
   phoneNumber: string;
   status: string;
   isOutbound: boolean;
+  errorMessage?: string;
   wamid: string;
   recipient: {
+    name?: string;
     phoneNumber: string;
   };
 };
@@ -75,6 +82,8 @@ interface SSEMessage {
     wamid?: string;
     status?: string;
     phoneNumberId?: string;
+    phoneNumber?: string;
+    error?: string;
   };
 }
 
@@ -111,6 +120,8 @@ const MessagesList = ({
   const [phoneNumberId, setPhoneNumberId] = useState<string>(phoneNumbers[0].phoneNumberId);
   const [conversationCache, setConversationCache] = useState<Record<string, Message[]>>({});
   const [isRegisteringModalOpen, setIsRegisteringModalOpen] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [isAddToLeadsModalOpen, setIsAddToLeadsModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   // Add scroll to bottom function
@@ -127,7 +138,15 @@ const MessagesList = ({
     const fetchChats = async () => {
       try {
         const response = await whatsAppService.getPhoneNumbers(1, 20, phoneNumberId);
-        setChats(response);
+        // Add unreadCount to each chat
+        const chatsWithUnread = response.data.map((chat: Chat) => ({
+          ...chat,
+          unreadCount: 0,
+        }));
+        setChats({
+          ...response,
+          data: chatsWithUnread,
+        });
         setHasMoreChats(response.pagination.hasMore);
 
         // Initialize messages state with empty arrays for each chat
@@ -166,9 +185,10 @@ const MessagesList = ({
       };
 
       eventSource.onmessage = (event) => {
-        console.log(event.data, 'event data');
+        console.log('Raw SSE event data:', event.data);
         try {
           const data = JSON.parse(event.data) as SSEMessage;
+          console.log('Parsed SSE message:', data);
 
           if (data.type === 'connected') {
             console.log('Connected to SSE with userId:', data.userId);
@@ -176,46 +196,75 @@ const MessagesList = ({
           }
 
           if (data.type === 'new_message' && data.data.message && data.data.phoneNumberId) {
+            console.log('Processing new message:', {
+              message: data.data.message,
+              phoneNumberId: data.data.phoneNumberId,
+            });
+
             const { message, phoneNumberId } = data.data;
             const recipientPhoneNumber = message.phoneNumber;
 
-            console.log('New message received:', message);
-            console.log('Phone numbers:', phoneNumbers);
-            console.log('Recipient phone number:', recipientPhoneNumber);
+            // Update chats state with new message and unread count
+            setChats((prev) => {
+              const currentChats = [...prev.data];
+              const chatIndex = currentChats.findIndex(
+                (chat) => chat.phoneNumber === recipientPhoneNumber
+              );
 
-            // Update conversation cache
-            setConversationCache((prev) => {
-              const currentCache = { ...prev };
+              if (chatIndex !== -1) {
+                // Chat exists, update it
+                const updatedChat: Chat = {
+                  ...currentChats[chatIndex],
+                  latestMessage: {
+                    message: message.message,
+                    createdAt: message.sentAt,
+                    status: message.status,
+                  },
+                  unreadCount:
+                    selectedChat.phoneNumber === recipientPhoneNumber
+                      ? 0
+                      : currentChats[chatIndex].unreadCount + 1,
+                };
 
-              // If the conversation doesn't exist yet, create it
-              if (!currentCache[recipientPhoneNumber]) {
-                currentCache[recipientPhoneNumber] = [];
+                // Remove from current position and add to beginning
+                currentChats.splice(chatIndex, 1);
+                currentChats.unshift(updatedChat);
+
+                return {
+                  ...prev,
+                  data: currentChats,
+                };
+              } else {
+                // New chat, add it to the beginning
+                const newChat: Chat = {
+                  phoneNumber: recipientPhoneNumber,
+                  name: message.recipient.name,
+                  latestMessage: {
+                    message: message.message,
+                    createdAt: message.sentAt,
+                    status: message.status,
+                  },
+                  unreadCount: selectedChat.phoneNumber === recipientPhoneNumber ? 0 : 1,
+                };
+
+                return {
+                  ...prev,
+                  data: [newChat, ...currentChats],
+                };
               }
-
-              // Add the new message to the conversation
-              currentCache[recipientPhoneNumber] = [...currentCache[recipientPhoneNumber], message];
-
-              console.log('Updated cache:', currentCache);
-              return currentCache;
             });
 
             // Update current messages if this is the selected chat
             if (selectedChat.phoneNumber === recipientPhoneNumber) {
               setMessages((prev) => {
                 const currentMessages = { ...prev };
-
-                // If the conversation doesn't exist yet, create it
                 if (!currentMessages[selectedChat.phoneNumber]) {
                   currentMessages[selectedChat.phoneNumber] = [];
                 }
-
-                // Add the new message to the conversation
                 currentMessages[selectedChat.phoneNumber] = [
                   ...currentMessages[selectedChat.phoneNumber],
                   message,
                 ];
-
-                console.log('Updated messages:', currentMessages);
                 return currentMessages;
               });
             }
@@ -225,18 +274,24 @@ const MessagesList = ({
             data.data.status &&
             data.data.phoneNumberId
           ) {
-            const { wamid, status, phoneNumberId } = data.data;
+            const { wamid, status, phoneNumberId, phoneNumber, error } = data.data;
 
             // Update message status in cache
             setConversationCache((prev) => {
               const currentCache = { ...prev };
-              const phoneNumber = phoneNumbers.find(
-                (pn) => pn.phoneNumberId === phoneNumberId
-              )?.phoneNumber;
+              console.log('Phone number:', phoneNumber);
 
               if (phoneNumber && currentCache[phoneNumber]) {
+                console.log(
+                  'Phone number:',
+                  currentCache[phoneNumber].filter((msg) => {
+                    console.log('Msg:', msg.wamid);
+                    console.log('Wamid:', wamid);
+                    return msg.wamid === wamid;
+                  })
+                );
                 currentCache[phoneNumber] = currentCache[phoneNumber].map((msg) =>
-                  msg.wamid === wamid ? { ...msg, status } : msg
+                  msg.wamid === wamid ? { ...msg, status, error } : msg
                 );
               }
 
@@ -252,7 +307,7 @@ const MessagesList = ({
                 if (currentMessages[selectedChat.phoneNumber]) {
                   currentMessages[selectedChat.phoneNumber] = currentMessages[
                     selectedChat.phoneNumber
-                  ].map((msg) => (msg.wamid === wamid ? { ...msg, status } : msg));
+                  ].map((msg) => (msg.wamid === wamid ? { ...msg, status, error } : msg));
                 }
 
                 console.log('Updated messages with status:', currentMessages);
@@ -281,6 +336,18 @@ const MessagesList = ({
       }
     };
   }, [phoneNumbers, selectedChat.phoneNumber]);
+
+  // Add effect to reset unread count when selecting a chat
+  useEffect(() => {
+    if (selectedChat.phoneNumber) {
+      setChats((prev) => ({
+        ...prev,
+        data: prev.data.map((chat) =>
+          chat.phoneNumber === selectedChat.phoneNumber ? { ...chat, unreadCount: 0 } : chat
+        ),
+      }));
+    }
+  }, [selectedChat.phoneNumber]);
 
   const loadMoreChats = async () => {
     if (!hasMoreChats || isLoadingMore) return;
@@ -385,14 +452,15 @@ const MessagesList = ({
   const handleSendMessage = () => {
     if (!selectedChat.phoneNumber || !inputMessage.trim()) return;
 
+    const newMessageId = String(Date.now());
     const newMessage: Message = {
-      id: String(Date.now()),
+      id: newMessageId,
       message: inputMessage,
       phoneNumber: selectedChat.phoneNumber,
       sentAt: new Date().toISOString(),
       status: 'PENDING',
       isOutbound: true,
-      wamid: String(Date.now()),
+      wamid: newMessageId,
       recipient: {
         phoneNumber: selectedChat.phoneNumber,
       },
@@ -425,13 +493,45 @@ const MessagesList = ({
       'POST',
       campaignData,
       (phoneNumbers: any) => {
-        api.post('/whatsapp/campaigns/saveMessage', {
-          recipientNumber: selectedChat.phoneNumber,
-          phoneNumberId: phoneNumberId,
-          message: inputMessage,
-          wamid: phoneNumbers.messages[0].id,
-          sentAt: new Date().toISOString(),
-        });
+        if (phoneNumbers.messages[0].id) {
+          api
+            .post('/whatsapp/campaigns/saveMessage', {
+              recipientNumber: selectedChat.phoneNumber,
+              phoneNumberId: phoneNumberId,
+              message: inputMessage,
+              wamid: phoneNumbers.messages[0].id,
+              sentAt: new Date().toISOString(),
+            })
+            .catch((err) => {
+              // if error then remove the message from the cache
+              setConversationCache((prev) => ({
+                ...prev,
+                [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+                  (msg) => msg.wamid !== newMessageId
+                ),
+              }));
+              setMessages((prev) => ({
+                ...prev,
+                [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+                  (msg) => msg.wamid !== newMessageId
+                ),
+              }));
+            });
+        } else {
+          // if error then remove the message from the cache
+          setConversationCache((prev) => ({
+            ...prev,
+            [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+              (msg) => msg.wamid !== newMessageId
+            ),
+          }));
+          setMessages((prev) => ({
+            ...prev,
+            [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].filter(
+              (msg) => msg.wamid !== newMessageId
+            ),
+          }));
+        }
       }
     );
 
@@ -519,12 +619,19 @@ const MessagesList = ({
                         <p className='font-medium truncate text-sm'>
                           {chat.name ? chat.name : chat.phoneNumber}
                         </p>
-                        <span className='text-xs text-muted-foreground ml-2'>
-                          {new Date(chat.latestMessage?.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </span>
+                        <div className='flex items-center gap-2'>
+                          {chat.unreadCount > 0 && (
+                            <span className='bg-primary text-primary-foreground text-xs rounded-full px-2 py-1'>
+                              {chat.unreadCount}
+                            </span>
+                          )}
+                          <span className='text-xs text-muted-foreground'>
+                            {new Date(chat.latestMessage?.createdAt).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </div>
                       </div>
                       <div className='flex justify-between items-center'>
                         <p className='text-sm w-[50%] text-muted-foreground truncate'>
@@ -559,6 +666,33 @@ const MessagesList = ({
                     : selectedChat.phoneNumber}
                 </p>
                 <p className='text-sm text-muted-foreground'>Online</p>
+              </div>
+              <div className='ml-auto'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => {
+                    if (selectedChat.phoneNumber) {
+                      setSelectedMessage({
+                        id: '',
+                        message: '',
+                        sentAt: new Date().toISOString(),
+                        phoneNumber: selectedChat.phoneNumber,
+                        status: '',
+                        isOutbound: false,
+                        wamid: '',
+                        recipient: {
+                          name: selectedChat.name,
+                          phoneNumber: selectedChat.phoneNumber,
+                        },
+                      });
+                      setIsAddToLeadsModalOpen(true);
+                    }
+                  }}
+                >
+                  <Plus className='h-4 w-4' />
+                  Add to leads
+                </Button>
               </div>
             </div>
 
@@ -598,6 +732,30 @@ const MessagesList = ({
                             })}
                           </p>
                         </div>
+                        {message.status === 'FAILED' && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className='flex items-center ml-2'>
+                                  <Cross1Icon className='h-5 w-5 text-red-500 border-2 border-red-500 rounded-full p-1 hover:bg-red-50 hover:text-red-600 transition-all duration-200 cursor-help' />
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent
+                                side='left'
+                                className='max-w-[300px] bg-white/95 backdrop-blur-sm border border-red-100 shadow-lg rounded-lg p-3'
+                              >
+                                <div className='flex flex-col gap-2'>
+                                  <p className='text-sm font-semibold text-red-600'>
+                                    Message Failed
+                                  </p>
+                                  <p className='text-xs text-red-500/90 leading-relaxed'>
+                                    {message.errorMessage || 'Failed to send message'}
+                                  </p>
+                                </div>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
                     ))}
                     <div ref={messagesEndRef} />
@@ -649,6 +807,21 @@ const MessagesList = ({
           codeVerificationStatus: phoneNumber.status,
           isRegistered: phoneNumber.isRegistered,
         }))}
+      />
+      <CreateLeadDialog
+        open={isAddToLeadsModalOpen}
+        onOpenChange={(open) => setIsAddToLeadsModalOpen(open)}
+        initialValues={{
+          name: selectedChat.name || '',
+          phone: selectedChat.phoneNumber,
+          source: 'WhatsApp',
+          status: LeadStatus.NEW,
+          role: 'BUY',
+          propertyType: PropertyType.RESIDENTIAL,
+          budget: undefined,
+          location: '',
+          notes: [],
+        }}
       />
     </div>
   );

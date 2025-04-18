@@ -32,6 +32,8 @@ interface CreateTemplateModalProps {
   onClose: () => void;
   onCreateTemplate: () => void;
   editingTemplate?: any;
+  wabaId: string;
+  accessToken: string;
 }
 
 export function CreateTemplateModal({
@@ -39,6 +41,8 @@ export function CreateTemplateModal({
   onClose,
   onCreateTemplate,
   editingTemplate,
+  wabaId,
+  accessToken,
 }: CreateTemplateModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [name, setName] = useState(editingTemplate?.name || '');
@@ -58,27 +62,75 @@ export function CreateTemplateModal({
   );
   const [showRules, setShowRules] = useState(false);
 
+  const fixVariableNumbering = (text: string): string => {
+    let counter = 1;
+    return text.replace(/{{(\d+)}}/g, () => `{{${counter++}}}`);
+  };
+
   const handleSubmit = async () => {
     if (!name || !language || !category || !bodyText) {
       toast.error('Please fill in all required fields');
       return;
     }
 
-    // Count variables in header and body text
-    const headerVariables = (headerText.match(/{{(\d+)}}/g) || []).length;
-    const bodyVariables = (bodyText.match(/{{(\d+)}}/g) || []).length;
+    // Fix variable numbering in both components
+    const fixedHeaderText = headerText ? fixVariableNumbering(headerText) : '';
+    const fixedBodyText = fixVariableNumbering(bodyText);
 
-    // Validate examples match variables
-    if (headerText && headerExamples.length !== headerVariables) {
+    // Validate variable numbering in header and body text
+    const headerVariables = (fixedHeaderText.match(/{{(\d+)}}/g) || []).map((match: string) =>
+      parseInt(match.match(/\d+/)![0])
+    );
+    const bodyVariables = (fixedBodyText.match(/{{(\d+)}}/g) || []).map((match: string) =>
+      parseInt(match.match(/\d+/)![0])
+    );
+
+    console.log('Header variables:', headerVariables);
+    console.log('Body variables:', bodyVariables);
+    console.log('Body text:', fixedBodyText);
+
+    // Check if variables start from 1 and are sequential
+    const isHeaderSequential =
+      headerVariables.length === 0 ||
+      (headerVariables[0] === 1 &&
+        headerVariables.every((val: number, idx: number) => val === idx + 1));
+    const isBodySequential =
+      bodyVariables.length === 0 ||
+      (bodyVariables[0] === 1 &&
+        bodyVariables.every((val: number, idx: number) => val === idx + 1));
+
+    console.log('Is header sequential:', isHeaderSequential);
+    console.log('Is body sequential:', isBodySequential);
+
+    if (!isHeaderSequential && headerVariables.length > 0) {
       toast.error(
-        `Please provide ${headerVariables} example${headerVariables !== 1 ? 's' : ''} for the header variables`
+        `Header variables must start from 1 and be sequential. Found: ${headerVariables.join(', ')}`
       );
       return;
     }
 
-    if (bodyExamples.length !== bodyVariables) {
+    if (!isBodySequential && bodyVariables.length > 0) {
       toast.error(
-        `Please provide ${bodyVariables} example${bodyVariables !== 1 ? 's' : ''} for the body variables`
+        `Body variables must start from 1 and be sequential. Found: ${bodyVariables.join(', ')}`
+      );
+      return;
+    }
+
+    // Count variables in header and body text
+    const headerVarCount = headerVariables.length;
+    const bodyVarCount = bodyVariables.length;
+
+    // Validate examples match variables
+    if (headerText && headerExamples.length !== headerVarCount) {
+      toast.error(
+        `Please provide ${headerVarCount} example${headerVarCount !== 1 ? 's' : ''} for the header variables`
+      );
+      return;
+    }
+
+    if (bodyExamples.length !== bodyVarCount) {
+      toast.error(
+        `Please provide ${bodyVarCount} example${bodyVarCount !== 1 ? 's' : ''} for the body variables`
       );
       return;
     }
@@ -87,16 +139,16 @@ export function CreateTemplateModal({
 
     try {
       const templateData = {
-        name,
+        name: name.toLowerCase().replace(/ /g, '_'),
         language,
         category,
         components: [
-          ...(headerText
+          ...(fixedHeaderText
             ? [
                 {
                   type: 'HEADER',
                   format: 'TEXT',
-                  text: headerText,
+                  text: fixedHeaderText,
                   example: {
                     header_text: headerExamples,
                   },
@@ -105,21 +157,36 @@ export function CreateTemplateModal({
             : []),
           {
             type: 'BODY',
-            text: bodyText,
+            text: fixedBodyText,
             example: {
-              body_text: [bodyExamples],
+              body_text: [bodyExamples.map((example) => example || '')],
             },
+          },
+          {
+            type: 'FOOTER',
+            text: 'Generated using AvenCRM',
           },
         ],
       };
 
-      // if (editingTemplate) {
-      //   await whatsAppService.updateTemplate(editingTemplate.id, templateData);
-      //   toast.success('Template updated successfully');
-      // } else {
-      //   await whatsAppService.createTemplate(templateData);
-      //   toast.success('Template created successfully');
-      // }
+      if (editingTemplate) {
+        // TODO: Update template
+      } else {
+        // @ts-ignore
+        FB.api(
+          `/${wabaId}/message_templates?access_token=${accessToken}`,
+          'POST',
+          templateData,
+          (response: any) => {
+            console.log('response:', response);
+            if (response.error) {
+              toast.error(response.error.error_user_msg);
+            } else {
+              toast.success('Template created successfully! Please wait for approval from Meta.');
+            }
+          }
+        );
+      }
 
       onCreateTemplate();
       onClose();
@@ -206,9 +273,9 @@ export function CreateTemplateModal({
         </DialogHeader>
 
         <ScrollArea className='max-h-[calc(90vh-230px)] pr-4'>
-          <div className='grid gap-6 py-4 -ml-10'>
+          <div className='grid gap-6 py-4 mx-8'>
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='name' className='text-right font-medium'>
+              <Label htmlFor='name' className='text-left font-medium'>
                 Name
                 <TooltipProvider>
                   <Tooltip>
@@ -231,7 +298,7 @@ export function CreateTemplateModal({
             </div>
 
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='language' className='text-right font-medium'>
+              <Label htmlFor='language' className='text-left font-medium'>
                 Language
                 <TooltipProvider>
                   <Tooltip>
@@ -266,7 +333,7 @@ export function CreateTemplateModal({
             </div>
 
             <div className='grid grid-cols-4 items-center gap-4'>
-              <Label htmlFor='category' className='text-right font-medium'>
+              <Label htmlFor='category' className='text-left font-medium'>
                 Category
                 <TooltipProvider>
                   <Tooltip>
@@ -355,7 +422,7 @@ export function CreateTemplateModal({
             <div className='grid grid-cols-4 gap-4'>
               <Label
                 htmlFor='header'
-                className='text-right font-medium sticky top-0 pt-4 bg-background'
+                className='text-left font-medium sticky top-0 pt-4 bg-background'
               >
                 Header
                 <TooltipProvider>
@@ -417,7 +484,7 @@ export function CreateTemplateModal({
             <div className='grid grid-cols-4 gap-4'>
               <Label
                 htmlFor='body'
-                className='text-right font-medium sticky top-0 pt-4 bg-background'
+                className='text-left font-medium sticky top-0 pt-4 bg-background'
               >
                 Body
                 <TooltipProvider>

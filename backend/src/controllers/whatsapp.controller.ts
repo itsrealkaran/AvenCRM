@@ -239,27 +239,29 @@ export class WhatsAppController extends BaseController {
         return res.status(401).json({ message: 'Unauthorized' });
       }
 
-      const accountId = req.params.id;
+      const { phoneNumberId } = req.query;
 
-      const account = await prisma.whatsAppAccount.findUnique({
-        where: { id: accountId }
+      const phoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
+        where: {
+          account: {
+            userId: req.user.id
+          },
+          phoneNumberId: phoneNumberId as string
+        }
       });
 
-      if (!account) {
+      if (!phoneNumber) {
         return res.status(404).json({ message: 'Account not found' });
       }
 
-      if (account.userId !== req.user.id) {
-        return res.status(403).json({ message: 'Forbidden' });
-      }
+      await prisma.whatsAppPhoneNumber.update({
+        where: { id: phoneNumber.id },
+        data: {
+          codeVerificationStatus: 'VERIFIED'
+        }
+      });
 
-      const verified = await whatsAppService.verifyAccount(accountId);
-
-      if (verified) {
-        return res.status(200).json({ message: 'Account verified successfully', verified: true });
-      } else {
-        return res.status(400).json({ message: 'Account verification failed', verified: false });
-      }
+      return res.status(200).json({ message: 'Account verified successfully' });
     } catch (error) {
       logger.error('Error verifying WhatsApp account:', error);
       return res.status(500).json({ message: 'Internal server error' });
@@ -1051,118 +1053,136 @@ export class WhatsAppController extends BaseController {
           for (const change of entry.changes) {
             const phoneNumberId = change.value.metadata.phone_number_id;
 
-            const whatsAppPhoneNumber = await prisma.whatsAppPhoneNumber.findFirst({
+            // Find all matching phone numbers
+            const whatsAppPhoneNumbers = await prisma.whatsAppPhoneNumber.findMany({
               where: {
                 phoneNumberId
               },
               include: {
                 recipients: true,
-                account: true // Include account to get userId
+                account: true
               }
             });
 
-            if (!whatsAppPhoneNumber) {
+            if (!whatsAppPhoneNumbers || whatsAppPhoneNumbers.length === 0) {
               logger.error('WhatsApp phone number not found');
               continue;
             }
 
-            // Emit event for status updates
-            if (change.field === 'messages' && change.value && change.value.statuses) {
-              for (const status of change.value.statuses) {
-                const wamid = status.id;
-                const statusValue = status.status;
+            // Process each matching phone number
+            for (const whatsAppPhoneNumber of whatsAppPhoneNumbers) {
+              // Emit event for status updates
+              if (change.field === 'messages' && change.value && change.value.statuses) {
+                for (const status of change.value.statuses) {
+                  const wamid = status.id;
+                  const statusValue = status.status;
+                  const phoneNumber = status.recipient_id;
 
-                // Update message status
-                const updatedMessage = await prisma.whatsAppMessage.updateMany({
-                  where: { wamid },
-                  data: {
-                    status: statusValue.toUpperCase(),
-                    deliveredAt: statusValue === 'delivered' ? new Date() : undefined,
-                    readAt: statusValue === 'read' ? new Date() : undefined,
-                    errorMessage: status.errors ? JSON.stringify(status.errors) : null
-                  }
-                });
-
-                // Emit status update event
-                const eventData = {
-                  type: 'status_update',
-                  userId: whatsAppPhoneNumber.account.userId,
-                  data: {
-                    wamid,
-                    status: statusValue.toUpperCase(),
-                    phoneNumberId
-                  }
-                };
-                global.sseClients.forEach(client => {
-                  if (client.userId === whatsAppPhoneNumber.account.userId) {
-                    client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
-                  }
-                });
-              }
-            } else if (change.field === 'messages' && change.value && !change.value.statuses) {
-              for (const message of change.value.messages) {
-                const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
-                let newMessage;
-
-                if (recipient) {
-                  if (!recipient.name && change.value.contacts[0].profile.name) {
-                    await prisma.whatsAppRecipient.update({
-                      where: {
-                        id: recipient.id
-                      },
+                  if (statusValue === 'failed') {
+                    await prisma.whatsAppMessage.updateMany({
+                      where: { wamid },
                       data: {
-                        name: change.value.contacts[0].profile.name
-                      }
-                    })
-                  }
-                  newMessage = await prisma.whatsAppMessage.create({
-                    data: {
-                      recipientId: recipient.id,
-                      phoneNumber: message.from,
-                      wamid: message.id,
-                      message: message.text.body,
-                      sentAt: new Date(message.timestamp * 1000),
-                      status: 'PENDING',
-                      whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
-                    }
-                  });
-                } else {
-                  await prisma.$transaction(async (tx) => {
-                    const newRecipient = await tx.whatsAppRecipient.create({
-                      data: {
-                        phoneNumber: message.from,
-                        name: change.value.contacts[0].profile.name || null,
-                        whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
+                        status: 'FAILED',
+                        errorMessage: status.errors[0].error_data.details
                       }
                     });
+                  } else {
+                    // Update message status
+                    await prisma.whatsAppMessage.updateMany({
+                      where: { wamid },
+                      data: {
+                        status: statusValue.toUpperCase(),
+                        deliveredAt: statusValue === 'delivered' ? new Date() : undefined,
+                        readAt: statusValue === 'read' ? new Date() : undefined,
+                        errorMessage: status.errors ? JSON.stringify(status.errors) : null
+                      }
+                    });
+                  }
+
+                  // Emit status update event
+                  const eventData = {
+                    type: 'status_update',
+                    userId: whatsAppPhoneNumber.account.userId,
+                    data: {
+                      wamid,
+                      status: statusValue.toUpperCase(),
+                      phoneNumberId,
+                      phoneNumber,
+                      error: status.errors ? status.errors[0].error_data.details : null
+                    }
+                  };
+                  global.sseClients.forEach(client => {
+                    if (client.userId === whatsAppPhoneNumber.account.userId) {
+                      client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                    }
+                  });
+                }
+              } else if (change.field === 'messages' && change.value && !change.value.statuses) {
+                for (const message of change.value.messages) {
+                  const recipient = whatsAppPhoneNumber.recipients.find(recipient => recipient.phoneNumber === message.from);
+                  let newMessage;
+
+                  if (recipient) {
+                    if (!recipient.name && change.value.contacts[0].profile.name) {
+                      await prisma.whatsAppRecipient.update({
+                        where: {
+                          id: recipient.id
+                        },
+                        data: {
+                          name: change.value.contacts[0].profile.name
+                        }
+                      });
+                    }
                     newMessage = await prisma.whatsAppMessage.create({
                       data: {
-                        recipientId: newRecipient.id,
-                        wamid: message.id,
+                        recipientId: recipient.id,
                         phoneNumber: message.from,
+                        wamid: message.id,
                         message: message.text.body,
                         sentAt: new Date(message.timestamp * 1000),
                         status: 'PENDING',
                         whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
                       }
                     });
+                  } else {
+                    const newData = await prisma.$transaction(async (tx) => {
+                      const newRecipient = await tx.whatsAppRecipient.create({
+                        data: {
+                          phoneNumber: message.from,
+                          name: change.value.contacts[0].profile.name || null,
+                          whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
+                        }
+                      });
+                      newMessage = await tx.whatsAppMessage.create({
+                        data: {
+                          recipientId: newRecipient.id,
+                          wamid: message.id,
+                          phoneNumber: message.from,
+                          message: message.text.body,
+                          sentAt: new Date(message.timestamp * 1000),
+                          status: 'PENDING',
+                          whatsAppPhoneNumberId: whatsAppPhoneNumber.id,
+                        }
+                      });
+                      return { newRecipient, newMessage };
+                    });
+                  }
+
+                  // Emit new message event
+                  const eventData = {
+                    type: 'new_message',
+                    userId: whatsAppPhoneNumber.account.userId,
+                    data: {
+                      message: newMessage,
+                      phoneNumberId
+                    }
+                  };
+                  global.sseClients.forEach(client => {
+                    if (client.userId === whatsAppPhoneNumber.account.userId) {
+                      client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
+                    }
                   });
                 }
-
-                // Emit new message event
-                const eventData = {
-                  type: 'new_message',
-                  userId: whatsAppPhoneNumber.account.userId,
-                  data: {
-                    message: newMessage,
-                    phoneNumberId
-                  }
-                };
-                global.sseClients.forEach(client => {
-                  if (client.userId === whatsAppPhoneNumber.account.userId) {
-                    client.res.write(`data: ${JSON.stringify(eventData)}\n\n`);
-                  }
-                });
               }
             }
           }
@@ -1441,11 +1461,17 @@ export class WhatsAppController extends BaseController {
         }
       });
 
-      const phoneNumbers = whatsAppPhoneNumbers[0].recipients.map(recipient => ({
-        phoneNumber: recipient.phoneNumber,
-        name: recipient.name,
-        latestMessage: recipient.messages[0]
-      }));
+      const phoneNumbers = whatsAppPhoneNumbers[0].recipients
+        .map(recipient => ({
+          phoneNumber: recipient.phoneNumber,
+          name: recipient.name,
+          latestMessage: recipient.messages[0]
+        }))
+        .sort((a, b) => {
+          const aTime = a.latestMessage?.createdAt ? new Date(a.latestMessage.createdAt).getTime() : 0;
+          const bTime = b.latestMessage?.createdAt ? new Date(b.latestMessage.createdAt).getTime() : 0;
+          return bTime - aTime;
+        });
 
       const totalPages = Math.ceil(totalCount / limit);
 
@@ -1555,10 +1581,10 @@ export class WhatsAppController extends BaseController {
       const thirtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 30));
       const sixtyDaysAgo = new Date(new Date().setDate(new Date().getDate() - 60));
 
-      const currentPeriodMessages = messages.filter(msg => 
+      const currentPeriodMessages = messages.filter(msg =>
         msg.createdAt >= thirtyDaysAgo && msg.isOutbound
       );
-      const previousPeriodMessages = messages.filter(msg => 
+      const previousPeriodMessages = messages.filter(msg =>
         msg.createdAt >= sixtyDaysAgo && msg.createdAt < thirtyDaysAgo && msg.isOutbound
       );
 
@@ -1576,12 +1602,20 @@ export class WhatsAppController extends BaseController {
         ? Math.round(((currentOpenRate - previousOpenRate) / previousOpenRate) * 100)
         : 0;
 
+      // if the phone number is in the current period, then it is an active conversation
+      const activeConversation = currentPeriodMessages.reduce((acc, msg) => {
+        if (msg.phoneNumber) {
+          acc[msg.phoneNumber] = (acc[msg.phoneNumber] || 0) + 1;
+        }
+        return acc;
+      }, {} as Record<string, number>);
+
       const messageOpenRate = currentOpenRate;
       const messageOpenRateChange = openRateChange;
 
       return res.status(200).json({
-        activeConversations: currentPeriodMessages.length,
-        activeConversationsChange: previousPeriodMessages.length > 0 
+        activeConversations: Object.keys(activeConversation).length,
+        activeConversationsChange: previousPeriodMessages.length > 0
           ? Math.round(((currentPeriodMessages.length - previousPeriodMessages.length) / previousPeriodMessages.length) * 100)
           : 0,
         messageOpenRate,
