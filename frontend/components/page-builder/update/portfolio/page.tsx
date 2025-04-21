@@ -197,6 +197,13 @@ export default function SetupForm({
     }
   }, [existingPageData, open]);
 
+  // Handle dialog close
+  useEffect(() => {
+    if (!open && !pageId) {
+      router.push('/dashboard');
+    }
+  }, [open, pageId, router]);
+
   // Mutation for saving the form
   const savePage = useMutation({
     mutationFn: async (values: PortfolioFormValues) => {

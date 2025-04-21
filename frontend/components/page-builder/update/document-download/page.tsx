@@ -1,19 +1,20 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Building,
   CheckCircle,
   ChevronLeft,
   ChevronRight,
-  FileText,
   ImageIcon,
   Mail,
   MapPin,
   Palette,
   Phone,
+  Search,
   Share2,
   Type,
 } from 'lucide-react';
@@ -25,9 +26,9 @@ import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Tabs } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
-import { api } from '@/lib/api';
+import { pageBuilderApi } from '@/lib/api';
 
 interface DocumentDownloadFormProps {
   pageId?: string;
@@ -46,7 +47,7 @@ const documentDownloadFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   subtitle: z.string().optional(),
   description: z.string().optional(),
-  bgImage: z.string().url('Please enter a valid URL').optional(),
+  bgImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   buttonText: z.string().optional(),
   accentColor: z.string().optional(),
   documentRequireForm: z.boolean().default(true),
@@ -70,6 +71,17 @@ const documentDownloadFormSchema = z.object({
     linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
     twitter: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   }),
+
+  // Documents array
+  documents: z.array(
+    z.object({
+      title: z.string().min(1, 'Title is required'),
+      description: z.string().optional(),
+      fileSize: z.string().optional(),
+      fileType: z.string().optional(),
+      downloadUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    })
+  ).default([]),
 });
 
 type DocumentDownloadFormValues = z.infer<typeof documentDownloadFormSchema>;
@@ -78,16 +90,24 @@ export default function DocumentDownloadForm({
   pageId,
   open,
   onOpenChange,
-  isLoading,
+  isLoading: externalLoading,
 }: DocumentDownloadFormProps) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
+  const queryClient = useQueryClient();
+  const [slugAvailable, setSlugAvailable] = useState(true);
+  
+  // Fetch page data if editing an existing page
+  const { data: pageData, isLoading: isLoadingPage } = useQuery({
+    queryKey: ['page', pageId],
+    queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
+    enabled: !!pageId && open,
+  });
 
   // Steps configuration
   const steps = [
     { id: 'content', label: 'Content' },
     { id: 'appearance', label: 'Appearance' },
+    { id: 'documents', label: 'Documents' },
     { id: 'agent', label: 'Agent Info' },
     { id: 'social', label: 'Social' },
     { id: 'settings', label: 'Settings' },
@@ -121,7 +141,44 @@ export default function DocumentDownloadForm({
       linkedin: 'https://linkedin.com',
       twitter: 'https://twitter.com',
     },
+    documents: [
+      {
+        title: 'Purchase Agreement',
+        description: 'Standard real estate purchase agreement template',
+        fileSize: '245 KB',
+        fileType: 'PDF',
+        downloadUrl: 'https://example.com/documents/purchase-agreement.pdf',
+      },
+      {
+        title: 'Listing Contract',
+        description: 'Property listing agreement document',
+        fileSize: '198 KB',
+        fileType: 'DOCX',
+        downloadUrl: 'https://example.com/documents/listing-contract.docx',
+      },
+      {
+        title: 'Home Inspection Checklist',
+        description: 'Comprehensive home inspection guide',
+        fileSize: '312 KB',
+        fileType: 'PDF',
+        downloadUrl: 'https://example.com/documents/inspection-checklist.pdf',
+      },
+    ],
   };
+
+  // Mutation for checking slug availability
+  const checkSlug = useMutation({
+    mutationFn: async (slug: string) => {
+      const result = await pageBuilderApi.checkSlugAvailability(slug);
+      return result;
+    },
+    onSuccess: (data) => {
+      setSlugAvailable(data.data.available);
+      if (!data.data.available) {
+        toast.error('This URL is already taken. Please choose another one.');
+      }
+    },
+  });
 
   // Mutation for saving the form
   const savePage = useMutation({
@@ -135,9 +192,9 @@ export default function DocumentDownloadForm({
       };
 
       if (pageId) {
-        return await api.put(`/page-builder/${pageId}`, pageData);
+        return await pageBuilderApi.updatePage(pageId, pageData);
       } else {
-        return await api.post('/page-builder', pageData);
+        return await pageBuilderApi.createPage(pageData);
       }
     },
     onSuccess: () => {
@@ -164,17 +221,47 @@ export default function DocumentDownloadForm({
     }
   };
 
+  // Set form values when pageData is loaded
+  useEffect(() => {
+    if (pageData?.data?.jsonData) {
+      // For debugging
+      console.log('Page data loaded:', pageData.data);
+    }
+  }, [pageData]);
+
+  // Handle document array management
+  const [documents, setDocuments] = useState(defaultValues.documents);
+  
+  const addDocument = () => {
+    setDocuments([
+      ...documents,
+      {
+        title: '',
+        description: '',
+        fileSize: '',
+        fileType: '',
+        downloadUrl: '',
+      },
+    ]);
+  };
+
+  const removeDocument = (index: number) => {
+    setDocuments(documents.filter((_, i) => i !== index));
+  };
+
+  const isLoading = externalLoading || isLoadingPage || savePage.isPending;
+
   return (
     <BaseEntityDialog
       open={open}
       onOpenChange={onOpenChange}
       title={pageId ? 'Update Document Download Page' : 'Create Document Download Page'}
       schema={documentDownloadFormSchema}
-      defaultValues={defaultValues}
+      defaultValues={pageData?.data?.jsonData || defaultValues}
       onSubmit={(values) => {
         savePage.mutate(values);
       }}
-      isLoading={isLoading || savePage.isPending}
+      isLoading={isLoading}
     >
       {(form) => (
         <Tabs value={steps[currentStep].id} className='w-full'>
@@ -187,8 +274,8 @@ export default function DocumentDownloadForm({
                     index === currentStep
                       ? 'border-emerald-600 bg-emerald-600 text-white'
                       : index < currentStep
-                        ? 'border-emerald-600 bg-white text-emerald-600'
-                        : 'border-gray-300 bg-white text-gray-400'
+                      ? 'border-emerald-600 bg-white text-emerald-600'
+                      : 'border-gray-300 bg-white text-gray-400'
                   }`}
                 >
                   {index < currentStep ? <CheckCircle className='w-4 h-4' /> : index + 1}
@@ -213,11 +300,14 @@ export default function DocumentDownloadForm({
                   name='title'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Page Title</FormLabel>
+                      <FormLabel>
+                        <Type className='w-4 h-4 inline mr-2' />
+                        Page Title
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder='Enter page title'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -231,11 +321,14 @@ export default function DocumentDownloadForm({
                   name='subtitle'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Subtitle</FormLabel>
+                      <FormLabel>
+                        <Type className='w-4 h-4 inline mr-2' />
+                        Subtitle
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder='Enter subtitle'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -249,12 +342,15 @@ export default function DocumentDownloadForm({
                   name='description'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>
+                        <Type className='w-4 h-4 inline mr-2' />
+                        Description
+                      </FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder='Enter page description'
-                          disabled={isLoading || savePage.isPending}
                           className='min-h-[100px]'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -268,11 +364,14 @@ export default function DocumentDownloadForm({
                   name='buttonText'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Button Text</FormLabel>
+                      <FormLabel>
+                        <Type className='w-4 h-4 inline mr-2' />
+                        Button Text
+                      </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter button text'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='Download Documents'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -291,22 +390,16 @@ export default function DocumentDownloadForm({
                   name='bgImage'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Background Image URL</FormLabel>
+                      <FormLabel>
+                        <ImageIcon className='w-4 h-4 inline mr-2' />
+                        Background Image URL
+                      </FormLabel>
                       <FormControl>
-                        <div className='flex space-x-2'>
-                          <Input
-                            placeholder='Enter image URL'
-                            disabled={isLoading || savePage.isPending}
-                            {...field}
-                            className='flex-1'
-                          />
-                          {field.value && (
-                            <div
-                              className='h-10 w-10 rounded border overflow-hidden bg-cover bg-center'
-                              style={{ backgroundImage: `url(${field.value})` }}
-                            />
-                          )}
-                        </div>
+                        <Input
+                          placeholder='https://example.com/image.jpg'
+                          disabled={isLoading}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -318,17 +411,23 @@ export default function DocumentDownloadForm({
                   name='accentColor'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Accent Color</FormLabel>
+                      <FormLabel>
+                        <Palette className='w-4 h-4 inline mr-2' />
+                        Accent Color
+                      </FormLabel>
                       <FormControl>
                         <div className='flex items-center space-x-2'>
                           <Input
-                            placeholder='#059669'
-                            disabled={isLoading || savePage.isPending}
+                            type='color'
+                            className='w-12 h-10 p-1'
+                            disabled={isLoading}
                             {...field}
                           />
-                          <div
-                            className='h-10 w-10 rounded border'
-                            style={{ backgroundColor: field.value }}
+                          <Input
+                            placeholder='#059669'
+                            disabled={isLoading}
+                            value={field.value}
+                            onChange={field.onChange}
                           />
                         </div>
                       </FormControl>
@@ -336,11 +435,161 @@ export default function DocumentDownloadForm({
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name='documentRequireForm'
+                  render={({ field }) => (
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
+                      <div className='space-y-0.5'>
+                        <FormLabel>Require Form for Downloads</FormLabel>
+                        <div className='text-sm text-muted-foreground'>
+                          Visitors will need to fill out a form before downloading documents
+                        </div>
+                      </div>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          disabled={isLoading}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Documents */}
+            {currentStep === 2 && (
+              <div className='space-y-4 p-2'>
+                <h3 className='text-lg font-medium'>Document List</h3>
+                <p className='text-sm text-gray-500 mb-4'>
+                  Add the documents you want to make available for download
+                </p>
+
+                {form.watch('documents')?.map((_, index) => (
+                  <div key={index} className='border rounded-md p-4 mb-4 relative'>
+                    <button
+                      type='button'
+                      className='absolute top-2 right-2 text-red-500 hover:text-red-700'
+                      onClick={() => {
+                        const currentDocs = form.getValues('documents');
+                        const newDocs = currentDocs.filter((_, i) => i !== index);
+                        form.setValue('documents', newDocs);
+                      }}
+                    >
+                      ×
+                    </button>
+                    
+                    <FormField
+                      control={form.control}
+                      name={`documents.${index}.title`}
+                      render={({ field }) => (
+                        <FormItem className='mb-2'>
+                          <FormLabel>Document Title</FormLabel>
+                          <FormControl>
+                            <Input placeholder='Purchase Agreement' {...field} disabled={isLoading} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name={`documents.${index}.description`}
+                      render={({ field }) => (
+                        <FormItem className='mb-2'>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder='A brief description of the document' 
+                              {...field} 
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <div className='grid grid-cols-2 gap-2'>
+                      <FormField
+                        control={form.control}
+                        name={`documents.${index}.fileSize`}
+                        render={({ field }) => (
+                          <FormItem className='mb-2'>
+                            <FormLabel>File Size</FormLabel>
+                            <FormControl>
+                              <Input placeholder='245 KB' {...field} disabled={isLoading} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name={`documents.${index}.fileType`}
+                        render={({ field }) => (
+                          <FormItem className='mb-2'>
+                            <FormLabel>File Type</FormLabel>
+                            <FormControl>
+                              <Input placeholder='PDF' {...field} disabled={isLoading} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <FormField
+                      control={form.control}
+                      name={`documents.${index}.downloadUrl`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Download URL</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder='https://example.com/documents/file.pdf' 
+                              {...field} 
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                ))}
+
+                <Button
+                  type='button'
+                  variant='outline'
+                  className='w-full'
+                  onClick={() => {
+                    const currentDocs = form.getValues('documents') || [];
+                    form.setValue('documents', [
+                      ...currentDocs,
+                      {
+                        title: '',
+                        description: '',
+                        fileSize: '',
+                        fileType: '',
+                        downloadUrl: '',
+                      }
+                    ]);
+                  }}
+                  disabled={isLoading}
+                >
+                  + Add Document
+                </Button>
               </div>
             )}
 
             {/* Agent Info */}
-            {currentStep === 2 && (
+            {currentStep === 3 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -350,8 +599,8 @@ export default function DocumentDownloadForm({
                       <FormLabel>Agent Name</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter agent name'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='John Doe'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -368,8 +617,8 @@ export default function DocumentDownloadForm({
                       <FormLabel>Agent Title</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter agent title'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='Real Estate Agent'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -385,20 +634,11 @@ export default function DocumentDownloadForm({
                     <FormItem>
                       <FormLabel>Agent Image URL</FormLabel>
                       <FormControl>
-                        <div className='flex space-x-2'>
-                          <Input
-                            placeholder='Enter image URL'
-                            disabled={isLoading || savePage.isPending}
-                            {...field}
-                            className='flex-1'
-                          />
-                          {field.value && (
-                            <div
-                              className='h-10 w-10 rounded-full border overflow-hidden bg-cover bg-center'
-                              style={{ backgroundImage: `url(${field.value})` }}
-                            />
-                          )}
-                        </div>
+                        <Input
+                          placeholder='https://example.com/agent.jpg'
+                          disabled={isLoading}
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -410,11 +650,14 @@ export default function DocumentDownloadForm({
                   name='contactInfo.address'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Office Address</FormLabel>
+                      <FormLabel>
+                        <MapPin className='w-4 h-4 inline mr-2' />
+                        Address
+                      </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter office address'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='123 Main St, Anytown, USA'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -428,11 +671,14 @@ export default function DocumentDownloadForm({
                   name='contactInfo.phone'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
+                      <FormLabel>
+                        <Phone className='w-4 h-4 inline mr-2' />
+                        Phone
+                      </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter phone number'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='(123) 456-7890'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -446,11 +692,14 @@ export default function DocumentDownloadForm({
                   name='contactInfo.email'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>
+                        <Mail className='w-4 h-4 inline mr-2' />
+                        Email
+                      </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='Enter email address'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='john.doe@example.com'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -462,7 +711,7 @@ export default function DocumentDownloadForm({
             )}
 
             {/* Social */}
-            {currentStep === 3 && (
+            {currentStep === 4 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -473,7 +722,7 @@ export default function DocumentDownloadForm({
                       <FormControl>
                         <Input
                           placeholder='https://facebook.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -490,26 +739,8 @@ export default function DocumentDownloadForm({
                       <FormLabel>Instagram URL</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='https://instagram.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='social.twitter'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Twitter URL</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder='https://twitter.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='https://instagram.com/yourprofile'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -526,8 +757,26 @@ export default function DocumentDownloadForm({
                       <FormLabel>LinkedIn URL</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder='https://linkedin.com/in/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          placeholder='https://linkedin.com/in/yourprofile'
+                          disabled={isLoading}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='social.twitter'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Twitter URL</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder='https://twitter.com/yourhandle'
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -539,26 +788,37 @@ export default function DocumentDownloadForm({
             )}
 
             {/* Settings */}
-            {currentStep === 4 && (
+            {currentStep === 5 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
                   name='slug'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Custom URL Slug</FormLabel>
+                      <FormLabel>URL Slug</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Enter URL slug (e.g., documents)'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                        />
+                        <div className='flex items-center space-x-2'>
+                          <div className='bg-gray-100 p-2 rounded text-gray-500 text-sm'>
+                            {typeof window !== 'undefined' ? window.location.origin : ''}/p/
+                          </div>
+                          <Input
+                            placeholder='your-document-page'
+                            disabled={isLoading}
+                            {...field}
+                            onBlur={() => {
+                              if (field.value) {
+                                checkSlug.mutate(field.value);
+                              }
+                            }}
+                          />
+                        </div>
                       </FormControl>
+                      {!slugAvailable && field.value && !checkSlug.isPending && (
+                        <p className='text-sm font-medium text-red-500 mt-1'>
+                          This URL is already taken
+                        </p>
+                      )}
                       <FormMessage />
-                      <p className='text-xs text-muted-foreground'>
-                        This will determine your page URL: yourdomain.com/p/
-                        {field.value || 'documents-[timestamp]'}
-                      </p>
                     </FormItem>
                   )}
                 />
@@ -567,18 +827,18 @@ export default function DocumentDownloadForm({
                   control={form.control}
                   name='isPublic'
                   render={({ field }) => (
-                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
                       <div className='space-y-0.5'>
-                        <FormLabel className='text-base'>Public Page</FormLabel>
+                        <FormLabel>Make Page Public</FormLabel>
                         <div className='text-sm text-muted-foreground'>
-                          Make this page publicly accessible
+                          This will make your document page accessible to anyone with the link
                         </div>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                         />
                       </FormControl>
                     </FormItem>
@@ -595,7 +855,7 @@ export default function DocumentDownloadForm({
                   type='button'
                   variant='outline'
                   onClick={handlePrevious}
-                  disabled={savePage.isPending}
+                  disabled={isLoading}
                 >
                   <ChevronLeft className='w-4 h-4 mr-2' />
                   Previous
@@ -607,7 +867,7 @@ export default function DocumentDownloadForm({
               <Button
                 type='button'
                 variant='outline'
-                disabled={savePage.isPending}
+                disabled={isLoading}
                 onClick={() => onOpenChange(false)}
               >
                 Cancel
@@ -617,7 +877,7 @@ export default function DocumentDownloadForm({
                 <Button
                   type='button'
                   onClick={handleNext}
-                  disabled={savePage.isPending}
+                  disabled={isLoading}
                   className='bg-emerald-600 hover:bg-emerald-700'
                 >
                   Next
@@ -626,10 +886,10 @@ export default function DocumentDownloadForm({
               ) : (
                 <Button
                   type='submit'
-                  disabled={savePage.isPending || !form.formState.isValid}
+                  disabled={isLoading || !form.formState.isValid || !slugAvailable}
                   className='bg-emerald-600 hover:bg-emerald-700 min-w-[100px]'
                 >
-                  {savePage.isPending ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
+                  {isLoading ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
                 </Button>
               )}
             </div>
