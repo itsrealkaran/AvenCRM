@@ -10,7 +10,11 @@ import DocumentDownloadTemplate from '@/components/page-builder/document-downloa
 import LocationSearchTemplate from '@/components/page-builder/location-search-template';
 import { api } from '@/lib/api';
 
-export default function DynamicPage({ params }: { params: { slug: string } }) {
+type Props = {
+  params: Promise<{ slug: string }>;
+};
+
+export default function DynamicPage({ params }: Props) {
   const [pageData, setPageData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +23,8 @@ export default function DynamicPage({ params }: { params: { slug: string } }) {
     const fetchPageData = async () => {
       try {
         setIsLoading(true);
-        const response = await api.get(`/page-builder/pages/${params.slug}`);
+        const resolvedParams = await params;
+        const response = await api.get(`/page-builder/pages/${resolvedParams.slug}`);
         setPageData(response.data);
       } catch (err: any) {
         console.error('Error fetching page data:', err);
@@ -29,10 +34,8 @@ export default function DynamicPage({ params }: { params: { slug: string } }) {
       }
     };
 
-    if (params.slug) {
-      fetchPageData();
-    }
-  }, [params.slug]);
+    fetchPageData();
+  }, [params]);
 
   if (isLoading)
     return (
@@ -72,7 +75,7 @@ export default function DynamicPage({ params }: { params: { slug: string } }) {
             </div>
             <h1 className='text-2xl font-bold text-center mb-2'>Unknown Template Type</h1>
             <p className='text-gray-600 text-center max-w-md'>
-              The template type "{pageData.type}" is not supported.
+              The template type &quot;{pageData.type}&quot; is not supported.
             </p>
           </div>
         );

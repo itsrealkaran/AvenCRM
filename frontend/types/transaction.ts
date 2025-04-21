@@ -11,6 +11,12 @@ export interface Transaction {
     name: string;
     email: string;
   };
+  partnerDetails?: {
+    name: string;
+    email: string;
+    phone: string;
+    commissionRate: number;
+  };
   propertyType: string;
   transactionType: TransactionType;
   isApprovedByTeamLeader: TransactionStatus;

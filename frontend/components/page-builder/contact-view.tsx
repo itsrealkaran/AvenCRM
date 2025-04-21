@@ -8,13 +8,15 @@ import ContactForm from '@/components/page-builder/update/contact/page';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+
 import Logo from '../logo';
 
 interface ContactViewProps {
   navigateTo: (view: string) => void;
+  pageId?: string;
 }
 
-export default function ContactView({ navigateTo }: ContactViewProps) {
+export default function ContactView({ navigateTo, pageId }: ContactViewProps) {
   const [contactData, setContactData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -99,8 +101,7 @@ export default function ContactView({ navigateTo }: ContactViewProps) {
       <main className='flex-grow container mx-auto p-4'>
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
           <div className='h-[calc(99%-8rem)] overflow-y-auto'>
-            <ContactFormTemplate data={contactData}
-            />
+            <ContactFormTemplate data={contactData} />
           </div>
         </div>
       </main>

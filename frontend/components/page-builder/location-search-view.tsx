@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ExternalLink, RefreshCw, Share, Trash2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ExternalLink, RefreshCw, Share, Trash2 } from 'lucide-react';
 
 import LocationSearchTemplate from '@/components/page-builder/location-search-template';
 import {
@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { pageBuilderApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+
 import LocationSearchForm from './update/location-search/page';
 
 interface LocationSearchViewProps {
@@ -31,64 +32,70 @@ export default function LocationSearchView({ navigateTo, pageId }: LocationSearc
   const queryClient = useQueryClient();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+
   // Debug log to check pageId
   useEffect(() => {
     console.log('LocationSearchView pageId:', pageId);
   }, [pageId]);
 
   // Fetch page data if pageId is provided
-  const { 
-    data: pageData, 
+  const {
+    data: pageData,
     isLoading,
-    isError 
+    isError,
   } = useQuery({
     queryKey: ['page', pageId],
     queryFn: () => {
       console.log('Fetching location page with ID:', pageId);
       return pageId ? pageBuilderApi.getPage(pageId) : null;
     },
-    enabled: !!pageId
+    enabled: !!pageId,
   });
 
   // Default location search data
   const defaultData = {
     title: 'Find Your Dream Property',
     subtitle: 'Search properties by location, features, and price range',
-    description: 'Our interactive map helps you discover available properties in your desired neighborhoods.',
+    description:
+      'Our interactive map helps you discover available properties in your desired neighborhoods.',
     regions: [
       {
         name: 'Downtown',
         description: 'Urban living in the heart of the city with modern condos and lofts.',
         properties: '45',
         priceRange: '$350k - $1.2M',
-        image: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
-        location: { lat: 37.7749, lng: -122.4194 }
+        image:
+          'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.7749, lng: -122.4194 },
       },
       {
         name: 'Suburbia',
-        description: 'Family-friendly neighborhoods with excellent schools and community amenities.',
+        description:
+          'Family-friendly neighborhoods with excellent schools and community amenities.',
         properties: '78',
         priceRange: '$450k - $950k',
-        image: 'https://images.unsplash.com/photo-1625602812206-5ec545ca1231?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
-        location: { lat: 37.7749, lng: -122.2194 }
+        image:
+          'https://images.unsplash.com/photo-1625602812206-5ec545ca1231?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.7749, lng: -122.2194 },
       },
       {
         name: 'Waterfront',
         description: 'Luxury properties with stunning water views and premium amenities.',
         properties: '23',
         priceRange: '$750k - $3.5M',
-        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
-        location: { lat: 37.8049, lng: -122.4194 }
+        image:
+          'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.8049, lng: -122.4194 },
       },
       {
         name: 'Countryside',
         description: 'Spacious properties with large lots and rural charm just outside the city.',
         properties: '32',
         priceRange: '$400k - $1.1M',
-        image: 'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
-        location: { lat: 37.7249, lng: -122.4594 }
-      }
+        image:
+          'https://images.unsplash.com/photo-1513584684374-8bab748fbf90?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80',
+        location: { lat: 37.7249, lng: -122.4594 },
+      },
     ],
     accentColor: '#3b82f6',
     mapZoom: 10,
@@ -97,16 +104,16 @@ export default function LocationSearchView({ navigateTo, pageId }: LocationSearc
     contactInfo: {
       name: 'Sarah Johnson',
       phone: '(415) 555-0123',
-      email: 'info@realestate.com'
+      email: 'info@realestate.com',
     },
     filters: {
       price: true,
       bedrooms: true,
       propertyType: true,
-      squareFeet: true
+      squareFeet: true,
     },
     callToAction: 'Contact us to schedule a viewing',
-    templateType: 'LOCATION'
+    templateType: 'LOCATION',
   };
 
   // Effect to open setup form automatically if no pageId is provided

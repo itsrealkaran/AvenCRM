@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useCurrency } from '@/contexts/CurrencyContext';
 import { Transaction, TransactionStatus } from '@/types';
 import { ListItemIcon, MenuItem } from '@mui/material';
@@ -9,6 +10,7 @@ import { type MRT_ColumnDef } from 'material-react-table';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export const columns: MRT_ColumnDef<Transaction>[] = [
   {
@@ -122,17 +124,67 @@ export const columns: MRT_ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: 'date',
-    header: 'Date',
-    Cell: ({ row }) => {
-      return format(new Date(row.getValue('date')), 'MMM d, yyyy');
-    },
-  },
-  {
     accessorKey: 'commissionRate',
     header: 'Commission Rate',
     Cell: ({ row }) => {
       return `${row.getValue('commissionRate')}%`;
+    },
+  },
+  {
+    accessorKey: 'partner',
+    header: 'Partner',
+    Cell: ({ row }: { row: { original: Transaction } }) => {
+      const [open, setOpen] = useState(false);
+      const partner = row.original.partnerDetails;
+
+      if (!partner) {
+        return 'N/A';
+      }
+
+      return (
+        <>
+          <Button
+            variant='ghost'
+            className='h-8 w-fit text-xs px-1 bg-gray-50 text-gray-800 hover:bg-gray-300'
+            onClick={() => setOpen(true)}
+          >
+            <span className='sr-only'>View Partner Details</span>
+            View Partner
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Partner Details</DialogTitle>
+              </DialogHeader>
+              <div className='grid grid-cols-2 gap-4'>
+                <div>
+                  <h4 className='text-sm font-medium'>Name</h4>
+                  <p className='text-sm text-muted-foreground'>{partner.name}</p>
+                </div>
+                <div>
+                  <h4 className='text-sm font-medium'>Phone</h4>
+                  <p className='text-sm text-muted-foreground'>{partner.phone}</p>
+                </div>
+                <div>
+                  <h4 className='text-sm font-medium'>Email</h4>
+                  <p className='text-sm text-muted-foreground'>{partner.email}</p>
+                </div>
+                <div>
+                  <h4 className='text-sm font-medium'>Commission Rate</h4>
+                  <p className='text-sm text-muted-foreground'>{partner.commissionRate}%</p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </>
+      );
+    },
+  },
+  {
+    accessorKey: 'date',
+    header: 'Date',
+    Cell: ({ row }) => {
+      return format(new Date(row.getValue('date')), 'MMM d, yyyy');
     },
   },
 ];

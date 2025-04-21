@@ -24,9 +24,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 
+import { CreateTransactionDialog } from '../../admin/transactions/create-transaction-dialog';
+import { EditTransactionDialog } from '../../admin/transactions/edit-transaction-dialog';
 import { columns, renderRowActionMenuItems } from './columns';
-import { CreateTransactionDialog } from './create-transaction-dialog';
-import { EditTransactionDialog } from './edit-transaction-dialog';
 
 async function getTransactions(): Promise<Transaction[]> {
   try {
@@ -286,7 +286,6 @@ export default function TransactionsPage() {
           open={isEditDialogOpen}
           onOpenChange={setIsEditDialogOpen}
           transaction={selectedTransaction}
-          onEdit={handleEdit}
         />
       )}
     </div>

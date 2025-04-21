@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -18,6 +17,7 @@ import {
   Share2,
   Type,
 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -80,13 +80,15 @@ const defaultValues: LocationSearchFormValues = {
   title: 'Property Search',
   subtitle: 'Find your dream home in your preferred location',
   description: 'Search through our extensive listing of premium properties in top neighborhoods.',
-  bgImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+  bgImage:
+    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
   searchPlaceholder: 'Enter city, neighborhood, or zip code',
   buttonText: 'Search Properties',
   accentColor: '#3b82f6',
   agentName: 'Sarah Johnson',
   agentTitle: 'Senior Real Estate Agent',
-  agentImage: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=988&q=80',
+  agentImage:
+    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=988&q=80',
   contactInfo: {
     address: '123 Main Street, San Francisco, CA 94105',
     phone: '(415) 555-0123',
@@ -132,7 +134,7 @@ export default function LocationSearchForm({
   // Fetch existing page data if in edit mode
   const { data: existingPage } = useQuery({
     queryKey: ['page', pageId],
-    queryFn: () => pageId ? pageBuilderApi.getPage(pageId) : null,
+    queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
     enabled: !!pageId && open,
   });
 
@@ -164,7 +166,7 @@ export default function LocationSearchForm({
     if (existingPage?.data) {
       const pageData = existingPage.data;
       const jsonData = pageData.jsonData || {};
-      
+
       // Reset form with merged values from existing data
       form.reset({
         title: jsonData.title || defaultValues.title,

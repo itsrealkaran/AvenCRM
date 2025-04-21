@@ -31,24 +31,24 @@ export default function PortfolioView({ navigateTo, pageId }: PortfolioViewProps
   const queryClient = useQueryClient();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  
+
   // Debug log to check pageId
   useEffect(() => {
     console.log('PortfolioView pageId:', pageId);
   }, [pageId]);
 
   // Fetch page data if pageId is provided
-  const { 
-    data: pageData, 
+  const {
+    data: pageData,
     isLoading,
-    isError 
+    isError,
   } = useQuery({
     queryKey: ['page', pageId],
     queryFn: () => {
       console.log('Fetching page with ID:', pageId);
       return pageId ? pageBuilderApi.getPage(pageId) : null;
     },
-    enabled: !!pageId
+    enabled: !!pageId,
   });
 
   // Default portfolio data
@@ -56,14 +56,16 @@ export default function PortfolioView({ navigateTo, pageId }: PortfolioViewProps
     name: 'Sarah Johnson',
     title: 'Luxury Real Estate Specialist',
     location: 'San Francisco Bay Area, CA',
-    image: 'https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXQlMjBtYW58ZW58MHx8MHx8fDA%3D',
+    image:
+      'https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXQlMjBtYW58ZW58MHx8MHx8fDA%3D',
     bio: 'With over 15 years of experience, I specialize in luxury properties and helping clients make informed decisions in the competitive Bay Area market.',
     dealsCount: '350+',
     propertyValue: '$500M+',
     yearsExperience: '15+',
     clientSatisfaction: '98%',
     accentColor: '#7c3aed',
-    approach: 'I believe in personalized service and leveraging the latest technology to ensure my clients get the best deals in the market.',
+    approach:
+      'I believe in personalized service and leveraging the latest technology to ensure my clients get the best deals in the market.',
     expertise: [
       'Luxury Residential Properties',
       'Investment Properties',
@@ -72,11 +74,12 @@ export default function PortfolioView({ navigateTo, pageId }: PortfolioViewProps
     ],
     certifications: [
       'Certified Residential Specialist (CRS)',
-      'Accredited Buyer\'s Representative (ABR)',
+      "Accredited Buyer's Representative (ABR)",
       'Luxury Home Marketing Specialist',
       'Certified Negotiation Expert (CNE)',
     ],
-    education: 'Bachelor of Business Administration in Real Estate, University of California, Berkeley',
+    education:
+      'Bachelor of Business Administration in Real Estate, University of California, Berkeley',
     phone: '(415) 555-0123',
     email: 'sarah@sarahjohnsonrealty.com',
     officeAddress: '123 Market Street, San Francisco, CA 94105',

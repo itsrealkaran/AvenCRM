@@ -114,5 +114,5 @@ export const pageBuilderApi = {
   // Get a public page by slug
   getPublicPage: async (slug: string) => {
     return api.get(`/public/pages/${slug}`);
-  }
+  },
 };

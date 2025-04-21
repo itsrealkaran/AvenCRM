@@ -35,12 +35,14 @@ const transactionFormSchema = z.object({
   date: z.string(),
   propertyType: z.string().optional(),
   hasPartner: z.boolean().default(false),
-  partnerDetails: z.object({
-    name: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.string().email().optional(),
-    commissionRate: z.string().optional(),
-  }).optional(),
+  partnerDetails: z
+    .object({
+      name: z.string().optional(),
+      phone: z.string().optional(),
+      email: z.string().email().optional().or(z.literal('')),
+      commissionRate: z.string().optional(),
+    })
+    .optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -86,12 +88,16 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
           amount: parseFloat(values.amount),
           commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : 0,
           date: new Date(values.date).toISOString(),
-          partner: values.hasPartner ? {
-            name: values.partnerDetails?.name,
-            phone: values.partnerDetails?.phone,
-            email: values.partnerDetails?.email,
-            commissionRate: values.partnerDetails?.commissionRate ? parseFloat(values.partnerDetails.commissionRate) : 0,
-          } : null,
+          partner: values.hasPartner
+            ? {
+                name: values.partnerDetails?.name,
+                phone: values.partnerDetails?.phone,
+                email: values.partnerDetails?.email,
+                commissionRate: values.partnerDetails?.commissionRate
+                  ? parseFloat(values.partnerDetails.commissionRate)
+                  : 0,
+              }
+            : null,
         };
 
         console.log('Transaction payload:', JSON.stringify(payload, null, 2));

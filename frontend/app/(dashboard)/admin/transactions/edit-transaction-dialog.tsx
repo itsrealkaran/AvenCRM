@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import * as z from 'zod';
 
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Form,
@@ -37,6 +38,15 @@ const transactionFormSchema = z.object({
   transactionMethod: z.string().optional(),
   date: z.string(),
   propertyType: z.string().optional(),
+  hasPartner: z.boolean().default(false),
+  partnerDetails: z
+    .object({
+      name: z.string().optional(),
+      email: z.string().optional(),
+      phone: z.string().optional(),
+      commissionRate: z.string().optional(),
+    })
+    .optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -61,6 +71,13 @@ export function EditTransactionDialog({
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
       propertyType: '',
+      hasPartner: false,
+      partnerDetails: {
+        name: '',
+        email: '',
+        phone: '',
+        commissionRate: '',
+      },
     },
   });
 
@@ -75,11 +92,20 @@ export function EditTransactionDialog({
   useEffect(() => {
     if (transaction) {
       form.reset({
-        amount: (transaction.amount * (transaction?.commissionRate || 0 / 100)).toString(),
+        amount: transaction.amount.toString(),
         commissionRate: transaction.commissionRate?.toString() || '',
         transactionMethod: transaction.transactionMethod || '',
         date: new Date(transaction.date).toISOString().split('T')[0],
         propertyType: transaction.propertyType || '',
+        hasPartner: !!transaction.partnerDetails,
+        partnerDetails: transaction.partnerDetails
+          ? {
+              name: transaction.partnerDetails.name || '',
+              email: transaction.partnerDetails.email || '',
+              phone: transaction.partnerDetails.phone || '',
+              commissionRate: transaction.partnerDetails.commissionRate?.toString() || '',
+            }
+          : undefined,
       });
     }
   }, [transaction, form]);
@@ -96,6 +122,15 @@ export function EditTransactionDialog({
           amount: parseFloat(values.amount),
           commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : null,
           date: new Date(values.date).toISOString(),
+          partnerDetails:
+            values.hasPartner && values.partnerDetails
+              ? {
+                  ...values.partnerDetails,
+                  commissionRate: values.partnerDetails.commissionRate
+                    ? parseFloat(values.partnerDetails.commissionRate)
+                    : null,
+                }
+              : null,
         };
 
         const response = await api.put(`/transactions/${transaction.id}`, payload);
@@ -215,6 +250,85 @@ export function EditTransactionDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name='hasPartner'
+              render={({ field }) => (
+                <FormItem className='col-span-2 flex items-center space-x-2'>
+                  <FormControl>
+                    <input
+                      type='checkbox'
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                      className='h-4 w-4 rounded border-gray-300'
+                    />
+                  </FormControl>
+                  <FormLabel className='!mt-0'>Add Partner</FormLabel>
+                </FormItem>
+              )}
+            />
+
+            {form.watch('hasPartner') && (
+              <div className='space-y-4'>
+                <h3 className='font-medium'>Partner Details</h3>
+                <div className='grid grid-cols-2 gap-4'>
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.name'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder='John Doe' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.email'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Email</FormLabel>
+                        <FormControl>
+                          <Input type='email' placeholder='john@example.com' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.phone'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Phone</FormLabel>
+                        <FormControl>
+                          <Input placeholder='+1234567890' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.commissionRate'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Commission Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input type='number' placeholder='5' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
             <div className='flex justify-end space-x-4'>
               <Button
                 type='button'
@@ -224,17 +338,7 @@ export function EditTransactionDialog({
               >
                 Cancel
               </Button>
-              <Button
-                type='submit'
-                disabled={
-                  editTransaction.isPending ||
-                  !form.watch('commissionRate') ||
-                  !form.watch('transactionMethod') ||
-                  !form.watch('date') ||
-                  !form.watch('propertyType')
-                }
-                className='min-w-[100px]'
-              >
+              <Button type='submit' disabled={editTransaction.isPending} className='min-w-[100px]'>
                 {editTransaction.isPending ? (
                   <>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />

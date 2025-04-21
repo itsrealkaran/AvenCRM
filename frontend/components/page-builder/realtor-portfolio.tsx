@@ -12,9 +12,9 @@ import {
   Users,
 } from 'lucide-react';
 
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 export default function RealtorPortfolio({ data }: { data: any }) {
   return (
@@ -22,15 +22,21 @@ export default function RealtorPortfolio({ data }: { data: any }) {
       <main className='flex-1'>
         <section
           className='relative py-12 md:py-24 bg-gradient-to-br from-white via-white to-white'
-          style={{ backgroundImage: `linear-gradient(to bottom right, white, white, ${data.accentColor}10)` }}
+          style={{
+            backgroundImage: `linear-gradient(to bottom right, white, white, ${data.accentColor}10)`,
+          }}
         >
           <div
             className='absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-transparent to-transparent'
-            style={{ backgroundImage: `linear-gradient(to left, ${data.accentColor}05, transparent)` }}
+            style={{
+              backgroundImage: `linear-gradient(to left, ${data.accentColor}05, transparent)`,
+            }}
           ></div>
           <div
             className='absolute bottom-0 left-0 w-1/2 h-1/3 bg-gradient-to-t from-transparent to-transparent'
-            style={{ backgroundImage: `linear-gradient(to top, ${data.accentColor}05, transparent)` }}
+            style={{
+              backgroundImage: `linear-gradient(to top, ${data.accentColor}05, transparent)`,
+            }}
           ></div>
           <div className='container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center relative z-10'>
             <div className='space-y-6'>
@@ -66,12 +72,14 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                 <Button
                   size='lg'
                   className='text-white shadow-lg transition-all hover:shadow-xl'
-                  style={{ 
-                    backgroundColor: data.accentColor,
-                    boxShadow: `0 10px 15px -3px ${data.accentColor}25`,
-                    '--hover-bg': `${data.accentColor}90`,
-                    '--hover-shadow': `0 20px 25px -5px ${data.accentColor}20`
-                  } as React.CSSProperties}
+                  style={
+                    {
+                      backgroundColor: data.accentColor,
+                      boxShadow: `0 10px 15px -3px ${data.accentColor}25`,
+                      '--hover-bg': `${data.accentColor}90`,
+                      '--hover-shadow': `0 20px 25px -5px ${data.accentColor}20`,
+                    } as React.CSSProperties
+                  }
                 >
                   Contact Me
                 </Button>
@@ -79,11 +87,13 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                   variant='outline'
                   size='lg'
                   className='hover:bg-transparent'
-                  style={{ 
-                    borderColor: data.accentColor, 
-                    color: data.accentColor,
-                    '--hover-bg': `${data.accentColor}05`
-                  } as React.CSSProperties}
+                  style={
+                    {
+                      borderColor: data.accentColor,
+                      color: data.accentColor,
+                      '--hover-bg': `${data.accentColor}05`,
+                    } as React.CSSProperties
+                  }
                 >
                   View Credentials
                 </Button>
@@ -92,7 +102,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
             <div className='relative aspect-square max-w-md mx-auto'>
               <div
                 className='absolute inset-0 rounded-full blur-3xl'
-                style={{ backgroundImage: `linear-gradient(to bottom right, ${data.accentColor}20, ${data.accentColor}05)` }}
+                style={{
+                  backgroundImage: `linear-gradient(to bottom right, ${data.accentColor}20, ${data.accentColor}05)`,
+                }}
               ></div>
               <Image
                 src={data.image}
@@ -115,8 +127,12 @@ export default function RealtorPortfolio({ data }: { data: any }) {
         <section className='py-12 bg-white'>
           <div className='container mx-auto px-4'>
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8'>
-              <Card className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-white'
-                style={{ backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)` }}>
+              <Card
+                className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-white'
+                style={{
+                  backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)`,
+                }}
+              >
                 <CardContent className='p-6 flex flex-col items-center text-center'>
                   <div className='bg-accent p-3 rounded-full mb-4'>
                     <CheckCircle className='h-8 w-8' style={{ color: data.accentColor }} />
@@ -129,7 +145,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
               </Card>
               <Card
                 className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-white'
-                style={{ backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)` }}
+                style={{
+                  backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)`,
+                }}
               >
                 <CardContent className='p-6 flex flex-col items-center text-center'>
                   <div className='bg-accent p-3 rounded-full mb-4'>
@@ -143,7 +161,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
               </Card>
               <Card
                 className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-white'
-                style={{ backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)` }}
+                style={{
+                  backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)`,
+                }}
               >
                 <CardContent className='p-6 flex flex-col items-center text-center'>
                   <div className='bg-accent p-3 rounded-full mb-4'>
@@ -157,7 +177,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
               </Card>
               <Card
                 className='overflow-hidden border-none shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-br from-white to-white'
-                style={{ backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)` }}
+                style={{
+                  backgroundImage: `linear-gradient(to bottom right, white, ${data.accentColor}05)`,
+                }}
               >
                 <CardContent className='p-6 flex flex-col items-center text-center'>
                   <div className='bg-accent p-3 rounded-full mb-4'>
@@ -177,7 +199,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
         <section
           id='about'
           className='py-12 md:py-24 bg-gradient-to-br from-white via-white to-white'
-          style={{ backgroundImage: `linear-gradient(to bottom right, white, white, ${data.accentColor}10)` }}
+          style={{
+            backgroundImage: `linear-gradient(to bottom right, white, white, ${data.accentColor}10)`,
+          }}
         >
           <div className='container mx-auto px-4'>
             <div className='max-w-3xl mx-auto text-center mb-12'>
@@ -187,16 +211,13 @@ export default function RealtorPortfolio({ data }: { data: any }) {
               >
                 About Me
               </div>
-              <h2
-                className='text-3xl font-bold mb-4'
-                style={{ color: data.accentColor }}
-              >
+              <h2 className='text-3xl font-bold mb-4' style={{ color: data.accentColor }}>
                 My Real Estate Journey
               </h2>
               <p className='text-lg text-muted-foreground'>
-                With over {data.yearsExperience} of experience in the {data.location}{' '}
-                real estate market, I specialize in luxury properties and helping clients make
-                informed decisions.
+                With over {data.yearsExperience} of experience in the {data.location} real estate
+                market, I specialize in luxury properties and helping clients make informed
+                decisions.
               </p>
             </div>
             <div className='grid md:grid-cols-2 gap-8 items-center'>
@@ -247,7 +268,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
         <section
           id='contact'
           className='py-12 md:py-24 bg-gradient-to-br from-white via-white to-white'
-          style={{ backgroundImage: `linear-gradient(to bottom right, white, white, ${data.accentColor}10)` }}
+          style={{
+            backgroundImage: `linear-gradient(to bottom right, white, white, ${data.accentColor}10)`,
+          }}
         >
           <div className='container mx-auto px-4'>
             <div className='max-w-3xl mx-auto text-center mb-12'>
@@ -257,18 +280,15 @@ export default function RealtorPortfolio({ data }: { data: any }) {
               >
                 Contact
               </div>
-              <h2
-                className='text-3xl font-bold mb-4'
-                style={{ color: data.accentColor }}
-              >
+              <h2 className='text-3xl font-bold mb-4' style={{ color: data.accentColor }}>
                 Get in Touch
               </h2>
               <p className='text-lg text-muted-foreground'>
                 Ready to find your dream home or sell your property? Let&apos;s connect!
               </p>
             </div>
-              <div className='grid md:grid-cols-2 gap-8 items-center'>
-                <div className='space-y-8'>
+            <div className='grid md:grid-cols-2 gap-8 items-center'>
+              <div className='space-y-8'>
                 <div>
                   <h2 className='text-3xl font-bold text-gray-900 mb-6'>Contact Information</h2>
                   <p className='text-gray-600 mb-8'>{data.description}</p>
@@ -293,9 +313,7 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                           <Building2 className='h-5 w-5' style={{ color: data.accentColor }} />
                           <div>
                             <h4 className='font-medium text-gray-700'>Office Address</h4>
-                            <p className='text-gray-600'>
-                              {data.officeAddress}
-                            </p>
+                            <p className='text-gray-600'>{data.officeAddress}</p>
                           </div>
                         </div>
 
@@ -330,9 +348,11 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                         <input
                           id='first-name'
                           className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50'
-                          style={{ 
-                            '--focus-ring-color': data.accentColor 
-                          } as React.CSSProperties}
+                          style={
+                            {
+                              '--focus-ring-color': data.accentColor,
+                            } as React.CSSProperties
+                          }
                           placeholder='Enter your first name'
                         />
                       </div>
@@ -343,9 +363,11 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                         <input
                           id='last-name'
                           className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50'
-                          style={{ 
-                            '--focus-ring-color': data.accentColor 
-                          } as React.CSSProperties}
+                          style={
+                            {
+                              '--focus-ring-color': data.accentColor,
+                            } as React.CSSProperties
+                          }
                           placeholder='Enter your last name'
                         />
                       </div>
@@ -358,9 +380,11 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                         id='email'
                         type='email'
                         className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50'
-                        style={{ 
-                          '--focus-ring-color': data.accentColor 
-                        } as React.CSSProperties}
+                        style={
+                          {
+                            '--focus-ring-color': data.accentColor,
+                          } as React.CSSProperties
+                        }
                         placeholder='Enter your email'
                       />
                     </div>
@@ -371,21 +395,25 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                       <textarea
                         id='message'
                         className='flex min-h-[120px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50'
-                        style={{ 
-                          '--focus-ring-color': data.accentColor 
-                        } as React.CSSProperties}
+                        style={
+                          {
+                            '--focus-ring-color': data.accentColor,
+                          } as React.CSSProperties
+                        }
                         placeholder='Enter your message'
                       />
                     </div>
                   </div>
                   <Button
                     className='w-full text-white shadow-lg transition-all hover:shadow-xl'
-                    style={{ 
-                      backgroundColor: data.accentColor,
-                      boxShadow: `0 10px 15px -3px ${data.accentColor}25`,
-                      '--hover-bg': `${data.accentColor}90`,
-                      '--hover-shadow': `0 20px 25px -5px ${data.accentColor}20`
-                    } as React.CSSProperties}
+                    style={
+                      {
+                        backgroundColor: data.accentColor,
+                        boxShadow: `0 10px 15px -3px ${data.accentColor}25`,
+                        '--hover-bg': `${data.accentColor}90`,
+                        '--hover-shadow': `0 20px 25px -5px ${data.accentColor}20`,
+                      } as React.CSSProperties
+                    }
                   >
                     Send Message
                   </Button>
@@ -405,7 +433,9 @@ export default function RealtorPortfolio({ data }: { data: any }) {
           <div className='flex flex-col md:flex-row justify-between items-center gap-4'>
             <div className='flex items-center gap-2'>
               <Building className='h-5 w-5' style={{ color: data.accentColor }} />
-              <span className={`font-semibold`} style={{ color: data.accentColor }}>{data.name}</span>
+              <span className={`font-semibold`} style={{ color: data.accentColor }}>
+                {data.name}
+              </span>
             </div>
             <div className='flex flex-col items-center text-center'>
               <div className='text-xs mt-1 font-medium' style={{ color: `${data.accentColor}aa` }}>
@@ -468,7 +498,7 @@ export default function RealtorPortfolio({ data }: { data: any }) {
                 style={{
                   color: `${data.accentColor}aa`,
                   transition: 'color 0.2s ease',
-                }} 
+                }}
                 onMouseOver={(e) => (e.currentTarget.style.color = data.accentColor)}
                 onMouseOut={(e) => (e.currentTarget.style.color = `${data.accentColor}aa`)}
               >

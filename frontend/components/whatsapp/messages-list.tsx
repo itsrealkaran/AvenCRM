@@ -507,8 +507,8 @@ const MessagesList = ({
                 ...prev,
                 [selectedChat.phoneNumber]: prev[selectedChat.phoneNumber].map((msg) =>
                   msg.wamid === newMessageId ? { ...msg, wamid: phoneNumbers.messages[0].id } : msg
-                )
-              }))
+                ),
+              }));
             })
             .catch((err) => {
               // if error then remove the message from the cache

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -18,6 +17,7 @@ import {
   Share2,
   Type,
 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -73,15 +73,17 @@ const documentDownloadFormSchema = z.object({
   }),
 
   // Documents array
-  documents: z.array(
-    z.object({
-      title: z.string().min(1, 'Title is required'),
-      description: z.string().optional(),
-      fileSize: z.string().optional(),
-      fileType: z.string().optional(),
-      downloadUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    })
-  ).default([]),
+  documents: z
+    .array(
+      z.object({
+        title: z.string().min(1, 'Title is required'),
+        description: z.string().optional(),
+        fileSize: z.string().optional(),
+        fileType: z.string().optional(),
+        downloadUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+      })
+    )
+    .default([]),
 });
 
 type DocumentDownloadFormValues = z.infer<typeof documentDownloadFormSchema>;
@@ -95,7 +97,7 @@ export default function DocumentDownloadForm({
   const [currentStep, setCurrentStep] = useState(0);
   const queryClient = useQueryClient();
   const [slugAvailable, setSlugAvailable] = useState(true);
-  
+
   // Fetch page data if editing an existing page
   const { data: pageData, isLoading: isLoadingPage } = useQuery({
     queryKey: ['page', pageId],
@@ -169,6 +171,8 @@ export default function DocumentDownloadForm({
   // Mutation for checking slug availability
   const checkSlug = useMutation({
     mutationFn: async (slug: string) => {
+      // todo: yeh thik kar
+      //@ts-ignore
       const result = await pageBuilderApi.checkSlugAvailability(slug);
       return result;
     },
@@ -231,7 +235,7 @@ export default function DocumentDownloadForm({
 
   // Handle document array management
   const [documents, setDocuments] = useState(defaultValues.documents);
-  
+
   const addDocument = () => {
     setDocuments([
       ...documents,
@@ -274,8 +278,8 @@ export default function DocumentDownloadForm({
                     index === currentStep
                       ? 'border-emerald-600 bg-emerald-600 text-white'
                       : index < currentStep
-                      ? 'border-emerald-600 bg-white text-emerald-600'
-                      : 'border-gray-300 bg-white text-gray-400'
+                        ? 'border-emerald-600 bg-white text-emerald-600'
+                        : 'border-gray-300 bg-white text-gray-400'
                   }`}
                 >
                   {index < currentStep ? <CheckCircle className='w-4 h-4' /> : index + 1}
@@ -305,11 +309,7 @@ export default function DocumentDownloadForm({
                         Page Title
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Enter page title'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='Enter page title' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -326,11 +326,7 @@ export default function DocumentDownloadForm({
                         Subtitle
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Enter subtitle'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='Enter subtitle' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -369,11 +365,7 @@ export default function DocumentDownloadForm({
                         Button Text
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Download Documents'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='Download Documents' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -468,20 +460,20 @@ export default function DocumentDownloadForm({
                   Add the documents you want to make available for download
                 </p>
 
-                {form.watch('documents')?.map((_, index) => (
+                {form.watch('documents')?.map((_: any, index: number) => (
                   <div key={index} className='border rounded-md p-4 mb-4 relative'>
                     <button
                       type='button'
                       className='absolute top-2 right-2 text-red-500 hover:text-red-700'
                       onClick={() => {
                         const currentDocs = form.getValues('documents');
-                        const newDocs = currentDocs.filter((_, i) => i !== index);
+                        const newDocs = currentDocs.filter((_: any, i: number) => i !== index);
                         form.setValue('documents', newDocs);
                       }}
                     >
                       ×
                     </button>
-                    
+
                     <FormField
                       control={form.control}
                       name={`documents.${index}.title`}
@@ -489,23 +481,9 @@ export default function DocumentDownloadForm({
                         <FormItem className='mb-2'>
                           <FormLabel>Document Title</FormLabel>
                           <FormControl>
-                            <Input placeholder='Purchase Agreement' {...field} disabled={isLoading} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name={`documents.${index}.description`}
-                      render={({ field }) => (
-                        <FormItem className='mb-2'>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              placeholder='A brief description of the document' 
-                              {...field} 
+                            <Input
+                              placeholder='Purchase Agreement'
+                              {...field}
                               disabled={isLoading}
                             />
                           </FormControl>
@@ -513,7 +491,25 @@ export default function DocumentDownloadForm({
                         </FormItem>
                       )}
                     />
-                    
+
+                    <FormField
+                      control={form.control}
+                      name={`documents.${index}.description`}
+                      render={({ field }) => (
+                        <FormItem className='mb-2'>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder='A brief description of the document'
+                              {...field}
+                              disabled={isLoading}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
                     <div className='grid grid-cols-2 gap-2'>
                       <FormField
                         control={form.control}
@@ -528,7 +524,7 @@ export default function DocumentDownloadForm({
                           </FormItem>
                         )}
                       />
-                      
+
                       <FormField
                         control={form.control}
                         name={`documents.${index}.fileType`}
@@ -543,7 +539,7 @@ export default function DocumentDownloadForm({
                         )}
                       />
                     </div>
-                    
+
                     <FormField
                       control={form.control}
                       name={`documents.${index}.downloadUrl`}
@@ -551,9 +547,9 @@ export default function DocumentDownloadForm({
                         <FormItem>
                           <FormLabel>Download URL</FormLabel>
                           <FormControl>
-                            <Input 
-                              placeholder='https://example.com/documents/file.pdf' 
-                              {...field} 
+                            <Input
+                              placeholder='https://example.com/documents/file.pdf'
+                              {...field}
                               disabled={isLoading}
                             />
                           </FormControl>
@@ -578,7 +574,7 @@ export default function DocumentDownloadForm({
                         fileSize: '',
                         fileType: '',
                         downloadUrl: '',
-                      }
+                      },
                     ]);
                   }}
                   disabled={isLoading}
@@ -598,11 +594,7 @@ export default function DocumentDownloadForm({
                     <FormItem>
                       <FormLabel>Agent Name</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='John Doe'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='John Doe' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -616,11 +608,7 @@ export default function DocumentDownloadForm({
                     <FormItem>
                       <FormLabel>Agent Title</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Real Estate Agent'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='Real Estate Agent' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -676,11 +664,7 @@ export default function DocumentDownloadForm({
                         Phone
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='(123) 456-7890'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='(123) 456-7890' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -697,11 +681,7 @@ export default function DocumentDownloadForm({
                         Email
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='john.doe@example.com'
-                          disabled={isLoading}
-                          {...field}
-                        />
+                        <Input placeholder='john.doe@example.com' disabled={isLoading} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

@@ -93,7 +93,7 @@ router.get("/:id", async (req: Request, res: Response) => {
 
 router.post("/", async (req: Request, res: Response) => {
     try {
-        const { amount, commissionRate, transactionMethod, date, propertyType } = req.body;
+        const { amount, commissionRate, transactionMethod, date, propertyType, partner } = req.body;
 
         // generate a random 10 digit invoice number
         const invoiceNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
@@ -112,7 +112,7 @@ router.post("/", async (req: Request, res: Response) => {
         
         const transaction = await prisma.transaction.create({
             data: {
-                amount: parseFloat(amount),
+                amount: amount,
                 invoiceNumber: invoiceNumber,
                 commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
@@ -122,6 +122,7 @@ router.post("/", async (req: Request, res: Response) => {
                 companyId: req.user?.companyId!,
                 isApprovedByTeamLeader,
                 propertyType: propertyType as LeadRole,
+                partnerDetails: partner ? partner : null
             },
             include: {
                 agent: {
@@ -212,7 +213,7 @@ router.put("/admin/verify/:id", async (req: Request, res: Response) => {
 
 router.put("/:id", async (req: Request, res: Response) => {
     try {
-        const { amount, commissionRate, transactionMethod, date, propertyType } = req.body;
+        const { amount, commissionRate, transactionMethod, date, propertyType, partnerDetails } = req.body;
         
         const user = req.user;
         if(!user) {
@@ -234,11 +235,12 @@ router.put("/:id", async (req: Request, res: Response) => {
         const transaction = await prisma.transaction.update({
             where: { id: req.params.id },
             data: {
-                amount: parseFloat(amount),
+                amount: amount,
                 commissionRate: commissionRate ? parseFloat(commissionRate) : null,
                 transactionMethod,
                 date: new Date(date),
-                propertyType: propertyType as LeadRole
+                propertyType: propertyType as LeadRole,
+                partnerDetails: partnerDetails ? partnerDetails : null
             },
             include: {
                 agent: {
