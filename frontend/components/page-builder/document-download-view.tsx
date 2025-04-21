@@ -1,159 +1,241 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, RefreshCw, Share } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChevronLeft, ExternalLink, RefreshCw, Share, Trash2 } from 'lucide-react';
 
 import DocumentDownloadTemplate from '@/components/page-builder/document-download-template';
+import DocumentDownloadForm from '@/components/page-builder/update/document-download/page';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { pageBuilderApi } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
-// Sample document data
-const documents = [
-  {
-    id: 1,
-    title: 'Purchase Agreement Template',
-    description: 'Standard residential property purchase agreement form',
-    category: 'Contracts',
-    type: 'PDF',
-    size: '245 KB',
-    updated: '2023-11-15',
-    downloads: 1245,
-    featured: true,
-  },
-  {
-    id: 2,
-    title: 'Seller Disclosure Statement',
-    description: 'Property condition disclosure form for sellers',
-    category: 'Disclosures',
-    type: 'DOCX',
-    size: '180 KB',
-    updated: '2023-10-22',
-    downloads: 987,
-    featured: false,
-  },
-  {
-    id: 3,
-    title: "Buyer's Agent Agreement",
-    description: 'Exclusive buyer representation agreement',
-    category: 'Contracts',
-    type: 'PDF',
-    size: '210 KB',
-    updated: '2023-09-30',
-    downloads: 756,
-    featured: false,
-  },
-  {
-    id: 4,
-    title: 'Home Inspection Checklist',
-    description: 'Comprehensive checklist for home inspections',
-    category: 'Checklists',
-    type: 'PDF',
-    size: '320 KB',
-    updated: '2023-11-05',
-    downloads: 1532,
-    featured: true,
-  },
-  {
-    id: 5,
-    title: 'Closing Cost Worksheet',
-    description: 'Detailed breakdown of closing costs for buyers',
-    category: 'Financial',
-    type: 'XLSX',
-    size: '175 KB',
-    updated: '2023-10-18',
-    downloads: 892,
-    featured: false,
-  },
-  {
-    id: 6,
-    title: 'Lead-Based Paint Disclosure',
-    description: 'Required disclosure for properties built before 1978',
-    category: 'Disclosures',
-    type: 'PDF',
-    size: '195 KB',
-    updated: '2023-09-12',
-    downloads: 645,
-    featured: false,
-  },
-  {
-    id: 7,
-    title: 'Mortgage Application Checklist',
-    description: 'Documents needed for mortgage application',
-    category: 'Checklists',
-    type: 'PDF',
-    size: '230 KB',
-    updated: '2023-11-10',
-    downloads: 1105,
-    featured: false,
-  },
-  {
-    id: 8,
-    title: 'Property Management Agreement',
-    description: 'Contract between property owner and management company',
-    category: 'Contracts',
-    type: 'DOCX',
-    size: '255 KB',
-    updated: '2023-10-05',
-    downloads: 578,
-    featured: false,
-  },
-];
-
-interface DocumentDownloadProps {
+interface DocumentDownloadViewProps {
   navigateTo: (view: string) => void;
+  pageId?: string;
 }
 
-export default function DocumentDownload({ navigateTo }: DocumentDownloadProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export default function DocumentDownloadView({ navigateTo, pageId }: DocumentDownloadViewProps) {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  // Update the document settings
-  const [documentSettings, setDocumentSettings] = useState({
+  // Debug log to check pageId
+  useEffect(() => {
+    console.log('DocumentDownloadView pageId:', pageId);
+  }, [pageId]);
+
+  // Fetch page data if pageId is provided
+  const {
+    data: pageData,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['page', pageId],
+    queryFn: () => {
+      console.log('Fetching document page with ID:', pageId);
+      return pageId ? pageBuilderApi.getPage(pageId) : null;
+    },
+    enabled: !!pageId,
+  });
+
+  // Default document download data
+  const defaultData = {
     title: 'Document Resource Center',
     description:
       'Access our comprehensive collection of real estate documents, forms, and templates.',
+    bgImage:
+      'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+    buttonText: 'Download Documents',
+    accentColor: '#059669',
+    agentName: 'John Doe',
+    agentTitle: 'Real Estate Agent',
+    agentImage:
+      'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+    documents: [
+      {
+        title: 'Purchase Agreement',
+        description: 'Standard real estate purchase agreement template',
+        fileSize: '245 KB',
+        fileType: 'PDF',
+        downloadUrl: '#',
+      },
+      {
+        title: 'Listing Contract',
+        description: 'Property listing agreement document',
+        fileSize: '198 KB',
+        fileType: 'DOCX',
+        downloadUrl: '#',
+      },
+      {
+        title: 'Home Inspection Checklist',
+        description: 'Comprehensive home inspection guide',
+        fileSize: '312 KB',
+        fileType: 'PDF',
+        downloadUrl: '#',
+      },
+    ],
+    contactInfo: {
+      address: '123 Main St, Anytown, USA',
+      phone: '123-456-7890',
+      email: 'john.doe@example.com',
+    },
+    social: {
+      facebook: 'https://www.facebook.com/john.doe',
+      instagram: 'https://www.instagram.com/john.doe',
+      linkedin: 'https://www.linkedin.com/in/john.doe',
+      twitter: 'https://www.twitter.com/john.doe',
+    },
+  };
+
+  // Delete page mutation
+  const deletePage = useMutation({
+    mutationFn: () => pageBuilderApi.deletePage(pageId!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      toast({
+        title: 'Document page deleted',
+        description: 'Your document download page has been deleted successfully.',
+      });
+      navigateTo('dashboard');
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to delete document page. Please try again.',
+        variant: 'destructive',
+      });
+    },
   });
 
-  // In useEffect, add code to load settings from localStorage
+  // Publish page mutation
+  const publishPage = useMutation({
+    mutationFn: () => pageBuilderApi.publishPage(pageId!),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['page', pageId] });
+      queryClient.invalidateQueries({ queryKey: ['pages'] });
+      toast({
+        title: 'Document page published',
+        description: 'Your document download page is now publicly available.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: 'Error',
+        description: 'Failed to publish document page. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Effect to open setup form automatically if no pageId is provided
   useEffect(() => {
-    const savedData = localStorage.getItem('realtorData');
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      setDocumentSettings({
-        title: parsedData.documentTitle || documentSettings.title,
-        description: parsedData.documentDescription || documentSettings.description,
+    if (!pageId && !isUpdateModalOpen) {
+      setIsUpdateModalOpen(true);
+    }
+  }, [pageId, isUpdateModalOpen]);
+
+  // Handle update button click
+  const handleUpdate = () => {
+    setIsUpdateModalOpen(true);
+  };
+
+  // Handle share/publish action
+  const handleShare = () => {
+    if (!pageId) {
+      toast({
+        title: 'Cannot share',
+        description: 'Please create your document page first before sharing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!pageData?.data?.slug) {
+      toast({
+        title: 'Cannot share',
+        description: 'Please save your document page first before sharing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!pageData?.data?.isPublic) {
+      publishPage.mutate();
+    } else {
+      // Copy the URL to clipboard
+      const url = `${window.location.origin}/p/${pageData?.data?.slug}`;
+      navigator.clipboard.writeText(url);
+      toast({
+        title: 'Link copied',
+        description: 'Document page URL has been copied to clipboard.',
       });
     }
-  }, []);
-
-  const handleShare = () => {
-    // Implement share functionality
-    alert('Share functionality to be implemented');
   };
 
-  const handleUpdate = () => {
-    // In a real app, this would navigate to a setup page
-    alert('Update functionality to be implemented');
+  // Handle delete button click
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <Card className='flex items-center justify-center min-h-full'>
-        <div className='text-center'>
-          <div className='inline-flex items-center px-3 py-1 rounded-full bg-emerald-100 text-emerald-600 text-sm font-medium mb-4'>
-            <span className='relative flex h-2 w-2 mr-2'>
-              <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-600 opacity-75'></span>
-              <span className='relative inline-flex rounded-full h-2 w-2 bg-emerald-600'></span>
-            </span>
-            Loading Documents
-          </div>
-          <p className='text-muted-foreground'>Please wait while we load your documents...</p>
-        </div>
-      </Card>
-    );
-  }
+  // Handle preview button click
+  const handlePreview = () => {
+    if (pageData?.data?.slug) {
+      window.open(`/p/${pageData.data.slug}`, '_blank');
+    } else {
+      toast({
+        title: 'Cannot preview',
+        description: 'Please save your document page first before previewing.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Handle confirmation of delete
+  const confirmDelete = () => {
+    deletePage.mutate();
+    setIsDeleteDialogOpen(false);
+  };
 
   return (
-    <Card className='min-h-full flex flex-col'>
+    <Card className='h-full flex flex-col'>
+      <DocumentDownloadForm
+        pageId={pageId}
+        open={isUpdateModalOpen}
+        onOpenChange={setIsUpdateModalOpen}
+        isLoading={isLoading}
+      />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete your document download
+              page.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className='bg-red-600 hover:bg-red-700'>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <header className='bg-white shadow-sm p-4'>
         <div className='container mx-auto flex justify-between items-center'>
           <div className='flex items-center'>
@@ -163,30 +245,48 @@ export default function DocumentDownload({ navigateTo }: DocumentDownloadProps) 
               className='mr-2'
               onClick={() => navigateTo('dashboard')}
             >
-              <ArrowLeft className='h-5 w-5' />
+              <ChevronLeft className='h-5 w-5 text-emerald-600' />
             </Button>
             <h1 className='text-2xl font-bold text-emerald-600'>Document Center</h1>
           </div>
           <div className='space-x-2'>
+            {pageId && (
+              <>
+                <Button onClick={handlePreview} variant='outline'>
+                  <ExternalLink className='w-4 h-4 mr-2' />
+                  Preview
+                </Button>
+                <Button
+                  onClick={handleDelete}
+                  variant='outline'
+                  className='text-red-600 border-red-200 hover:bg-red-50'
+                >
+                  <Trash2 className='w-4 h-4 mr-2' />
+                  Delete
+                </Button>
+              </>
+            )}
             <Button onClick={handleShare} variant='outline'>
               <Share className='w-4 h-4 mr-2' />
-              Share
+              {pageData?.data?.isPublic ? 'Copy Link' : 'Publish'}
             </Button>
             <Button onClick={handleUpdate} className='bg-emerald-600 hover:bg-emerald-700'>
               <RefreshCw className='w-4 h-4 mr-2' />
-              Update
+              {pageId ? 'Update' : 'Create'}
             </Button>
           </div>
         </div>
       </header>
       <main className='flex-grow container mx-auto p-4'>
         <div className='bg-gray-100 rounded-lg overflow-hidden shadow-inner'>
-          <div className='h-[calc(100vh-8rem)] overflow-y-auto p-6'>
-            <DocumentDownloadTemplate
-              documents={documents}
-              title={documentSettings.title}
-              description={documentSettings.description}
-            />
+          <div className='h-[calc(100vh-8rem)] overflow-y-auto'>
+            {isLoading ? (
+              <div className='flex items-center justify-center h-full'>
+                <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500'></div>
+              </div>
+            ) : (
+              <DocumentDownloadTemplate data={pageData?.data?.jsonData || defaultData} />
+            )}
           </div>
         </div>
       </main>

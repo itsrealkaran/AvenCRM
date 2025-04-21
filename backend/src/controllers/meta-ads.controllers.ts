@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
-import axios from 'axios';
 import { uploadFile } from '../utils/s3.js';
+import axios from 'axios';
 
 const MetaController = {
     async getFacebookAccessToken(req: Request, res: Response) {
@@ -9,23 +9,41 @@ const MetaController = {
             for (let i = 0; i < 3; i++) {
                 try {
                     const { code } = req.params;
-                    const response = await fetch(
-                        `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${process.env.META_ADS_CLIENT_ID}&client_secret=${process.env.META_ADS_CLIENT_SECRET}&code=${code}`,
+                    
+                    // Using axios instead of fetch with timeout
+                    const response = await axios.get(
+                        `https://graph.facebook.com/v22.0/oauth/access_token`,
+                        {
+                            params: {
+                                client_id: process.env.META_ADS_CLIENT_ID,
+                                client_secret: process.env.META_ADS_CLIENT_SECRET,
+                                code: code
+                            },
+                            timeout: 10000 // 10 seconds timeout
+                        }
                     );
-                    const data: any = await response.json();
-                    return res.status(200).json({ access_token: data.access_token });
+                    
+                    return res.status(200).json({ access_token: response.data.access_token });
                 } catch (error: any) {
-                    console.error('Facebook API Error:', error);
+                    console.error('Facebook API Error:', error.message);
+                    
+                    // Check if it's the last retry
+                    if (i === 2) {
+                        break;
+                    }
+                    
+                    // Wait before retrying (exponential backoff)
+                    await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                 }
             }
             return res.status(500).json({ 
-                error: 'UNKNOWN_ERROR',
-                code: 'UNKNOWN_ERROR'
+                error: 'Could not connect to Facebook API after multiple attempts',
+                code: 'CONNECTION_ERROR'
             });
         } catch (error: any) {
             console.error('Facebook API Error:', error.message);
             return res.status(500).json({ 
-                error: error,
+                error: error.message || 'Unknown error occurred',
                 code: error.code || 'UNKNOWN_ERROR'
             });
         }

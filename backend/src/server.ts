@@ -27,6 +27,7 @@ import { publicRoutes } from './routes/public.routes.js';
 import { notificationRoutes } from './routes/notification.routes.js';
 import { whatsAppRoutes } from './routes/whatsapp.routes.js';
 import metaAdsRoutes from './routes/meta-ads.routes.js';
+import pageBuilderRoutes from './routes/page-builder.routes.js';
 
 const app = express();
 
@@ -191,6 +192,7 @@ app.use('/public', publicRoutes);
 app.use('/notification', notificationRoutes);
 app.use('/whatsapp', whatsAppRoutes);
 app.use('/meta-ads', metaAdsRoutes);
+app.use('/page-builder', pageBuilderRoutes);
 
 // // Enhanced error handling middleware
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
