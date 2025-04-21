@@ -121,7 +121,7 @@ router.post("/", async (req: Request, res: Response) => {
                 agentId: req.user?.id!,
                 companyId: req.user?.companyId!,
                 isApprovedByTeamLeader,
-                propertyType: propertyType as LeadRole
+                propertyType: propertyType as LeadRole,
             },
             include: {
                 agent: {

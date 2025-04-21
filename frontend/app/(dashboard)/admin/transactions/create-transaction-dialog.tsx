@@ -34,6 +34,13 @@ const transactionFormSchema = z.object({
   transactionMethod: z.string().optional(),
   date: z.string(),
   propertyType: z.string().optional(),
+  hasPartner: z.boolean().default(false),
+  partnerDetails: z.object({
+    name: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().email().optional(),
+    commissionRate: z.string().optional(),
+  }).optional(),
 });
 
 type TransactionFormValues = z.infer<typeof transactionFormSchema>;
@@ -53,6 +60,13 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
       transactionMethod: '',
       date: new Date().toISOString().split('T')[0],
       propertyType: '',
+      hasPartner: false,
+      partnerDetails: {
+        name: '',
+        phone: '',
+        email: '',
+        commissionRate: '',
+      },
     },
   });
 
@@ -72,8 +86,15 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
           amount: parseFloat(values.amount),
           commissionRate: values.commissionRate ? parseFloat(values.commissionRate) : 0,
           date: new Date(values.date).toISOString(),
+          partner: values.hasPartner ? {
+            name: values.partnerDetails?.name,
+            phone: values.partnerDetails?.phone,
+            email: values.partnerDetails?.email,
+            commissionRate: values.partnerDetails?.commissionRate ? parseFloat(values.partnerDetails.commissionRate) : 0,
+          } : null,
         };
 
+        console.log('Transaction payload:', JSON.stringify(payload, null, 2));
         const response = await api.post('/transactions', payload);
         return response.data;
       } catch (error) {
@@ -214,6 +235,97 @@ export function CreateTransactionDialog({ open, onOpenChange }: CreateTransactio
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name='hasPartner'
+                render={({ field }) => (
+                  <FormItem className='col-span-2 flex items-center space-x-2'>
+                    <FormControl>
+                      <input
+                        type='checkbox'
+                        checked={field.value}
+                        onChange={(e) => field.onChange(e.target.checked)}
+                        className='h-4 w-4 rounded border-gray-300'
+                      />
+                    </FormControl>
+                    <FormLabel className='!mt-0'>Add Partner</FormLabel>
+                  </FormItem>
+                )}
+              />
+              {form.watch('hasPartner') && (
+                <>
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.name'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Name</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='Enter partner name'
+                            {...field}
+                            disabled={createTransaction.isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.phone'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Phone</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder='Enter partner phone'
+                            {...field}
+                            disabled={createTransaction.isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.email'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='email'
+                            placeholder='Enter partner email'
+                            {...field}
+                            disabled={createTransaction.isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name='partnerDetails.commissionRate'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Partner Commission Rate (%)</FormLabel>
+                        <FormControl>
+                          <Input
+                            type='number'
+                            placeholder='Enter partner commission rate'
+                            {...field}
+                            disabled={createTransaction.isPending}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
             </div>
             <div className='flex justify-end space-x-4'>
               <Button

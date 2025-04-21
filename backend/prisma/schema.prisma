@@ -391,6 +391,9 @@ model Transaction {
   commissionRate Float? @default(0)
   totalAmount    Float?
 
+  // Partner Details
+  partnerDetails Json? // {name: string, email: string, phone: string, commissionRate: number}
+
   propertyType LeadRole?
 
   // Additional Financial Info
