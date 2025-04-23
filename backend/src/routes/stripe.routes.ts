@@ -18,7 +18,7 @@ declare global {
 const router: Router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   //@ts-ignore
-  apiVersion: '2024-11-20.acacia'
+  apiVersion: '2025-03-31.basil'
 });
 
 // Webhook handler for Stripe events
@@ -39,6 +39,7 @@ router.post(
         process.env.STRIPE_WEBHOOK_SECRET!
       );
       console.log('event', event);
+      
       // Handle the event
       switch (event.type) {
         case 'checkout.session.completed':
@@ -49,12 +50,29 @@ router.post(
           const subscription = event.data.object as Stripe.Subscription;
           await handleSubscriptionCancellation(subscription);
           break;
+        case 'customer.subscription.updated':
+          const updatedSubscription = event.data.object as Stripe.Subscription;
+          await handleSubscriptionUpdate(updatedSubscription);
+          break;
+        case 'invoice.payment_succeeded':
+          const invoice = event.data.object as Stripe.Invoice;
+          await handleSuccessfulPayment(invoice);
+          break;
+        case 'invoice.payment_failed':
+          const failedInvoice = event.data.object as Stripe.Invoice;
+          await handleFailedPayment(failedInvoice);
+          break;
+        default:
+          console.log(`Unhandled event type: ${event.type}`);
       }
 
       res.json({ received: true });
     } catch (error) {
       console.error('Webhook error:', error);
-      res.status(400).json({ error: 'Webhook error' });
+      if (error instanceof Stripe.errors.StripeError) {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
 );
@@ -169,6 +187,7 @@ router.post('/create-checkout-session', async (req: AuthenticatedRequest, res: R
         companyId,
         billingFrequency,
         accountType,
+        userCount,
       },//@ts-ignore
       customer_email: customerEmail,
     });
@@ -229,7 +248,7 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
           isSuccessfull: true,
           transactionMethod: 'STRIPE',
           receiptUrl,
-          billingFrequency: metadata.billingFrequency
+          billingFrequency: metadata.billingFrequency.toUpperCase() as BillingFrequency
         },
       })
       const timePeriod = metadata.billingFrequency === 'monthly' ? 30 : 365;
@@ -239,8 +258,9 @@ async function handleSuccessfulSubscription(session: Stripe.Checkout.Session) {
           planStart: new Date(),
           planEnd: new Date(Date.now() + timePeriod * 24 * 60 * 60 * 1000),
           planName: metadata.planId.toUpperCase() as PlanTier,
-          billingFrequency: metadata.billingFrequency as BillingFrequency,
-          planType: metadata.accountType as PlanType || 'company',
+          billingFrequency: metadata.billingFrequency.toUpperCase() as BillingFrequency,
+          planType: metadata.accountType.toUpperCase() as PlanType || 'company',
+          userCount: Number(metadata.userCount),
         },
       });
     });
@@ -285,6 +305,108 @@ async function handleSubscriptionCancellation(subscription: Stripe.Subscription)
   //   console.error('Error handling subscription cancellation:', error);
   //   throw error;
   // }
+}
+
+// Add new handler functions
+async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
+  try {
+    const metadata = subscription.metadata || {};
+    
+    if (!metadata.companyId) {
+      console.error('Missing companyId in subscription metadata');
+      throw new Error('Missing companyId in subscription metadata');
+    }
+
+    // Update company subscription details
+    await prisma.company.update({
+      where: { id: metadata.companyId },
+      data: {
+        planEnd: new Date((subscription as any).current_period_end * 1000),
+        planName: metadata.planId?.toUpperCase() as PlanTier,
+        billingFrequency: metadata.billingFrequency as BillingFrequency,
+        planType: metadata.accountType as PlanType || 'company',
+        userCount: Number(metadata.userCount),
+      },
+    });
+
+    console.log('Subscription updated successfully for company:', metadata.companyId);
+  } catch (error) {
+    console.error('Error updating subscription:', error);
+    throw error;
+  }
+}
+
+async function handleSuccessfulPayment(invoice: Stripe.Invoice) {
+  // try {
+  //   const subscriptionId = (invoice as any).subscription;
+  //   if (!subscriptionId) {
+  //     console.log('No subscription associated with invoice');
+  //     return;
+  //   }
+
+  //   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  //   const metadata = subscription.metadata || {};
+
+  //   if (!metadata.companyId) {
+  //     console.error('Missing companyId in subscription metadata');
+  //     throw new Error('Missing companyId in subscription metadata');
+  //   }
+
+  //   // Create a payment record
+  //   await prisma.payments.create({
+  //     data: {
+  //       amount: invoice.amount_paid / 100,
+  //       companyId: metadata.companyId,
+  //       planType: metadata.planId?.toUpperCase() as PlanTier,
+  //       isSuccessfull: true,
+  //       transactionMethod: 'STRIPE',
+  //       receiptUrl: invoice.hosted_invoice_url || undefined,
+  //       billingFrequency: metadata.billingFrequency
+  //     },
+  //   });
+
+  //   console.log('Payment recorded successfully for company:', metadata.companyId);
+  // } catch (error) {
+  //   console.error('Error handling successful payment:', error);
+  //   throw error;
+  // }
+}
+
+async function handleFailedPayment(invoice: Stripe.Invoice) {
+  try {
+    const subscriptionId = (invoice as any).subscription;
+    if (!subscriptionId) {
+      console.log('No subscription associated with invoice');
+      return;
+    }
+
+    const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+    const metadata = subscription.metadata || {};
+
+    if (!metadata.companyId) {
+      console.error('Missing companyId in subscription metadata');
+      throw new Error('Missing companyId in subscription metadata');
+    }
+
+    // Create a failed payment record
+    await prisma.payments.create({
+      data: {
+        amount: invoice.amount_due / 100,
+        companyId: metadata.companyId,
+        planType: metadata.planId?.toUpperCase() as PlanTier,
+        isSuccessfull: false,
+        transactionMethod: 'STRIPE',
+        receiptUrl: invoice.hosted_invoice_url || undefined,
+        billingFrequency: metadata.billingFrequency
+      },
+    });
+
+    // Optionally update company status or send notification
+    console.log('Failed payment recorded for company:', metadata.companyId);
+  } catch (error) {
+    console.error('Error handling failed payment:', error);
+    throw error;
+  }
 }
 
 export default router;
