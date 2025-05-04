@@ -34,6 +34,7 @@ interface LocationSearchFormProps {
   pageId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  navigateTo: (view: string, pageId?: string) => void;
   isLoading?: boolean;
 }
 
@@ -118,6 +119,7 @@ export default function LocationSearchForm({
   pageId,
   open,
   onOpenChange,
+  navigateTo,
   isLoading,
 }: LocationSearchFormProps) {
   const queryClient = useQueryClient();
@@ -191,7 +193,7 @@ export default function LocationSearchForm({
           twitter: jsonData.social?.twitter || defaultValues.social.twitter,
         },
         slug: pageData.slug || '',
-        isPublic: pageData.isPublic || false,
+        isPublic: pageData.isPublic || true,
       });
     }
   }, [existingPage, form]);
@@ -237,10 +239,15 @@ export default function LocationSearchForm({
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+    navigateTo('dashboard');
+  };
+
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Location Search Page' : 'Create Location Search Page'}
       schema={locationSearchFormSchema}
       defaultValues={defaultValues}
@@ -678,6 +685,17 @@ export default function LocationSearchForm({
 
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
+            <Button
+                type='button'
+                variant='outline'
+                disabled={savePage.isPending}
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+            </div>
+
+            <div className='flex space-x-2'>
               {currentStep > 0 && (
                 <Button
                   type='button'
@@ -689,17 +707,6 @@ export default function LocationSearchForm({
                   Previous
                 </Button>
               )}
-            </div>
-
-            <div className='flex space-x-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={savePage.isPending}
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
 
               {currentStep < steps.length - 1 ? (
                 <Button

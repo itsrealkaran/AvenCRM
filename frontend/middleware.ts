@@ -18,6 +18,7 @@ const publicRoutes = [
   '/forgot-password',
   '/property',
   '/reset-password',
+  '/p'
 ];
 
 // List of protected routes that require authentication

@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Award,
@@ -36,6 +35,7 @@ interface SetupFormProps {
   pageId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  navigateTo: (view: string, pageId?: string) => void;
   isLoading?: boolean;
 }
 
@@ -93,9 +93,9 @@ export default function SetupForm({
   pageId,
   open,
   onOpenChange,
+  navigateTo,
   isLoading = false,
 }: SetupFormProps) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -197,13 +197,6 @@ export default function SetupForm({
     }
   }, [existingPageData, open]);
 
-  // Handle dialog close
-  useEffect(() => {
-    if (!open && !pageId) {
-      router.push('/dashboard');
-    }
-  }, [open, pageId, router]);
-
   // Mutation for saving the form
   const savePage = useMutation({
     mutationFn: async (values: PortfolioFormValues) => {
@@ -264,6 +257,11 @@ export default function SetupForm({
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+    navigateTo('dashboard');
+  };
+
   // Function to add a new testimonial field
   const addTestimonial = (form: any) => {
     const currentTestimonials = form.getValues('testimonials') || [];
@@ -285,7 +283,7 @@ export default function SetupForm({
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Portfolio' : 'Create Portfolio'}
       schema={portfolioFormSchema}
       defaultValues={initialValues}
@@ -813,7 +811,7 @@ export default function SetupForm({
                 type='button'
                 variant='outline'
                 disabled={savePage.isPending}
-                onClick={() => onOpenChange(false)}
+                onClick={handleClose}
               >
                 Cancel
               </Button>

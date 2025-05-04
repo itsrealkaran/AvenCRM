@@ -66,7 +66,7 @@ export default function ContactView({ navigateTo, pageId }: ContactViewProps) {
   if (isLoading && !contactData) return null;
 
   return (
-    <Card className='h-full flex flex-col'>
+    <Card className='flex flex-col'>
       <ContactForm
         open={isUpdateModalOpen}
         onOpenChange={setIsUpdateModalOpen}

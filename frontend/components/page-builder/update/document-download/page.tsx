@@ -35,6 +35,7 @@ interface DocumentDownloadFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isLoading?: boolean;
+  navigateTo: (view: string, pageId?: string) => void;
 }
 
 // Form validation schema
@@ -93,6 +94,7 @@ export default function DocumentDownloadForm({
   open,
   onOpenChange,
   isLoading: externalLoading,
+  navigateTo,
 }: DocumentDownloadFormProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const queryClient = useQueryClient();
@@ -225,6 +227,11 @@ export default function DocumentDownloadForm({
     }
   };
 
+  const handleClose = () => {
+    onOpenChange(false);
+    navigateTo('dashboard');
+  };
+
   // Set form values when pageData is loaded
   useEffect(() => {
     if (pageData?.data?.jsonData) {
@@ -258,7 +265,7 @@ export default function DocumentDownloadForm({
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Document Download Page' : 'Create Document Download Page'}
       schema={documentDownloadFormSchema}
       defaultValues={pageData?.data?.jsonData || defaultValues}
@@ -830,7 +837,18 @@ export default function DocumentDownloadForm({
 
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
-              {currentStep > 0 && (
+              <Button
+                type='button'
+                variant='outline'
+                disabled={isLoading}
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+            </div>
+
+            <div className='flex space-x-2'>
+            {currentStep > 0 && (
                 <Button
                   type='button'
                   variant='outline'
@@ -841,17 +859,6 @@ export default function DocumentDownloadForm({
                   Previous
                 </Button>
               )}
-            </div>
-
-            <div className='flex space-x-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={isLoading}
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
 
               {currentStep < steps.length - 1 ? (
                 <Button

@@ -39,5 +39,5 @@ export default function PageBuilder() {
     }
   };
 
-  return <div className='min-h-screen'>{renderView()}</div>;
+  return <>{renderView()}</>;
 }
