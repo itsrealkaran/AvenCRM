@@ -214,7 +214,7 @@ export default function SetupForm({
         propertyValue: jsonData.propertyValue || '',
         yearsExperience: jsonData.yearsExperience || '',
         clientSatisfaction: jsonData.clientSatisfaction || '',
-        accentColor: jsonData.accentColor || '#000000',
+        accentColor: jsonData.accentColor || '#7b3ae4',
         approach: jsonData.approach || '',
         expertise: jsonData.expertise || ['', '', '', ''],
         certifications: jsonData.certifications || ['', '', '', ''],

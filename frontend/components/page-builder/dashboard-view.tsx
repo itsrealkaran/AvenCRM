@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Building, FileText, Mail, MapPin } from 'lucide-react';
 
@@ -9,7 +9,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -25,7 +24,6 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
   const {
     data: pages,
     isLoading,
-    error,
   } = useQuery({
     queryKey: ['pages'],
     queryFn: () => pageBuilderApi.getPages(),
@@ -107,7 +105,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                   size='sm'
                   onClick={() => handleNavigate('portfolio', 'PORTFOLIO')}
                 >
-                  {pageMap.PORTFOLIO ? 'Edit Page' : 'Create Page'}
+                  {pageMap.PORTFOLIO ? 'View Page' : 'Create Page'}
                 </Button>
               </div>
             </CardContent>
@@ -144,7 +142,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                   size='sm'
                   onClick={() => handleNavigate('location-search', 'LOCATION')}
                 >
-                  {pageMap.LOCATION ? 'Edit Page' : 'Create Page'}
+                  {pageMap.LOCATION ? 'View Page' : 'Create Page'}
                 </Button>
               </div>
             </CardContent>
@@ -181,7 +179,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                   size='sm'
                   onClick={() => handleNavigate('document-download', 'DOCUMENT')}
                 >
-                  {pageMap.DOCUMENT ? 'Edit Page' : 'Create Page'}
+                  {pageMap.DOCUMENT ? 'View Page' : 'Create Page'}
                 </Button>
               </div>
             </CardContent>
@@ -218,7 +216,7 @@ export default function Dashboard({ navigateTo }: DashboardProps) {
                   size='sm'
                   onClick={() => handleNavigate('contact', 'CONTACT')}
                 >
-                  {pageMap.CONTACT ? 'Edit Page' : 'Create Page'}
+                  {pageMap.CONTACT ? 'View Page' : 'Create Page'}
                 </Button>
               </div>
             </CardContent>

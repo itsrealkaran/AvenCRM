@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { debounce } from 'lodash';
 import {
   Building,
   CheckCircle,
@@ -17,6 +18,7 @@ import {
   Share2,
   Type,
 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -34,6 +36,7 @@ interface ContactFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isLoading?: boolean;
+  navigateTo: (view: string, pageId?: string) => void;
 }
 
 // Form validation schema
@@ -61,10 +64,49 @@ const contactFormSchema = z.object({
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
-export default function ContactForm({ pageId, open, onOpenChange, isLoading }: ContactFormProps) {
+export default function ContactForm({
+  pageId,
+  open,
+  onOpenChange,
+  isLoading: externalLoading,
+  navigateTo,
+}: ContactFormProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
+  const [slugAvailable, setSlugAvailable] = useState(false);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
+
+  // Initialize form with default values
+  const form = useForm<ContactFormValues>({
+    defaultValues: {
+      slug: '',
+      isPublic: false,
+      title: 'Get in Touch With Our Team',
+      subtitle: "We're here to help with all your real estate needs",
+      description:
+        'Have questions about buying or selling a property? Our team of experts is here to help you every step of the way.',
+      bgImage:
+        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
+      buttonText: 'Send Message',
+      accentColor: '#4f46e5',
+      social: {
+        facebook: 'https://facebook.com',
+        instagram: 'https://instagram.com',
+        linkedin: 'https://linkedin.com',
+        twitter: 'https://twitter.com',
+      },
+    },
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+  });
+
+  // Fetch existing page data if in edit mode
+  const { data: existingPage, isLoading: isLoadingPageData } = useQuery({
+    queryKey: ['page', pageId],
+    queryFn: () => (pageId ? api.get(`/page-builder/${pageId}`) : null),
+    enabled: !!pageId && open,
+  });
 
   // Steps configuration
   const steps = [
@@ -74,32 +116,81 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
     { id: 'settings', label: 'Settings' },
   ];
 
-  // Default values for the form
-  const defaultValues: ContactFormValues = {
-    slug: '',
-    isPublic: false,
-    title: 'Get in Touch With Our Team',
-    subtitle: "We're here to help with all your real estate needs",
-    description:
-      'Have questions about buying or selling a property? Our team of experts is here to help you every step of the way.',
-    bgImage:
-      'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
-    buttonText: 'Send Message',
-    accentColor: '#4f46e5',
-    social: {
-      facebook: 'https://facebook.com',
-      instagram: 'https://instagram.com',
-      linkedin: 'https://linkedin.com',
-      twitter: 'https://twitter.com',
+  // Check if slug is available
+  const checkSlug = useMutation({
+    mutationFn: async (slug: string) => {
+      const response = await api.post('/page-builder/check-slug', { slug });
+      return response;
     },
-  };
+    onSuccess: (data) => {
+      setSlugAvailable(data.data.isUnique);
+      setIsCheckingSlug(false);
+      if (!data.data.isUnique) {
+        form.setError('slug', {
+          message: `This URL is already taken. Suggested URL: ${data.data.suggestedSlug}`,
+        });
+      } else {
+        form.clearErrors('slug');
+      }
+    },
+    onError: () => {
+      setIsCheckingSlug(false);
+    },
+  });
+
+  // Debounced slug check
+  const debouncedSlugCheck = useCallback(
+    debounce((value: string) => {
+      if (value && value.length >= 3) {
+        setIsCheckingSlug(true);
+        checkSlug.mutate(value);
+      } else {
+        setSlugAvailable(false);
+        setIsCheckingSlug(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSlugCheck.cancel();
+    };
+  }, [debouncedSlugCheck]);
+
+  // Update form with existing data when available
+  useEffect(() => {
+    if (existingPage?.data) {
+      const pageData = existingPage.data;
+      const content = pageData.content || {};
+
+      // Reset form with merged values from existing data
+      form.reset({
+        title: content.title || form.getValues('title'),
+        subtitle: content.subtitle || form.getValues('subtitle'),
+        description: content.description || form.getValues('description'),
+        bgImage: content.bgImage || form.getValues('bgImage'),
+        buttonText: content.buttonText || form.getValues('buttonText'),
+        accentColor: content.accentColor || form.getValues('accentColor'),
+        social: {
+          facebook: content.social?.facebook || form.getValues('social.facebook'),
+          instagram: content.social?.instagram || form.getValues('social.instagram'),
+          linkedin: content.social?.linkedin || form.getValues('social.linkedin'),
+          twitter: content.social?.twitter || form.getValues('social.twitter'),
+        },
+        slug: pageData.slug || form.getValues('slug'),
+        isPublic: pageData.isPublic || form.getValues('isPublic'),
+      });
+    }
+  }, [existingPage, form]);
 
   // Mutation for saving the form
   const savePage = useMutation({
     mutationFn: async (values: ContactFormValues) => {
       const pageData = {
         title: values.title,
-        templateType: 'contact',
+        templateType: 'CONTACT',
         content: values,
         isPublic: values.isPublic,
         slug: values.slug || `contact-${Date.now()}`,
@@ -111,15 +202,42 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
         return await api.post('/page-builder', pageData);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['pages'] });
-      onOpenChange(false);
+      queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       toast.success(`Contact page ${pageId ? 'updated' : 'created'} successfully`);
+
+      // Auto close and navigate after successful save
+      setTimeout(() => {
+        onOpenChange(false);
+        if (!pageId) {
+          navigateTo('dashboard');
+        }
+      }, 1000);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error saving page:', error);
       toast.error(`Failed to ${pageId ? 'update' : 'create'} contact page`);
     },
   });
+
+  const handleClose = () => {
+    if (form.formState.isDirty) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        onOpenChange(false);
+        if (!pageId) {
+          navigateTo('dashboard');
+        }
+      }
+    } else {
+      onOpenChange(false);
+      if (!pageId) {
+        navigateTo('dashboard');
+      }
+    }
+  };
+
+  const isLoading = externalLoading || isLoadingPageData || savePage.isPending;
 
   // Handle next step navigation
   const handleNext = () => {
@@ -138,16 +256,16 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Contact Page' : 'Create Contact Page'}
       schema={contactFormSchema}
-      defaultValues={defaultValues}
+      defaultValues={existingPage?.data?.content || form.getValues()}
       onSubmit={(values) => {
         savePage.mutate(values);
       }}
-      isLoading={isLoading || savePage.isPending}
+      isLoading={isLoading}
     >
-      {(form) => (
+      {(dialogForm) => (
         <Tabs value={steps[currentStep].id} className='w-full'>
           {/* Step Indicator */}
           <div className='flex items-center justify-between mb-6 px-1'>
@@ -188,8 +306,13 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='Enter page title'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('title')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('title');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -206,8 +329,13 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='Enter subtitle'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('subtitle')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('subtitle');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -224,9 +352,14 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Textarea
                           placeholder='Enter page description'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           className='min-h-[100px]'
                           {...field}
+                          onBlur={() => form.trigger('description')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('description');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -243,8 +376,13 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='Enter button text'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('buttonText')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('buttonText');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -267,7 +405,7 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                         <div className='flex space-x-2'>
                           <Input
                             placeholder='Enter image URL'
-                            disabled={isLoading || savePage.isPending}
+                            disabled={isLoading}
                             {...field}
                             className='flex-1'
                           />
@@ -292,11 +430,7 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormLabel>Accent Color</FormLabel>
                       <FormControl>
                         <div className='flex items-center space-x-2'>
-                          <Input
-                            placeholder='#4f46e5'
-                            disabled={isLoading || savePage.isPending}
-                            {...field}
-                          />
+                          <Input placeholder='#4f46e5' disabled={isLoading} {...field} />
                           <div
                             className='h-10 w-10 rounded border'
                             style={{ backgroundColor: field.value }}
@@ -322,7 +456,7 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='https://facebook.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -340,7 +474,7 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='https://instagram.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -358,7 +492,7 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='https://twitter.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -376,7 +510,7 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                       <FormControl>
                         <Input
                           placeholder='https://linkedin.com/in/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                           {...field}
                         />
                       </FormControl>
@@ -395,20 +529,47 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                   name='slug'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Page URL Slug</FormLabel>
+                      <FormLabel>URL Slug</FormLabel>
                       <FormControl>
-                        <div className='flex items-center gap-2'>
-                          <span className='text-muted-foreground text-sm'>yoursite.com/p/</span>
+                        <div className='flex items-center space-x-2'>
+                          <div className='text-muted-foreground text-sm'>
+                            {typeof window !== 'undefined' ? window.location.origin : ''}/p/
+                          </div>
                           <Input
-                            placeholder='contact-us'
-                            disabled={isLoading || savePage.isPending}
+                            placeholder='your-contact-page'
+                            disabled={isLoading}
                             {...field}
+                            onBlur={() => {
+                              form.trigger('slug');
+                              if (field.value) {
+                                debouncedSlugCheck(field.value);
+                              }
+                            }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('slug');
+                              debouncedSlugCheck(e.target.value);
+                            }}
                           />
                         </div>
                       </FormControl>
-                      <p className='text-xs text-muted-foreground mt-1'>
-                        This will be used in the public URL for your contact page
-                      </p>
+                      {field.value && (
+                        <p
+                          className={`text-xs ${
+                            isCheckingSlug
+                              ? 'text-gray-500'
+                              : slugAvailable
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                          }`}
+                        >
+                          {isCheckingSlug
+                            ? 'Checking availability...'
+                            : slugAvailable
+                              ? 'URL is available'
+                              : 'URL is not available'}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -418,18 +579,21 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
                   control={form.control}
                   name='isPublic'
                   render={({ field }) => (
-                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4 mt-6'>
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
                       <div className='space-y-0.5'>
-                        <FormLabel className='text-base'>Publish Page</FormLabel>
-                        <p className='text-xs text-muted-foreground'>
-                          When published, your page will be accessible to the public
-                        </p>
+                        <FormLabel>Make Page Public</FormLabel>
+                        <div className='text-sm text-muted-foreground'>
+                          This will make your contact page accessible to anyone with the link
+                        </div>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading || savePage.isPending}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            form.trigger('isPublic');
+                          }}
+                          disabled={isLoading}
                         />
                       </FormControl>
                     </FormItem>
@@ -441,34 +605,29 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
 
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
+              <Button type='button' variant='outline' disabled={isLoading} onClick={handleClose}>
+                Cancel
+              </Button>
+            </div>
+
+            <div className='flex space-x-2'>
               {currentStep > 0 && (
                 <Button
                   type='button'
                   variant='outline'
                   onClick={handlePrevious}
-                  disabled={savePage.isPending}
+                  disabled={isLoading}
                 >
                   <ChevronLeft className='w-4 h-4 mr-2' />
                   Previous
                 </Button>
               )}
-            </div>
-
-            <div className='flex space-x-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={savePage.isPending}
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
 
               {currentStep < steps.length - 1 ? (
                 <Button
                   type='button'
                   onClick={handleNext}
-                  disabled={savePage.isPending}
+                  disabled={isLoading}
                   className='bg-amber-600 hover:bg-amber-700'
                 >
                   Next
@@ -477,10 +636,10 @@ export default function ContactForm({ pageId, open, onOpenChange, isLoading }: C
               ) : (
                 <Button
                   type='submit'
-                  disabled={savePage.isPending || !form.formState.isValid}
+                  disabled={isLoading || !form.formState.isValid || !slugAvailable}
                   className='bg-amber-600 hover:bg-amber-700 min-w-[100px]'
                 >
-                  {savePage.isPending ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
+                  {isLoading ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
                 </Button>
               )}
             </div>
