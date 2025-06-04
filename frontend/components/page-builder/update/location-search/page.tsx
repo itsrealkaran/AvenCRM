@@ -102,7 +102,7 @@ const defaultValues: LocationSearchFormValues = {
     twitter: 'https://twitter.com/sarahjohnson',
   },
   slug: '',
-  isPublic: false,
+  isPublic: true,
 };
 
 // Form steps
@@ -124,14 +124,7 @@ export default function LocationSearchForm({
 }: LocationSearchFormProps) {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
-  const [baseUrl, setBaseUrl] = useState('');
-
-  // Set the base URL on client side only
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setBaseUrl(window.location.origin);
-    }
-  }, []);
+  const [slugAvailable, setSlugAvailable] = useState(false);
 
   // Fetch existing page data if in edit mode
   const { data: existingPage } = useQuery({
@@ -153,6 +146,7 @@ export default function LocationSearchForm({
       return response;
     },
     onSuccess: (data) => {
+      setSlugAvailable(data.data.available);
       if (data?.data?.exists && data?.data?.id !== pageId) {
         form.setError('slug', {
           message: 'This URL is already taken. Please try another one.',
@@ -241,7 +235,9 @@ export default function LocationSearchForm({
 
   const handleClose = () => {
     onOpenChange(false);
-    navigateTo('dashboard');
+    if (!pageId) {
+      navigateTo('dashboard');
+    }
   };
 
   return (
@@ -636,24 +632,33 @@ export default function LocationSearchForm({
                   name='slug'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Custom URL Slug</FormLabel>
+                      <FormLabel>URL Slug</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Enter URL slug (e.g., property-search)'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                          onBlur={() => {
-                            if (field.value) {
-                              checkSlug.mutate(field.value);
-                            }
-                          }}
-                        />
+                        <div className='flex items-center space-x-2'>
+                          <div className='text-muted-foreground text-sm'>
+                            {typeof window !== 'undefined' ? window.location.origin : ''}/p/
+                          </div>
+                          <Input
+                            placeholder='your-document-page'
+                            disabled={isLoading}
+                            {...field}
+                            onBlur={() => {
+                              if (field.value) {
+                                checkSlug.mutate(field.value);
+                              }
+                            }}
+                          />
+                        </div>
                       </FormControl>
+                      {checkSlug.isPending && (
+                        <p className='text-sm font-medium text-red-500 mt-1'>Checking URL...</p>
+                      )}
+                      {!checkSlug.isPending && !slugAvailable && field.value && (
+                        <p className='text-sm font-medium text-red-500 mt-1'>
+                          This URL is already taken
+                        </p>
+                      )}
                       <FormMessage />
-                      <p className='text-xs text-muted-foreground'>
-                        This will determine your page URL: {baseUrl}/p/
-                        {field.value || 'property-search-[timestamp]'}
-                      </p>
                     </FormItem>
                   )}
                 />
@@ -662,18 +667,18 @@ export default function LocationSearchForm({
                   control={form.control}
                   name='isPublic'
                   render={({ field }) => (
-                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
                       <div className='space-y-0.5'>
-                        <FormLabel className='text-base'>Public Page</FormLabel>
+                        <FormLabel>Make Page Public</FormLabel>
                         <div className='text-sm text-muted-foreground'>
-                          Make this page publicly accessible
+                          This will make your document page accessible to anyone with the link
                         </div>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading}
                         />
                       </FormControl>
                     </FormItem>
@@ -685,7 +690,7 @@ export default function LocationSearchForm({
 
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
-            <Button
+              <Button
                 type='button'
                 variant='outline'
                 disabled={savePage.isPending}
