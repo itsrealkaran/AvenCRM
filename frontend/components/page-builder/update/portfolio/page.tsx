@@ -267,15 +267,6 @@ export default function SetupForm({
     },
   });
 
-  // Handle form submission
-  const onSubmit = async (values: PortfolioFormValues) => {
-    try {
-      await savePage.mutateAsync(values);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-    }
-  };
-
   // Handle next step navigation
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
