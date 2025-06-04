@@ -91,42 +91,30 @@ type PortfolioFormValues = z.infer<typeof portfolioFormSchema>;
 
 // Empty form initial values
 const emptyFormValues: PortfolioFormValues = {
-  name: 'John Doe',
-  title: 'Senior Real Estate Agent',
-  location: 'San Francisco, CA',
-  image:
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=988&q=80',
-  bio: 'Experienced real estate professional with over 10 years of expertise in luxury properties and commercial real estate.',
-  dealsCount: '250+',
-  propertyValue: '$500M+',
-  yearsExperience: '10+',
-  clientSatisfaction: '98%',
-  accentColor: '#2563eb',
-  approach:
-    'I focus on understanding client needs and providing personalized service to ensure the best possible outcomes.',
-  expertise: [
-    'Luxury Residential',
-    'Commercial Properties',
-    'Investment Properties',
-    'New Developments',
-  ],
-  certifications: [
-    'Certified Luxury Home Specialist',
-    'Certified Commercial Investment Member',
-    'Certified Residential Specialist',
-    'Certified International Property Specialist',
-  ],
-  education: 'Bachelor of Business Administration in Real Estate',
-  phone: '(415) 555-0123',
-  email: 'john.doe@example.com',
-  officeAddress: '123 Market Street, San Francisco, CA 94105',
+  name: '',
+  title: '',
+  location: '',
+  image: '',
+  bio: '',
+  dealsCount: '',
+  propertyValue: '',
+  yearsExperience: '',
+  clientSatisfaction: '',
+  accentColor: '',
+  approach: '',
+  expertise: [],
+  certifications: [],
+  education: '',
+  phone: '',
+  email: '',
+  officeAddress: '',
   social: {
-    facebook: 'https://facebook.com/johndoe',
-    instagram: 'https://instagram.com/johndoe',
-    linkedin: 'https://linkedin.com/in/johndoe',
-    twitter: 'https://twitter.com/johndoe',
+    facebook: '',
+    instagram: '',
+    linkedin: '',
+    twitter: '',
   },
-  slug: 'john-doe-portfolio',
+  slug: '',
   isPublic: true,
 };
 
@@ -163,6 +151,7 @@ export default function SetupForm({
     resolver: zodResolver(portfolioFormSchema),
     defaultValues: emptyFormValues,
     mode: 'onChange',
+    reValidateMode: 'onChange',
   });
 
   // Check if slug is available
@@ -365,6 +354,10 @@ export default function SetupForm({
                           placeholder='e.g. Sarah Johnson'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('name');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -383,6 +376,10 @@ export default function SetupForm({
                           placeholder='e.g. Luxury Real Estate Specialist'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('title');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -401,6 +398,10 @@ export default function SetupForm({
                           placeholder='e.g. San Francisco Bay Area, CA'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('location');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -419,6 +420,10 @@ export default function SetupForm({
                           placeholder='https://example.com/your-photo.jpg'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('image');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -438,6 +443,10 @@ export default function SetupForm({
                           className='min-h-[120px]'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('bio');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -462,6 +471,10 @@ export default function SetupForm({
                             placeholder='e.g. 15+'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('yearsExperience');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -480,6 +493,10 @@ export default function SetupForm({
                             placeholder='e.g. 350+'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('dealsCount');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -498,6 +515,10 @@ export default function SetupForm({
                             placeholder='e.g. $500M+'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('propertyValue');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -516,6 +537,10 @@ export default function SetupForm({
                             placeholder='e.g. 98%'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('clientSatisfaction');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -563,6 +588,10 @@ export default function SetupForm({
                           className='min-h-[120px]'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('approach');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -584,6 +613,10 @@ export default function SetupForm({
                               placeholder={`Expertise ${index + 1}`}
                               disabled={isLoading || savePage.isPending}
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`expertise.${index}`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -607,6 +640,10 @@ export default function SetupForm({
                               placeholder={`Certification ${index + 1}`}
                               disabled={isLoading || savePage.isPending}
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`certifications.${index}`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -627,6 +664,10 @@ export default function SetupForm({
                           placeholder='e.g. Bachelor of Business Administration in Real Estate'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('education');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -650,6 +691,10 @@ export default function SetupForm({
                           placeholder='e.g. (415) 555-0123'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('phone');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -668,6 +713,10 @@ export default function SetupForm({
                           placeholder='e.g. sarah@example.com'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('email');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -686,6 +735,10 @@ export default function SetupForm({
                           placeholder='e.g. 123 Market Street, San Francisco, CA 94105'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('officeAddress');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -709,6 +762,10 @@ export default function SetupForm({
                           placeholder='https://facebook.com/yourpage'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.facebook');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -727,6 +784,10 @@ export default function SetupForm({
                           placeholder='https://twitter.com/yourhandle'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.twitter');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -745,6 +806,10 @@ export default function SetupForm({
                           placeholder='https://instagram.com/yourpage'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.instagram');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -763,6 +828,10 @@ export default function SetupForm({
                           placeholder='https://linkedin.com/in/yourpage'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.linkedin');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />

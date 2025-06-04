@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { debounce } from 'lodash';
 import {
   Building,
   CheckCircle,
@@ -120,14 +121,15 @@ export default function LocationSearchForm({
   open,
   onOpenChange,
   navigateTo,
-  isLoading,
+  isLoading = false,
 }: LocationSearchFormProps) {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
   const [slugAvailable, setSlugAvailable] = useState(false);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
   // Fetch existing page data if in edit mode
-  const { data: existingPage } = useQuery({
+  const { data: existingPage, isLoading: isLoadingPageData } = useQuery({
     queryKey: ['page', pageId],
     queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
     enabled: !!pageId && open,
@@ -137,6 +139,7 @@ export default function LocationSearchForm({
   const form = useForm<LocationSearchFormValues>({
     resolver: zodResolver(locationSearchFormSchema),
     defaultValues,
+    mode: 'onChange',
   });
 
   // Check if slug is available
@@ -146,16 +149,41 @@ export default function LocationSearchForm({
       return response;
     },
     onSuccess: (data) => {
-      setSlugAvailable(data.data.available);
-      if (data?.data?.exists && data?.data?.id !== pageId) {
+      setSlugAvailable(data.data.isUnique);
+      setIsCheckingSlug(false);
+      if (!data.data.isUnique) {
         form.setError('slug', {
-          message: 'This URL is already taken. Please try another one.',
+          message: `This URL is already taken. Suggested URL: ${data.data.suggestedSlug}`,
         });
       } else {
         form.clearErrors('slug');
       }
     },
+    onError: () => {
+      setIsCheckingSlug(false);
+    },
   });
+
+  // Debounced slug check
+  const debouncedSlugCheck = useCallback(
+    debounce((value: string) => {
+      if (value && value.length >= 3) {
+        setIsCheckingSlug(true);
+        checkSlug.mutate(value);
+      } else {
+        setSlugAvailable(false);
+        setIsCheckingSlug(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSlugCheck.cancel();
+    };
+  }, [debouncedSlugCheck]);
 
   // Update form with existing data when available
   useEffect(() => {
@@ -250,7 +278,7 @@ export default function LocationSearchForm({
       onSubmit={(values) => {
         savePage.mutate(values);
       }}
-      isLoading={isLoading || savePage.isPending}
+      isLoading={isLoading || savePage.isPending || isLoadingPageData}
     >
       {(form) => (
         <Tabs value={steps[currentStep].id} className='w-full'>
@@ -293,7 +321,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Enter page title'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -311,7 +339,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Enter subtitle'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -329,7 +357,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Textarea
                           placeholder='Enter page description'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           className='min-h-[100px]'
                           {...field}
                         />
@@ -353,7 +381,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://example.com/image.jpg'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -371,7 +399,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Enter city, neighborhood, or zip code'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -389,7 +417,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Search Properties'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -409,7 +437,7 @@ export default function LocationSearchForm({
                           <Input
                             type='color'
                             className='w-16 h-8 p-1'
-                            disabled={isLoading || savePage.isPending}
+                            disabled={isLoading || savePage.isPending || isLoadingPageData}
                             {...field}
                           />
                         </FormControl>
@@ -418,7 +446,7 @@ export default function LocationSearchForm({
                           onChange={field.onChange}
                           placeholder='#3b82f6'
                           maxLength={7}
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           className='w-full'
                         />
                       </div>
@@ -441,7 +469,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Sarah Johnson'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -459,7 +487,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Senior Real Estate Agent'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -477,7 +505,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://example.com/agent.jpg'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -500,7 +528,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='123 Main St, Anytown, USA'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -518,7 +546,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='(123) 456-7890'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -536,7 +564,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='contact@example.com'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -559,7 +587,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://facebook.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -577,7 +605,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://instagram.com/youraccount'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -595,7 +623,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://twitter.com/youraccount'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -613,7 +641,7 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://linkedin.com/in/yourprofile'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
                         />
                       </FormControl>
@@ -640,22 +668,30 @@ export default function LocationSearchForm({
                           </div>
                           <Input
                             placeholder='your-document-page'
-                            disabled={isLoading}
+                            disabled={isLoading || savePage.isPending || isLoadingPageData}
                             {...field}
-                            onBlur={() => {
-                              if (field.value) {
-                                checkSlug.mutate(field.value);
-                              }
+                            onChange={(e) => {
+                              field.onChange(e);
+                              debouncedSlugCheck(e.target.value);
                             }}
                           />
                         </div>
                       </FormControl>
-                      {checkSlug.isPending && (
-                        <p className='text-sm font-medium text-red-500 mt-1'>Checking URL...</p>
-                      )}
-                      {!checkSlug.isPending && !slugAvailable && field.value && (
-                        <p className='text-sm font-medium text-red-500 mt-1'>
-                          This URL is already taken
+                      {field.value && (
+                        <p
+                          className={`text-xs ${
+                            isCheckingSlug
+                              ? 'text-gray-500'
+                              : slugAvailable
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                          }`}
+                        >
+                          {isCheckingSlug
+                            ? 'Checking availability...'
+                            : slugAvailable
+                              ? 'URL is available'
+                              : 'URL is not available'}
                         </p>
                       )}
                       <FormMessage />
@@ -678,7 +714,7 @@ export default function LocationSearchForm({
                         <Switch
                           checked={field.value}
                           onCheckedChange={field.onChange}
-                          disabled={isLoading}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                         />
                       </FormControl>
                     </FormItem>
@@ -693,7 +729,7 @@ export default function LocationSearchForm({
               <Button
                 type='button'
                 variant='outline'
-                disabled={savePage.isPending}
+                disabled={savePage.isPending || isLoadingPageData}
                 onClick={handleClose}
               >
                 Cancel
@@ -706,7 +742,7 @@ export default function LocationSearchForm({
                   type='button'
                   variant='outline'
                   onClick={handlePrevious}
-                  disabled={savePage.isPending}
+                  disabled={savePage.isPending || isLoadingPageData}
                 >
                   <ChevronLeft className='w-4 h-4 mr-2' />
                   Previous
@@ -717,7 +753,7 @@ export default function LocationSearchForm({
                 <Button
                   type='button'
                   onClick={handleNext}
-                  disabled={savePage.isPending}
+                  disabled={savePage.isPending || isLoadingPageData}
                   className='bg-blue-600 hover:bg-blue-700'
                 >
                   Next
@@ -726,7 +762,7 @@ export default function LocationSearchForm({
               ) : (
                 <Button
                   type='submit'
-                  disabled={savePage.isPending || !form.formState.isValid}
+                  disabled={savePage.isPending || !form.formState.isValid || isLoadingPageData}
                   className='bg-blue-600 hover:bg-blue-700 min-w-[100px]'
                 >
                   {savePage.isPending ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}
