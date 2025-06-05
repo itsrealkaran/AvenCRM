@@ -5,13 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Building, FileText, Mail, MapPin } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { pageBuilderApi } from '@/lib/api';
 
@@ -21,10 +15,7 @@ interface DashboardProps {
 
 export default function Dashboard({ navigateTo }: DashboardProps) {
   // Use React Query to fetch pages
-  const {
-    data: pages,
-    isLoading,
-  } = useQuery({
+  const { data: pages, isLoading } = useQuery({
     queryKey: ['pages'],
     queryFn: () => pageBuilderApi.getPages(),
   });
