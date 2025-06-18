@@ -164,7 +164,7 @@ export function CreateTemplateModal({
           },
           {
             type: 'FOOTER',
-            text: 'Generated using AvenCRM',
+            text: 'Message was sent using AvenCRM',
           },
         ],
       };

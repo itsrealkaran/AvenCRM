@@ -85,8 +85,8 @@ export default function CompaniesPage() {
       setCompanies([]);
       const companiesRes = await api.get<Company[]>('/company');
       setCompanies(companiesRes.data);
-      setPlans(companiesRes.data.map((company) => company.plan));
-      setAdmins(companiesRes.data.map((company) => company.admin));
+      setPlans(companiesRes.data.map((company) => company.plan).filter(Boolean));
+      setAdmins(companiesRes.data.map((company) => company.admin).filter(Boolean));
     } catch (error) {
       console.error('Error fetching data:', error);
       let errorMessage = 'Failed to fetch data';
@@ -115,6 +115,7 @@ export default function CompaniesPage() {
       company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       company.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  console.log(filteredCompanies);
 
   const handleBlock = async (id: string) => {
     const confirmed = window.confirm('Are you sure you want to block this company?');
@@ -314,7 +315,7 @@ export default function CompaniesPage() {
                           <div className='flex items-center space-x-2'>
                             <UserIcon className='h-4 w-4 text-muted-foreground' />
                             <span>
-                              {admins.find((admin) => admin.id === company.adminId)?.name || 'N/A'}
+                              {company.adminId && admins.find((admin) => admin?.id === company.adminId)?.name || 'N/A'}
                             </span>
                           </div>
                         </TableCell>
@@ -434,7 +435,7 @@ export default function CompaniesPage() {
                 <div>
                   <p className='text-sm font-medium text-gray-500'>Admin Name</p>
                   <p className='text-sm text-gray-900'>
-                    {admins.find((admin) => admin.id === selectedCompanyDetails?.adminId)?.name ||
+                    {selectedCompanyDetails?.adminId && admins.find((admin) => admin?.id === selectedCompanyDetails?.adminId)?.name ||
                       'N/A'}
                   </p>
                 </div>
