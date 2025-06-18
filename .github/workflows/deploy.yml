@@ -35,7 +35,7 @@ jobs:
             pnpm install --frozen-lockfile
             pnpx prisma generate
             pnpm build
-            pm2 restart backend-app-name || pm2 start npm --name "backend-app-name" -- start
+            pm2 restart all
           EOF
 
   deploy-frontend:
@@ -67,5 +67,5 @@ jobs:
             cd frontend
             pnpm install --frozen-lockfile
             pnpm build
-            pm2 restart frontend-app-name || pm2 start npm --name "frontend-app-name" -- start
+            pm2 restart all
           EOF
