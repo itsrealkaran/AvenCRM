@@ -8,76 +8,64 @@ jobs:
   deploy-backend:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup SSH for Backend
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.BACKEND_EC2_SSH_KEY }}
 
-      - name: Deploy Backend to EC2
+      - name: Deploy Backend
         env:
           EC2_HOST: ${{ secrets.BACKEND_EC2_HOST }}
           EC2_USER: ${{ secrets.BACKEND_EC2_USER }}
         run: |
-          # Add EC2 host to known hosts
           mkdir -p ~/.ssh
           ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
 
-          # SSH into EC2 and run deployment commands
-          ssh $EC2_USER@$EC2_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+            set -e
             cd AvenCRM
-            
-            # Pull latest changes
-            git pull origin main
-            
-            # Load NVM and Node environment
+            git pull --rebase origin main
+
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            
-            # Backend deployment
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             cd backend
-            pnpm install
+            pnpm install --frozen-lockfile
             pnpx prisma generate
             pnpm build
-            pm2 restart all
+            pm2 restart backend-app-name || pm2 start npm --name "backend-app-name" -- start
           EOF
 
   deploy-frontend:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
       - name: Setup SSH for Frontend
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.FRONTEND_EC2_SSH_KEY }}
 
-      - name: Deploy Frontend to EC2
+      - name: Deploy Frontend
         env:
           EC2_HOST: ${{ secrets.FRONTEND_EC2_HOST }}
           EC2_USER: ${{ secrets.FRONTEND_EC2_USER }}
         run: |
-          # Add EC2 host to known hosts
           mkdir -p ~/.ssh
           ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
 
-          # SSH into EC2 and run deployment commands
-          ssh $EC2_USER@$EC2_HOST << 'EOF'
+          ssh -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST << 'EOF'
+            set -e
             cd AvenCRM
-            
-            # Pull latest changes
-            git pull origin main
+            git pull --rebase origin main
 
-            # Load NVM and Node environment
             export NVM_DIR="$HOME/.nvm"
-            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-            
-            # Frontend deployment
+            [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
             cd frontend
-            pnpm install
+            pnpm install --frozen-lockfile
             pnpm build
-            pm2 restart all
+            pm2 restart frontend-app-name || pm2 start npm --name "frontend-app-name" -- start
           EOF
