@@ -1,22 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Building,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
-  ImageIcon,
-  Mail,
-  MapPin,
-  Palette,
-  Phone,
-  Search,
-  Share2,
-  Type,
-} from 'lucide-react';
+import { debounce } from 'lodash';
+import { CheckCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
@@ -35,52 +23,73 @@ interface DocumentDownloadFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isLoading?: boolean;
+  navigateTo: (view: string, pageId?: string) => void;
 }
 
 // Form validation schema
 const documentDownloadFormSchema = z.object({
   // Page configuration
-  slug: z.string().min(3, 'Slug must be at least 3 characters').optional(),
+  slug: z.string().min(3, { message: 'Slug must be at least 3 characters' }).optional(),
   isPublic: z.boolean().default(false),
 
   // Template configuration
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  bgImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-  buttonText: z.string().optional(),
-  accentColor: z.string().optional(),
+  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
+  subtitle: z.string().min(3, { message: 'Subtitle must be at least 3 characters' }).optional(),
+  description: z
+    .string()
+    .min(10, { message: 'Description must be at least 10 characters' })
+    .optional(),
+  bgImage: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+  buttonText: z
+    .string()
+    .min(2, { message: 'Button text must be at least 2 characters' })
+    .optional(),
+  accentColor: z.string().min(4, { message: 'Please enter a valid color' }).optional(),
   documentRequireForm: z.boolean().default(true),
 
   // Agent information
-  agentName: z.string().optional(),
-  agentTitle: z.string().optional(),
-  agentImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  agentName: z.string().min(2, { message: 'Agent name must be at least 2 characters' }).optional(),
+  agentTitle: z
+    .string()
+    .min(2, { message: 'Agent title must be at least 2 characters' })
+    .optional(),
+  agentImage: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
 
   // Contact information
   contactInfo: z.object({
-    address: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+    address: z.string().min(5, { message: 'Address must be at least 5 characters' }).optional(),
+    phone: z.string().min(10, { message: 'Please enter a valid phone number' }).optional(),
+    email: z
+      .string()
+      .email({ message: 'Please enter a valid email address' })
+      .optional()
+      .or(z.literal('')),
   }),
 
   // Social links
   social: z.object({
-    facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    twitter: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    facebook: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+    instagram: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+    linkedin: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+    twitter: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
   }),
 
   // Documents array
   documents: z
     .array(
       z.object({
-        title: z.string().min(1, 'Title is required'),
-        description: z.string().optional(),
+        title: z.string().min(1, { message: 'Title is required' }),
+        description: z
+          .string()
+          .min(5, { message: 'Description must be at least 5 characters' })
+          .optional(),
         fileSize: z.string().optional(),
         fileType: z.string().optional(),
-        downloadUrl: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+        downloadUrl: z
+          .string()
+          .url({ message: 'Please enter a valid URL' })
+          .optional()
+          .or(z.literal('')),
       })
     )
     .default([]),
@@ -93,10 +102,12 @@ export default function DocumentDownloadForm({
   open,
   onOpenChange,
   isLoading: externalLoading,
+  navigateTo,
 }: DocumentDownloadFormProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const queryClient = useQueryClient();
   const [slugAvailable, setSlugAvailable] = useState(true);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
   // Fetch page data if editing an existing page
   const { data: pageData, isLoading: isLoadingPage } = useQuery({
@@ -152,13 +163,6 @@ export default function DocumentDownloadForm({
         downloadUrl: 'https://example.com/documents/purchase-agreement.pdf',
       },
       {
-        title: 'Listing Contract',
-        description: 'Property listing agreement document',
-        fileSize: '198 KB',
-        fileType: 'DOCX',
-        downloadUrl: 'https://example.com/documents/listing-contract.docx',
-      },
-      {
         title: 'Home Inspection Checklist',
         description: 'Comprehensive home inspection guide',
         fileSize: '312 KB',
@@ -168,29 +172,65 @@ export default function DocumentDownloadForm({
     ],
   };
 
+  // Initialize form with default values
+  const form = useForm<DocumentDownloadFormValues>({
+    resolver: zodResolver(documentDownloadFormSchema),
+    defaultValues,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+    criteriaMode: 'all',
+  });
+
   // Mutation for checking slug availability
   const checkSlug = useMutation({
     mutationFn: async (slug: string) => {
-      // todo: yeh thik kar
-      //@ts-ignore
-      const result = await pageBuilderApi.checkSlugAvailability(slug);
-      return result;
+      const response = await pageBuilderApi.checkSlug(slug);
+      return response;
     },
     onSuccess: (data) => {
-      setSlugAvailable(data.data.available);
-      if (!data.data.available) {
-        toast.error('This URL is already taken. Please choose another one.');
+      setSlugAvailable(data.data.isUnique);
+      setIsCheckingSlug(false);
+      if (!data.data.isUnique) {
+        form.setError('slug', {
+          message: `This URL is already taken. Suggested URL: ${data.data.suggestedSlug}`,
+        });
+      } else {
+        form.clearErrors('slug');
       }
     },
+    onError: () => {
+      setIsCheckingSlug(false);
+    },
   });
+
+  // Debounced slug check
+  const debouncedSlugCheck = useCallback(
+    debounce((value: string) => {
+      if (value && value.length >= 3) {
+        setIsCheckingSlug(true);
+        checkSlug.mutate(value);
+      } else {
+        setSlugAvailable(false);
+        setIsCheckingSlug(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSlugCheck.cancel();
+    };
+  }, [debouncedSlugCheck]);
 
   // Mutation for saving the form
   const savePage = useMutation({
     mutationFn: async (values: DocumentDownloadFormValues) => {
       const pageData = {
         title: values.title,
-        templateType: 'document-download',
-        content: values,
+        templateType: 'DOCUMENT',
+        jsonData: values,
         isPublic: values.isPublic,
         slug: values.slug || `documents-${Date.now()}`,
       };
@@ -201,12 +241,21 @@ export default function DocumentDownloadForm({
         return await pageBuilderApi.createPage(pageData);
       }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['pages'] });
-      onOpenChange(false);
+      queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       toast.success(`Document download page ${pageId ? 'updated' : 'created'} successfully`);
+
+      // Auto close and navigate after successful save
+      setTimeout(() => {
+        onOpenChange(false);
+        if (!pageId) {
+          navigateTo('dashboard');
+        }
+      }, 1000);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Error saving page:', error);
       toast.error(`Failed to ${pageId ? 'update' : 'create'} document download page`);
     },
   });
@@ -222,6 +271,22 @@ export default function DocumentDownloadForm({
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const handleClose = () => {
+    if (form.formState.isDirty) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        onOpenChange(false);
+        if (!pageId) {
+          navigateTo('dashboard');
+        }
+      }
+    } else {
+      onOpenChange(false);
+      if (!pageId) {
+        navigateTo('dashboard');
+      }
     }
   };
 
@@ -258,7 +323,7 @@ export default function DocumentDownloadForm({
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Document Download Page' : 'Create Document Download Page'}
       schema={documentDownloadFormSchema}
       defaultValues={pageData?.data?.jsonData || defaultValues}
@@ -304,12 +369,18 @@ export default function DocumentDownloadForm({
                   name='title'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Type className='w-4 h-4 inline mr-2' />
-                        Page Title
-                      </FormLabel>
+                      <FormLabel>Page Title</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter page title' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='Enter page title'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('title')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('title');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -321,12 +392,18 @@ export default function DocumentDownloadForm({
                   name='subtitle'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Type className='w-4 h-4 inline mr-2' />
-                        Subtitle
-                      </FormLabel>
+                      <FormLabel>Subtitle</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter subtitle' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='Enter subtitle'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('subtitle')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('subtitle');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -338,16 +415,18 @@ export default function DocumentDownloadForm({
                   name='description'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Type className='w-4 h-4 inline mr-2' />
-                        Description
-                      </FormLabel>
+                      <FormLabel>Description</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder='Enter page description'
                           className='min-h-[100px]'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('description')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('description');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -360,12 +439,18 @@ export default function DocumentDownloadForm({
                   name='buttonText'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Type className='w-4 h-4 inline mr-2' />
-                        Button Text
-                      </FormLabel>
+                      <FormLabel>Button Text</FormLabel>
                       <FormControl>
-                        <Input placeholder='Download Documents' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='Download Documents'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('buttonText')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('buttonText');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -382,15 +467,17 @@ export default function DocumentDownloadForm({
                   name='bgImage'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <ImageIcon className='w-4 h-4 inline mr-2' />
-                        Background Image URL
-                      </FormLabel>
+                      <FormLabel>Background Image URL</FormLabel>
                       <FormControl>
                         <Input
                           placeholder='https://example.com/image.jpg'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('bgImage')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('bgImage');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -403,10 +490,7 @@ export default function DocumentDownloadForm({
                   name='accentColor'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Palette className='w-4 h-4 inline mr-2' />
-                        Accent Color
-                      </FormLabel>
+                      <FormLabel>Accent Color</FormLabel>
                       <FormControl>
                         <div className='flex items-center space-x-2'>
                           <Input
@@ -414,12 +498,20 @@ export default function DocumentDownloadForm({
                             className='w-12 h-10 p-1'
                             disabled={isLoading}
                             {...field}
+                            onBlur={() => form.trigger('accentColor')}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('accentColor');
+                            }}
                           />
                           <Input
                             placeholder='#059669'
                             disabled={isLoading}
                             value={field.value}
-                            onChange={field.onChange}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('accentColor');
+                            }}
                           />
                         </div>
                       </FormControl>
@@ -442,7 +534,10 @@ export default function DocumentDownloadForm({
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            form.trigger('documentRequireForm');
+                          }}
                           disabled={isLoading}
                         />
                       </FormControl>
@@ -485,6 +580,11 @@ export default function DocumentDownloadForm({
                               placeholder='Purchase Agreement'
                               {...field}
                               disabled={isLoading}
+                              onBlur={() => form.trigger(`documents.${index}.title`)}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`documents.${index}.title`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -503,6 +603,11 @@ export default function DocumentDownloadForm({
                               placeholder='A brief description of the document'
                               {...field}
                               disabled={isLoading}
+                              onBlur={() => form.trigger(`documents.${index}.description`)}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`documents.${index}.description`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -518,7 +623,16 @@ export default function DocumentDownloadForm({
                           <FormItem className='mb-2'>
                             <FormLabel>File Size</FormLabel>
                             <FormControl>
-                              <Input placeholder='245 KB' {...field} disabled={isLoading} />
+                              <Input
+                                placeholder='245 KB'
+                                {...field}
+                                disabled={isLoading}
+                                onBlur={() => form.trigger(`documents.${index}.fileSize`)}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  form.trigger(`documents.${index}.fileSize`);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -532,7 +646,16 @@ export default function DocumentDownloadForm({
                           <FormItem className='mb-2'>
                             <FormLabel>File Type</FormLabel>
                             <FormControl>
-                              <Input placeholder='PDF' {...field} disabled={isLoading} />
+                              <Input
+                                placeholder='PDF'
+                                {...field}
+                                disabled={isLoading}
+                                onBlur={() => form.trigger(`documents.${index}.fileType`)}
+                                onChange={(e) => {
+                                  field.onChange(e);
+                                  form.trigger(`documents.${index}.fileType`);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -551,6 +674,11 @@ export default function DocumentDownloadForm({
                               placeholder='https://example.com/documents/file.pdf'
                               {...field}
                               disabled={isLoading}
+                              onBlur={() => form.trigger(`documents.${index}.downloadUrl`)}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`documents.${index}.downloadUrl`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -594,7 +722,16 @@ export default function DocumentDownloadForm({
                     <FormItem>
                       <FormLabel>Agent Name</FormLabel>
                       <FormControl>
-                        <Input placeholder='John Doe' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='John Doe'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('agentName')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('agentName');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -608,7 +745,16 @@ export default function DocumentDownloadForm({
                     <FormItem>
                       <FormLabel>Agent Title</FormLabel>
                       <FormControl>
-                        <Input placeholder='Real Estate Agent' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='Real Estate Agent'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('agentTitle')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('agentTitle');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -626,6 +772,11 @@ export default function DocumentDownloadForm({
                           placeholder='https://example.com/agent.jpg'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('agentImage')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('agentImage');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -638,15 +789,17 @@ export default function DocumentDownloadForm({
                   name='contactInfo.address'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <MapPin className='w-4 h-4 inline mr-2' />
-                        Address
-                      </FormLabel>
+                      <FormLabel>Address</FormLabel>
                       <FormControl>
                         <Input
                           placeholder='123 Main St, Anytown, USA'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('contactInfo.address')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('contactInfo.address');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -659,12 +812,18 @@ export default function DocumentDownloadForm({
                   name='contactInfo.phone'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Phone className='w-4 h-4 inline mr-2' />
-                        Phone
-                      </FormLabel>
+                      <FormLabel>Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder='(123) 456-7890' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='(123) 456-7890'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('contactInfo.phone')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('contactInfo.phone');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -676,12 +835,18 @@ export default function DocumentDownloadForm({
                   name='contactInfo.email'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>
-                        <Mail className='w-4 h-4 inline mr-2' />
-                        Email
-                      </FormLabel>
+                      <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder='john.doe@example.com' disabled={isLoading} {...field} />
+                        <Input
+                          placeholder='john.doe@example.com'
+                          disabled={isLoading}
+                          {...field}
+                          onBlur={() => form.trigger('contactInfo.email')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('contactInfo.email');
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -704,6 +869,11 @@ export default function DocumentDownloadForm({
                           placeholder='https://facebook.com/yourpage'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('social.facebook')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.facebook');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -722,6 +892,11 @@ export default function DocumentDownloadForm({
                           placeholder='https://instagram.com/yourprofile'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('social.instagram')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.instagram');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -740,6 +915,11 @@ export default function DocumentDownloadForm({
                           placeholder='https://linkedin.com/in/yourprofile'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('social.linkedin')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.linkedin');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -758,6 +938,11 @@ export default function DocumentDownloadForm({
                           placeholder='https://twitter.com/yourhandle'
                           disabled={isLoading}
                           {...field}
+                          onBlur={() => form.trigger('social.twitter')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.twitter');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -778,7 +963,7 @@ export default function DocumentDownloadForm({
                       <FormLabel>URL Slug</FormLabel>
                       <FormControl>
                         <div className='flex items-center space-x-2'>
-                          <div className='bg-gray-100 p-2 rounded text-gray-500 text-sm'>
+                          <div className='text-muted-foreground text-sm'>
                             {typeof window !== 'undefined' ? window.location.origin : ''}/p/
                           </div>
                           <Input
@@ -786,16 +971,34 @@ export default function DocumentDownloadForm({
                             disabled={isLoading}
                             {...field}
                             onBlur={() => {
+                              form.trigger('slug');
                               if (field.value) {
-                                checkSlug.mutate(field.value);
+                                debouncedSlugCheck(field.value);
                               }
+                            }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('slug');
+                              debouncedSlugCheck(e.target.value);
                             }}
                           />
                         </div>
                       </FormControl>
-                      {!slugAvailable && field.value && !checkSlug.isPending && (
-                        <p className='text-sm font-medium text-red-500 mt-1'>
-                          This URL is already taken
+                      {field.value && (
+                        <p
+                          className={`text-xs ${
+                            isCheckingSlug
+                              ? 'text-gray-500'
+                              : slugAvailable
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                          }`}
+                        >
+                          {isCheckingSlug
+                            ? 'Checking availability...'
+                            : slugAvailable
+                              ? 'URL is available'
+                              : 'URL is not available'}
                         </p>
                       )}
                       <FormMessage />
@@ -817,7 +1020,10 @@ export default function DocumentDownloadForm({
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            form.trigger('isPublic');
+                          }}
                           disabled={isLoading}
                         />
                       </FormControl>
@@ -830,6 +1036,12 @@ export default function DocumentDownloadForm({
 
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
+              <Button type='button' variant='outline' disabled={isLoading} onClick={handleClose}>
+                Cancel
+              </Button>
+            </div>
+
+            <div className='flex space-x-2'>
               {currentStep > 0 && (
                 <Button
                   type='button'
@@ -841,17 +1053,6 @@ export default function DocumentDownloadForm({
                   Previous
                 </Button>
               )}
-            </div>
-
-            <div className='flex space-x-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={isLoading}
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
 
               {currentStep < steps.length - 1 ? (
                 <Button

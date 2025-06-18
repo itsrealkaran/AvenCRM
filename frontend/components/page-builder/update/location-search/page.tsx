@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { debounce } from 'lodash';
 import {
   Building,
   CheckCircle,
@@ -34,6 +35,7 @@ interface LocationSearchFormProps {
   pageId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  navigateTo: (view: string, pageId?: string) => void;
   isLoading?: boolean;
 }
 
@@ -44,32 +46,48 @@ const locationSearchFormSchema = z.object({
   isPublic: z.boolean().default(false),
 
   // Template configuration
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  bgImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-  searchPlaceholder: z.string().optional(),
-  buttonText: z.string().optional(),
-  accentColor: z.string().optional(),
+  title: z.string().min(3, { message: 'Title must be at least 3 characters' }),
+  subtitle: z.string().min(3, { message: 'Subtitle must be at least 3 characters' }).optional(),
+  description: z
+    .string()
+    .min(10, { message: 'Description must be at least 10 characters' })
+    .optional(),
+  bgImage: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+  searchPlaceholder: z
+    .string()
+    .min(3, { message: 'Placeholder must be at least 3 characters' })
+    .optional(),
+  buttonText: z
+    .string()
+    .min(2, { message: 'Button text must be at least 2 characters' })
+    .optional(),
+  accentColor: z.string().min(4, { message: 'Please enter a valid color' }).optional(),
 
   // Agent information
-  agentName: z.string().optional(),
-  agentTitle: z.string().optional(),
-  agentImage: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  agentName: z.string().min(2, { message: 'Agent name must be at least 2 characters' }).optional(),
+  agentTitle: z
+    .string()
+    .min(2, { message: 'Agent title must be at least 2 characters' })
+    .optional(),
+  agentImage: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
 
   // Contact information
   contactInfo: z.object({
-    address: z.string().optional(),
-    phone: z.string().optional(),
-    email: z.string().email('Please enter a valid email').optional().or(z.literal('')),
+    address: z.string().min(5, { message: 'Address must be at least 5 characters' }).optional(),
+    phone: z.string().min(10, { message: 'Please enter a valid phone number' }).optional(),
+    email: z
+      .string()
+      .email({ message: 'Please enter a valid email address' })
+      .optional()
+      .or(z.literal('')),
   }),
 
   // Social links
   social: z.object({
-    facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
-    twitter: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    facebook: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+    instagram: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+    linkedin: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
+    twitter: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
   }),
 });
 
@@ -77,31 +95,29 @@ type LocationSearchFormValues = z.infer<typeof locationSearchFormSchema>;
 
 // Default values for the form
 const defaultValues: LocationSearchFormValues = {
-  title: 'Property Search',
-  subtitle: 'Find your dream home in your preferred location',
-  description: 'Search through our extensive listing of premium properties in top neighborhoods.',
-  bgImage:
-    'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1773&q=80',
-  searchPlaceholder: 'Enter city, neighborhood, or zip code',
-  buttonText: 'Search Properties',
+  title: '',
+  subtitle: '',
+  description: '',
+  bgImage: '',
+  searchPlaceholder: '',
+  buttonText: '',
   accentColor: '#3b82f6',
-  agentName: 'Sarah Johnson',
-  agentTitle: 'Senior Real Estate Agent',
-  agentImage:
-    'https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=988&q=80',
+  agentName: '',
+  agentTitle: '',
+  agentImage: '',
   contactInfo: {
-    address: '123 Main Street, San Francisco, CA 94105',
-    phone: '(415) 555-0123',
-    email: 'sarah@realestate.com',
+    address: '',
+    phone: '',
+    email: '',
   },
   social: {
-    facebook: 'https://facebook.com/sarahjohnson',
-    instagram: 'https://instagram.com/sarahjohnson',
-    linkedin: 'https://linkedin.com/in/sarahjohnson',
-    twitter: 'https://twitter.com/sarahjohnson',
+    facebook: '',
+    instagram: '',
+    linkedin: '',
+    twitter: '',
   },
   slug: '',
-  isPublic: false,
+  isPublic: true,
 };
 
 // Form steps
@@ -118,21 +134,16 @@ export default function LocationSearchForm({
   pageId,
   open,
   onOpenChange,
-  isLoading,
+  navigateTo,
+  isLoading = false,
 }: LocationSearchFormProps) {
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
-  const [baseUrl, setBaseUrl] = useState('');
-
-  // Set the base URL on client side only
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setBaseUrl(window.location.origin);
-    }
-  }, []);
+  const [slugAvailable, setSlugAvailable] = useState(false);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
   // Fetch existing page data if in edit mode
-  const { data: existingPage } = useQuery({
+  const { data: existingPage, isLoading: isLoadingPageData } = useQuery({
     queryKey: ['page', pageId],
     queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
     enabled: !!pageId && open,
@@ -142,6 +153,9 @@ export default function LocationSearchForm({
   const form = useForm<LocationSearchFormValues>({
     resolver: zodResolver(locationSearchFormSchema),
     defaultValues,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+    criteriaMode: 'all',
   });
 
   // Check if slug is available
@@ -151,15 +165,41 @@ export default function LocationSearchForm({
       return response;
     },
     onSuccess: (data) => {
-      if (data?.data?.exists && data?.data?.id !== pageId) {
+      setSlugAvailable(data.data.isUnique);
+      setIsCheckingSlug(false);
+      if (!data.data.isUnique) {
         form.setError('slug', {
-          message: 'This URL is already taken. Please try another one.',
+          message: `This URL is already taken. Suggested URL: ${data.data.suggestedSlug}`,
         });
       } else {
         form.clearErrors('slug');
       }
     },
+    onError: () => {
+      setIsCheckingSlug(false);
+    },
   });
+
+  // Debounced slug check
+  const debouncedSlugCheck = useCallback(
+    debounce((value: string) => {
+      if (value && value.length >= 3) {
+        setIsCheckingSlug(true);
+        checkSlug.mutate(value);
+      } else {
+        setSlugAvailable(false);
+        setIsCheckingSlug(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Cleanup debounce on unmount
+  useEffect(() => {
+    return () => {
+      debouncedSlugCheck.cancel();
+    };
+  }, [debouncedSlugCheck]);
 
   // Update form with existing data when available
   useEffect(() => {
@@ -191,7 +231,7 @@ export default function LocationSearchForm({
           twitter: jsonData.social?.twitter || defaultValues.social.twitter,
         },
         slug: pageData.slug || '',
-        isPublic: pageData.isPublic || false,
+        isPublic: pageData.isPublic || true,
       });
     }
   }, [existingPage, form]);
@@ -216,8 +256,15 @@ export default function LocationSearchForm({
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['pages'] });
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
-      onOpenChange(false);
       toast.success(`Location search page ${pageId ? 'updated' : 'created'} successfully`);
+
+      // Auto close and navigate after successful save
+      setTimeout(() => {
+        onOpenChange(false);
+        if (!pageId) {
+          navigateTo('dashboard');
+        }
+      }, 1000);
     },
     onError: (error) => {
       console.error('Error saving page:', error);
@@ -237,17 +284,33 @@ export default function LocationSearchForm({
     }
   };
 
+  const handleClose = () => {
+    if (form.formState.isDirty) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close?')) {
+        onOpenChange(false);
+        if (!pageId) {
+          navigateTo('dashboard');
+        }
+      }
+    } else {
+      onOpenChange(false);
+      if (!pageId) {
+        navigateTo('dashboard');
+      }
+    }
+  };
+
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Location Search Page' : 'Create Location Search Page'}
       schema={locationSearchFormSchema}
       defaultValues={defaultValues}
       onSubmit={(values) => {
         savePage.mutate(values);
       }}
-      isLoading={isLoading || savePage.isPending}
+      isLoading={isLoading || savePage.isPending || isLoadingPageData}
     >
       {(form) => (
         <Tabs value={steps[currentStep].id} className='w-full'>
@@ -290,8 +353,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Enter page title'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('title')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('title');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -308,8 +376,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Enter subtitle'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('subtitle')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('subtitle');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -326,9 +399,14 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Textarea
                           placeholder='Enter page description'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           className='min-h-[100px]'
                           {...field}
+                          onBlur={() => form.trigger('description')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('description');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -350,8 +428,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://example.com/image.jpg'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('bgImage')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('bgImage');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -368,8 +451,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Enter city, neighborhood, or zip code'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('searchPlaceholder')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('searchPlaceholder');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -386,8 +474,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Search Properties'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('buttonText')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('buttonText');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -406,16 +499,25 @@ export default function LocationSearchForm({
                           <Input
                             type='color'
                             className='w-16 h-8 p-1'
-                            disabled={isLoading || savePage.isPending}
+                            disabled={isLoading || savePage.isPending || isLoadingPageData}
                             {...field}
+                            onBlur={() => form.trigger('accentColor')}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('accentColor');
+                            }}
                           />
                         </FormControl>
                         <Input
                           value={field.value}
-                          onChange={field.onChange}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('accentColor');
+                          }}
+                          onBlur={() => form.trigger('accentColor')}
                           placeholder='#3b82f6'
                           maxLength={7}
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           className='w-full'
                         />
                       </div>
@@ -438,8 +540,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Sarah Johnson'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('agentName')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('agentName');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -456,8 +563,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='Senior Real Estate Agent'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('agentTitle')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('agentTitle');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -474,8 +586,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://example.com/agent.jpg'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('agentImage')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('agentImage');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -497,8 +614,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='123 Main St, Anytown, USA'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('contactInfo.address')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('contactInfo.address');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -515,8 +637,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='(123) 456-7890'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('contactInfo.phone')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('contactInfo.phone');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -533,8 +660,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='contact@example.com'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('contactInfo.email')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('contactInfo.email');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -556,8 +688,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://facebook.com/yourpage'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('social.facebook')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.facebook');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -574,8 +711,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://instagram.com/youraccount'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('social.instagram')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.instagram');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -592,8 +734,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://twitter.com/youraccount'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('social.twitter')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.twitter');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -610,8 +757,13 @@ export default function LocationSearchForm({
                       <FormControl>
                         <Input
                           placeholder='https://linkedin.com/in/yourprofile'
-                          disabled={isLoading || savePage.isPending}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                           {...field}
+                          onBlur={() => form.trigger('social.linkedin')}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.linkedin');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -629,24 +781,48 @@ export default function LocationSearchForm({
                   name='slug'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Custom URL Slug</FormLabel>
+                      <FormLabel>URL Slug</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder='Enter URL slug (e.g., property-search)'
-                          disabled={isLoading || savePage.isPending}
-                          {...field}
-                          onBlur={() => {
-                            if (field.value) {
-                              checkSlug.mutate(field.value);
-                            }
-                          }}
-                        />
+                        <div className='flex items-center space-x-2'>
+                          <div className='text-muted-foreground text-sm'>
+                            {typeof window !== 'undefined' ? window.location.origin : ''}/p/
+                          </div>
+                          <Input
+                            placeholder='your-document-page'
+                            disabled={isLoading || savePage.isPending || isLoadingPageData}
+                            {...field}
+                            onBlur={() => {
+                              form.trigger('slug');
+                              if (field.value) {
+                                debouncedSlugCheck(field.value);
+                              }
+                            }}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('slug');
+                              debouncedSlugCheck(e.target.value);
+                            }}
+                          />
+                        </div>
                       </FormControl>
+                      {field.value && (
+                        <p
+                          className={`text-xs ${
+                            isCheckingSlug
+                              ? 'text-gray-500'
+                              : slugAvailable
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                          }`}
+                        >
+                          {isCheckingSlug
+                            ? 'Checking availability...'
+                            : slugAvailable
+                              ? 'URL is available'
+                              : 'URL is not available'}
+                        </p>
+                      )}
                       <FormMessage />
-                      <p className='text-xs text-muted-foreground'>
-                        This will determine your page URL: {baseUrl}/p/
-                        {field.value || 'property-search-[timestamp]'}
-                      </p>
                     </FormItem>
                   )}
                 />
@@ -655,18 +831,21 @@ export default function LocationSearchForm({
                   control={form.control}
                   name='isPublic'
                   render={({ field }) => (
-                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-4'>
+                    <FormItem className='flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm'>
                       <div className='space-y-0.5'>
-                        <FormLabel className='text-base'>Public Page</FormLabel>
+                        <FormLabel>Make Page Public</FormLabel>
                         <div className='text-sm text-muted-foreground'>
-                          Make this page publicly accessible
+                          This will make your document page accessible to anyone with the link
                         </div>
                       </div>
                       <FormControl>
                         <Switch
                           checked={field.value}
-                          onCheckedChange={field.onChange}
-                          disabled={isLoading || savePage.isPending}
+                          onCheckedChange={(checked) => {
+                            field.onChange(checked);
+                            form.trigger('isPublic');
+                          }}
+                          disabled={isLoading || savePage.isPending || isLoadingPageData}
                         />
                       </FormControl>
                     </FormItem>
@@ -678,34 +857,34 @@ export default function LocationSearchForm({
 
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={savePage.isPending || isLoadingPageData}
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+            </div>
+
+            <div className='flex space-x-2'>
               {currentStep > 0 && (
                 <Button
                   type='button'
                   variant='outline'
                   onClick={handlePrevious}
-                  disabled={savePage.isPending}
+                  disabled={savePage.isPending || isLoadingPageData}
                 >
                   <ChevronLeft className='w-4 h-4 mr-2' />
                   Previous
                 </Button>
               )}
-            </div>
-
-            <div className='flex space-x-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={savePage.isPending}
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
 
               {currentStep < steps.length - 1 ? (
                 <Button
                   type='button'
                   onClick={handleNext}
-                  disabled={savePage.isPending}
+                  disabled={savePage.isPending || isLoadingPageData}
                   className='bg-blue-600 hover:bg-blue-700'
                 >
                   Next
@@ -714,7 +893,7 @@ export default function LocationSearchForm({
               ) : (
                 <Button
                   type='submit'
-                  disabled={savePage.isPending || !form.formState.isValid}
+                  disabled={savePage.isPending || !form.formState.isValid || isLoadingPageData}
                   className='bg-blue-600 hover:bg-blue-700 min-w-[100px]'
                 >
                   {savePage.isPending ? 'Saving...' : pageId ? 'Update Page' : 'Create Page'}

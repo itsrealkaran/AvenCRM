@@ -226,12 +226,13 @@ export default function LocationSearchView({ navigateTo, pageId }: LocationSearc
   };
 
   return (
-    <Card className='h-full flex flex-col'>
+    <Card className='flex flex-col'>
       <LocationSearchForm
         pageId={pageId}
         open={isUpdateModalOpen}
         onOpenChange={setIsUpdateModalOpen}
         isLoading={isLoading}
+        navigateTo={navigateTo}
       />
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>

@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { debounce } from 'lodash';
 import {
   Award,
   Building,
@@ -20,6 +21,7 @@ import {
   Type,
   User,
 } from 'lucide-react';
+import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
@@ -28,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { Tabs } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { pageBuilderApi } from '@/lib/api';
 
@@ -36,6 +38,7 @@ interface SetupFormProps {
   pageId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  navigateTo: (view: string, pageId?: string) => void;
   isLoading?: boolean;
 }
 
@@ -45,7 +48,7 @@ const portfolioFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters' }),
   title: z.string().min(2, { message: 'Title is required' }),
   location: z.string().min(2, { message: 'Location is required' }),
-  image: z.string().url({ message: 'Please enter a valid URL' }),
+  image: z.string().url({ message: 'Please enter a valid URL' }).optional().or(z.literal('')),
   bio: z.string().min(10, { message: 'Bio must be at least 10 characters' }),
 
   // Stats
@@ -63,169 +66,184 @@ const portfolioFormSchema = z.object({
 
   // Contact info
   phone: z.string(),
-  email: z.string().email({ message: 'Please enter a valid email address' }),
+  email: z
+    .string()
+    .email({ message: 'Please enter a valid email address' })
+    .optional()
+    .or(z.literal('')),
   officeAddress: z.string(),
 
   // Social info
-  facebook: z.string().optional(),
-  twitter: z.string().optional(),
-  instagram: z.string().optional(),
-  linkedin: z.string().optional(),
-
-  // Testimonials
-  testimonials: z.array(
-    z.object({
-      text: z.string(),
-      client: z.string(),
-      location: z.string(),
-    })
-  ),
+  social: z.object({
+    facebook: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    instagram: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+    twitter: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  }),
 
   // Page settings
-  slug: z.string().optional(),
+  slug: z.string().min(3, 'Slug must be at least 3 characters').optional(),
   isPublic: z.boolean().default(false),
 });
 
 // Type inference from zod schema
 type PortfolioFormValues = z.infer<typeof portfolioFormSchema>;
 
+// Empty form initial values
+const emptyFormValues: PortfolioFormValues = {
+  name: '',
+  title: '',
+  location: '',
+  image: '',
+  bio: '',
+  dealsCount: '',
+  propertyValue: '',
+  yearsExperience: '',
+  clientSatisfaction: '',
+  accentColor: '',
+  approach: '',
+  expertise: [],
+  certifications: [],
+  education: '',
+  phone: '',
+  email: '',
+  officeAddress: '',
+  social: {
+    facebook: '',
+    instagram: '',
+    linkedin: '',
+    twitter: '',
+  },
+  slug: '',
+  isPublic: true,
+};
+
 export default function SetupForm({
   pageId,
   open,
   onOpenChange,
+  navigateTo,
   isLoading = false,
 }: SetupFormProps) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(0);
+  const [slugAvailable, setSlugAvailable] = useState(false);
+  const [isCheckingSlug, setIsCheckingSlug] = useState(false);
 
   // Define the steps for the multi-step form
   const steps = [
-    { id: 'personal', label: 'Personal' },
-    { id: 'professional', label: 'Professional' },
-    { id: 'contact', label: 'Contact' },
-    { id: 'settings', label: 'Settings' },
+    { id: 'step-1', label: 'Personal' },
+    { id: 'step-2', label: 'Professional' },
+    { id: 'step-3', label: 'Contact' },
+    { id: 'step-4', label: 'Social' },
+    { id: 'step-5', label: 'Settings' },
   ];
 
   // Fetch existing page data if in edit mode
-  const { data: existingPageData, isLoading: isLoadingPageData } = useQuery({
+  const { data: existingPage, isLoading: isLoadingPageData } = useQuery({
     queryKey: ['page', pageId],
     queryFn: () => (pageId ? pageBuilderApi.getPage(pageId) : null),
     enabled: !!pageId && open,
   });
 
-  // Default values for the form
-  const defaultValues: PortfolioFormValues = {
-    // Personal info
-    name: 'Sarah Johnson',
-    title: 'Luxury Real Estate Specialist',
-    location: 'San Francisco Bay Area, CA',
-    image:
-      'https://images.unsplash.com/photo-1633332755192-727a05c4013d?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXQlMjBtYW58ZW58MHx8MHx8fDA%3D',
-    bio: 'With over 15 years of experience, I specialize in luxury properties and helping clients make informed decisions in the competitive Bay Area market.',
+  // Initialize form with empty values
+  const form = useForm<PortfolioFormValues>({
+    resolver: zodResolver(portfolioFormSchema),
+    defaultValues: emptyFormValues,
+    mode: 'onChange',
+    reValidateMode: 'onChange',
+  });
 
-    // Stats
-    dealsCount: '350+',
-    propertyValue: '$500M+',
-    yearsExperience: '15+',
-    clientSatisfaction: '98%',
-
-    // Style and approach
-    accentColor: '#7c3aed',
-    approach:
-      'I believe in personalized service and leveraging the latest technology to ensure my clients get the best deals in the market.',
-    expertise: [
-      'Luxury Residential Properties',
-      'Investment Properties',
-      'First-Time Home Buyers',
-      'Property Valuation',
-    ],
-    certifications: [
-      'Certified Residential Specialist (CRS)',
-      "Accredited Buyer's Representative (ABR)",
-      'Luxury Home Marketing Specialist',
-      'Certified Negotiation Expert (CNE)',
-    ],
-    education:
-      'Bachelor of Business Administration in Real Estate, University of California, Berkeley',
-
-    // Contact info
-    phone: '(415) 555-0123',
-    email: 'sarah@sarahjohnsonrealty.com',
-    officeAddress: '123 Market Street, San Francisco, CA 94105',
-
-    // Social info
-    facebook: 'https://www.facebook.com/sarahjohnsonrealty',
-    instagram: 'https://www.instagram.com/sarahjohnsonrealty',
-    linkedin: 'https://www.linkedin.com/company/sarahjohnsonrealty',
-    twitter: 'https://www.twitter.com/sarahjohnsonrealty',
-
-    // Testimonials
-    testimonials: [
-      {
-        text: 'Sarah helped us find our dream home in a competitive market. Her expertise and negotiation skills were invaluable.',
-        client: 'John & Lisa Thomason',
-        location: 'Palo Alto',
-      },
-      {
-        text: 'Working with Sarah made selling our home stress-free. She handled everything professionally and got us above asking price.',
-        client: 'Michael Chen',
-        location: 'San Francisco',
-      },
-      {
-        text: "As first-time buyers, we appreciated Sarah's patience and guidance throughout the process. Highly recommended!",
-        client: 'Emma & David Wilson',
-        location: 'Menlo Park',
-      },
-    ],
-
-    // Page settings
-    slug: '',
-    isPublic: false,
-  };
-
-  // Use existing data if available
-  useEffect(() => {
-    if (existingPageData?.data) {
-      // Reset form with existing data
-      const pageData = existingPageData.data;
-      if (pageData.jsonData) {
-        // If editing an existing page, we should update our defaultValues
-        const jsonData = pageData.jsonData;
-        // We'll handle this in the BaseEntityDialog by passing the updated defaultValues
+  // Check if slug is available
+  const checkSlug = useMutation({
+    mutationFn: async (slug: string) => {
+      const response = await pageBuilderApi.checkSlug(slug);
+      return response;
+    },
+    onSuccess: (data) => {
+      setSlugAvailable(data.data.isUnique);
+      setIsCheckingSlug(false);
+      if (!data.data.isUnique) {
+        form.setError('slug', {
+          message: `This URL is already taken. Suggested URL: ${data.data.suggestedSlug}`,
+        });
+      } else {
+        form.clearErrors('slug');
       }
-    }
-  }, [existingPageData, open]);
+    },
+    onError: () => {
+      setIsCheckingSlug(false);
+    },
+  });
 
-  // Handle dialog close
+  // Debounced slug check
+  const debouncedSlugCheck = useCallback(
+    debounce((value: string) => {
+      if (value && value.length >= 3) {
+        setIsCheckingSlug(true);
+        checkSlug.mutate(value);
+      } else {
+        setSlugAvailable(false);
+        setIsCheckingSlug(false);
+      }
+    }, 500),
+    []
+  );
+
+  // Cleanup debounce on unmount
   useEffect(() => {
-    if (!open && !pageId) {
-      router.push('/dashboard');
+    return () => {
+      debouncedSlugCheck.cancel();
+    };
+  }, [debouncedSlugCheck]);
+
+  // Update form with existing data when available
+  useEffect(() => {
+    if (existingPage?.data) {
+      const pageData = existingPage.data;
+      const jsonData = pageData.jsonData || {};
+
+      // Reset form with values from existing data
+      form.reset({
+        name: jsonData.name || '',
+        title: jsonData.title || '',
+        location: jsonData.location || '',
+        image: jsonData.image || '',
+        bio: jsonData.bio || '',
+        dealsCount: jsonData.dealsCount || '',
+        propertyValue: jsonData.propertyValue || '',
+        yearsExperience: jsonData.yearsExperience || '',
+        clientSatisfaction: jsonData.clientSatisfaction || '',
+        accentColor: jsonData.accentColor || '#7b3ae4',
+        approach: jsonData.approach || '',
+        expertise: jsonData.expertise || ['', '', '', ''],
+        certifications: jsonData.certifications || ['', '', '', ''],
+        education: jsonData.education || '',
+        phone: jsonData.phone || '',
+        email: jsonData.email || '',
+        officeAddress: jsonData.officeAddress || '',
+        social: {
+          facebook: jsonData.social?.facebook || '',
+          instagram: jsonData.social?.instagram || '',
+          linkedin: jsonData.social?.linkedin || '',
+          twitter: jsonData.social?.twitter || '',
+        },
+        slug: pageData.slug || '',
+        isPublic: pageData.isPublic || true,
+      });
     }
-  }, [open, pageId, router]);
+  }, [existingPage, form]);
 
   // Mutation for saving the form
   const savePage = useMutation({
     mutationFn: async (values: PortfolioFormValues) => {
-      // Social media links structure
-      const social = {
-        facebook: values.facebook || '',
-        instagram: values.instagram || '',
-        linkedin: values.linkedin || '',
-        twitter: values.twitter || '',
-      };
-
       // Prepare the page data structure for our API
       const pageData = {
         title: values.name,
-        slug: values.slug || `portfolio-${Date.now()}`,
         templateType: 'PORTFOLIO',
-        description: values.bio.substring(0, 100) + (values.bio.length > 100 ? '...' : ''),
-        jsonData: {
-          ...values,
-          social,
-        },
+        jsonData: values,
         isPublic: values.isPublic,
+        slug: values.slug || `portfolio-${Date.now()}`,
       };
 
       if (pageId) {
@@ -234,19 +252,18 @@ export default function SetupForm({
         return await pageBuilderApi.createPage(pageData);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pages'] });
-      if (pageId) {
-        queryClient.invalidateQueries({ queryKey: ['page', pageId] });
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ['pages'] });
+      await queryClient.invalidateQueries({ queryKey: ['page', pageId] });
+      toast.success(`Portfolio ${pageId ? 'updated' : 'created'} successfully`);
+      if (!pageId) {
+        navigateTo('dashboard');
       }
       onOpenChange(false);
-      toast.success(`Portfolio ${pageId ? 'updated' : 'created'} successfully`);
     },
-    onError: (error: any) => {
+    onError: (error) => {
       console.error('Error saving page:', error);
-      toast.error(
-        `Failed to ${pageId ? 'update' : 'create'} portfolio: ${error?.response?.data?.message || 'Unknown error'}`
-      );
+      toast.error(`Failed to ${pageId ? 'update' : 'create'} portfolio`);
     },
   });
 
@@ -264,33 +281,24 @@ export default function SetupForm({
     }
   };
 
-  // Function to add a new testimonial field
-  const addTestimonial = (form: any) => {
-    const currentTestimonials = form.getValues('testimonials') || [];
-    form.setValue('testimonials', [...currentTestimonials, { text: '', client: '', location: '' }]);
+  const handleClose = () => {
+    onOpenChange(false);
+    if (!pageId) {
+      navigateTo('dashboard');
+    }
   };
-
-  // Function to remove a testimonial field
-  const removeTestimonial = (form: any, index: number) => {
-    const currentTestimonials = form.getValues('testimonials') || [];
-    form.setValue(
-      'testimonials',
-      currentTestimonials.filter((_: any, i: number) => i !== index)
-    );
-  };
-
-  // Calculate initial values for the form
-  const initialValues = existingPageData?.data?.jsonData || defaultValues;
 
   return (
     <BaseEntityDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={handleClose}
       title={pageId ? 'Update Portfolio' : 'Create Portfolio'}
       schema={portfolioFormSchema}
-      defaultValues={initialValues}
+      defaultValues={emptyFormValues}
       onSubmit={(values) => {
-        savePage.mutate(values);
+        if (currentStep === steps.length - 1) {
+          savePage.mutate(values);
+        }
       }}
       isLoading={isLoading || isLoadingPageData || savePage.isPending}
     >
@@ -337,6 +345,10 @@ export default function SetupForm({
                           placeholder='e.g. Sarah Johnson'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('name');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -355,6 +367,10 @@ export default function SetupForm({
                           placeholder='e.g. Luxury Real Estate Specialist'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('title');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -373,6 +389,10 @@ export default function SetupForm({
                           placeholder='e.g. San Francisco Bay Area, CA'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('location');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -391,6 +411,10 @@ export default function SetupForm({
                           placeholder='https://example.com/your-photo.jpg'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('image');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -410,6 +434,10 @@ export default function SetupForm({
                           className='min-h-[120px]'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('bio');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -434,6 +462,10 @@ export default function SetupForm({
                             placeholder='e.g. 15+'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('yearsExperience');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -452,6 +484,10 @@ export default function SetupForm({
                             placeholder='e.g. 350+'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('dealsCount');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -470,6 +506,10 @@ export default function SetupForm({
                             placeholder='e.g. $500M+'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('propertyValue');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -488,6 +528,10 @@ export default function SetupForm({
                             placeholder='e.g. 98%'
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              form.trigger('clientSatisfaction');
+                            }}
                           />
                         </FormControl>
                         <FormMessage />
@@ -535,6 +579,10 @@ export default function SetupForm({
                           className='min-h-[120px]'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('approach');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -556,6 +604,10 @@ export default function SetupForm({
                               placeholder={`Expertise ${index + 1}`}
                               disabled={isLoading || savePage.isPending}
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`expertise.${index}`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -579,6 +631,10 @@ export default function SetupForm({
                               placeholder={`Certification ${index + 1}`}
                               disabled={isLoading || savePage.isPending}
                               {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                form.trigger(`certifications.${index}`);
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -599,6 +655,10 @@ export default function SetupForm({
                           placeholder='e.g. Bachelor of Business Administration in Real Estate'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('education');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -622,6 +682,10 @@ export default function SetupForm({
                           placeholder='e.g. (415) 555-0123'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('phone');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -640,6 +704,10 @@ export default function SetupForm({
                           placeholder='e.g. sarah@example.com'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('email');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -658,16 +726,25 @@ export default function SetupForm({
                           placeholder='e.g. 123 Market Street, San Francisco, CA 94105'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('officeAddress');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+              </div>
+            )}
 
+            {/* Social Media */}
+            {currentStep === 3 && (
+              <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
-                  name='facebook'
+                  name='social.facebook'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Facebook URL</FormLabel>
@@ -676,6 +753,10 @@ export default function SetupForm({
                           placeholder='https://facebook.com/yourpage'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.facebook');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -685,7 +766,7 @@ export default function SetupForm({
 
                 <FormField
                   control={form.control}
-                  name='twitter'
+                  name='social.twitter'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Twitter URL</FormLabel>
@@ -694,6 +775,10 @@ export default function SetupForm({
                           placeholder='https://twitter.com/yourhandle'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.twitter');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -703,7 +788,7 @@ export default function SetupForm({
 
                 <FormField
                   control={form.control}
-                  name='instagram'
+                  name='social.instagram'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Instagram URL</FormLabel>
@@ -712,6 +797,10 @@ export default function SetupForm({
                           placeholder='https://instagram.com/yourpage'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.instagram');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -721,7 +810,7 @@ export default function SetupForm({
 
                 <FormField
                   control={form.control}
-                  name='linkedin'
+                  name='social.linkedin'
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>LinkedIn URL</FormLabel>
@@ -730,6 +819,10 @@ export default function SetupForm({
                           placeholder='https://linkedin.com/in/yourpage'
                           disabled={isLoading || savePage.isPending}
                           {...field}
+                          onChange={(e) => {
+                            field.onChange(e);
+                            form.trigger('social.linkedin');
+                          }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -740,7 +833,7 @@ export default function SetupForm({
             )}
 
             {/* Page Settings */}
-            {currentStep === 3 && (
+            {currentStep === 4 && (
               <div className='space-y-4 p-2'>
                 <FormField
                   control={form.control}
@@ -750,19 +843,37 @@ export default function SetupForm({
                       <FormLabel>Page URL</FormLabel>
                       <div className='flex items-center space-x-2'>
                         <div className='flex-shrink-0 text-muted-foreground text-sm'>
-                          yourdomain.com/p/
+                          {typeof window !== 'undefined' ? window.location.origin : ''}/p/
                         </div>
                         <FormControl>
                           <Input
                             placeholder={`portfolio-${Date.now()}`}
                             disabled={isLoading || savePage.isPending}
                             {...field}
+                            onChange={(e) => {
+                              field.onChange(e);
+                              debouncedSlugCheck(e.target.value);
+                            }}
                           />
                         </FormControl>
                       </div>
-                      <p className='text-xs text-muted-foreground'>
-                        Enter a unique URL for your portfolio page or leave blank to auto-generate
-                      </p>
+                      {field.value && (
+                        <p
+                          className={`text-xs ${
+                            isCheckingSlug
+                              ? 'text-gray-500'
+                              : slugAvailable
+                                ? 'text-green-600'
+                                : 'text-red-600'
+                          }`}
+                        >
+                          {isCheckingSlug
+                            ? 'Checking availability...'
+                            : slugAvailable
+                              ? 'URL is available'
+                              : 'URL is not available'}
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -793,36 +904,37 @@ export default function SetupForm({
             )}
           </div>
 
+          {/* Navigation Buttons */}
           <div className='flex justify-between space-x-4 mt-6'>
             <div>
+              <Button
+                type='button'
+                variant='outline'
+                disabled={isLoading || savePage.isPending}
+                onClick={handleClose}
+              >
+                Cancel
+              </Button>
+            </div>
+
+            <div className='flex space-x-2'>
               {currentStep > 0 && (
                 <Button
                   type='button'
                   variant='outline'
                   onClick={handlePrevious}
-                  disabled={savePage.isPending}
+                  disabled={isLoading || savePage.isPending}
                 >
                   <ChevronLeft className='w-4 h-4 mr-2' />
                   Previous
                 </Button>
               )}
-            </div>
-
-            <div className='flex space-x-2'>
-              <Button
-                type='button'
-                variant='outline'
-                disabled={savePage.isPending}
-                onClick={() => onOpenChange(false)}
-              >
-                Cancel
-              </Button>
 
               {currentStep < steps.length - 1 ? (
                 <Button
                   type='button'
                   onClick={handleNext}
-                  disabled={savePage.isPending}
+                  disabled={isLoading || savePage.isPending}
                   className='bg-primary/90 hover:bg-primary/95'
                 >
                   Next
@@ -830,9 +942,16 @@ export default function SetupForm({
                 </Button>
               ) : (
                 <Button
-                  type='submit'
-                  disabled={savePage.isPending || !form.formState.isValid}
+                  type='button'
+                  disabled={
+                    isLoading || savePage.isPending || !form.formState.isValid || !slugAvailable
+                  }
                   className='bg-primary/90 hover:bg-primary/95 min-w-[100px]'
+                  onClick={() => {
+                    form.handleSubmit((values: PortfolioFormValues) => {
+                      savePage.mutate(values);
+                    })();
+                  }}
                 >
                   {savePage.isPending
                     ? 'Saving...'

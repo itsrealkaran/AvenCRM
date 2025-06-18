@@ -22,7 +22,7 @@ import { pageBuilderApi } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 interface DocumentDownloadViewProps {
-  navigateTo: (view: string) => void;
+  navigateTo: (view: string, pageId?: string) => void;
   pageId?: string;
 }
 
@@ -100,6 +100,20 @@ export default function DocumentDownloadView({ navigateTo, pageId }: DocumentDow
     },
   };
 
+  // Effect to open setup form automatically if no pageId is provided
+  useEffect(() => {
+    if (!pageId && !isUpdateModalOpen) {
+      setIsUpdateModalOpen(true);
+    }
+  }, [pageId, isUpdateModalOpen]);
+
+  // Debugging: log page data when it changes
+  useEffect(() => {
+    if (pageData) {
+      console.log('Fetched document page data:', pageData);
+    }
+  }, [pageData]);
+
   // Delete page mutation
   const deletePage = useMutation({
     mutationFn: () => pageBuilderApi.deletePage(pageId!),
@@ -140,29 +154,8 @@ export default function DocumentDownloadView({ navigateTo, pageId }: DocumentDow
     },
   });
 
-  // Effect to open setup form automatically if no pageId is provided
-  useEffect(() => {
-    if (!pageId && !isUpdateModalOpen) {
-      setIsUpdateModalOpen(true);
-    }
-  }, [pageId, isUpdateModalOpen]);
-
-  // Handle update button click
-  const handleUpdate = () => {
-    setIsUpdateModalOpen(true);
-  };
-
   // Handle share/publish action
   const handleShare = () => {
-    if (!pageId) {
-      toast({
-        title: 'Cannot share',
-        description: 'Please create your document page first before sharing.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     if (!pageData?.data?.slug) {
       toast({
         title: 'Cannot share',
@@ -177,20 +170,35 @@ export default function DocumentDownloadView({ navigateTo, pageId }: DocumentDow
     } else {
       // Copy the URL to clipboard
       const url = `${window.location.origin}/p/${pageData?.data?.slug}`;
-      navigator.clipboard.writeText(url);
-      toast({
-        title: 'Link copied',
-        description: 'Document page URL has been copied to clipboard.',
-      });
+      navigator.clipboard.writeText(url).then(
+        () => {
+          toast({
+            title: 'Link copied',
+            description: 'Document page link copied to clipboard!',
+          });
+        },
+        (err) => {
+          toast({
+            title: 'Failed to copy',
+            description: 'Could not copy the link to clipboard.',
+            variant: 'destructive',
+          });
+        }
+      );
     }
   };
 
-  // Handle delete button click
+  // Handle update action
+  const handleUpdate = () => {
+    setIsUpdateModalOpen(true);
+  };
+
+  // Handle delete action
   const handleDelete = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  // Handle preview button click
+  // Handle preview action
   const handlePreview = () => {
     if (pageData?.data?.slug) {
       window.open(`/p/${pageData.data.slug}`, '_blank');
@@ -210,11 +218,12 @@ export default function DocumentDownloadView({ navigateTo, pageId }: DocumentDow
   };
 
   return (
-    <Card className='h-full flex flex-col'>
+    <Card className='flex flex-col'>
       <DocumentDownloadForm
         pageId={pageId}
         open={isUpdateModalOpen}
         onOpenChange={setIsUpdateModalOpen}
+        navigateTo={navigateTo}
         isLoading={isLoading}
       />
 

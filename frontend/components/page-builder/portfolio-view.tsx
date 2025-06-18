@@ -200,9 +200,10 @@ export default function PortfolioView({ navigateTo, pageId }: PortfolioViewProps
   };
 
   return (
-    <Card className='h-full flex flex-col'>
+    <Card className='flex flex-col'>
       <SetupForm
         pageId={pageId}
+        navigateTo={navigateTo}
         open={isUpdateModalOpen}
         onOpenChange={setIsUpdateModalOpen}
         isLoading={isLoading}
